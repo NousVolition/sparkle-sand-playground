@@ -1,1 +1,808 @@
-PLACEHOLDER_FULL_HTML_CONTENT
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tension, Waves & Sparkle Sand</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #141922;
+    --accent: #00d4ff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #21262d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 16px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    background: linear-gradient(90deg, #ff6b9d, #c084fc, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .tab.active, .tab:hover {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+  .controls {
+    padding: 12px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 56px;
+  }
+  .controls label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .controls input[type="range"] {
+    width: 100px;
+    accent-color: var(--accent);
+  }
+  .controls button {
+    padding: 6px 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .controls button:hover, .controls button.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+  .palette {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .swatch.active { border-color: white; transform: scale(1.15); }
+  #canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #05070a;
+  }
+  .hint {
+    position: absolute;
+    bottom: 16px;
+    left: 24px;
+    right: 24px;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .wave-graphs {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    width: 280px;
+    background: rgba(10,14,20,0.85);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: none;
+  }
+  .wave-graphs.visible { display: block; }
+  .wave-graphs canvas { height: 80px; margin-bottom: 8px; background: transparent; }
+  .wave-graphs h3 { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Tension, Waves & Sparkle Sand</h1>
+  <div class="tabs">
+    <button class="tab active" data-mode="sand">1. Sparkle Kinetic Sand</button>
+    <button class="tab" data-mode="loop">2. Relaxing Loop</button>
+    <button class="tab" data-mode="bubbles">3. Soap Bubbles</button>
+    <button class="tab" data-mode="plate">4. Sound & Sand Plate</button>
+    <button class="tab" data-mode="waves">5. 1D to 2D Waves</button>
+  </div>
+</header>
+
+<div class="controls" id="controls">
+  <!-- Dynamic controls -->
+</div>
+
+<div id="canvas-container">
+  <canvas id="main"></canvas>
+  <div class="wave-graphs" id="waveGraphs">
+    <h3>Horizontal Wave</h3>
+    <canvas id="hWave" width="256" height="70"></canvas>
+    <h3>Vertical Wave</h3>
+    <canvas id="vWave" width="256" height="70"></canvas>
+  </div>
+  <div class="hint" id="hint">Click and drag to pour glitter sand. Choose colors from the palette.</div>
+</div>
+
+<script>
+const canvas = document.getElementById('main');
+const ctx = canvas.getContext('2d');
+const hint = document.getElementById('hint');
+const controlsDiv = document.getElementById('controls');
+const waveGraphs = document.getElementById('waveGraphs');
+
+let mode = 'sand';
+let width, height;
+let particles = [];
+let bubbles = [];
+let loopParticles = [];
+let mouse = { x: 0, y: 0, down: false };
+let color = '#ff6b9d';
+let cling = 0.7;
+let size = 3;
+let pouring = true;
+let guideLines = true;
+let surfaceTension = 0.6;
+let waveN = 3;
+let waveM = 4;
+let frozen = false;
+let hWaves = 2;
+let vWaves = 3;
+let loopSpeed = 0.6;
+let loopDensity = 150;
+let audioCtx = null;
+let osc1 = null;
+let osc2 = null;
+let gain = null;
+let soundOn = false;
+
+const palette = [
+  '#ff6b9d', '#00d4ff', '#c084fc', '#fbbf24', '#34d399',
+  '#fb923c', '#f472b6', '#a78bfa', '#facc15', '#2dd4bf'
+];
+
+function resize() {
+  width = canvas.width = canvas.offsetWidth * devicePixelRatio;
+  height = canvas.height = canvas.offsetHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  width /= devicePixelRatio;
+  height /= devicePixelRatio;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function setControls() {
+  controlsDiv.innerHTML = '';
+  waveGraphs.classList.remove('visible');
+  
+  if (mode === 'sand') {
+    hint.textContent = 'Click and drag to pour glitter sand. Use tools to stamp shapes or carve paths.';
+    controlsDiv.innerHTML = `
+      <button id="pourBtn" class="active">Pour Sand</button>
+      <button id="stampBtn">Stamp Star</button>
+      <label>Size <input type="range" id="size" min="1" max="8" value="3"></label>
+      <label>Cling <input type="range" id="cling" min="0" max="1" step="0.05" value="0.7"></label>
+      <button id="guideBtn" class="active">Guide Lines: On</button>
+      <button id="clearBtn">Clear</button>
+      <div class="palette" id="palette"></div>
+    `;
+    const pal = document.getElementById('palette');
+    palette.forEach(c => {
+      const s = document.createElement('div');
+      s.className = 'swatch' + (c === color ? ' active' : '');
+      s.style.background = c;
+      s.onclick = () => {
+        color = c;
+        document.querySelectorAll('.swatch').forEach(el => el.classList.remove('active'));
+        s.classList.add('active');
+      };
+      pal.appendChild(s);
+    });
+    document.getElementById('pourBtn').onclick = () => { pouring = true; updateToolBtns(); };
+    document.getElementById('stampBtn').onclick = () => { pouring = false; stampStar(); };
+    document.getElementById('size').oninput = e => size = +e.target.value;
+    document.getElementById('cling').oninput = e => cling = +e.target.value;
+    document.getElementById('guideBtn').onclick = function() {
+      guideLines = !guideLines;
+      this.textContent = 'Guide Lines: ' + (guideLines ? 'On' : 'Off');
+      this.classList.toggle('active', guideLines);
+    };
+    document.getElementById('clearBtn').onclick = () => particles = [];
+  }
+  else if (mode === 'loop') {
+    hint.textContent = 'A gentle, slow-moving particle loop. Sit back and relax.';
+    controlsDiv.innerHTML = `
+      <button id="resetLoop">Reset Loop</button>
+      <label>Speed <input type="range" id="loopSpeed" min="0.2" max="2" step="0.1" value="0.6"></label>
+      <label>Density <input type="range" id="loopDensity" min="50" max="400" value="150"></label>
+    `;
+    document.getElementById('resetLoop').onclick = initLoop;
+    document.getElementById('loopSpeed').oninput = e => loopSpeed = +e.target.value;
+    document.getElementById('loopDensity').oninput = e => { loopDensity = +e.target.value; initLoop(); };
+    initLoop();
+  }
+  else if (mode === 'bubbles') {
+    hint.textContent = 'Click empty space to blow a bubble. Drag bubbles together to merge them.';
+    controlsDiv.innerHTML = `
+      <button id="blowBtn">+ Blow Bubble</button>
+      <button id="jiggleBtn">Jiggle All</button>
+      <button id="popBtn">Pop All</button>
+      <label>Surface Tension <input type="range" id="tension" min="0.2" max="1" step="0.05" value="0.6"></label>
+    `;
+    document.getElementById('blowBtn').onclick = () => blowBubble(width/2, height/2);
+    document.getElementById('jiggleBtn').onclick = jiggleBubbles;
+    document.getElementById('popBtn').onclick = () => bubbles = [];
+    document.getElementById('tension').oninput = e => surfaceTension = +e.target.value;
+  }
+  else if (mode === 'plate') {
+    hint.textContent = 'Adjust Wave N and M to change the vibration pattern and pitch. Drag to stir the grains.';
+    controlsDiv.innerHTML = `
+      <label>Wave N <input type="range" id="wn" min="1" max="12" value="${waveN}"></label>
+      <label>Wave M <input type="range" id="wm" min="1" max="12" value="${waveM}"></label>
+      <button id="scatterBtn">Scatter Sand</button>
+      <button id="freezeBtn">${frozen ? 'Resume' : 'Freeze'}</button>
+      <button id="soundBtn">${soundOn ? 'Sound: On' : 'Sound: Off'}</button>
+    `;
+    document.getElementById('wn').oninput = e => { waveN = +e.target.value; updateSound(); };
+    document.getElementById('wm').oninput = e => { waveM = +e.target.value; updateSound(); };
+    document.getElementById('scatterBtn').onclick = scatterPlate;
+    document.getElementById('freezeBtn').onclick = function() {
+      frozen = !frozen;
+      this.textContent = frozen ? 'Resume' : 'Freeze';
+    };
+    document.getElementById('soundBtn').onclick = function() {
+      soundOn = !soundOn;
+      this.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
+      this.classList.toggle('active', soundOn);
+      if (soundOn) startSound(); else stopSound();
+    };
+    scatterPlate();
+    if (soundOn) startSound();
+  }
+  else if (mode === 'waves') {
+    hint.textContent = 'Left: simple 1D waves with still nodes. Right: where those waves cross to carve 2D patterns.';
+    waveGraphs.classList.add('visible');
+    controlsDiv.innerHTML = `
+      <label>Horizontal Waves <input type="range" id="hw" min="1" max="8" value="2"></label>
+      <label>Vertical Waves <input type="range" id="vw" min="1" max="8" value="3"></label>
+      <button id="resetWaves">Reset Sand</button>
+    `;
+    document.getElementById('hw').oninput = e => { hWaves = +e.target.value; resetWaveParticles(); };
+    document.getElementById('vw').oninput = e => { vWaves = +e.target.value; resetWaveParticles(); };
+    document.getElementById('resetWaves').onclick = resetWaveParticles;
+    resetWaveParticles();
+  }
+}
+
+function updateToolBtns() {
+  document.getElementById('pourBtn')?.classList.toggle('active', pouring);
+  document.getElementById('stampBtn')?.classList.toggle('active', !pouring);
+}
+
+// ========== SAND MODE ==========
+function pourSand() {
+  if (!mouse.down || !pouring) return;
+  for (let i = 0; i < 4; i++) {
+    particles.push({
+      x: mouse.x + (Math.random()-0.5)*12,
+      y: mouse.y + (Math.random()-0.5)*12,
+      vx: (Math.random()-0.5)*1.5,
+      vy: Math.random()*2 + 0.5,
+      color,
+      r: size * (0.6 + Math.random()*0.8),
+      stuck: false
+    });
+  }
+}
+
+function stampStar() {
+  const cx = mouse.x || width/2;
+  const cy = mouse.y || height/2;
+  const points = 5;
+  const outer = 40;
+  const inner = 18;
+  for (let i = 0; i < 200; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.random() < 0.5 ? outer * Math.random() : inner * Math.random();
+    const px = cx + Math.cos(a) * r;
+    const py = cy + Math.sin(a) * r;
+    // rough star fill
+    if (Math.abs(Math.sin(a * points)) > 0.4 || r < inner) {
+      particles.push({
+        x: px, y: py, vx: 0, vy: 0,
+        color, r: size * 0.8, stuck: true
+      });
+    }
+  }
+}
+
+function updateSand() {
+  pourSand();
+  const g = 0.15;
+  for (let p of particles) {
+    if (p.stuck) continue;
+    p.vy += g;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.98;
+    p.vy *= 0.98;
+    
+    // floor
+    if (p.y > height - 10) {
+      p.y = height - 10;
+      p.vy *= -0.3;
+      p.vx *= 0.6;
+      if (Math.random() < cling) p.stuck = true;
+    }
+    // walls
+    if (p.x < 5 || p.x > width - 5) {
+      p.vx *= -0.5;
+      p.x = Math.max(5, Math.min(width-5, p.x));
+    }
+  }
+  // keep particle count reasonable
+  if (particles.length > 8000) particles.splice(0, 1000);
+}
+
+function drawSand() {
+  ctx.fillStyle = '#05070a';
+  ctx.fillRect(0, 0, width, height);
+  
+  if (guideLines) {
+    ctx.strokeStyle = 'rgba(0,212,255,0.15)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < width; x += 50) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+    }
+    for (let y = 0; y < height; y += 50) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+    }
+    // circles
+    ctx.beginPath();
+    for (let r = 50; r < Math.max(width,height); r += 50) {
+      ctx.arc(width/2, height/2, r, 0, Math.PI*2);
+    }
+    ctx.stroke();
+  }
+  
+  for (let p of particles) {
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+    // sparkle
+    if (Math.random() < 0.02) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(p.x-1, p.y-1, 2, 2);
+    }
+  }
+}
+
+// ========== BUBBLES ==========
+function blowBubble(x, y) {
+  const r = 25 + Math.random() * 40;
+  bubbles.push({
+    x, y, r,
+    vx: (Math.random()-0.5)*2,
+    vy: (Math.random()-0.5)*2,
+    color: `hsl(${Math.random()*360}, 60%, 50%)`
+  });
+}
+
+function jiggleBubbles() {
+  for (let b of bubbles) {
+    b.vx += (Math.random()-0.5)*4;
+    b.vy += (Math.random()-0.5)*4;
+  }
+}
+
+function updateBubbles() {
+  for (let i = 0; i < bubbles.length; i++) {
+    const b = bubbles[i];
+    b.x += b.vx;
+    b.y += b.vy;
+    b.vx *= 0.98;
+    b.vy *= 0.98;
+    
+    // bounce walls
+    if (b.x - b.r < 0 || b.x + b.r > width) b.vx *= -0.8;
+    if (b.y - b.r < 0 || b.y + b.r > height) b.vy *= -0.8;
+    b.x = Math.max(b.r, Math.min(width - b.r, b.x));
+    b.y = Math.max(b.r, Math.min(height - b.r, b.y));
+    
+    // merge
+    for (let j = i+1; j < bubbles.length; j++) {
+      const o = bubbles[j];
+      const dx = o.x - b.x;
+      const dy = o.y - b.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < (b.r + o.r) * surfaceTension) {
+        // merge into larger
+        const newR = Math.sqrt(b.r*b.r + o.r*o.r);
+        b.x = (b.x * b.r + o.x * o.r) / (b.r + o.r);
+        b.y = (b.y * b.r + o.y * o.r) / (b.r + o.r);
+        b.r = newR;
+        b.vx = (b.vx + o.vx) / 2;
+        b.vy = (b.vy + o.vy) / 2;
+        bubbles.splice(j, 1);
+        j--;
+      }
+    }
+  }
+}
+
+function drawBubbles() {
+  ctx.fillStyle = '#05070a';
+  ctx.fillRect(0, 0, width, height);
+  
+  for (let b of bubbles) {
+    const g = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.3, 0, b.x, b.y, b.r);
+    g.addColorStop(0, 'rgba(255,255,255,0.6)');
+    g.addColorStop(0.3, b.color + '88');
+    g.addColorStop(1, b.color + '22');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+// ========== SAND PLATE (Chladni-like) ==========
+function scatterPlate() {
+  particles = [];
+  for (let i = 0; i < 2500; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      baseX: 0, baseY: 0,
+      color: '#facc15'
+    });
+  }
+}
+
+function updatePlate() {
+  if (frozen) return;
+  const t = Date.now() * 0.001;
+  for (let p of particles) {
+    if (!p.baseX) {
+      p.baseX = p.x;
+      p.baseY = p.y;
+    }
+    // simple standing wave pattern
+    const amp = 18;
+    const nx = waveN * Math.PI * p.baseX / width;
+    const my = waveM * Math.PI * p.baseY / height;
+    const wave = Math.sin(nx) * Math.sin(my) * Math.sin(t * 3);
+    // push particles away from antinodes toward nodes
+    const push = Math.abs(wave) * 2;
+    p.x = p.baseX + (Math.random()-0.5) * 2 - wave * amp * 0.3;
+    p.y = p.baseY + (Math.random()-0.5) * 2 - wave * amp * 0.3;
+    
+    // mouse stir
+    if (mouse.down) {
+      const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+      if (d < 60) {
+        const f = (60 - d) / 60;
+        p.x += (p.x - mouse.x) * f * 0.3;
+        p.y += (p.y - mouse.y) * f * 0.3;
+        p.baseX = p.x;
+        p.baseY = p.y;
+      }
+    }
+  }
+}
+
+function drawPlate() {
+  ctx.fillStyle = '#05070a';
+  ctx.fillRect(0, 0, width, height);
+  for (let p of particles) {
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(p.x, p.y, 1.8, 1.8);
+  }
+  // cursor cross
+  if (mouse.x) {
+    ctx.strokeStyle = '#00d4ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(mouse.x-10, mouse.y); ctx.lineTo(mouse.x+10, mouse.y);
+    ctx.moveTo(mouse.x, mouse.y-10); ctx.lineTo(mouse.x, mouse.y+10);
+    ctx.stroke();
+  }
+}
+
+// ========== 1D TO 2D WAVES ==========
+let waveParticles = [];
+
+function resetWaveParticles() {
+  waveParticles = [];
+  const cols = 40;
+  const rows = 30;
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      waveParticles.push({
+        gx: i / cols,
+        gy: j / rows,
+        color: '#67e8f9'
+      });
+    }
+  }
+}
+
+function drawWaves() {
+  ctx.fillStyle = '#05070a';
+  ctx.fillRect(0, 0, width, height);
+  
+  const t = Date.now() * 0.002;
+  const leftW = width * 0.45;
+  
+  // draw 2D pattern on right
+  for (let p of waveParticles) {
+    const hx = Math.sin(p.gx * Math.PI * hWaves + t);
+    const vy = Math.sin(p.gy * Math.PI * vWaves + t * 0.7);
+    const amp = (hx + vy) * 0.5;
+    const x = leftW + 40 + p.gx * (width - leftW - 60);
+    const y = 40 + p.gy * (height - 80);
+    const a = Math.abs(amp);
+    ctx.fillStyle = `rgba(103,232,249,${0.2 + a * 0.8})`;
+    ctx.fillRect(x, y, 3, 3);
+  }
+  
+  // draw wave graphs on left (mini canvases handled separately)
+  drawMiniWaves();
+}
+
+function drawMiniWaves() {
+  const hCanvas = document.getElementById('hWave');
+  const vCanvas = document.getElementById('vWave');
+  if (!hCanvas) return;
+  const hctx = hCanvas.getContext('2d');
+  const vctx = vCanvas.getContext('2d');
+  const t = Date.now() * 0.002;
+  
+  function drawWave(c, waves, label) {
+    c.clearRect(0, 0, 256, 70);
+    c.strokeStyle = '#67e8f9';
+    c.lineWidth = 2;
+    c.beginPath();
+    for (let x = 0; x < 256; x++) {
+      const y = 35 + Math.sin((x / 256) * Math.PI * waves + t) * 22;
+      if (x === 0) c.moveTo(x, y); else c.lineTo(x, y);
+    }
+    c.stroke();
+    // nodes
+    c.fillStyle = '#ff6b9d';
+    for (let i = 0; i <= waves; i++) {
+      const x = (i / waves) * 256;
+      c.beginPath();
+      c.arc(x, 35, 4, 0, Math.PI*2);
+      c.fill();
+    }
+  }
+  drawWave(hctx, hWaves);
+  drawWave(vctx, vWaves);
+}
+
+// ========== RELAXING LOOP ==========
+function initLoop() {
+  loopParticles = [];
+  for (let i = 0; i < loopDensity; i++) {
+    loopParticles.push({
+      angle: Math.random() * Math.PI * 2,
+      radius: 40 + Math.random() * Math.min(width, height) * 0.35,
+      speed: (0.2 + Math.random() * 0.6) * (Math.random() < 0.5 ? 1 : -1),
+      size: 1.5 + Math.random() * 3,
+      hue: Math.random() * 60 + 180,
+      offset: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function updateLoop() {
+  for (let p of loopParticles) {
+    p.angle += p.speed * loopSpeed * 0.01;
+  }
+}
+
+function drawLoop() {
+  ctx.fillStyle = '#05070a';
+  ctx.fillRect(0, 0, width, height);
+  
+  const cx = width / 2;
+  const cy = height / 2;
+  const t = Date.now() * 0.001;
+  
+  for (let p of loopParticles) {
+    const r = p.radius + Math.sin(t * 0.5 + p.offset) * 20;
+    const x = cx + Math.cos(p.angle) * r;
+    const y = cy + Math.sin(p.angle) * r * 0.7;
+    const alpha = 0.4 + Math.sin(t + p.offset) * 0.3;
+    ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ========== AUDIO (Sound Plate) ==========
+function startSound() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  stopSound();
+  
+  gain = audioCtx.createGain();
+  gain.gain.value = 0.08;
+  gain.connect(audioCtx.destination);
+  
+  osc1 = audioCtx.createOscillator();
+  osc1.type = 'sine';
+  osc1.connect(gain);
+  
+  osc2 = audioCtx.createOscillator();
+  osc2.type = 'triangle';
+  osc2.connect(gain);
+  
+  updateSound();
+  osc1.start();
+  osc2.start();
+}
+
+function stopSound() {
+  if (osc1) {
+    try { osc1.stop(); } catch(e) {}
+    osc1.disconnect();
+    osc1 = null;
+  }
+  if (osc2) {
+    try { osc2.stop(); } catch(e) {}
+    osc2.disconnect();
+    osc2 = null;
+  }
+  if (gain) {
+    gain.disconnect();
+    gain = null;
+  }
+}
+
+function updateSound() {
+  if (!osc1 || !osc2 || !audioCtx) return;
+  const freq1 = 80 + waveN * 18;
+  const freq2 = 120 + waveM * 22;
+  osc1.frequency.setTargetAtTime(freq1, audioCtx.currentTime, 0.1);
+  osc2.frequency.setTargetAtTime(freq2, audioCtx.currentTime, 0.1);
+}
+
+// ========== MAIN LOOP ==========
+function loop() {
+  if (mode === 'sand') {
+    updateSand();
+    drawSand();
+  } else if (mode === 'loop') {
+    updateLoop();
+    drawLoop();
+  } else if (mode === 'bubbles') {
+    updateBubbles();
+    drawBubbles();
+  } else if (mode === 'plate') {
+    updatePlate();
+    drawPlate();
+  } else if (mode === 'waves') {
+    drawWaves();
+  }
+  requestAnimationFrame(loop);
+}
+
+// Mouse / Touch
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top
+  };
+}
+
+canvas.addEventListener('mousedown', e => {
+  mouse.down = true;
+  const p = getPos(e);
+  mouse.x = p.x; mouse.y = p.y;
+  if (mode === 'bubbles') blowBubble(p.x, p.y);
+  if (mode === 'sand' && !pouring) stampStar();
+});
+canvas.addEventListener('mousemove', e => {
+  const p = getPos(e);
+  mouse.x = p.x; mouse.y = p.y;
+});
+window.addEventListener('mouseup', () => mouse.down = false);
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  mouse.down = true;
+  const p = getPos(e);
+  mouse.x = p.x; mouse.y = p.y;
+  if (mode === 'bubbles') blowBubble(p.x, p.y);
+}, {passive: false});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const p = getPos(e);
+  mouse.x = p.x; mouse.y = p.y;
+}, {passive: false});
+window.addEventListener('touchend', () => mouse.down = false);
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const newMode = tab.dataset.mode;
+    if (mode === 'plate' && newMode !== 'plate') {
+      stopSound();
+      soundOn = false;
+    }
+    mode = newMode;
+    particles = [];
+    bubbles = [];
+    setControls();
+  });
+});
+
+setControls();
+loop();
+</script>
+</body>
+</html>
