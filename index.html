@@ -149,6 +149,34 @@
   .wave-graphs.visible { display: block; }
   .wave-graphs canvas { height: 80px; margin-bottom: 8px; background: transparent; }
   .wave-graphs h3 { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+  .controls.sand { gap: 10px; }
+  .controls.sand input[type="range"] { width: 70px; }
+  .controls.sand button { padding: 6px 11px; }
+  .controls.sand label { gap: 6px; }
+  .controls.sand .palette { gap: 5px; }
+  .controls.sand .swatch { width: 20px; height: 20px; }
+  .controls select {
+    padding: 6px 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .mold-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .controls canvas#moldIcon {
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .hint { transition: opacity 0.6s; }
+  .hint.faded { opacity: 0.25; }
 </style>
 </head>
 <body>
@@ -175,7 +203,7 @@
     <h3>Vertical Wave</h3>
     <canvas id="vWave" width="256" height="70"></canvas>
   </div>
-  <div class="hint" id="hint">Click and drag to pour glitter sand. Choose colors from the palette.</div>
+  <div class="hint" id="hint">Pour: click and drag to pour glitter sand.</div>
 </div>
 
 <script>
@@ -227,19 +255,25 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
+if (window.ResizeObserver) new ResizeObserver(resize).observe(document.getElementById('canvas-container'));
 
 function setControls() {
   controlsDiv.innerHTML = '';
   waveGraphs.classList.remove('visible');
+  hint.classList.remove('faded');
+  controlsDiv.classList.toggle('sand', mode === 'sand');
   
   if (mode === 'sand') {
-    hint.textContent = 'Click and drag to pour glitter sand. Use tools to stamp shapes or carve paths.';
     controlsDiv.innerHTML = `
-      <button id="pourBtn" class="active">Pour Sand</button>
-      <button id="stampBtn">Stamp Star</button>
-      <label>Size <input type="range" id="size" min="1" max="8" value="3"></label>
-      <label>Cling <input type="range" id="cling" min="0" max="1" step="0.05" value="0.7"></label>
-      <button id="guideBtn" class="active">Guide Lines: On</button>
+      <button id="pourBtn" data-tool="pour">Pour</button>
+      <button id="stampBtn" data-tool="stamp">Stamp</button>
+      <button id="carveBtn" data-tool="carve">Carve</button>
+      <button id="ledgeBtn" data-tool="ledge">Ledge</button>
+      <span class="mold-box"><canvas id="moldIcon" width="44" height="44"></canvas><select id="mold" title="Mold"></select></span>
+      <label>Mold size <input type="range" id="moldSize" min="25" max="140" value="${moldSize}"></label>
+      <label>Size <input type="range" id="size" min="1" max="8" value="${size}"></label>
+      <label>Cling <input type="range" id="cling" min="0" max="1" step="0.05" value="${cling}"></label>
+      <button id="guideBtn" class="${guideLines ? 'active' : ''}">Guide Lines: ${guideLines ? 'On' : 'Off'}</button>
       <button id="clearBtn">Clear</button>
       <div class="palette" id="palette"></div>
     `;
@@ -252,11 +286,21 @@ function setControls() {
         color = c;
         document.querySelectorAll('.swatch').forEach(el => el.classList.remove('active'));
         s.classList.add('active');
+        drawMoldIcon();
       };
       pal.appendChild(s);
     });
-    document.getElementById('pourBtn').onclick = () => { pouring = true; updateToolBtns(); };
-    document.getElementById('stampBtn').onclick = () => { pouring = false; stampStar(); };
+    const sel = document.getElementById('mold');
+    Object.keys(MOLDS).forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = MOLDS[k].label;
+      if (k === moldName) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.onchange = () => { moldName = sel.value; drawMoldIcon(); setTool('stamp'); };
+    document.getElementById('moldIcon').onclick = () => setTool('stamp');
+    document.querySelectorAll('[data-tool]').forEach(btn => btn.onclick = () => setTool(btn.dataset.tool));
+    document.getElementById('moldSize').oninput = e => { moldSize = +e.target.value; setTool('stamp'); };
     document.getElementById('size').oninput = e => size = +e.target.value;
     document.getElementById('cling').oninput = e => cling = +e.target.value;
     document.getElementById('guideBtn').onclick = function() {
@@ -264,7 +308,9 @@ function setControls() {
       this.textContent = 'Guide Lines: ' + (guideLines ? 'On' : 'Off');
       this.classList.toggle('active', guideLines);
     };
-    document.getElementById('clearBtn').onclick = () => particles = [];
+    document.getElementById('clearBtn').onclick = clearSand;
+    drawMoldIcon();
+    setTool(tool);
   }
   else if (mode === 'loop') {
     hint.textContent = 'A gentle, slow-moving particle loop. Sit back and relax.';
@@ -331,80 +377,474 @@ function setControls() {
   }
 }
 
-function updateToolBtns() {
-  document.getElementById('pourBtn')?.classList.toggle('active', pouring);
-  document.getElementById('stampBtn')?.classList.toggle('active', !pouring);
+const TOOL_HINTS = {
+  pour: 'Pour: click and drag to pour glitter sand. Cling sets how steep it piles.',
+  stamp: 'Stamp: pick a mold, then click to stamp it in the chosen color.',
+  carve: 'Carve: drag through sand to dig it out. Size sets the brush.',
+  ledge: 'Ledge: drag to draw a ledge. Sand lands and piles on it.'
+};
+
+function setTool(t) {
+  tool = t;
+  pouring = t === 'pour';
+  document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+  if (mode === 'sand') {
+    hint.textContent = TOOL_HINTS[t];
+    hint.classList.remove('faded');
+  }
 }
 
 // ========== SAND MODE ==========
+const CELL = 3;               // grain size in px (one grid cell)
+const MAX_FLYING = 5000;      // cap on grains in the air
+const EMPTY = 0, LOOSE = 1, LEDGE = 2, STAMP = 3;
+let tool = 'pour';
+let moldName = 'star';
+let moldSize = 60;
+let gCols = 0, gRows = 0;
+let gType = null, gColor = null, gSticky = null, gPhase = null;
+let flying = [];
+let sandFrame = 0;
+let lastPt = null;
+const sandBuf = document.createElement('canvas');
+const sandBufCtx = sandBuf.getContext('2d');
+let sandImg = null, sandPix = null;
+const rgbCache = {};
+
+function hexRgb(h) {
+  if (!rgbCache[h]) {
+    const n = parseInt(h.slice(1), 16);
+    rgbCache[h] = [n >> 16 & 255, n >> 8 & 255, n & 255];
+  }
+  return rgbCache[h];
+}
+
+// Pack a grain color (ABGR for ImageData) with a little natural variation
+function grainColor(hex, kind) {
+  let [r, g, b] = hexRgb(hex);
+  let k = 0.8 + Math.random() * 0.3;
+  if (Math.random() < 0.07) k = 1.2;
+  if (kind === 'inner') k *= 0.88;
+  r *= k; g *= k; b *= k;
+  if (kind === 'edge') {
+    const w = 0.38 + Math.random() * 0.12;
+    r = r + (255 - r) * w; g = g + (255 - g) * w; b = b + (255 - b) * w;
+  }
+  r = Math.min(255, r | 0); g = Math.min(255, g | 0); b = Math.min(255, b | 0);
+  return ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0;
+}
+
+function initSandGrid() {
+  const nc = Math.max(1, Math.floor(width / CELL));
+  const nr = Math.max(1, Math.floor(height / CELL));
+  if (gType && nc === gCols && nr === gRows) return;
+  const t = new Uint8Array(nc * nr), c = new Uint32Array(nc * nr);
+  const s = new Uint8Array(nc * nr), ph = new Uint16Array(nc * nr);
+  for (let i = 0; i < ph.length; i++) ph[i] = (Math.random() * 1024) | 0;
+  if (gType) {
+    const dy = nr - gRows; // keep the floor where it is
+    for (let y = 0; y < gRows; y++) {
+      const ny = y + dy;
+      if (ny < 0 || ny >= nr) continue;
+      for (let x = 0; x < Math.min(gCols, nc); x++) {
+        const o = y * gCols + x, n = ny * nc + x;
+        t[n] = gType[o]; c[n] = gColor[o]; s[n] = gSticky[o];
+      }
+    }
+    for (const p of flying) p.y += dy * CELL;
+  }
+  gType = t; gColor = c; gSticky = s; gPhase = ph; gCols = nc; gRows = nr;
+  sandBuf.width = nc; sandBuf.height = nr;
+  sandImg = sandBufCtx.createImageData(nc, nr);
+  sandPix = new Uint32Array(sandImg.data.buffer);
+}
+
+function clearSand() {
+  flying = [];
+  if (gType) { gType.fill(0); }
+}
+
+// ---------- Molds ----------
+function poly(g, pts) {
+  g.beginPath();
+  pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+  g.closePath();
+  g.fill();
+}
+function disc(g, x, y, r) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+function cut(g, fn) { g.globalCompositeOperation = 'destination-out'; fn(); g.globalCompositeOperation = 'source-over'; }
+function starPts(n, ro, ri, dy) {
+  const pts = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / n;
+    const r = i % 2 ? ri : ro;
+    pts.push([Math.cos(a) * r, Math.sin(a) * r + (dy || 0)]);
+  }
+  return pts;
+}
+function ngon(n, r, a0) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = a0 + i * Math.PI * 2 / n;
+    pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+  }
+  return pts;
+}
+
+// Each mold draws itself in a -1..1 box (y down)
+const MOLDS = {
+  star: { label: 'Star', draw: g => poly(g, starPts(5, 1, 0.43, 0.1)) },
+  heart: { label: 'Heart', draw: g => {
+    const pts = [];
+    for (let i = 0; i < 80; i++) {
+      const t = i / 80 * Math.PI * 2;
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      pts.push([x / 16.5, y / 16.5 - 0.15]);
+    }
+    poly(g, pts);
+  } },
+  circle: { label: 'Circle', draw: g => disc(g, 0, 0, 0.95) },
+  square: { label: 'Square', draw: g => { g.beginPath(); g.roundRect(-0.85, -0.85, 1.7, 1.7, 0.1); g.fill(); } },
+  triangle: { label: 'Triangle', draw: g => poly(g, [[0, -0.92], [0.98, 0.8], [-0.98, 0.8]]) },
+  moon: { label: 'Moon', draw: g => {
+    disc(g, -0.05, 0, 0.95);
+    cut(g, () => disc(g, 0.4, -0.25, 0.78));
+  } },
+  flower: { label: 'Flower', draw: g => {
+    for (let k = 0; k < 6; k++) {
+      const a = -Math.PI / 2 + k * Math.PI / 3;
+      disc(g, Math.cos(a) * 0.55, Math.sin(a) * 0.55, 0.4);
+    }
+    cut(g, () => disc(g, 0, 0, 0.33));
+    disc(g, 0, 0, 0.22);
+  } },
+  diamond: { label: 'Diamond', draw: g => poly(g, [[0, -1], [0.75, 0], [0, 1], [-0.75, 0]]) },
+  hexagon: { label: 'Hexagon', draw: g => poly(g, ngon(6, 0.97, -Math.PI / 2)) },
+  ring: { label: 'Ring', draw: g => {
+    disc(g, 0, 0, 0.95);
+    cut(g, () => disc(g, 0, 0, 0.55));
+  } },
+  plus: { label: 'Plus', draw: g => {
+    g.fillRect(-0.3, -0.92, 0.6, 1.84);
+    g.fillRect(-0.92, -0.3, 1.84, 0.6);
+  } },
+  arrow: { label: 'Arrow', draw: g => {
+    g.fillRect(-0.95, -0.2, 1.1, 0.4);
+    poly(g, [[0.1, -0.72], [0.97, 0], [0.1, 0.72]]);
+  } },
+  bolt: { label: 'Lightning', draw: g => poly(g, [[0.2, -1], [-0.62, 0.14], [-0.06, 0.14], [-0.3, 1], [0.64, -0.2], [0.08, -0.2], [0.42, -1]]) },
+  cloud: { label: 'Cloud', draw: g => {
+    disc(g, -0.5, 0.18, 0.36);
+    disc(g, -0.05, -0.12, 0.5);
+    disc(g, 0.47, 0.08, 0.4);
+    g.beginPath(); g.roundRect(-0.86, 0.12, 1.72, 0.48, 0.24); g.fill();
+  } },
+  drop: { label: 'Drop', draw: g => {
+    g.beginPath();
+    g.moveTo(0, -1);
+    g.bezierCurveTo(0.25, -0.55, 0.68, -0.15, 0.68, 0.3);
+    g.arc(0, 0.3, 0.68, 0, Math.PI);
+    g.bezierCurveTo(-0.68, -0.15, -0.25, -0.55, 0, -1);
+    g.fill();
+  } },
+  leaf: { label: 'Leaf', draw: g => {
+    g.beginPath();
+    g.moveTo(-0.7, 0.7);
+    g.quadraticCurveTo(-0.85, -0.85, 0.92, -0.92);
+    g.quadraticCurveTo(0.85, 0.85, -0.7, 0.7);
+    g.fill();
+    cut(g, () => {
+      g.lineWidth = 0.09; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-0.5, 0.5); g.lineTo(0.7, -0.7); g.stroke();
+    });
+    g.lineWidth = 0.12; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(-0.68, 0.68); g.lineTo(-0.95, 0.95); g.stroke();
+  } },
+  spiral: { label: 'Swirl', draw: g => {
+    g.lineWidth = 0.17; g.lineCap = 'round';
+    g.beginPath();
+    for (let i = 0; i <= 240; i++) {
+      const t = i / 240;
+      const a = t * 2.5 * Math.PI * 2;
+      const r = 0.05 + t * 0.82;
+      const x = Math.cos(a) * r, y = Math.sin(a) * r;
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+  } },
+  house: { label: 'House', draw: g => {
+    poly(g, [[-0.97, 0], [0, -0.88], [0.97, 0]]);
+    g.fillRect(-0.72, -0.1, 1.44, 1.02);
+    g.fillRect(0.38, -0.85, 0.22, 0.5);
+    cut(g, () => {
+      g.fillRect(-0.16, 0.38, 0.32, 0.6);
+      g.fillRect(-0.55, 0.1, 0.26, 0.24);
+      g.fillRect(0.29, 0.1, 0.26, 0.24);
+    });
+  } },
+  fish: { label: 'Fish', draw: g => {
+    g.beginPath(); g.ellipse(-0.15, 0, 0.66, 0.44, 0, 0, Math.PI * 2); g.fill();
+    poly(g, [[0.3, 0], [0.97, -0.52], [0.85, 0], [0.97, 0.52]]);
+    cut(g, () => {
+      disc(g, -0.5, -0.1, 0.09);
+      g.lineWidth = 0.07;
+      g.beginPath(); g.arc(-0.65, 0, 0.5, -0.5, 0.5); g.stroke();
+    });
+  } },
+  butterfly: { label: 'Butterfly', draw: g => {
+    g.beginPath(); g.ellipse(-0.47, -0.32, 0.47, 0.34, 0.6, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(0.47, -0.32, 0.47, 0.34, -0.6, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(-0.36, 0.42, 0.34, 0.25, -0.6, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(0.36, 0.42, 0.34, 0.25, 0.6, 0, Math.PI * 2); g.fill();
+    cut(g, () => g.fillRect(-0.15, -1, 0.3, 2));
+    g.beginPath(); g.ellipse(0, 0.02, 0.08, 0.66, 0, 0, Math.PI * 2); g.fill();
+    g.lineWidth = 0.08; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(-0.03, -0.6); g.lineTo(-0.3, -0.95); g.moveTo(0.03, -0.6); g.lineTo(0.3, -0.95); g.stroke();
+  } },
+};
+
+const moldCanvas = document.createElement('canvas');
+const moldCtx = moldCanvas.getContext('2d', { willReadFrequently: true });
+const maskCache = {};
+
+function moldMask(name, n) {
+  const key = name + ':' + n;
+  if (maskCache[key]) return maskCache[key];
+  moldCanvas.width = n; moldCanvas.height = n;
+  const g = moldCtx;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, n, n);
+  g.globalCompositeOperation = 'source-over';
+  const s = n / 2;
+  g.setTransform(s, 0, 0, s, s, s);
+  g.fillStyle = '#fff'; g.strokeStyle = '#fff';
+  MOLDS[name].draw(g);
+  const d = g.getImageData(0, 0, n, n).data;
+  const m = new Uint8Array(n * n);
+  for (let i = 0; i < n * n; i++) m[i] = d[i * 4 + 3] > 120 ? 1 : 0;
+  maskCache[key] = m;
+  return m;
+}
+
+function drawMoldIcon() {
+  const ic = document.getElementById('moldIcon');
+  if (!ic) return;
+  const g = ic.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, ic.width, ic.height);
+  const s = ic.width / 2;
+  g.setTransform(s * 0.9, 0, 0, s * 0.9, s, s);
+  g.fillStyle = color; g.strokeStyle = color;
+  g.globalCompositeOperation = 'source-over';
+  MOLDS[moldName].draw(g);
+  g.globalCompositeOperation = 'source-over';
+}
+
+function stampMold(px, py) {
+  initSandGrid();
+  const n = Math.max(8, Math.round(2 * moldSize / CELL));
+  const m = moldMask(moldName, n);
+  const x0 = Math.round(px / CELL - n / 2), y0 = Math.round(py / CELL - n / 2);
+  for (let y = 0; y < n; y++) {
+    const gy = y0 + y;
+    if (gy < 0 || gy >= gRows) continue;
+    for (let x = 0; x < n; x++) {
+      if (!m[y * n + x]) continue;
+      const gx = x0 + x;
+      if (gx < 0 || gx >= gCols) continue;
+      const i = gy * gCols + gx;
+      if (gType[i] === LEDGE) continue;
+      const edge = x === 0 || y === 0 || x === n - 1 || y === n - 1 ||
+        !m[(y - 1) * n + x] || !m[(y + 1) * n + x] || !m[y * n + x - 1] || !m[y * n + x + 1];
+      gType[i] = STAMP;
+      gColor[i] = grainColor(color, edge ? 'edge' : 'inner');
+    }
+  }
+}
+
+// ---------- Pour / carve / ledge ----------
 function pourSand() {
-  if (!mouse.down || !pouring) return;
-  for (let i = 0; i < 4; i++) {
-    particles.push({
-      x: mouse.x + (Math.random()-0.5)*12,
-      y: mouse.y + (Math.random()-0.5)*12,
-      vx: (Math.random()-0.5)*1.5,
-      vy: Math.random()*2 + 0.5,
-      color,
-      r: size * (0.6 + Math.random()*0.8),
-      stuck: false
+  if (!mouse.down || tool !== 'pour') return;
+  const spread = 4 + size * 3;
+  const n = 3 + Math.round(size * 1.5);
+  for (let k = 0; k < n && flying.length < MAX_FLYING; k++) {
+    flying.push({
+      x: mouse.x + (Math.random() - 0.5) * spread,
+      y: mouse.y + (Math.random() - 0.5) * spread * 0.5,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: Math.random() * 1.5 + 0.5,
+      c: grainColor(color)
     });
   }
 }
 
-function stampStar() {
-  const cx = mouse.x || width/2;
-  const cy = mouse.y || height/2;
-  const points = 5;
-  const outer = 40;
-  const inner = 18;
-  for (let i = 0; i < 200; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = Math.random() < 0.5 ? outer * Math.random() : inner * Math.random();
-    const px = cx + Math.cos(a) * r;
-    const py = cy + Math.sin(a) * r;
-    // rough star fill
-    if (Math.abs(Math.sin(a * points)) > 0.4 || r < inner) {
-      particles.push({
-        x: px, y: py, vx: 0, vy: 0,
-        color, r: size * 0.8, stuck: true
-      });
+function eachOnSegment(a, b, stepLen, fn) {
+  const d = Math.hypot(b.x - a.x, b.y - a.y);
+  const steps = Math.max(1, Math.ceil(d / stepLen));
+  for (let s = 0; s <= steps; s++) {
+    const t = s / steps;
+    fn(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  }
+}
+
+function carveAt(px, py) {
+  const r = (6 + size * 4) / CELL;
+  const cx = px / CELL, cy = py / CELL;
+  for (let gy = Math.floor(cy - r); gy <= Math.ceil(cy + r); gy++) {
+    if (gy < 0 || gy >= gRows) continue;
+    for (let gx = Math.floor(cx - r); gx <= Math.ceil(cx + r); gx++) {
+      if (gx < 0 || gx >= gCols) continue;
+      const dx = gx + 0.5 - cx, dy = gy + 0.5 - cy;
+      const d2 = dx * dx + dy * dy;
+      if (d2 > r * r) continue;
+      const i = gy * gCols + gx;
+      const t = gType[i];
+      if (t !== LOOSE && t !== STAMP) continue;
+      gType[i] = EMPTY;
+      // push some grains out to the sides of the brush
+      if (Math.random() < 0.3 && flying.length < MAX_FLYING) {
+        const d = Math.sqrt(d2) || 1;
+        flying.push({
+          x: (gx + 0.5) * CELL, y: (gy + 0.5) * CELL,
+          vx: dx / d * (1.5 + Math.random() * 2),
+          vy: dy / d * (1.5 + Math.random() * 2) - 1.5,
+          c: gColor[i]
+        });
+      }
+    }
+  }
+}
+
+function ledgeAt(px, py) {
+  const w = 1 + Math.floor(size / 3);
+  const gx0 = Math.round(px / CELL - w / 2), gy0 = Math.round(py / CELL - w / 2);
+  for (let gy = gy0; gy < gy0 + w; gy++) {
+    if (gy < 0 || gy >= gRows) continue;
+    for (let gx = gx0; gx < gx0 + w; gx++) {
+      if (gx < 0 || gx >= gCols) continue;
+      const i = gy * gCols + gx;
+      if (gType[i] === LEDGE) continue;
+      gType[i] = LEDGE;
+      const k = 0.88 + Math.random() * 0.14;
+      gColor[i] = ((255 << 24) | ((215 * k) << 16) | ((190 * k) << 8) | (165 * k)) >>> 0;
+    }
+  }
+}
+
+function sandDown(p) {
+  initSandGrid();
+  hint.classList.add('faded');
+  lastPt = { x: p.x, y: p.y };
+  if (tool === 'stamp') stampMold(p.x, p.y);
+  else if (tool === 'carve') carveAt(p.x, p.y);
+  else if (tool === 'ledge') ledgeAt(p.x, p.y);
+}
+
+function sandMove(p) {
+  if (!mouse.down || !lastPt) return;
+  if (tool === 'carve') eachOnSegment(lastPt, p, (6 + size * 4) * 0.5, carveAt);
+  else if (tool === 'ledge') eachOnSegment(lastPt, p, CELL * 0.7, ledgeAt);
+  lastPt = { x: p.x, y: p.y };
+}
+
+// ---------- Physics ----------
+function settleGrain(p) {
+  let cx = Math.min(gCols - 1, Math.max(0, (p.x / CELL) | 0));
+  let cy = Math.min(gRows - 1, Math.floor(p.y / CELL));
+  if (cy < 0) return;
+  // if a settled grain slipped into this spot, sit just above it (never climb far)
+  const lim = cy - 2;
+  while (cy >= 0 && cy >= lim && gType[cy * gCols + cx] !== EMPTY) cy--;
+  if (cy < 0 || cy < lim) return;
+  const i = cy * gCols + cx;
+  gType[i] = LOOSE;
+  gColor[i] = p.c;
+  gSticky[i] = Math.random() < cling ? 1 : 0;
+}
+
+function updateFlying() {
+  const G = 0.25, maxV = 9, W = gCols * CELL - 0.01;
+  const keep = [];
+  for (const p of flying) {
+    p.vy = Math.min(p.vy + G, maxV);
+    p.vx *= 0.985;
+    const steps = Math.max(1, Math.ceil(Math.max(Math.abs(p.vx), Math.abs(p.vy)) / (CELL * 0.8)));
+    let landed = false;
+    for (let s = 0; s < steps; s++) {
+      let nx = p.x + p.vx / steps, ny = p.y + p.vy / steps;
+      if (nx < 0) { nx = 0; p.vx = Math.abs(p.vx) * 0.4; }
+      else if (nx > W) { nx = W; p.vx = -Math.abs(p.vx) * 0.4; }
+      const cx = (nx / CELL) | 0, cy = Math.floor(ny / CELL);
+      if (cy >= gRows) { landed = true; break; }
+      if (cy >= 0 && gType[cy * gCols + cx] !== EMPTY) {
+        const ox = (p.x / CELL) | 0;
+        // side hit while falling: drop straight instead
+        if (cx !== ox && gType[cy * gCols + ox] === EMPTY && p.vy > 0) {
+          p.vx *= -0.3; p.y = ny; continue;
+        }
+        if (p.vy < 0) { p.vy = 0; p.vx *= 0.5; continue; }
+        landed = true; break;
+      }
+      p.x = nx; p.y = ny;
+    }
+    if (landed) settleGrain(p); else keep.push(p);
+  }
+  flying = keep;
+}
+
+// Settled grains: fall if unsupported, slide down diagonally unless they cling
+function updateGrid() {
+  const C = gCols, R = gRows, T = gType, S = gSticky, Col = gColor;
+  const flip = sandFrame & 1;
+  for (let y = R - 2; y >= 0; y--) {
+    const row = y * C, below = row + C;
+    for (let k = 0; k < C; k++) {
+      const x = flip ? k : C - 1 - k;
+      const i = row + x;
+      if (T[i] !== LOOSE) continue;
+      if (T[below + x] === EMPTY) {
+        // long drops become falling grains; one-cell drops stay in the grid
+        if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) {
+          flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i] });
+          T[i] = EMPTY;
+        } else {
+          T[below + x] = LOOSE; Col[below + x] = Col[i]; S[below + x] = S[i]; T[i] = EMPTY;
+        }
+        continue;
+      }
+      const dl = x > 0 ? T[below + x - 1] !== EMPTY : true;
+      const dr = x < C - 1 ? T[below + x + 1] !== EMPTY : true;
+      if (dl && dr) continue;
+      let dir;
+      if (!dl && !dr) dir = Math.random() < 0.5 ? -1 : 1;
+      else dir = dl ? 1 : -1;
+      if (T[i + dir] !== EMPTY) continue;
+      // clingy grains hold on unless the drop on that side is steep
+      if (S[i]) {
+        const two = below + C + x + dir;
+        if (y + 2 >= R || T[two] !== EMPTY) continue;
+      }
+      const j = below + x + dir;
+      T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; T[i] = EMPTY;
     }
   }
 }
 
 function updateSand() {
+  initSandGrid();
+  sandFrame++;
   pourSand();
-  const g = 0.15;
-  for (let p of particles) {
-    if (p.stuck) continue;
-    p.vy += g;
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.98;
-    p.vy *= 0.98;
-    
-    // floor
-    if (p.y > height - 10) {
-      p.y = height - 10;
-      p.vy *= -0.3;
-      p.vx *= 0.6;
-      if (Math.random() < cling) p.stuck = true;
-    }
-    // walls
-    if (p.x < 5 || p.x > width - 5) {
-      p.vx *= -0.5;
-      p.x = Math.max(5, Math.min(width-5, p.x));
-    }
-  }
-  // keep particle count reasonable
-  if (particles.length > 8000) particles.splice(0, 1000);
+  updateFlying();
+  updateGrid();
+  sandFrame++;
+  updateGrid();
 }
 
 function drawSand() {
   ctx.fillStyle = '#05070a';
   ctx.fillRect(0, 0, width, height);
-  
+
   if (guideLines) {
     ctx.strokeStyle = 'rgba(0,212,255,0.15)';
     ctx.lineWidth = 1;
@@ -414,24 +854,46 @@ function drawSand() {
     for (let y = 0; y < height; y += 50) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
     }
-    // circles
     ctx.beginPath();
-    for (let r = 50; r < Math.max(width,height); r += 50) {
-      ctx.arc(width/2, height/2, r, 0, Math.PI*2);
+    for (let r = 50; r < Math.max(width, height); r += 50) {
+      ctx.moveTo(width / 2 + r, height / 2);
+      ctx.arc(width / 2, height / 2, r, 0, Math.PI * 2);
     }
     ctx.stroke();
   }
-  
-  for (let p of particles) {
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-    ctx.fill();
-    // sparkle
-    if (Math.random() < 0.02) {
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(p.x-1, p.y-1, 2, 2);
+  if (!gType) return;
+
+  const T = gType, Col = gColor, P = sandPix, ph = gPhase, f = sandFrame;
+  const glints = [];
+  for (let i = 0, n = T.length; i < n; i++) {
+    const t = T[i];
+    if (t === EMPTY) { P[i] = 0; continue; }
+    P[i] = Col[i];
+    if (t !== LEDGE && glints.length < 400) {
+      const a = (ph[i] + f) & 1023;
+      if (a < 6) glints.push(i, a);
     }
+  }
+  for (const p of flying) {
+    const cx = (p.x / CELL) | 0, cy = Math.floor(p.y / CELL);
+    if (cy >= 0 && cy < gRows && cx >= 0 && cx < gCols) P[cy * gCols + cx] = p.c;
+  }
+  sandBufCtx.putImageData(sandImg, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sandBuf, 0, 0, gCols * CELL, gRows * CELL);
+  ctx.imageSmoothingEnabled = true;
+
+  // sparkle glints: tiny four-point flashes
+  for (let k = 0; k < glints.length; k += 2) {
+    const i = glints[k], a = glints[k + 1];
+    const x = (i % gCols + 0.5) * CELL, y = ((i / gCols) | 0) * CELL + CELL * 0.5;
+    const al = 1 - Math.abs(a - 2.5) / 3.5;
+    const len = 2 + al * 3;
+    ctx.fillStyle = `rgba(255,255,255,${(al * 0.85).toFixed(2)})`;
+    ctx.fillRect(x - 0.6, y - len, 1.2, len * 2);
+    ctx.fillRect(x - len, y - 0.6, len * 2, 1.2);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x - 1, y - 1, 2, 2);
   }
 }
 
@@ -804,12 +1266,13 @@ canvas.addEventListener('mousedown', e => {
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') startBubbleInteraction(p.x, p.y);
-  if (mode === 'sand' && !pouring) stampStar();
+  if (mode === 'sand') sandDown(p);
 });
 canvas.addEventListener('mousemove', e => {
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') moveDraggedBubble(p.x, p.y);
+  if (mode === 'sand') sandMove(p);
 });
 window.addEventListener('mouseup', () => { mouse.down = false; draggingBubble = null; });
 
@@ -819,12 +1282,14 @@ canvas.addEventListener('touchstart', e => {
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') startBubbleInteraction(p.x, p.y);
+  if (mode === 'sand') sandDown(p);
 }, {passive: false});
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') moveDraggedBubble(p.x, p.y);
+  if (mode === 'sand') sandMove(p);
 }, {passive: false});
 window.addEventListener('touchend', () => { mouse.down = false; draggingBubble = null; });
 
