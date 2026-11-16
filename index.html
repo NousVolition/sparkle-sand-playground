@@ -54,6 +54,16 @@
     font-size: 0.85rem;
     transition: all 0.2s;
   }
+  .sound-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .sound-btn.active { background: #c084fc; color: #000; border: 1px solid #c084fc; }
   .tab.active, .tab:hover {
     background: var(--accent);
     color: #000;
@@ -178,6 +188,12 @@
     background: transparent;
     cursor: pointer;
   }
+  .palette.sets { gap: 5px; }
+  .swatch.set { width: 20px; height: 20px; }
+  .swatch.set.follow { outline: 1px dashed rgba(255,255,255,0.6); outline-offset: 2px; }
+  .tick-label { font-size: 0.8rem; color: var(--muted); min-width: 96px; font-variant-numeric: tabular-nums; }
+  .tick-label:empty { display: none; }
+  .tick-label.freeze { color: #fbbf24; }
   .hint { transition: opacity 0.6s; }
   .hint.faded { opacity: 0.25; }
 </style>
@@ -191,6 +207,7 @@
     <button class="tab" data-mode="bubbles">3. Soap Bubbles</button>
     <button class="tab" data-mode="plate">4. Sound & Sand Plate</button>
     <button class="tab" data-mode="waves">5. 1D to 2D Waves</button>
+    <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
   </div>
 </header>
 
@@ -324,7 +341,9 @@ function setControls() {
       <label>Speed <input type="range" id="loopSpeed" min="0.2" max="2" step="0.1" value="${loopSpeed}"></label>
       <label>Density <input type="range" id="loopDensity" min="50" max="400" value="${loopDensity}"></label>
       <button id="trailsBtn" class="${loopTrails ? 'active' : ''}">Trails: ${loopTrails ? 'On' : 'Off'}</button>
+      ${colorControlsHTML()}
     `;
+    setupColorControls('loop');
     document.getElementById('resetLoop').onclick = initLoop;
     document.getElementById('loopSpeed').oninput = e => loopSpeed = +e.target.value;
     document.getElementById('loopDensity').oninput = e => { loopDensity = +e.target.value; initLoop(); };
@@ -342,7 +361,9 @@ function setControls() {
       <button id="jiggleBtn">Jiggle All</button>
       <button id="popBtn">Pop All</button>
       <label>Surface Tension <input type="range" id="tension" min="0.2" max="1" step="0.05" value="0.6"></label>
+      ${colorControlsHTML()}
     `;
+    setupColorControls('bubbles');
     document.getElementById('blowBtn').onclick = () => blowBubble(width/2, height/2);
     document.getElementById('jiggleBtn').onclick = jiggleBubbles;
     document.getElementById('popBtn').onclick = () => bubbles = [];
@@ -357,7 +378,9 @@ function setControls() {
       <button id="freezeBtn">${frozen ? 'Resume' : 'Freeze'}</button>
       <button id="soundBtn">${soundOn ? 'Sound: On' : 'Sound: Off'}</button>
       <button id="linesBtn" class="${plateLines ? 'active' : ''}">Lines: ${plateLines ? 'On' : 'Off'}</button>
+      ${colorControlsHTML()}
     `;
+    setupColorControls('plate');
     document.getElementById('wn').oninput = e => { waveN = +e.target.value; plateBoost = 1; updateSound(); };
     document.getElementById('wm').oninput = e => { waveM = +e.target.value; plateBoost = 1; updateSound(); };
     document.getElementById('scatterBtn').onclick = scatterPlate;
@@ -365,28 +388,25 @@ function setControls() {
       frozen = !frozen;
       this.textContent = frozen ? 'Resume' : 'Freeze';
     };
-    document.getElementById('soundBtn').onclick = function() {
-      soundOn = !soundOn;
-      this.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
-      this.classList.toggle('active', soundOn);
-      if (soundOn) startSound(); else stopSound();
-    };
+    document.getElementById('soundBtn').onclick = () => setSound(!soundOn);
+    document.getElementById('soundBtn').classList.toggle('active', soundOn);
     document.getElementById('linesBtn').onclick = function() {
       plateLines = !plateLines;
       this.textContent = 'Lines: ' + (plateLines ? 'On' : 'Off');
       this.classList.toggle('active', plateLines);
     };
     scatterPlate();
-    if (soundOn) startSound();
   }
   else if (mode === 'waves') {
-    hint.textContent = 'Each 1D wave has still points (pink). Where they cross, sand gathers into the 2D pattern. Tap the field to pluck, drag to stir.';
+    hint.textContent = 'Each 1D wave has still points (the dots). Where they cross, sand gathers into the 2D pattern. Tap the field to pluck, drag to stir.';
     waveGraphs.classList.add('visible');
     controlsDiv.innerHTML = `
       <label>Horizontal Waves <input type="range" id="hw" min="1" max="8" value="${hWaves}"></label>
       <label>Vertical Waves <input type="range" id="vw" min="1" max="8" value="${vWaves}"></label>
       <button id="resetWaves">Reset Sand</button>
+      ${colorControlsHTML()}
     `;
+    setupColorControls('waves');
     document.getElementById('hw').oninput = e => { hWaves = +e.target.value; reshakeWaves(); };
     document.getElementById('vw').oninput = e => { vWaves = +e.target.value; reshakeWaves(); };
     document.getElementById('resetWaves').onclick = resetWaveParticles;
@@ -439,12 +459,13 @@ function hexRgb(h) {
 // Pack a grain color (ABGR for ImageData) with a little natural variation
 function grainColor(hex, kind) {
   let [r, g, b] = hexRgb(hex);
-  let k = 0.8 + Math.random() * 0.3;
+  // a few fixed shade steps keep the number of grain sprites small
+  let k = 0.8 + ((Math.random() * 6) | 0) * 0.06;
   if (Math.random() < 0.07) k = 1.2;
   if (kind === 'inner') k *= 0.88;
   r *= k; g *= k; b *= k;
   if (kind === 'edge') {
-    const w = 0.38 + Math.random() * 0.12;
+    const w = 0.44;
     r = r + (255 - r) * w; g = g + (255 - g) * w; b = b + (255 - b) * w;
   }
   r = Math.min(255, r | 0); g = Math.min(255, g | 0); b = Math.min(255, b | 0);
@@ -743,7 +764,7 @@ function ledgeAt(px, py) {
       const i = gy * gCols + gx;
       if (gType[i] === LEDGE) continue;
       gType[i] = LEDGE;
-      const k = 0.88 + Math.random() * 0.14;
+      const k = 0.88 + ((Math.random() * 4) | 0) * 0.045;
       gColor[i] = ((255 << 24) | ((215 * k) << 16) | ((190 * k) << 8) | (165 * k)) >>> 0;
     }
   }
@@ -880,38 +901,174 @@ function drawSand() {
   }
   if (!gType) return;
 
-  const T = gType, Col = gColor, P = sandPix, ph = gPhase, f = sandFrame;
+  // Settled grains live on a cached full-resolution layer; only tiles that changed get redrawn.
+  const T = gType, Col = gColor, ph = gPhase, f = sandFrame, C = gCols, R = gRows;
+  const atlas = sandAtlas();
+  ensureSandLayer();
   const glints = [];
-  for (let i = 0, n = T.length; i < n; i++) {
-    const t = T[i];
-    if (t === EMPTY) { P[i] = 0; continue; }
-    P[i] = Col[i];
-    if (t !== LEDGE && glints.length < 400) {
-      const a = (ph[i] + f) & 1023;
-      if (a < 6) glints.push(i, a);
+  const pT = prevT, pC = prevC, TD = tileDirty, TX = tilesX;
+  for (let y = 0; y < R; y++) {
+    const ty = (y / TILE) | 0, ly = y - ty * TILE;
+    for (let x = 0, i = y * C; x < C; x++, i++) {
+      const t = T[i];
+      if (t !== pT[i] || (t !== EMPTY && Col[i] !== pC[i])) {
+        pT[i] = t; pC[i] = Col[i];
+        const tx = (x / TILE) | 0, lx = x - tx * TILE;
+        // dots spill a little into the neighbor cells, so mark bordering tiles too
+        const x0 = lx === 0 && tx > 0 ? tx - 1 : tx, x1 = lx === TILE - 1 && tx < TX - 1 ? tx + 1 : tx;
+        const y0 = ly === 0 && ty > 0 ? ty - 1 : ty, y1 = ly === TILE - 1 && ty < tilesY - 1 ? ty + 1 : ty;
+        for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) TD[yy * TX + xx] = 1;
+      }
+      if (t !== EMPTY && t !== LEDGE && glints.length < 320) {
+        const a = (ph[i] * 4 + f) & 4095;
+        if (a < GLINT_LEN) glints.push(grainX(i, t), grainY(i, t), a);
+      }
     }
   }
-  for (const p of flying) {
-    const cx = (p.x / CELL) | 0, cy = Math.floor(p.y / CELL);
-    if (cy >= 0 && cy < gRows && cx >= 0 && cx < gCols) P[cy * gCols + cx] = p.c;
+  const lc = layerCtx;
+  for (let k = 0; k < TD.length; k++) {
+    if (!TD[k]) continue;
+    TD[k] = 0;
+    const tx = k % TX, ty = (k / TX) | 0;
+    const px = tx * TILE * CELL, py = ty * TILE * CELL, pw = TILE * CELL;
+    lc.save();
+    lc.beginPath(); lc.rect(px, py, pw, pw); lc.clip();
+    lc.clearRect(px, py, pw, pw);
+    const xs = Math.max(0, tx * TILE - 1), xe = Math.min(C - 1, tx * TILE + TILE);
+    const ys = Math.max(0, ty * TILE - 1), ye = Math.min(R - 1, ty * TILE + TILE);
+    for (let y = ys; y <= ye; y++) {
+      for (let x = xs, i = y * C + xs; x <= xe; x++, i++) {
+        const t = T[i];
+        if (t !== EMPTY) drawGrainOn(lc, atlas, i, t, Col[i]);
+      }
+    }
+    lc.restore();
   }
-  sandBufCtx.putImageData(sandImg, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sandBuf, 0, 0, gCols * CELL, gRows * CELL);
   ctx.imageSmoothingEnabled = true;
-
-  // sparkle glints: tiny four-point flashes
-  for (let k = 0; k < glints.length; k += 2) {
-    const i = glints[k], a = glints[k + 1];
-    const x = (i % gCols + 0.5) * CELL, y = ((i / gCols) | 0) * CELL + CELL * 0.5;
-    const al = 1 - Math.abs(a - 2.5) / 3.5;
-    const len = 2 + al * 3;
-    ctx.fillStyle = `rgba(255,255,255,${(al * 0.85).toFixed(2)})`;
-    ctx.fillRect(x - 0.6, y - len, 1.2, len * 2);
-    ctx.fillRect(x - len, y - 0.6, len * 2, 1.2);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x - 1, y - 1, 2, 2);
+  ctx.drawImage(sandLayer, 0, 0, C * CELL, R * CELL);
+  const SP = SPR_PX;
+  for (const p of flying) {
+    const idx = grainSprite(p.c);
+    ctx.drawImage(atlas, (idx % SPR_COLS) * SP, ((idx / SPR_COLS) | 0) * SP, SP, SP,
+      p.x - SPR_CSS / 2, p.y - SPR_CSS / 2, SPR_CSS, SPR_CSS);
   }
+
+  // soft twinkling sparkles, added light
+  if (glints.length) {
+    const spk = sparkleSprite();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < glints.length; k += 3) {
+      const a = glints[k + 2] / GLINT_LEN;
+      const tw = Math.sin(a * Math.PI);           // fade in and out
+      const s = SPARK_CSS * (0.55 + 0.45 * tw);
+      ctx.globalAlpha = tw * 0.9;
+      ctx.drawImage(spk, glints[k] - s / 2, glints[k + 1] - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+}
+
+// ---------- grain + sparkle sprites (drawn once per color at full screen resolution) ----------
+const SPR_CSS = 5, SPR_COLS = 32, SPARK_CSS = 16, GLINT_LEN = 64;
+let SPR_PX = 0, sprDpr = 0, sprAtlas = null, sprCtx = null, sprNext = 0, sparkCanvas = null;
+const sprMap = new Map();
+
+function resetSprites() {
+  sprDpr = window.devicePixelRatio || 1;
+  SPR_PX = Math.ceil(SPR_CSS * sprDpr);
+  sprAtlas = document.createElement('canvas');
+  sprAtlas.width = sprAtlas.height = SPR_COLS * SPR_PX;
+  sprCtx = sprAtlas.getContext('2d');
+  sprMap.clear(); sprNext = 0;
+  sparkCanvas = null;
+  if (prevT) prevT.fill(255); // sprites moved: redraw the whole layer
+}
+function sandAtlas() {
+  if (!sprAtlas || sprDpr !== (window.devicePixelRatio || 1)) resetSprites();
+  return sprAtlas;
+}
+function grainSprite(u32) {
+  let idx = sprMap.get(u32);
+  if (idx !== undefined) return idx;
+  if (sprNext >= SPR_COLS * SPR_COLS) { resetSprites(); }
+  idx = sprNext++;
+  const sx = (idx % SPR_COLS) * SPR_PX, sy = ((idx / SPR_COLS) | 0) * SPR_PX;
+  const r = u32 & 255, g = (u32 >> 8) & 255, b = (u32 >> 16) & 255;
+  const R = SPR_PX / 2, cx = sx + R, cy = sy + R, rr = R * 0.8;
+  const hi = v => Math.min(255, v + 80), lo = v => v * 0.72 | 0;
+  const grad = sprCtx.createRadialGradient(cx - rr * 0.3, cy - rr * 0.35, 0, cx, cy, rr);
+  grad.addColorStop(0, `rgb(${hi(r)},${hi(g)},${hi(b)})`);
+  grad.addColorStop(0.4, `rgb(${r},${g},${b})`);
+  grad.addColorStop(0.82, `rgb(${lo(r)},${lo(g)},${lo(b)})`);
+  grad.addColorStop(1, `rgba(${lo(r)},${lo(g)},${lo(b)},0)`);
+  sprCtx.fillStyle = grad;
+  sprCtx.beginPath(); sprCtx.arc(cx, cy, rr, 0, Math.PI * 2); sprCtx.fill();
+  sprMap.set(u32, idx);
+  return idx;
+}
+function sparkleSprite() {
+  if (sparkCanvas) return sparkCanvas;
+  const d = window.devicePixelRatio || 1, S = Math.ceil(SPARK_CSS * d), h = S / 2;
+  sparkCanvas = document.createElement('canvas');
+  sparkCanvas.width = sparkCanvas.height = S;
+  const c = sparkCanvas.getContext('2d');
+  const glow = c.createRadialGradient(h, h, 0, h, h, h * 0.55);
+  glow.addColorStop(0, 'rgba(255,255,255,0.9)');
+  glow.addColorStop(0.3, 'rgba(255,250,235,0.35)');
+  glow.addColorStop(1, 'rgba(255,250,235,0)');
+  c.fillStyle = glow; c.fillRect(0, 0, S, S);
+  // soft four-point star: two thin tapered beams
+  c.translate(h, h);
+  for (let k = 0; k < 2; k++) {
+    const beam = c.createLinearGradient(-h, 0, h, 0);
+    beam.addColorStop(0, 'rgba(255,255,255,0)');
+    beam.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+    beam.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = beam;
+    c.beginPath();
+    c.moveTo(-h, 0); c.quadraticCurveTo(0, -h * 0.07, h, 0); c.quadraticCurveTo(0, h * 0.07, -h, 0);
+    c.fill();
+    c.rotate(Math.PI / 2);
+  }
+  return sparkCanvas;
+}
+
+// ---------- cached layer for settled grains ----------
+const TILE = 16;
+let sandLayer = null, layerCtx = null, prevT = null, prevC = null, tileDirty = null, tilesX = 0, tilesY = 0, layerDpr = 0;
+
+function ensureSandLayer() {
+  const d = window.devicePixelRatio || 1;
+  if (sandLayer && prevT && prevT.length === gType.length && layerDpr === d && sandLayer._c === gCols) return;
+  layerDpr = d;
+  sandLayer = document.createElement('canvas');
+  sandLayer.width = Math.round(gCols * CELL * d);
+  sandLayer.height = Math.round(gRows * CELL * d);
+  sandLayer._c = gCols;
+  layerCtx = sandLayer.getContext('2d');
+  layerCtx.setTransform(d, 0, 0, d, 0, 0);
+  layerCtx.imageSmoothingEnabled = true;
+  prevT = new Uint8Array(gType.length).fill(255);
+  prevC = new Uint32Array(gType.length);
+  tilesX = Math.ceil(gCols / TILE); tilesY = Math.ceil(gRows / TILE);
+  tileDirty = new Uint8Array(tilesX * tilesY);
+}
+
+function grainX(i, t) {
+  const x = (i % gCols + 0.5) * CELL;
+  return t === LOOSE ? x + ((gPhase[i] & 15) / 15 - 0.5) * 1.3 : x;
+}
+function grainY(i, t) {
+  const y = ((i / gCols) | 0) * CELL + CELL * 0.5;
+  return t === LOOSE ? y + (((gPhase[i] >> 4) & 15) / 15 - 0.5) * 1.1 : y;
+}
+function drawGrainOn(c, atlas, i, t, col) {
+  const idx = grainSprite(col);
+  // loose sand: sub-cell jitter and size variation so piles don't look like a grid; stamps stay crisp
+  const dw = t === LOOSE ? SPR_CSS * (0.86 + ((gPhase[i] >> 8) & 3) * 0.08) : SPR_CSS;
+  c.drawImage(atlas, (idx % SPR_COLS) * SPR_PX, ((idx / SPR_COLS) | 0) * SPR_PX, SPR_PX, SPR_PX,
+    grainX(i, t) - dw / 2, grainY(i, t) - dw / 2, dw, dw);
 }
 
 // ========== BUBBLES ==========
@@ -921,7 +1078,8 @@ function blowBubble(x, y) {
     x, y, r,
     vx: (Math.random()-0.5)*2,
     vy: (Math.random()-0.5)*2,
-    hue: Math.random()*360
+    hue: Math.random()*360,
+    k: Math.random()
   });
 }
 
@@ -1005,11 +1163,33 @@ function drawBubbles() {
   ctx.fillStyle = '#05070a';
   ctx.fillRect(0, 0, width, height);
   
+  const bubCols = tabColorList('bubbles');
+  const bubSplit = followSplitting('bubbles');
+  const bft = followTick();
   for (let b of bubbles) {
+    let bdx = 0, fc = null;
+    if (bubSplit) {
+      // overlap: bubbles touching another bubble
+      const touching = bubbles.some(o => o !== b && Math.hypot(o.x - b.x, o.y - b.y) < o.r + b.r + 6);
+      const nb = bubCols.length;
+      if (b.k === undefined) b.k = Math.random();
+      const st = followStyle(tabRGB('bubbles', Math.floor(b.k * nb) / nb), touching, bft);
+      fc = st.c; bdx = st.dx;
+    }
+    ctx.save();
+    ctx.translate(bdx, 0);
     const g = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.3, 0, b.x, b.y, b.r);
     g.addColorStop(0, 'rgba(255,255,255,0.6)');
-    g.addColorStop(0.3, `hsla(${b.hue}, 60%, 50%, 0.53)`);
-    g.addColorStop(1, `hsla(${b.hue}, 60%, 50%, 0.13)`);
+    if (bubCols) {
+      if (b.k === undefined) b.k = Math.random();
+      const nb = tabColorList('bubbles').length;
+      const c = fc || tabRGB('bubbles', Math.floor(b.k * nb) / nb);
+      g.addColorStop(0.3, rgbStr(c, 0.53));
+      g.addColorStop(1, rgbStr(c, 0.13));
+    } else {
+      g.addColorStop(0.3, `hsla(${b.hue}, 60%, 50%, 0.53)`);
+      g.addColorStop(1, `hsla(${b.hue}, 60%, 50%, 0.13)`);
+    }
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
@@ -1017,6 +1197,219 @@ function drawBubbles() {
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ========== TAB COLORS ==========
+// Each non-sand tab can take a list of colors. null = the original look.
+// setTabColors(tab, colors) is the one entry point, so an outside source can drive it later.
+const COLOR_SETS = {
+  ocean:   { label: 'Ocean',       colors: ['#22d3ee', '#0ea5e9', '#3b82f6', '#2dd4bf'] },
+  sunset:  { label: 'Sunset',      colors: ['#fb923c', '#f43f5e', '#fbbf24', '#ec4899'] },
+  aurora:  { label: 'Aurora',      colors: ['#34d399', '#22d3ee', '#a78bfa', '#4ade80'] },
+  rose:    { label: 'Rose Gold',   colors: ['#f9a8d4', '#fcd34d', '#fda4af', '#fde68a'] },
+  forest:  { label: 'Forest',      colors: ['#4ade80', '#a3e635', '#16a34a', '#facc15'] },
+  candy:   { label: 'Candy',       colors: ['#f472b6', '#c084fc', '#67e8f9', '#fde047'] },
+  silver:  { label: 'Mono Silver', colors: ['#f1f5f9', '#94a3b8', '#cbd5e1', '#64748b'] },
+  rainbow: { label: 'Rainbow',     colors: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7'] },
+};
+// The original colors of each tab, used for its "Classic" swatch and when Shift runs on Classic
+const CLASSIC_COLORS = {
+  loop: ['#67e8f9', '#60a5fa', '#818cf8', '#22d3ee'],
+  bubbles: ['#f472b6', '#facc15', '#34d399', '#60a5fa', '#c084fc'],
+  plate: ['#facc15', '#fde68a', '#fb923c'],
+  waves: ['#67e8f9', '#ff6b9d', '#a5f3fc'],
+};
+const COLOR_TABS = ['loop', 'bubbles', 'plate', 'waves'];
+const SHIFT_RATE = 0.22; // colors per second while Shift is on
+let colorState = { loop: {}, bubbles: {}, plate: {}, waves: {} };
+
+try {
+  const saved = JSON.parse(localStorage.getItem('sparkleTabColors') || 'null');
+  if (saved) COLOR_TABS.forEach(t => { if (saved[t]) colorState[t] = saved[t]; });
+} catch (e) {}
+
+function saveColors() {
+  try { localStorage.setItem('sparkleTabColors', JSON.stringify(colorState)); } catch (e) {}
+}
+
+function setTabColors(tab, colors, name) {
+  const s = colorState[tab];
+  if (!s) return;
+  s.colors = colors && colors.length ? colors.slice() : null;
+  s.set = s.colors ? (name || 'custom') : null;
+  saveColors();
+  if (mode === tab) markColorSwatches();
+}
+
+function setTabShift(tab, on) {
+  colorState[tab].shift = !!on;
+  saveColors();
+}
+
+// Active color list for a tab, or null when it should draw exactly as before
+function tabColorList(tab) {
+  const s = colorState[tab];
+  if (s.colors) return s.colors;
+  if (s.shift) return CLASSIC_COLORS[tab];
+  return null;
+}
+
+function hexToRgb(h) {
+  const n = parseInt(h.slice(1), 16);
+  return [n >> 16 & 255, n >> 8 & 255, n & 255];
+}
+
+// Color at position f (0..1) along the tab's list, blended, moving over time if Shift is on
+function tabRGB(tab, f) {
+  const list = tabColorList(tab);
+  const n = list.length;
+  const st = colorState[tab];
+  let x = f * n + (st.set === 'follow' ? Date.now() * 0.001 * 0.6 : st.shift ? Date.now() * 0.001 * SHIFT_RATE : 0);
+  x = ((x % n) + n) % n;
+  const i = Math.floor(x), k = x - i;
+  const a = hexToRgbCached(list[i]), b = hexToRgbCached(list[(i + 1) % n]);
+  return [a[0] + (b[0] - a[0]) * k | 0, a[1] + (b[1] - a[1]) * k | 0, a[2] + (b[2] - a[2]) * k | 0];
+}
+const _rgbC = {};
+function hexToRgbCached(h) { return _rgbC[h] || (_rgbC[h] = hexToRgb(h)); }
+function rgbStr(c, a) { return a === undefined ? `rgb(${c[0]},${c[1]},${c[2]})` : `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+function rgbTriplet(c) { return `${c[0]},${c[1]},${c[2]}`; }
+function lighten(c, w) { return [c[0] + (255 - c[0]) * w | 0, c[1] + (255 - c[1]) * w | 0, c[2] + (255 - c[2]) * w | 0]; }
+
+function colorControlsHTML() {
+  return `<div class="palette sets" id="colorSets"></div><button id="shiftBtn">Shift: Off</button><span class="tick-label" id="tickLabel"></span>`;
+}
+
+function setupColorControls(tab) {
+  const box = document.getElementById('colorSets');
+  if (!box) return;
+  const items = [['classic', 'Classic', CLASSIC_COLORS[tab]]].concat(
+    Object.keys(COLOR_SETS).map(k => [k, COLOR_SETS[k].label, COLOR_SETS[k].colors]),
+    [['follow', 'Follow my work', ['#22d3ee', '#f472b6', '#fbbf24', '#4c3ad2']]]);
+  items.forEach(([key, label, cols]) => {
+    const s = document.createElement('div');
+    s.className = 'swatch set';
+    s.dataset.set = key;
+    s.title = label;
+    s.style.background = `linear-gradient(135deg, ${cols.join(', ')})`;
+    if (key === 'follow') s.classList.add('follow');
+    s.onclick = () => setTabColors(tab, key === 'classic' ? null : key === 'follow' ? FOLLOW_WRITE : COLOR_SETS[key].colors, key);
+    box.appendChild(s);
+  });
+  const btn = document.getElementById('shiftBtn');
+  const paint = () => {
+    const on = !!colorState[tab].shift;
+    btn.textContent = 'Shift: ' + (on ? 'On' : 'Off');
+    btn.classList.toggle('active', on);
+  };
+  btn.onclick = () => { setTabShift(tab, !colorState[tab].shift); paint(); };
+  paint();
+  markColorSwatches();
+}
+
+function markColorSwatches() {
+  const cur = colorState[mode] && colorState[mode].set || 'classic';
+  document.querySelectorAll('#colorSets .swatch').forEach(el => el.classList.toggle('active', el.dataset.set === cur));
+}
+
+// Draw grains split into groups, one color per group (used when a color set is active)
+function drawGrainsTab(list, tab, sz, glow) {
+  const n = tabColorList(tab).length;
+  for (let g = 0; g < n; g++) {
+    let c = tabRGB(tab, g / n);
+    if (glow) c = lighten(c, glow);
+    ctx.fillStyle = rgbStr(c);
+    for (let i = g; i < list.length; i += n) {
+      const p = list[i];
+      ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+    }
+  }
+  // a few bright sparkles
+  ctx.fillStyle = rgbStr(lighten(tabRGB(tab, 0), 0.75));
+  for (let i = 0; i < list.length; i += 11) {
+    const p = list[i];
+    ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+  }
+}
+
+// ---------- "Follow my work": a never-ending write / freeze cycle ----------
+// 24 ticks per cycle. Ticks 1-22 write (bright colors flow). Tick 23 is the freeze:
+// motion holds, the overlapping part turns gold (the user's bucket) and the rest turns
+// deep blue and drifts left (the never-ending bucket). Tick 24 filters through soft white.
+const FOLLOW_TICKS = 24, FOLLOW_MS = 400, FOLLOW_FREEZE = 23;
+const FOLLOW_WRITE = ['#22d3ee', '#f472b6', '#a3e635', '#fde047', '#c084fc'];
+const FOLLOW_GOLD = [251, 191, 36], FOLLOW_BLUE = [76, 58, 210], FOLLOW_WHITE = [241, 245, 249];
+const FOLLOW_DRIFT = 60;
+
+function isFollow(tab) { return colorState[tab] && colorState[tab].set === 'follow'; }
+function followTick() {
+  const t = Date.now() / FOLLOW_MS, n = Math.floor(t);
+  return { tick: n % FOLLOW_TICKS + 1, frac: t - n };
+}
+function followHolding(tab) { return isFollow(tab) && followTick().tick === FOLLOW_FREEZE; }
+function mixRGB(a, b, k) { return [a[0] + (b[0] - a[0]) * k | 0, a[1] + (b[1] - a[1]) * k | 0, a[2] + (b[2] - a[2]) * k | 0]; }
+function easeIO(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+
+// Final color and left drift for one element, given its write color and whether it overlaps
+function followStyle(base, overlap, ft) {
+  const { tick, frac } = ft || followTick();
+  if (tick < FOLLOW_FREEZE) return { c: base, dx: 0 };
+  const target = overlap ? FOLLOW_GOLD : FOLLOW_BLUE;
+  if (tick === FOLLOW_FREEZE) {
+    const e = easeIO(frac * 2.5);
+    return { c: mixRGB(base, target, e), dx: overlap ? 0 : -FOLLOW_DRIFT * easeIO(frac * 1.6) };
+  }
+  // filtered: fade through soft white, then back to the write colors
+  const c = frac < 0.5 ? mixRGB(target, FOLLOW_WHITE, easeIO(frac * 2)) : mixRGB(FOLLOW_WHITE, base, easeIO(frac * 2 - 1));
+  return { c, dx: overlap ? 0 : -FOLLOW_DRIFT * (1 - easeIO(frac)) };
+}
+function followSplitting(tab) { return isFollow(tab) && followTick().tick >= FOLLOW_FREEZE; }
+
+function updateTickLabel() {
+  const el = document.getElementById('tickLabel');
+  if (!el) return;
+  if (!isFollow(mode)) { if (el.textContent) { el.textContent = ''; el.classList.remove('freeze'); } return; }
+  const { tick } = followTick();
+  const txt = tick === FOLLOW_FREEZE ? `tick ${tick} · freeze` : `tick ${tick}`;
+  if (el.textContent !== txt) {
+    el.textContent = txt;
+    el.classList.toggle('freeze', tick === FOLLOW_FREEZE);
+  }
+}
+
+// Grains for plate / waves while splitting: near the still lines = overlap (gold)
+function drawGrainsFollow(list, tab, sz, rect, field) {
+  const ft = followTick();
+  const n = tabColorList(tab).length;
+  const styles = [];
+  for (let g = 0; g < n; g++) {
+    const base = tabRGB(tab, g / n);
+    styles.push([followStyle(base, false, ft), followStyle(base, true, ft)]);
+  }
+  // overlap: on the still lines AND near the pointer (or near the middle if no pointer yet)
+  const ov = new Uint8Array(list.length);
+  const usePtr = mouse.x > 0;
+  const ox = usePtr ? mouse.x : rect.x + rect.w / 2, oy = usePtr ? mouse.y : rect.y + rect.h / 2;
+  const R = Math.max(110, Math.min(rect.w, rect.h) * 0.33), R2 = R * R;
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    const dx = p.x - ox, dy = p.y - oy;
+    if (dx * dx + dy * dy > R2) continue;
+    field((p.x - rect.x) / rect.w, (p.y - rect.y) / rect.h);
+    ov[i] = Math.abs(fieldF) < 0.2 ? 1 : 0;
+  }
+  for (let g = 0; g < n; g++) {
+    for (let o = 0; o < 2; o++) {
+      const st = styles[g][o];
+      ctx.fillStyle = rgbStr(st.c);
+      for (let i = g; i < list.length; i += n) {
+        if (ov[i] !== o) continue;
+        const p = list[i];
+        ctx.fillRect(p.x + st.dx - sz / 2, p.y - sz / 2, sz, sz);
+      }
+    }
   }
 }
 
@@ -1127,8 +1520,9 @@ const PLATE_GRAINS = 5000;
 
 function plateRect() {
   // keep the plate clear of the hint bar at the bottom
-  const S = Math.max(120, Math.min(width - 32, height - 92));
-  return { x: (width - S) / 2, y: Math.max(16, (height - 76 - S) / 2), w: S, h: S };
+  const hb = hint.offsetHeight + 32;
+  const S = Math.max(120, Math.min(width - 32, height - hb - 16));
+  return { x: (width - S) / 2, y: Math.max(16, (height - hb - S) / 2), w: S, h: S };
 }
 
 function plateParams() {
@@ -1154,7 +1548,7 @@ function scatterPlate() {
 
 function plateDown(x, y) {
   plateBoost = 1;
-  addRipple(x, y, '250,204,21');
+  addRipple(x, y, tabColorList('plate') ? rgbTriplet(tabRGB('plate', 0)) : '250,204,21');
   if (gain && audioCtx) {
     const t = audioCtx.currentTime;
     gain.gain.cancelScheduledValues(t);
@@ -1182,8 +1576,11 @@ function drawPlate() {
   ctx.lineWidth = 1;
   ctx.strokeRect(r.x - 0.5, r.y - 0.5, r.w + 1, r.h + 1);
   [plateA, plateB, plateS] = plateParams();
-  if (plateLines) drawNodeLines(r, plateField, 'rgba(0,212,255,0.35)');
-  drawGrains(particles, '#facc15', '#fff3b0', 1.7);
+  const plateCols = tabColorList('plate');
+  if (plateLines) drawNodeLines(r, plateField, plateCols ? rgbStr(tabRGB('plate', 0.5), 0.35) : 'rgba(0,212,255,0.35)');
+  if (plateCols && followSplitting('plate')) drawGrainsFollow(particles, 'plate', 1.7, r, plateField);
+  else if (plateCols) drawGrainsTab(particles, 'plate', 1.7, 0);
+  else drawGrains(particles, '#facc15', '#fff3b0', 1.7);
   drawRipples();
   if (mouse.x) {
     ctx.strokeStyle = '#00d4ff';
@@ -1232,6 +1629,7 @@ function resetWaveParticles() {
 }
 
 function reshakeWaves() {
+  updateSound();
   waveBoost = 1;
   wavePulse = 1;
   updateWaveLabels();
@@ -1248,7 +1646,7 @@ function wavesDown(x, y) {
   if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
     waveBoost = 1;
     wavePulse = 1;
-    addRipple(x, y, '103,232,249');
+    addRipple(x, y, tabColorList('waves') ? rgbTriplet(tabRGB('waves', 0)) : '103,232,249');
   }
 }
 
@@ -1266,11 +1664,12 @@ function drawWaves() {
   const r = waveRect();
   ctx.fillStyle = '#0a0f17';
   ctx.fillRect(r.x, r.y, r.w, r.h);
-  ctx.strokeStyle = 'rgba(103,232,249,0.22)';
+  const waveCols = tabColorList('waves');
+  ctx.strokeStyle = waveCols ? rgbStr(tabRGB('waves', 0), 0.22) : 'rgba(103,232,249,0.22)';
   ctx.lineWidth = 1;
   ctx.strokeRect(r.x - 0.5, r.y - 0.5, r.w + 1, r.h + 1);
-  // node ticks on the field edges, matching the pink dots in the graphs
-  ctx.fillStyle = '#ff6b9d';
+  // node ticks on the field edges, matching the node dots in the graphs
+  ctx.fillStyle = waveNodeColor();
   for (let i = 0; i <= hWaves; i++) {
     const x = r.x + r.w * i / hWaves;
     ctx.beginPath(); ctx.arc(x, r.y - 7, 3, 0, Math.PI * 2); ctx.fill();
@@ -1280,12 +1679,29 @@ function drawWaves() {
     ctx.beginPath(); ctx.arc(r.x - 7, y, 3, 0, Math.PI * 2); ctx.fill();
   }
   const glow = Math.min(1, waveBoost);
-  drawGrains(waveParticles, glow > 0.3 ? '#a5f3fc' : '#67e8f9', '#ecfeff', 1.8);
+  if (waveCols && followSplitting('waves')) drawGrainsFollow(waveParticles, 'waves', 1.8, r, waveField);
+  else if (waveCols) drawGrainsTab(waveParticles, 'waves', 1.8, glow > 0.3 ? 0.35 : 0);
+  else drawGrains(waveParticles, glow > 0.3 ? '#a5f3fc' : '#67e8f9', '#ecfeff', 1.8);
   drawRipples();
   drawMiniWaves();
 }
 
+function waveNodeColor() {
+  const cols = tabColorList('waves');
+  if (!cols) return '#ff6b9d';
+  return rgbStr(lighten(tabRGB('waves', 0.5), 0.15));
+}
+
+let lastNoteDot = '';
 function drawMiniWaves() {
+  const waveCols = tabColorList('waves');
+  const lineC = waveCols ? tabRGB('waves', 0) : [103, 232, 249];
+  const nodeC = waveNodeColor();
+  if (nodeC !== lastNoteDot) {
+    const dot = document.querySelector('.wave-note .dot');
+    if (dot) dot.style.background = nodeC;
+    lastNoteDot = nodeC;
+  }
   const hCanvas = document.getElementById('hWave');
   const vCanvas = document.getElementById('vWave');
   if (!hCanvas) return;
@@ -1295,13 +1711,13 @@ function drawMiniWaves() {
   function drawWave(c, waves) {
     const W = c.canvas.width, H = c.canvas.height, mid = H / 2;
     c.clearRect(0, 0, W, H);
-    c.strokeStyle = 'rgba(103,232,249,0.12)';
+    c.strokeStyle = rgbStr(lineC, 0.12);
     c.lineWidth = 1;
     c.beginPath(); c.moveTo(0, mid); c.lineTo(W, mid); c.stroke();
     const amp = (H * 0.3) * (1 + pulse * 0.5) * Math.sin(t * 2.2);
-    c.strokeStyle = pulse > 0.05 ? `rgb(${103 + 152 * pulse | 0},${232 + 23 * pulse | 0},249)` : '#67e8f9';
+    c.strokeStyle = waveCols ? rgbStr(lighten(lineC, pulse * 0.9)) : (pulse > 0.05 ? `rgb(${103 + 152 * pulse | 0},${232 + 23 * pulse | 0},249)` : '#67e8f9');
     c.lineWidth = 2 + pulse * 2;
-    c.shadowColor = '#67e8f9';
+    c.shadowColor = waveCols ? rgbStr(lineC) : '#67e8f9';
     c.shadowBlur = pulse * 14;
     c.beginPath();
     for (let x = 0; x <= W; x++) {
@@ -1310,7 +1726,7 @@ function drawMiniWaves() {
     }
     c.stroke();
     c.shadowBlur = 0;
-    c.fillStyle = '#ff6b9d';
+    c.fillStyle = nodeC;
     for (let i = 0; i <= waves; i++) {
       const x = Math.min(W - 4, Math.max(4, (i / waves) * W));
       c.beginPath();
@@ -1341,7 +1757,7 @@ function initLoop() {
 }
 
 function loopDown(x, y) {
-  addRipple(x, y, '125,211,252');
+  addRipple(x, y, tabColorList('loop') ? rgbTriplet(lighten(tabRGB('loop', 0.5), 0.3)) : '125,211,252');
 }
 
 function updateLoop() {
@@ -1395,89 +1811,297 @@ function drawLoop() {
   const t = Date.now() * 0.001;
   if (mouse.down) {
     const g = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 90);
-    g.addColorStop(0, 'rgba(125,211,252,0.12)');
-    g.addColorStop(1, 'rgba(125,211,252,0)');
+    const gc = tabColorList('loop') ? rgbTriplet(tabRGB('loop', 0)) : '125,211,252';
+    g.addColorStop(0, `rgba(${gc},0.12)`);
+    g.addColorStop(1, `rgba(${gc},0)`);
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 90, 0, Math.PI * 2); ctx.fill();
   }
+  const loopCols = tabColorList('loop');
+  const loopSplit = followSplitting('loop');
+  const ft = followTick();
+  const inner = 40 + Math.min(width, height) * 0.35 * 0.4;
   for (const p of loopParticles) {
+    let dx = 0;
     const alpha = 0.4 + Math.sin(t + p.offset) * 0.3;
     const sp = Math.min(1, Math.hypot(p.vx, p.vy) / 6);
-    ctx.fillStyle = `hsla(${p.hue}, 70%, ${60 + sp * 20}%, ${Math.min(1, alpha + sp * 0.4)})`;
+    if (loopCols) {
+      let c = lighten(tabRGB('loop', p.offset / (Math.PI * 2)), 0.1 + sp * 0.45);
+      if (loopSplit) {
+        // overlap: near the pointer if it is on the canvas, else the inner ring
+        const near = mouse.x ? Math.hypot(p.x - mouse.x, p.y - mouse.y) < 180 : p.radius < inner;
+        const st = followStyle(c, near, ft);
+        c = st.c; dx = st.dx;
+      }
+      ctx.fillStyle = rgbStr(c, Math.min(1, alpha + sp * 0.4).toFixed(3));
+    } else {
+      ctx.fillStyle = `hsla(${p.hue}, 70%, ${60 + sp * 20}%, ${Math.min(1, alpha + sp * 0.4)})`;
+    }
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.arc(p.x + dx, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
   }
   drawRipples();
 }
 
-// ========== AUDIO (Sound Plate) ==========
-function startSound() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+// ========== SOUND (shared layer) ==========
+// One master gain + soft compressor. Each tab can run a "bed" (continuous voices)
+// plus short one-shot sounds. Everything starts only after a user click.
+let master = null, limiter = null, noiseBuf = null;
+let bed = null;                 // { tab, out, nodes, frame, update }
+let liveVoices = 0;             // for testing cleanup
+let lastBubbleCount = 0, lastFollowTick = 0, lastScrape = 0;
+const toneN = n => 80 + n * 18;  // same mapping as the plate's Wave N
+const toneM = m => 120 + m * 22; // same mapping as the plate's Wave M
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  
-  stopSound();
-  
-  gain = audioCtx.createGain();
-  gain.gain.value = 0.08;
-  gain.connect(audioCtx.destination);
-  
-  osc1 = audioCtx.createOscillator();
-  osc1.type = 'sine';
-  osc1.connect(gain);
-  
-  osc2 = audioCtx.createOscillator();
-  osc2.type = 'triangle';
-  osc2.connect(gain);
-  
-  updateSound();
-  osc1.start();
-  osc2.start();
-}
-
-function stopSound() {
-  if (osc1) {
-    try { osc1.stop(); } catch(e) {}
-    osc1.disconnect();
-    osc1 = null;
-  }
-  if (osc2) {
-    try { osc2.stop(); } catch(e) {}
-    osc2.disconnect();
-    osc2 = null;
-  }
-  if (gain) {
-    gain.disconnect();
-    gain = null;
+  if (!master) {
+    limiter = audioCtx.createDynamicsCompressor();
+    limiter.threshold.value = -18;
+    limiter.knee.value = 12;
+    limiter.ratio.value = 8;
+    limiter.attack.value = 0.004;
+    limiter.release.value = 0.25;
+    master = audioCtx.createGain();
+    master.gain.value = 0.7;
+    master.connect(limiter);
+    limiter.connect(audioCtx.destination);
   }
 }
 
-function updateSound() {
-  if (!osc1 || !osc2 || !audioCtx) return;
-  const freq1 = 80 + waveN * 18;
-  const freq2 = 120 + waveM * 22;
-  osc1.frequency.setTargetAtTime(freq1, audioCtx.currentTime, 0.1);
-  osc2.frequency.setTargetAtTime(freq2, audioCtx.currentTime, 0.1);
+function getNoise() {
+  if (!noiseBuf) {
+    const sr = audioCtx.sampleRate;
+    noiseBuf = audioCtx.createBuffer(1, sr * 2, sr);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuf;
+}
+
+function setSound(on) {
+  soundOn = !!on;
+  const hb = document.getElementById('soundToggle');
+  if (hb) { hb.textContent = soundOn ? 'Sound: On' : 'Sound: Off'; hb.classList.toggle('active', soundOn); }
+  const pb = document.getElementById('soundBtn');
+  if (pb) { pb.textContent = soundOn ? 'Sound: On' : 'Sound: Off'; pb.classList.toggle('active', soundOn); }
+  if (soundOn) { ensureAudio(); startBed(mode); }
+  else stopBed();
+}
+// kept for older callers
+function startSound() { setSound(true); }
+function stopSound() { stopBed(); }
+
+function osc(type, freq) {
+  const o = audioCtx.createOscillator();
+  o.type = type; o.frequency.value = freq;
+  return o;
+}
+
+function stopBed() {
+  if (!bed || !audioCtx) { bed = null; return; }
+  const b = bed; bed = null;
+  const t = audioCtx.currentTime;
+  b.out.gain.cancelScheduledValues(t);
+  b.out.gain.setValueAtTime(b.out.gain.value, t);
+  b.out.gain.linearRampToValueAtTime(0, t + 0.2);
+  setTimeout(() => {
+    b.nodes.forEach(n => { try { n.stop && n.stop(); } catch (e) {} try { n.disconnect(); } catch (e) {} });
+    try { b.out.disconnect(); } catch (e) {}
+    liveVoices -= b.nodes.length;
+  }, 300);
+  if (b.tab === 'plate') { osc1 = osc2 = gain = null; }
+}
+
+function makeBed(tab, level) {
+  const out = audioCtx.createGain();
+  out.gain.value = 0;
+  out.connect(master);
+  out.gain.setTargetAtTime(level, audioCtx.currentTime, 0.15);
+  return { tab, out, nodes: [], frame: null, update: null };
+}
+function addNodes(b, list) { b.nodes.push(...list); liveVoices += list.length; list.forEach(n => n.start && n.start()); }
+
+function startBed(tab) {
+  stopBed();
+  if (!soundOn || !audioCtx) return;
+  if (tab === 'plate') {
+    const b = makeBed(tab, 1);
+    gain = audioCtx.createGain(); gain.gain.value = 0.08; gain.connect(b.out);
+    osc1 = osc('sine', toneN(waveN)); osc2 = osc('triangle', toneM(waveM));
+    osc1.connect(gain); osc2.connect(gain);
+    b.update = () => {
+      const t = audioCtx.currentTime;
+      osc1 && osc1.frequency.setTargetAtTime(toneN(waveN), t, 0.1);
+      osc2 && osc2.frequency.setTargetAtTime(toneM(waveM), t, 0.1);
+    };
+    addNodes(b, [osc1, osc2, gain]);
+    bed = b;
+  } else if (tab === 'waves') {
+    const b = makeBed(tab, 0.06);
+    // each wave gets a tone plus a slightly detuned twin, so they shimmer and beat together
+    const h1 = osc('sine', toneN(hWaves)), h2 = osc('sine', toneN(hWaves) + 0.8);
+    const v1 = osc('triangle', toneM(vWaves)), v2 = osc('sine', toneM(vWaves) + 0.6);
+    [h1, h2, v1, v2].forEach(o => o.connect(b.out));
+    b.update = () => {
+      const t = audioCtx.currentTime;
+      h1.frequency.setTargetAtTime(toneN(hWaves), t, 0.1); h2.frequency.setTargetAtTime(toneN(hWaves) + 0.8, t, 0.1);
+      v1.frequency.setTargetAtTime(toneM(vWaves), t, 0.1); v2.frequency.setTargetAtTime(toneM(vWaves) + 0.6, t, 0.1);
+    };
+    addNodes(b, [h1, h2, v1, v2]);
+    bed = b;
+  } else if (tab === 'loop') {
+    const b = makeBed(tab, 0.05);
+    const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220; lp.Q.value = 0.7;
+    lp.connect(b.out);
+    const a = osc('sawtooth', 55), c = osc('sawtooth', 55.35), d = osc('sine', 82.4);
+    [a, c, d].forEach(o => o.connect(lp));
+    b.frame = () => {
+      let s = 0;
+      for (const p of loopParticles) s += Math.abs(p.vx) + Math.abs(p.vy);
+      const avg = loopParticles.length ? s / loopParticles.length : 0;
+      lp.frequency.setTargetAtTime(200 + Math.min(1, avg / 5) * 1400, audioCtx.currentTime, 0.12);
+    };
+    addNodes(b, [a, c, d, lp]);
+    bed = b;
+  } else if (tab === 'sand') {
+    const b = makeBed(tab, 1);
+    const src = audioCtx.createBufferSource(); src.buffer = getNoise(); src.loop = true;
+    const hissF = audioCtx.createBiquadFilter(); hissF.type = 'bandpass'; hissF.frequency.value = 3200; hissF.Q.value = 0.6;
+    const hissG = audioCtx.createGain(); hissG.gain.value = 0;
+    const scrF = audioCtx.createBiquadFilter(); scrF.type = 'bandpass'; scrF.frequency.value = 700; scrF.Q.value = 1.2;
+    const scrG = audioCtx.createGain(); scrG.gain.value = 0;
+    src.connect(hissF); hissF.connect(hissG); hissG.connect(b.out);
+    src.connect(scrF); scrF.connect(scrG); scrG.connect(b.out);
+    b.frame = () => {
+      const t = audioCtx.currentTime;
+      const pouring = mouse.down && tool === 'pour';
+      hissG.gain.setTargetAtTime(pouring ? 0.035 + size * 0.003 : 0, t, 0.08);
+      const carving = mouse.down && tool === 'carve' && performance.now() - lastScrape < 120;
+      scrG.gain.setTargetAtTime(carving ? 0.09 : 0, t, 0.05);
+    };
+    addNodes(b, [src, hissF, hissG, scrF, scrG]);
+    bed = b;
+  } else if (tab === 'bubbles') {
+    bed = makeBed(tab, 0);  // no bed; pops are one-shots
+  }
+}
+
+function updateSound() { if (bed && bed.update) bed.update(); }
+
+// Short one-shot voice: an oscillator with a pitch glide and decay envelope
+function blip(type, f0, f1, dur, vol, when) {
+  if (!soundOn || !audioCtx || !master) return;
+  const t = audioCtx.currentTime + (when || 0);
+  const o = osc(type, f0), g = audioCtx.createGain();
+  o.frequency.setValueAtTime(f0, t);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur * 0.6);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master);
+  liveVoices += 2;
+  o.onended = () => { o.disconnect(); g.disconnect(); liveVoices -= 2; };
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+function chime(base, vol) {
+  blip('sine', base, base, 1.6, vol || 0.08);
+  blip('sine', base * 2.01, base * 2.01, 1.1, (vol || 0.08) * 0.4);
+  blip('sine', base * 3.0, base * 3.0, 0.7, (vol || 0.08) * 0.2);
+}
+
+// Plucked string (Karplus-Strong) rendered into a buffer
+function pluck(freq, vol) {
+  if (!soundOn || !audioCtx || !master) return;
+  const sr = audioCtx.sampleRate, N = Math.max(2, Math.round(sr / freq)), len = Math.floor(sr * 1.4);
+  const buf = audioCtx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  const ring = new Float32Array(N);
+  for (let i = 0; i < N; i++) ring[i] = Math.random() * 2 - 1;
+  let k = 0;
+  for (let i = 0; i < len; i++) {
+    const a = ring[k], b = ring[(k + 1) % N];
+    d[i] = a;
+    ring[k] = (a + b) * 0.5 * 0.996;
+    k = (k + 1) % N;
+  }
+  const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
+  src.buffer = buf; g.gain.value = vol || 0.22;
+  src.connect(g); g.connect(master);
+  liveVoices += 2;
+  src.onended = () => { src.disconnect(); g.disconnect(); liveVoices -= 2; };
+  src.start();
+}
+
+function soundPointerDown(p) {
+  if (!soundOn) return;
+  if (mode === 'sand') {
+    if (tool === 'stamp') blip('square', 1800, 900, 0.05, 0.03);
+  } else if (mode === 'loop') {
+    chime(660 + Math.random() * 220, 0.06);
+  } else if (mode === 'plate') {
+    blip('triangle', toneN(waveN) * 4, toneN(waveN) * 3.9, 0.5, 0.07);
+    blip('sine', toneM(waveM) * 2, toneM(waveM) * 2, 0.7, 0.05);
+  } else if (mode === 'waves') {
+    const r = waveRect();
+    if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) {
+      pluck(toneN(hWaves) * 2, 0.22);
+      pluck(toneM(vWaves) * 2, 0.14);
+    }
+  }
+}
+
+function soundPointerMove() {
+  if (mode === 'sand' && tool === 'carve' && mouse.down) lastScrape = performance.now();
+}
+
+// Called every frame
+function soundFrame() {
+  if (mode === 'bubbles') {
+    const n = bubbles.length;
+    if (soundOn) {
+      if (n > lastBubbleCount) {
+        const b = bubbles[n - 1];
+        const f = 900 - Math.min(60, b.r) * 8;
+        blip('sine', f, f * 1.6, 0.18, 0.08);          // blow: rising bloop
+      } else if (n < lastBubbleCount && n > 0) {
+        const big = Math.max(...bubbles.map(b => b.r));
+        const f = Math.max(140, 700 - big * 5);
+        blip('sine', f * 1.5, f, 0.22, 0.09);          // merge: falling bloop, lower for bigger bubbles
+      }
+    }
+    lastBubbleCount = n;
+  } else {
+    lastBubbleCount = 0;
+  }
+  if (isFollow(mode)) {
+    const tk = followTick().tick;
+    if (tk !== lastFollowTick && tk === FOLLOW_FREEZE && soundOn) chime(523.25, 0.05);
+    lastFollowTick = tk;
+  }
+  if (soundOn && bed && bed.frame) bed.frame();
 }
 
 // ========== MAIN LOOP ==========
 function loop() {
+  updateTickLabel();
+  soundFrame();
   if (mode === 'sand') {
     updateSand();
     drawSand();
   } else if (mode === 'loop') {
-    updateLoop();
+    if (!followHolding('loop')) updateLoop();
     drawLoop();
   } else if (mode === 'bubbles') {
-    updateBubbles();
+    if (!followHolding('bubbles')) updateBubbles();
     drawBubbles();
   } else if (mode === 'plate') {
-    updatePlate();
+    if (!followHolding('plate')) updatePlate();
     drawPlate();
   } else if (mode === 'waves') {
-    updateWaves();
+    if (!followHolding('waves')) updateWaves();
     drawWaves();
   }
   requestAnimationFrame(loop);
@@ -1503,12 +2127,14 @@ canvas.addEventListener('mousedown', e => {
   if (mode === 'loop') loopDown(p.x, p.y);
   if (mode === 'plate') plateDown(p.x, p.y);
   if (mode === 'waves') wavesDown(p.x, p.y);
+  soundPointerDown(p);
 });
 canvas.addEventListener('mousemove', e => {
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') moveDraggedBubble(p.x, p.y);
   if (mode === 'sand') sandMove(p);
+  soundPointerMove();
 });
 window.addEventListener('mouseup', () => { mouse.down = false; draggingBubble = null; });
 
@@ -1522,6 +2148,7 @@ canvas.addEventListener('touchstart', e => {
   if (mode === 'loop') loopDown(p.x, p.y);
   if (mode === 'plate') plateDown(p.x, p.y);
   if (mode === 'waves') wavesDown(p.x, p.y);
+  soundPointerDown(p);
 }, {passive: false});
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
@@ -1529,6 +2156,7 @@ canvas.addEventListener('touchmove', e => {
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') moveDraggedBubble(p.x, p.y);
   if (mode === 'sand') sandMove(p);
+  soundPointerMove();
 }, {passive: false});
 window.addEventListener('touchend', () => { mouse.down = false; draggingBubble = null; });
 
@@ -1538,17 +2166,16 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     const newMode = tab.dataset.mode;
-    if (mode === 'plate' && newMode !== 'plate') {
-      stopSound();
-      soundOn = false;
-    }
+    stopBed();
     mode = newMode;
     particles = [];
     bubbles = [];
     draggingBubble = null;
     setControls();
+    if (soundOn) startBed(mode);
   });
 });
+document.getElementById('soundToggle').onclick = () => setSound(!soundOn);
 
 setControls();
 loop();
