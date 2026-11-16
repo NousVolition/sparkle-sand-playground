@@ -139,7 +139,7 @@
     position: absolute;
     left: 16px;
     top: 16px;
-    width: 280px;
+    width: min(340px, calc(100% - 32px));
     background: rgba(10,14,20,0.85);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -147,8 +147,11 @@
     display: none;
   }
   .wave-graphs.visible { display: block; }
-  .wave-graphs canvas { height: 80px; margin-bottom: 8px; background: transparent; }
+  .wave-graphs canvas { height: 90px; margin-bottom: 10px; background: transparent; }
   .wave-graphs h3 { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+  .wave-note { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+  .wave-note .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff6b9d; margin-right: 4px; }
+  @media (max-width: 700px) { .wave-graphs { padding: 10px; } .wave-graphs canvas { height: 56px; margin-bottom: 6px; } }
   .controls.sand { gap: 10px; }
   .controls.sand input[type="range"] { width: 70px; }
   .controls.sand button { padding: 6px 11px; }
@@ -198,10 +201,11 @@
 <div id="canvas-container">
   <canvas id="main"></canvas>
   <div class="wave-graphs" id="waveGraphs">
-    <h3>Horizontal Wave</h3>
-    <canvas id="hWave" width="256" height="70"></canvas>
-    <h3>Vertical Wave</h3>
-    <canvas id="vWave" width="256" height="70"></canvas>
+    <h3 id="hLabel">Horizontal wave</h3>
+    <canvas id="hWave" width="640" height="180"></canvas>
+    <h3 id="vLabel">Vertical wave</h3>
+    <canvas id="vWave" width="640" height="180"></canvas>
+    <p class="wave-note"><span class="dot"></span> Nodes: points that stay still. Sand collects on the lines through them.</p>
   </div>
   <div class="hint" id="hint">Pour: click and drag to pour glitter sand.</div>
 </div>
@@ -262,6 +266,7 @@ function setControls() {
   waveGraphs.classList.remove('visible');
   hint.classList.remove('faded');
   controlsDiv.classList.toggle('sand', mode === 'sand');
+  ripples = [];
   
   if (mode === 'sand') {
     controlsDiv.innerHTML = `
@@ -313,15 +318,21 @@ function setControls() {
     setTool(tool);
   }
   else if (mode === 'loop') {
-    hint.textContent = 'A gentle, slow-moving particle loop. Sit back and relax.';
+    hint.textContent = 'Calm on its own. Touch and drag to swirl the light around you; let go and it drifts home. Tap for a ripple.';
     controlsDiv.innerHTML = `
       <button id="resetLoop">Reset Loop</button>
-      <label>Speed <input type="range" id="loopSpeed" min="0.2" max="2" step="0.1" value="0.6"></label>
-      <label>Density <input type="range" id="loopDensity" min="50" max="400" value="150"></label>
+      <label>Speed <input type="range" id="loopSpeed" min="0.2" max="2" step="0.1" value="${loopSpeed}"></label>
+      <label>Density <input type="range" id="loopDensity" min="50" max="400" value="${loopDensity}"></label>
+      <button id="trailsBtn" class="${loopTrails ? 'active' : ''}">Trails: ${loopTrails ? 'On' : 'Off'}</button>
     `;
     document.getElementById('resetLoop').onclick = initLoop;
     document.getElementById('loopSpeed').oninput = e => loopSpeed = +e.target.value;
     document.getElementById('loopDensity').oninput = e => { loopDensity = +e.target.value; initLoop(); };
+    document.getElementById('trailsBtn').onclick = function() {
+      loopTrails = !loopTrails;
+      this.textContent = 'Trails: ' + (loopTrails ? 'On' : 'Off');
+      this.classList.toggle('active', loopTrails);
+    };
     initLoop();
   }
   else if (mode === 'bubbles') {
@@ -338,16 +349,17 @@ function setControls() {
     document.getElementById('tension').oninput = e => surfaceTension = +e.target.value;
   }
   else if (mode === 'plate') {
-    hint.textContent = 'Adjust Wave N and M to change the vibration pattern and pitch. Drag to stir the grains.';
+    hint.textContent = 'Sand jumps off the shaking parts and gathers on the still lines. Change Wave N and M for a new figure. Drag to stir, tap to shake.';
     controlsDiv.innerHTML = `
       <label>Wave N <input type="range" id="wn" min="1" max="12" value="${waveN}"></label>
       <label>Wave M <input type="range" id="wm" min="1" max="12" value="${waveM}"></label>
       <button id="scatterBtn">Scatter Sand</button>
       <button id="freezeBtn">${frozen ? 'Resume' : 'Freeze'}</button>
       <button id="soundBtn">${soundOn ? 'Sound: On' : 'Sound: Off'}</button>
+      <button id="linesBtn" class="${plateLines ? 'active' : ''}">Lines: ${plateLines ? 'On' : 'Off'}</button>
     `;
-    document.getElementById('wn').oninput = e => { waveN = +e.target.value; updateSound(); };
-    document.getElementById('wm').oninput = e => { waveM = +e.target.value; updateSound(); };
+    document.getElementById('wn').oninput = e => { waveN = +e.target.value; plateBoost = 1; updateSound(); };
+    document.getElementById('wm').oninput = e => { waveM = +e.target.value; plateBoost = 1; updateSound(); };
     document.getElementById('scatterBtn').onclick = scatterPlate;
     document.getElementById('freezeBtn').onclick = function() {
       frozen = !frozen;
@@ -359,19 +371,24 @@ function setControls() {
       this.classList.toggle('active', soundOn);
       if (soundOn) startSound(); else stopSound();
     };
+    document.getElementById('linesBtn').onclick = function() {
+      plateLines = !plateLines;
+      this.textContent = 'Lines: ' + (plateLines ? 'On' : 'Off');
+      this.classList.toggle('active', plateLines);
+    };
     scatterPlate();
     if (soundOn) startSound();
   }
   else if (mode === 'waves') {
-    hint.textContent = 'Left: simple 1D waves with still nodes. Right: where those waves cross to carve 2D patterns.';
+    hint.textContent = 'Each 1D wave has still points (pink). Where they cross, sand gathers into the 2D pattern. Tap the field to pluck, drag to stir.';
     waveGraphs.classList.add('visible');
     controlsDiv.innerHTML = `
-      <label>Horizontal Waves <input type="range" id="hw" min="1" max="8" value="2"></label>
-      <label>Vertical Waves <input type="range" id="vw" min="1" max="8" value="3"></label>
+      <label>Horizontal Waves <input type="range" id="hw" min="1" max="8" value="${hWaves}"></label>
+      <label>Vertical Waves <input type="range" id="vw" min="1" max="8" value="${vWaves}"></label>
       <button id="resetWaves">Reset Sand</button>
     `;
-    document.getElementById('hw').oninput = e => { hWaves = +e.target.value; resetWaveParticles(); };
-    document.getElementById('vw').oninput = e => { vWaves = +e.target.value; resetWaveParticles(); };
+    document.getElementById('hw').oninput = e => { hWaves = +e.target.value; reshakeWaves(); };
+    document.getElementById('vw').oninput = e => { vWaves = +e.target.value; reshakeWaves(); };
     document.getElementById('resetWaves').onclick = resetWaveParticles;
     resetWaveParticles();
   }
@@ -1003,107 +1020,268 @@ function drawBubbles() {
   }
 }
 
-// ========== SAND PLATE (Chladni-like) ==========
-function scatterPlate() {
-  particles = [];
-  for (let i = 0; i < 2500; i++) {
-    particles.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      baseX: 0, baseY: 0,
-      color: '#facc15'
+// ========== SHARED: ripples + vibrating grains ==========
+let ripples = [];
+let fieldF = 0, fieldFU = 0, fieldFV = 0;
+
+function addRipple(x, y, color) {
+  ripples.push({ x, y, r: 4, life: 1, color: color || '0,212,255' });
+}
+
+function updateRipples() {
+  for (const r of ripples) { r.r += 4.5; r.life -= 0.014; }
+  ripples = ripples.filter(r => r.life > 0);
+}
+
+function drawRipples() {
+  ctx.lineWidth = 1.5;
+  for (const r of ripples) {
+    ctx.strokeStyle = `rgba(${r.color},${(r.life * 0.45).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function scatterGrains(list, n, rect) {
+  list.length = 0;
+  for (let i = 0; i < n; i++) {
+    list.push({
+      x: rect.x + Math.random() * rect.w,
+      y: rect.y + Math.random() * rect.h,
+      vx: 0, vy: 0
     });
   }
 }
 
-function updatePlate() {
-  if (frozen) return;
-  const t = Date.now() * 0.001;
-  for (let p of particles) {
-    if (!p.baseX) {
-      p.baseX = p.x;
-      p.baseY = p.y;
-    }
-    // simple standing wave pattern
-    const amp = 18;
-    const nx = waveN * Math.PI * p.baseX / width;
-    const my = waveM * Math.PI * p.baseY / height;
-    const wave = Math.sin(nx) * Math.sin(my) * Math.sin(t * 3);
-    // push particles away from antinodes toward nodes
-    const push = Math.abs(wave) * 2;
-    p.x = p.baseX + (Math.random()-0.5) * 2 - wave * amp * 0.3;
-    p.y = p.baseY + (Math.random()-0.5) * 2 - wave * amp * 0.3;
-    
-    // mouse stir
-    if (mouse.down) {
-      const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
-      if (d < 60) {
-        const f = (60 - d) / 60;
-        p.x += (p.x - mouse.x) * f * 0.3;
-        p.y += (p.y - mouse.y) * f * 0.3;
-        p.baseX = p.x;
-        p.baseY = p.y;
+// Grains shake in proportion to how hard their spot vibrates (|f|),
+// and drift down the slope of f^2, so they gather on the still lines.
+function shakeGrains(list, rect, field, boost, scale) {
+  const stir = mouse.down;
+  const SR = 70;
+  for (const p of list) {
+    const u = (p.x - rect.x) / rect.w, v = (p.y - rect.y) / rect.h;
+    field(u, v);
+    const amp = Math.min(Math.abs(fieldF), 1.6);
+    const kick = (0.75 * Math.pow(amp, 1.5) + 0.03) * (1 + boost * 5);
+    p.vx += (Math.random() - 0.5) * kick * 2;
+    p.vy += (Math.random() - 0.5) * kick * 2;
+    p.vx -= fieldF * fieldFU / scale * 0.9;
+    p.vy -= fieldF * fieldFV / scale * 0.9;
+    if (stir) {
+      const dx = p.x - mouse.x, dy = p.y - mouse.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < SR * SR) {
+        const d = Math.sqrt(d2) || 1;
+        const f = (SR - d) / SR;
+        p.vx += dx / d * f * 3 + (Math.random() - 0.5) * 2;
+        p.vy += dy / d * f * 3 + (Math.random() - 0.5) * 2;
       }
     }
+    p.vx *= 0.75; p.vy *= 0.75;
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < rect.x) { p.x = rect.x; p.vx = Math.abs(p.vx); }
+    else if (p.x > rect.x + rect.w) { p.x = rect.x + rect.w; p.vx = -Math.abs(p.vx); }
+    if (p.y < rect.y) { p.y = rect.y; p.vy = Math.abs(p.vy); }
+    else if (p.y > rect.y + rect.h) { p.y = rect.y + rect.h; p.vy = -Math.abs(p.vy); }
   }
+}
+
+function drawGrains(list, c1, c2, sz) {
+  ctx.fillStyle = c1;
+  for (let i = 0; i < list.length; i++) {
+    if (i % 6 === 0) continue;
+    const p = list[i];
+    ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+  }
+  ctx.fillStyle = c2;
+  for (let i = 0; i < list.length; i += 6) {
+    const p = list[i];
+    ctx.fillRect(p.x - sz / 2, p.y - sz / 2, sz, sz);
+  }
+}
+
+// Faint dots along the still lines (sign changes of f)
+function drawNodeLines(rect, field, color) {
+  const step = 3;
+  ctx.fillStyle = color;
+  const nx = Math.ceil(rect.w / step), ny = Math.ceil(rect.h / step);
+  let prevRow = new Float32Array(nx + 1);
+  for (let j = 0; j <= ny; j++) {
+    const row = new Float32Array(nx + 1);
+    for (let i = 0; i <= nx; i++) {
+      field(i * step / rect.w, j * step / rect.h);
+      row[i] = fieldF;
+      if ((i > 0 && (row[i] > 0) !== (row[i - 1] > 0)) || (j > 0 && (row[i] > 0) !== (prevRow[i] > 0))) {
+        ctx.fillRect(rect.x + i * step - 0.75, rect.y + j * step - 0.75, 1.5, 1.5);
+      }
+    }
+    prevRow = row;
+  }
+}
+
+// ========== SAND PLATE (Chladni) ==========
+let plateBoost = 0;
+let plateLines = false;
+const PLATE_GRAINS = 5000;
+
+function plateRect() {
+  // keep the plate clear of the hint bar at the bottom
+  const S = Math.max(120, Math.min(width - 32, height - 92));
+  return { x: (width - S) / 2, y: Math.max(16, (height - 76 - S) / 2), w: S, h: S };
+}
+
+function plateParams() {
+  let a = waveN, b = waveM, s = -1;
+  if (a === b) { b = a + 1; s = 1; } // equal modes cancel out; use a neighbor mode instead
+  return [a, b, s];
+}
+
+let plateA = 3, plateB = 4, plateS = -1;
+function plateField(u, v) {
+  const pa = Math.PI * plateA, pb = Math.PI * plateB;
+  const cau = Math.cos(pa * u), sau = Math.sin(pa * u), cbu = Math.cos(pb * u), sbu = Math.sin(pb * u);
+  const cav = Math.cos(pa * v), sav = Math.sin(pa * v), cbv = Math.cos(pb * v), sbv = Math.sin(pb * v);
+  fieldF = cau * cbv + plateS * cbu * cav;
+  fieldFU = -pa * sau * cbv - plateS * pb * sbu * cav;
+  fieldFV = -pb * cau * sbv - plateS * pa * cbu * sav;
+}
+
+function scatterPlate() {
+  scatterGrains(particles, PLATE_GRAINS, plateRect());
+  plateBoost = 0.6;
+}
+
+function plateDown(x, y) {
+  plateBoost = 1;
+  addRipple(x, y, '250,204,21');
+  if (gain && audioCtx) {
+    const t = audioCtx.currentTime;
+    gain.gain.cancelScheduledValues(t);
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.setTargetAtTime(0.08, t, 0.15);
+  }
+}
+
+function updatePlate() {
+  updateRipples();
+  if (frozen) return;
+  [plateA, plateB, plateS] = plateParams();
+  const r = plateRect();
+  shakeGrains(particles, r, plateField, plateBoost, Math.PI * Math.max(plateA, plateB));
+  plateBoost *= 0.97;
 }
 
 function drawPlate() {
   ctx.fillStyle = '#05070a';
   ctx.fillRect(0, 0, width, height);
-  for (let p of particles) {
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(p.x, p.y, 1.8, 1.8);
-  }
-  // cursor cross
+  const r = plateRect();
+  ctx.fillStyle = '#0b1018';
+  ctx.fillRect(r.x, r.y, r.w, r.h);
+  ctx.strokeStyle = 'rgba(0,212,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(r.x - 0.5, r.y - 0.5, r.w + 1, r.h + 1);
+  [plateA, plateB, plateS] = plateParams();
+  if (plateLines) drawNodeLines(r, plateField, 'rgba(0,212,255,0.35)');
+  drawGrains(particles, '#facc15', '#fff3b0', 1.7);
+  drawRipples();
   if (mouse.x) {
     ctx.strokeStyle = '#00d4ff';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(mouse.x-10, mouse.y); ctx.lineTo(mouse.x+10, mouse.y);
-    ctx.moveTo(mouse.x, mouse.y-10); ctx.lineTo(mouse.x, mouse.y+10);
+    ctx.moveTo(mouse.x - 10, mouse.y); ctx.lineTo(mouse.x + 10, mouse.y);
+    ctx.moveTo(mouse.x, mouse.y - 10); ctx.lineTo(mouse.x, mouse.y + 10);
     ctx.stroke();
+    if (mouse.down) {
+      ctx.strokeStyle = 'rgba(0,212,255,0.3)';
+      ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 70, 0, Math.PI * 2); ctx.stroke();
+    }
   }
 }
 
 // ========== 1D TO 2D WAVES ==========
 let waveParticles = [];
+let waveBoost = 0;
+let wavePulse = 0;
+const WAVE_GRAINS = 4000;
+
+function waveRect() {
+  const gl = waveGraphs.offsetLeft, gt = waveGraphs.offsetTop;
+  const gw = waveGraphs.offsetWidth, gh = waveGraphs.offsetHeight;
+  const bottom = height - hint.offsetHeight - 32; // stay above the hint bar
+  if (width >= 700) {
+    const x = gl + gw + 32;
+    return { x, y: 24, w: Math.max(80, width - x - 24), h: Math.max(80, bottom - 24) };
+  }
+  const y = gt + gh + 16;
+  return { x: 22, y, w: Math.max(80, width - 38), h: Math.max(60, bottom - y) };
+}
+
+function waveField(u, v) {
+  const a = Math.PI * hWaves, b = Math.PI * vWaves;
+  const su = Math.sin(a * u), sv = Math.sin(b * v);
+  fieldF = su * sv;
+  fieldFU = a * Math.cos(a * u) * sv;
+  fieldFV = b * su * Math.cos(b * v);
+}
 
 function resetWaveParticles() {
-  waveParticles = [];
-  const cols = 40;
-  const rows = 30;
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      waveParticles.push({
-        gx: i / cols,
-        gy: j / rows,
-        color: '#67e8f9'
-      });
-    }
+  scatterGrains(waveParticles, WAVE_GRAINS, waveRect());
+  waveBoost = 0.6;
+  updateWaveLabels();
+}
+
+function reshakeWaves() {
+  waveBoost = 1;
+  wavePulse = 1;
+  updateWaveLabels();
+}
+
+function updateWaveLabels() {
+  const h = document.getElementById('hLabel'), v = document.getElementById('vLabel');
+  if (h) h.textContent = `Horizontal wave: ${hWaves + 1} nodes`;
+  if (v) v.textContent = `Vertical wave: ${vWaves + 1} nodes`;
+}
+
+function wavesDown(x, y) {
+  const r = waveRect();
+  if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
+    waveBoost = 1;
+    wavePulse = 1;
+    addRipple(x, y, '103,232,249');
   }
+}
+
+function updateWaves() {
+  updateRipples();
+  if (!waveParticles.length) resetWaveParticles();
+  shakeGrains(waveParticles, waveRect(), waveField, waveBoost, Math.PI * Math.max(hWaves, vWaves));
+  waveBoost *= 0.97;
+  wavePulse *= 0.95;
 }
 
 function drawWaves() {
   ctx.fillStyle = '#05070a';
   ctx.fillRect(0, 0, width, height);
-  
-  const t = Date.now() * 0.002;
-  const leftW = width * 0.45;
-  
-  // draw 2D pattern on right
-  for (let p of waveParticles) {
-    const hx = Math.sin(p.gx * Math.PI * hWaves + t);
-    const vy = Math.sin(p.gy * Math.PI * vWaves + t * 0.7);
-    const amp = (hx + vy) * 0.5;
-    const x = leftW + 40 + p.gx * (width - leftW - 60);
-    const y = 40 + p.gy * (height - 80);
-    const a = Math.abs(amp);
-    ctx.fillStyle = `rgba(103,232,249,${0.2 + a * 0.8})`;
-    ctx.fillRect(x, y, 3, 3);
+  const r = waveRect();
+  ctx.fillStyle = '#0a0f17';
+  ctx.fillRect(r.x, r.y, r.w, r.h);
+  ctx.strokeStyle = 'rgba(103,232,249,0.22)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(r.x - 0.5, r.y - 0.5, r.w + 1, r.h + 1);
+  // node ticks on the field edges, matching the pink dots in the graphs
+  ctx.fillStyle = '#ff6b9d';
+  for (let i = 0; i <= hWaves; i++) {
+    const x = r.x + r.w * i / hWaves;
+    ctx.beginPath(); ctx.arc(x, r.y - 7, 3, 0, Math.PI * 2); ctx.fill();
   }
-  
-  // draw wave graphs on left (mini canvases handled separately)
+  for (let j = 0; j <= vWaves; j++) {
+    const y = r.y + r.h * j / vWaves;
+    ctx.beginPath(); ctx.arc(r.x - 7, y, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  const glow = Math.min(1, waveBoost);
+  drawGrains(waveParticles, glow > 0.3 ? '#a5f3fc' : '#67e8f9', '#ecfeff', 1.8);
+  drawRipples();
   drawMiniWaves();
 }
 
@@ -1111,34 +1289,42 @@ function drawMiniWaves() {
   const hCanvas = document.getElementById('hWave');
   const vCanvas = document.getElementById('vWave');
   if (!hCanvas) return;
-  const hctx = hCanvas.getContext('2d');
-  const vctx = vCanvas.getContext('2d');
   const t = Date.now() * 0.002;
-  
-  function drawWave(c, waves, label) {
-    c.clearRect(0, 0, 256, 70);
-    c.strokeStyle = '#67e8f9';
-    c.lineWidth = 2;
+  const pulse = wavePulse;
+
+  function drawWave(c, waves) {
+    const W = c.canvas.width, H = c.canvas.height, mid = H / 2;
+    c.clearRect(0, 0, W, H);
+    c.strokeStyle = 'rgba(103,232,249,0.12)';
+    c.lineWidth = 1;
+    c.beginPath(); c.moveTo(0, mid); c.lineTo(W, mid); c.stroke();
+    const amp = (H * 0.3) * (1 + pulse * 0.5) * Math.sin(t * 2.2);
+    c.strokeStyle = pulse > 0.05 ? `rgb(${103 + 152 * pulse | 0},${232 + 23 * pulse | 0},249)` : '#67e8f9';
+    c.lineWidth = 2 + pulse * 2;
+    c.shadowColor = '#67e8f9';
+    c.shadowBlur = pulse * 14;
     c.beginPath();
-    for (let x = 0; x < 256; x++) {
-      const y = 35 + Math.sin((x / 256) * Math.PI * waves + t) * 22;
+    for (let x = 0; x <= W; x++) {
+      const y = mid + Math.sin((x / W) * Math.PI * waves) * amp;
       if (x === 0) c.moveTo(x, y); else c.lineTo(x, y);
     }
     c.stroke();
-    // nodes
+    c.shadowBlur = 0;
     c.fillStyle = '#ff6b9d';
     for (let i = 0; i <= waves; i++) {
-      const x = (i / waves) * 256;
+      const x = Math.min(W - 4, Math.max(4, (i / waves) * W));
       c.beginPath();
-      c.arc(x, 35, 4, 0, Math.PI*2);
+      c.arc(x, mid, 4 + pulse * 2, 0, Math.PI * 2);
       c.fill();
     }
   }
-  drawWave(hctx, hWaves);
-  drawWave(vctx, vWaves);
+  drawWave(hCanvas.getContext('2d'), hWaves);
+  drawWave(vCanvas.getContext('2d'), vWaves);
 }
 
 // ========== RELAXING LOOP ==========
+let loopTrails = false;
+
 function initLoop() {
   loopParticles = [];
   for (let i = 0; i < loopDensity; i++) {
@@ -1148,35 +1334,81 @@ function initLoop() {
       speed: (0.2 + Math.random() * 0.6) * (Math.random() < 0.5 ? 1 : -1),
       size: 1.5 + Math.random() * 3,
       hue: Math.random() * 60 + 180,
-      offset: Math.random() * Math.PI * 2
+      offset: Math.random() * Math.PI * 2,
+      x: undefined, y: undefined, vx: 0, vy: 0
     });
   }
 }
 
+function loopDown(x, y) {
+  addRipple(x, y, '125,211,252');
+}
+
 function updateLoop() {
-  for (let p of loopParticles) {
+  updateRipples();
+  const cx = width / 2, cy = height / 2;
+  const t = Date.now() * 0.001;
+  const R = Math.max(150, Math.min(width, height) * 0.3);
+  for (const p of loopParticles) {
     p.angle += p.speed * loopSpeed * 0.01;
+    const r = p.radius + Math.sin(t * 0.5 + p.offset) * 20;
+    const tx = cx + Math.cos(p.angle) * r;
+    const ty = cy + Math.sin(p.angle) * r * 0.7;
+    if (p.x === undefined) { p.x = tx; p.y = ty; }
+    let hold = 0, ax = 0, ay = 0;
+    if (mouse.down) {
+      const dx = mouse.x - p.x, dy = mouse.y - p.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d < R) {
+        hold = 1 - d / R;
+        const pull = (d - 45) / d * 0.05 * hold;   // pull in, but keep a ring around the finger
+        ax += dx * pull; ay += dy * pull;
+        const swirl = 0.55 * hold * (p.speed > 0 ? 1 : 0.8);
+        ax += -dy / d * swirl; ay += dx / d * swirl;
+      }
+    }
+    // ease back to the orbit when released
+    const spring = 0.015 * (1 - hold);
+    ax += (tx - p.x) * spring; ay += (ty - p.y) * spring;
+    for (const rp of ripples) {
+      const dx = p.x - rp.x, dy = p.y - rp.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const gap = Math.abs(d - rp.r);
+      if (gap < 24) {
+        const f = (1 - gap / 24) * rp.life * 1.2;
+        ax += dx / d * f; ay += dy / d * f;
+      }
+    }
+    p.vx = (p.vx + ax) * 0.9;
+    p.vy = (p.vy + ay) * 0.9;
+    p.x += p.vx; p.y += p.vy;
   }
 }
 
 function drawLoop() {
-  ctx.fillStyle = '#05070a';
+  if (loopTrails) {
+    ctx.fillStyle = 'rgba(5,7,10,0.14)';
+  } else {
+    ctx.fillStyle = '#05070a';
+  }
   ctx.fillRect(0, 0, width, height);
-  
-  const cx = width / 2;
-  const cy = height / 2;
   const t = Date.now() * 0.001;
-  
-  for (let p of loopParticles) {
-    const r = p.radius + Math.sin(t * 0.5 + p.offset) * 20;
-    const x = cx + Math.cos(p.angle) * r;
-    const y = cy + Math.sin(p.angle) * r * 0.7;
+  if (mouse.down) {
+    const g = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 90);
+    g.addColorStop(0, 'rgba(125,211,252,0.12)');
+    g.addColorStop(1, 'rgba(125,211,252,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 90, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const p of loopParticles) {
     const alpha = 0.4 + Math.sin(t + p.offset) * 0.3;
-    ctx.fillStyle = `hsla(${p.hue}, 70%, 60%, ${alpha})`;
+    const sp = Math.min(1, Math.hypot(p.vx, p.vy) / 6);
+    ctx.fillStyle = `hsla(${p.hue}, 70%, ${60 + sp * 20}%, ${Math.min(1, alpha + sp * 0.4)})`;
     ctx.beginPath();
-    ctx.arc(x, y, p.size, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
   }
+  drawRipples();
 }
 
 // ========== AUDIO (Sound Plate) ==========
@@ -1245,6 +1477,7 @@ function loop() {
     updatePlate();
     drawPlate();
   } else if (mode === 'waves') {
+    updateWaves();
     drawWaves();
   }
   requestAnimationFrame(loop);
@@ -1267,6 +1500,9 @@ canvas.addEventListener('mousedown', e => {
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') startBubbleInteraction(p.x, p.y);
   if (mode === 'sand') sandDown(p);
+  if (mode === 'loop') loopDown(p.x, p.y);
+  if (mode === 'plate') plateDown(p.x, p.y);
+  if (mode === 'waves') wavesDown(p.x, p.y);
 });
 canvas.addEventListener('mousemove', e => {
   const p = getPos(e);
@@ -1283,6 +1519,9 @@ canvas.addEventListener('touchstart', e => {
   mouse.x = p.x; mouse.y = p.y;
   if (mode === 'bubbles') startBubbleInteraction(p.x, p.y);
   if (mode === 'sand') sandDown(p);
+  if (mode === 'loop') loopDown(p.x, p.y);
+  if (mode === 'plate') plateDown(p.x, p.y);
+  if (mode === 'waves') wavesDown(p.x, p.y);
 }, {passive: false});
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
