@@ -189,6 +189,9 @@ let mode = 'sand';
 let width, height;
 let particles = [];
 let bubbles = [];
+let draggingBubble = null;
+let dragOffset = { x: 0, y: 0 };
+let lastDrag = { x: 0, y: 0 };
 let loopParticles = [];
 let mouse = { x: 0, y: 0, down: false };
 let color = '#ff6b9d';
@@ -276,7 +279,7 @@ function setControls() {
     initLoop();
   }
   else if (mode === 'bubbles') {
-    hint.textContent = 'Click empty space to blow a bubble. Drag bubbles together to merge them.';
+    hint.textContent = 'Click empty space to blow a bubble. Click and drag a bubble to move it; bring bubbles close to merge them.';
     controlsDiv.innerHTML = `
       <button id="blowBtn">+ Blow Bubble</button>
       <button id="jiggleBtn">Jiggle All</button>
@@ -443,6 +446,37 @@ function blowBubble(x, y) {
   });
 }
 
+function findBubbleAt(x, y) {
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    if (Math.hypot(x - b.x, y - b.y) <= b.r) return b;
+  }
+  return null;
+}
+
+function startBubbleInteraction(x, y) {
+  const hit = findBubbleAt(x, y);
+  if (hit) {
+    draggingBubble = hit;
+    dragOffset.x = hit.x - x;
+    dragOffset.y = hit.y - y;
+    lastDrag.x = x; lastDrag.y = y;
+    hit.vx = 0; hit.vy = 0;
+  } else {
+    blowBubble(x, y);
+  }
+}
+
+function moveDraggedBubble(x, y) {
+  if (!draggingBubble) return;
+  if (!bubbles.includes(draggingBubble)) { draggingBubble = null; return; }
+  draggingBubble.x = x + dragOffset.x;
+  draggingBubble.y = y + dragOffset.y;
+  draggingBubble.vx = (x - lastDrag.x) * 0.5;
+  draggingBubble.vy = (y - lastDrag.y) * 0.5;
+  lastDrag.x = x; lastDrag.y = y;
+}
+
 function jiggleBubbles() {
   for (let b of bubbles) {
     b.vx += (Math.random()-0.5)*4;
@@ -453,8 +487,10 @@ function jiggleBubbles() {
 function updateBubbles() {
   for (let i = 0; i < bubbles.length; i++) {
     const b = bubbles[i];
-    b.x += b.vx;
-    b.y += b.vy;
+    if (b !== draggingBubble) {
+      b.x += b.vx;
+      b.y += b.vy;
+    }
     b.vx *= 0.98;
     b.vy *= 0.98;
     
@@ -478,6 +514,7 @@ function updateBubbles() {
         b.r = newR;
         b.vx = (b.vx + o.vx) / 2;
         b.vy = (b.vy + o.vy) / 2;
+        if (o === draggingBubble) draggingBubble = b;
         bubbles.splice(j, 1);
         j--;
       }
@@ -766,28 +803,30 @@ canvas.addEventListener('mousedown', e => {
   mouse.down = true;
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
-  if (mode === 'bubbles') blowBubble(p.x, p.y);
+  if (mode === 'bubbles') startBubbleInteraction(p.x, p.y);
   if (mode === 'sand' && !pouring) stampStar();
 });
 canvas.addEventListener('mousemove', e => {
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
+  if (mode === 'bubbles') moveDraggedBubble(p.x, p.y);
 });
-window.addEventListener('mouseup', () => mouse.down = false);
+window.addEventListener('mouseup', () => { mouse.down = false; draggingBubble = null; });
 
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   mouse.down = true;
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
-  if (mode === 'bubbles') blowBubble(p.x, p.y);
+  if (mode === 'bubbles') startBubbleInteraction(p.x, p.y);
 }, {passive: false});
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
   const p = getPos(e);
   mouse.x = p.x; mouse.y = p.y;
+  if (mode === 'bubbles') moveDraggedBubble(p.x, p.y);
 }, {passive: false});
-window.addEventListener('touchend', () => mouse.down = false);
+window.addEventListener('touchend', () => { mouse.down = false; draggingBubble = null; });
 
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
@@ -802,6 +841,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     mode = newMode;
     particles = [];
     bubbles = [];
+    draggingBubble = null;
     setControls();
   });
 });
