@@ -64,6 +64,11 @@
     font-size: 0.85rem;
   }
   .sound-btn.active { background: #c084fc; color: #000; border: 1px solid #c084fc; }
+  .link-btn.active { background: var(--accent); border: 1px solid var(--accent); }
+  .linked-note { font-size: 0.78rem; color: var(--muted); }
+  .tab, .sound-btn { padding: 8px 10px; }
+  .tabs { gap: 5px; }
+  header { padding: 16px 18px; }
   .tab.active, .tab:hover {
     background: var(--accent);
     color: #000;
@@ -208,6 +213,7 @@
     <button class="tab" data-mode="plate">4. Sound & Sand Plate</button>
     <button class="tab" data-mode="waves">5. 1D to 2D Waves</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
+    <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
 </header>
 
@@ -256,6 +262,33 @@ let hWaves = 2;
 let vWaves = 3;
 let loopSpeed = 0.6;
 let loopDensity = 150;
+let linkedOn = (() => { try { return localStorage.getItem('sparkleLinked') !== '0'; } catch (e) { return true; } })();
+const LINK_NOTES = {
+  loop: 'Linked: bigger gap heals faster',
+  plate: 'Linked: finer pattern settles faster',
+  waves: 'Linked: more nodes, pluck fades faster',
+  bubbles: 'Linked: higher tension merges sooner, calms faster'
+};
+function applyLinkNote() {
+  if (!LINK_NOTES[mode] || hint.dataset.base === undefined) return;
+  hint.textContent = hint.dataset.base + (linkedOn ? ' ' + LINK_NOTES[mode] + '.' : '');
+}
+function linkNoteHTML() { return LINK_NOTES[mode] ? `<span class="linked-note" id="linkNote">${linkedOn ? LINK_NOTES[mode] : ''}</span>` : ''; }
+function setLinked(on) {
+  linkedOn = !!on;
+  try { localStorage.setItem('sparkleLinked', linkedOn ? '1' : '0'); } catch (e) {}
+  const b = document.getElementById('linkToggle');
+  if (b) { b.textContent = linkedOn ? 'Linked: On' : 'Linked: Off'; b.classList.toggle('active', linkedOn); }
+  applyLinkNote();
+  const g = document.getElementById('gapVal');
+  if (g) g.textContent = gapText();
+}
+// one number per tab; 1 = the original look
+function plateK() { return linkedOn ? Math.max(plateA, plateB) / 4 : 1; }
+function wavesK() { return linkedOn ? Math.max(hWaves, vWaves) / 3 : 1; }
+function bubblesK() { return linkedOn ? surfaceTension / 0.6 : 1; }
+const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+let loopGap = 1;   // one number: ring size around the finger AND how fast things heal
 let audioCtx = null;
 let osc1 = null;
 let osc2 = null;
@@ -339,11 +372,12 @@ function setControls() {
     setTool(tool);
   }
   else if (mode === 'loop') {
-    hint.textContent = 'Calm on its own. Touch and drag to swirl the light around you; let go and it drifts home. Tap for a ripple.';
+    hint.textContent = 'Calm on its own. Touch and drag to swirl the light around you; let go and it drifts home. Tap for a ripple. Gap sets the ring size and how fast it heals.';
     controlsDiv.innerHTML = `
       <button id="resetLoop">Reset Loop</button>
       <label>Speed <input type="range" id="loopSpeed" min="0.2" max="2" step="0.1" value="${loopSpeed}"></label>
       <label>Density <input type="range" id="loopDensity" min="50" max="400" value="${loopDensity}"></label>
+      <label title="Bigger gap heals faster: one number sets both">Gap <input type="range" id="loopGap" min="0.5" max="2" step="0.1" value="${loopGap}"> <span id="gapVal">${gapText()}</span></label>
       <button id="trailsBtn" class="${loopTrails ? 'active' : ''}">Trails: ${loopTrails ? 'On' : 'Off'}</button>
       ${colorControlsHTML()}
     `;
@@ -351,6 +385,7 @@ function setControls() {
     document.getElementById('resetLoop').onclick = initLoop;
     document.getElementById('loopSpeed').oninput = e => loopSpeed = +e.target.value;
     document.getElementById('loopDensity').oninput = e => { loopDensity = +e.target.value; initLoop(); };
+    document.getElementById('loopGap').oninput = e => { loopGap = +e.target.value; document.getElementById('gapVal').textContent = gapText(); };
     document.getElementById('trailsBtn').onclick = function() {
       loopTrails = !loopTrails;
       this.textContent = 'Trails: ' + (loopTrails ? 'On' : 'Off');
@@ -364,7 +399,7 @@ function setControls() {
       <button id="blowBtn">+ Blow Bubble</button>
       <button id="jiggleBtn">Jiggle All</button>
       <button id="popBtn">Pop All</button>
-      <label>Surface Tension <input type="range" id="tension" min="0.2" max="1" step="0.05" value="0.6"></label>
+      <label>Surface Tension <input type="range" id="tension" min="0.2" max="1" step="0.05" value="${surfaceTension}"></label>
       ${colorControlsHTML()}
     `;
     setupColorControls('bubbles');
@@ -416,6 +451,8 @@ function setControls() {
     document.getElementById('resetWaves').onclick = resetWaveParticles;
     resetWaveParticles();
   }
+  hint.dataset.base = hint.textContent;
+  applyLinkNote();
 }
 
 const TOOL_HINTS = {
@@ -648,6 +685,7 @@ function matteRGB(T, O, Col, PH, F, C, R, x, y, melt) {
   const i = y * C + x;
   let tt = T[i];
   const own = O[i];
+  if (tt === LOOSE) return looseRGB(T, Col, PH, C, R, x, y);
   let fill = false;
   if (tt !== STAMP && tt !== LEDGE) {
     if (!melt || tt !== EMPTY || !F[i]) return 0;
@@ -663,11 +701,11 @@ function matteRGB(T, O, Col, PH, F, C, R, x, y, melt) {
       let s = false, j = 0;
       if (xx >= 0 && yy >= 0 && xx < C && yy < R) {
         j = yy * C + xx;
-        s = (T[j] === tt && (melt || O[j] === own)) || (blend && F[j] === 1);
+        s = (T[j] === tt && (melt || O[j] === own)) || (blend && F[j] === 1) || T[j] === LOOSE;
       }
       if (!s) { if (Math.abs(dx) + Math.abs(dy) === 1) edge = true; continue; }
       n++; lit += dx + dy;
-      if ((blend || (!dx && !dy)) && T[j] !== EMPTY) {
+      if ((blend || (!dx && !dy)) && T[j] === tt) {
         const c = Col[j]; r += c & 255; g += (c >> 8) & 255; b += (c >> 16) & 255; cn++;
       }
     }
@@ -682,6 +720,43 @@ function matteRGB(T, O, Col, PH, F, C, R, x, y, melt) {
   if (edge && !melt) { const w = 0.16; r += (255 - r) * w; g += (255 - g) * w; b += (255 - b) * w; }
   r = Math.min(255, r | 0); g = Math.min(255, g | 0); b = Math.min(255, b | 0);
   return ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0;
+}
+
+// Poured sand: soft and calm. Color is half its own, half the 3x3 average (low contrast),
+// shading is gentler than the molds, and molds count as support so the pile and the mold share one surface.
+function looseRGB(T, Col, PH, C, R, x, y) {
+  const i = y * C + x;
+  let lit = 0, n = 0, r = 0, g = 0, b = 0, cn = 0;
+  for (let dy = -2; dy <= 2; dy++) {
+    const yy = y + dy;
+    if (yy < 0) continue;
+    for (let dx = -2; dx <= 2; dx++) {
+      const xx = x + dx;
+      if (xx < 0 || xx >= C) continue;
+      if (yy >= R) { n++; lit += dx + dy; continue; }   // the floor holds sand up
+      const j = yy * C + xx, t = T[j];
+      if (t === EMPTY) continue;
+      n++; lit += dx + dy;
+      if (t === LOOSE && dx * dx <= 1 && dy * dy <= 1) {
+        const c = Col[j]; r += c & 255; g += (c >> 8) & 255; b += (c >> 16) & 255; cn++;
+      }
+    }
+  }
+  const c = Col[i];
+  r = ((c & 255) + r / cn) / 2; g = (((c >> 8) & 255) + g / cn) / 2; b = (((c >> 16) & 255) + b / cn) / 2;
+  let k = (1 + 0.14 * lit / 15) * (0.86 + 0.14 * n / 25);
+  k *= 0.92 + (((PH[i] * 7) >> 2) & 15) / 15 * 0.16;
+  r = Math.min(255, r * k | 0); g = Math.min(255, g * k | 0); b = Math.min(255, b * k | 0);
+  return ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0;
+}
+
+// palette tone for poured sand: close to the molds, a touch brighter, small grain to grain change
+function pourColor(hex) {
+  const [r, g, b] = hexRgb(hex);
+  const L = 0.3 * r + 0.59 * g + 0.11 * b;
+  const k = 0.93 + ((Math.random() * 4) | 0) * 0.03;
+  const m = v => Math.min(255, (v + (L - v) * 0.22) * k | 0);
+  return ((255 << 24) | (m(b) << 16) | (m(g) << 8) | m(r)) >>> 0;
 }
 
 // Melt: a gap of up to about 14 cells between two different shapes fills in, like sand settling into the seam
@@ -714,12 +789,13 @@ function mattePixel(T, O, Col, PH, F, C, R, x, y, melt) {
       const xx = x + dx;
       if (xx < 0 || xx >= C) continue;
       const t = T[yy * C + xx];
-      if (t === STAMP || t === LEDGE || F[yy * C + xx]) { cnt++; if (nb < 0 || (dx === 0 || dy === 0)) nb = yy * C + xx; }
+      if (t !== EMPTY || F[yy * C + xx]) { cnt++; if (nb < 0 || (dx === 0 || dy === 0)) nb = yy * C + xx; }
     }
   }
   if (!cnt) return 0;
   let v = matteRGB(T, O, Col, PH, F, C, R, x, y, melt);
-  if (v) { if (cnt < 9 && T[y * C + x] !== EMPTY) cnt = Math.max(cnt, 5); else if (cnt < 9) cnt = Math.max(cnt + 2, 6); }
+  const self = T[y * C + x];
+  if (v) { if (cnt < 9 && self === LOOSE) cnt = Math.max(cnt, 3.9); else if (cnt < 9 && self !== EMPTY) cnt = Math.max(cnt, 5); else if (cnt < 9) cnt = Math.max(cnt + 2, 6); }
   else {
     if (cnt < 3) return 0;
     v = matteRGB(T, O, Col, PH, F, C, R, nb % C, (nb / C) | 0, melt);
@@ -793,12 +869,14 @@ function markMatte(x, y) {
 function updateMatteLayer() {
   ensureMatteLayer();
   const T = gType, O = gOwner, Col = gColor, C = gCols, R = gRows;
+  let nd = 0;
   for (let y = 0, i = 0; y < R; y++) {
     for (let x = 0; x < C; x++, i++) {
-      const t = T[i], mt = (t === STAMP || t === LEDGE) ? t : 0;
+      const t = T[i], mt = t;
       if (mt !== pMT[i] || (mt && (Col[i] !== pMC[i] || O[i] !== pMO[i]))) {
         pMT[i] = mt; pMC[i] = Col[i]; pMO[i] = O[i];
         markMatte(x, y);
+        nd++;
       }
     }
   }
@@ -1085,7 +1163,7 @@ function pourSand() {
       y: mouse.y + (Math.random() - 0.5) * spread * 0.5,
       vx: (Math.random() - 0.5) * 1.2,
       vy: Math.random() * 1.5 + 0.5,
-      c: grainColor(color)
+      c: pourColor(color)
     });
   }
 }
@@ -1299,8 +1377,8 @@ function drawSand() {
         const y0 = ly === 0 && ty > 0 ? ty - 1 : ty, y1 = ly === TILE - 1 && ty < tilesY - 1 ? ty + 1 : ty;
         for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) TD[yy * TX + xx] = 1;
       }
-      if (t === LOOSE && glints.length < 320) {
-        const a = (ph[i] * 4 + f) & 4095;
+      if (t === LOOSE && (ph[i] & 3) === 0 && glints.length < 90) {
+        const a = (ph[i] * 4 + (f >> 1)) & 4095;
         if (a < GLINT_LEN) glints.push(grainX(i, t), grainY(i, t), a);
       }
     }
@@ -1319,7 +1397,6 @@ function drawSand() {
     for (let y = ys; y <= ye; y++) {
       for (let x = xs, i = y * C + xs; x <= xe; x++, i++) {
         const t = T[i];
-        if (t === LOOSE) drawGrainOn(lc, atlas, i, t, Col[i]);
       }
     }
     lc.restore();
@@ -1327,7 +1404,6 @@ function drawSand() {
   updateMatteLayer();
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(matteLayer, 0, 0, C * CELL, R * CELL);
-  ctx.drawImage(sandLayer, 0, 0, C * CELL, R * CELL);
   drawLifted();
   const SP = SPR_PX;
   for (const p of flying) {
@@ -1344,7 +1420,7 @@ function drawSand() {
       const a = glints[k + 2] / GLINT_LEN;
       const tw = Math.sin(a * Math.PI);           // fade in and out
       const s = SPARK_CSS * (0.55 + 0.45 * tw);
-      ctx.globalAlpha = tw * 0.9;
+      ctx.globalAlpha = tw * 0.5;
       ctx.drawImage(spk, glints[k] - s / 2, glints[k + 1] - s / 2, s, s);
     }
     ctx.globalAlpha = 1;
@@ -1353,7 +1429,7 @@ function drawSand() {
 }
 
 // ---------- grain + sparkle sprites (drawn once per color at full screen resolution) ----------
-const SPR_CSS = 5, SPR_COLS = 32, SPARK_CSS = 16, GLINT_LEN = 64;
+const SPR_CSS = 5, SPR_COLS = 32, SPARK_CSS = 9, GLINT_LEN = 110;
 let SPR_PX = 0, sprDpr = 0, sprAtlas = null, sprCtx = null, sprNext = 0, sparkCanvas = null;
 const sprMap = new Map();
 
@@ -1379,7 +1455,7 @@ function grainSprite(u32) {
   const sx = (idx % SPR_COLS) * SPR_PX, sy = ((idx / SPR_COLS) | 0) * SPR_PX;
   const r = u32 & 255, g = (u32 >> 8) & 255, b = (u32 >> 16) & 255;
   const R = SPR_PX / 2, cx = sx + R, cy = sy + R, rr = R * 0.8;
-  const hi = v => Math.min(255, v + 80), lo = v => v * 0.72 | 0;
+  const hi = v => Math.min(255, v + 22), lo = v => v * 0.88 | 0;
   const grad = sprCtx.createRadialGradient(cx - rr * 0.3, cy - rr * 0.35, 0, cx, cy, rr);
   grad.addColorStop(0, `rgb(${hi(r)},${hi(g)},${hi(b)})`);
   grad.addColorStop(0.4, `rgb(${r},${g},${b})`);
@@ -1511,8 +1587,9 @@ function updateBubbles() {
       b.x += b.vx;
       b.y += b.vy;
     }
-    b.vx *= 0.98;
-    b.vy *= 0.98;
+    const keepB = clampN(1 - 0.02 * bubblesK(), 0.95, 0.995);
+    b.vx *= keepB;
+    b.vy *= keepB;
     
     // bounce walls
     if (b.x - b.r < 0 || b.x + b.r > width) b.vx *= -0.8;
@@ -1805,7 +1882,8 @@ function addRipple(x, y, color) {
 }
 
 function updateRipples() {
-  for (const r of ripples) { r.r += 4.5; r.life -= 0.014; }
+  const fade = mode === 'loop' ? gapParams().fade : 0.014;
+  for (const r of ripples) { r.r += 4.5; r.life -= fade; }
   ripples = ripples.filter(r => r.life > 0);
 }
 
@@ -1832,7 +1910,9 @@ function scatterGrains(list, n, rect) {
 
 // Grains shake in proportion to how hard their spot vibrates (|f|),
 // and drift down the slope of f^2, so they gather on the still lines.
-function shakeGrains(list, rect, field, boost, scale) {
+function shakeGrains(list, rect, field, boost, scale, keep, pullK) {
+  if (keep === undefined) keep = 0.75;
+  const pk = 0.9 * (pullK || 1);
   const stir = mouse.down;
   const SR = 70;
   for (const p of list) {
@@ -1842,8 +1922,8 @@ function shakeGrains(list, rect, field, boost, scale) {
     const kick = (0.75 * Math.pow(amp, 1.5) + 0.03) * (1 + boost * 5);
     p.vx += (Math.random() - 0.5) * kick * 2;
     p.vy += (Math.random() - 0.5) * kick * 2;
-    p.vx -= fieldF * fieldFU / scale * 0.9;
-    p.vy -= fieldF * fieldFV / scale * 0.9;
+    p.vx -= fieldF * fieldFU / scale * pk;
+    p.vy -= fieldF * fieldFV / scale * pk;
     if (stir) {
       const dx = p.x - mouse.x, dy = p.y - mouse.y;
       const d2 = dx * dx + dy * dy;
@@ -1854,7 +1934,7 @@ function shakeGrains(list, rect, field, boost, scale) {
         p.vy += dy / d * f * 3 + (Math.random() - 0.5) * 2;
       }
     }
-    p.vx *= 0.75; p.vy *= 0.75;
+    p.vx *= keep; p.vy *= keep;
     p.x += p.vx; p.y += p.vy;
     if (p.x < rect.x) { p.x = rect.x; p.vx = Math.abs(p.vx); }
     else if (p.x > rect.x + rect.w) { p.x = rect.x + rect.w; p.vx = -Math.abs(p.vx); }
@@ -1945,8 +2025,9 @@ function updatePlate() {
   if (frozen) return;
   [plateA, plateB, plateS] = plateParams();
   const r = plateRect();
-  shakeGrains(particles, r, plateField, plateBoost, Math.PI * Math.max(plateA, plateB));
-  plateBoost *= 0.97;
+  const k = plateK();
+  shakeGrains(particles, r, plateField, plateBoost, Math.PI * Math.max(plateA, plateB), clampN(1 - 0.25 * k, 0.5, 0.9), k * k);
+  plateBoost *= 1 - 0.03 * k;
 }
 
 function drawPlate() {
@@ -2036,9 +2117,10 @@ function wavesDown(x, y) {
 function updateWaves() {
   updateRipples();
   if (!waveParticles.length) resetWaveParticles();
-  shakeGrains(waveParticles, waveRect(), waveField, waveBoost, Math.PI * Math.max(hWaves, vWaves));
-  waveBoost *= 0.97;
-  wavePulse *= 0.95;
+  const k = wavesK();
+  shakeGrains(waveParticles, waveRect(), waveField, waveBoost, Math.PI * Math.max(hWaves, vWaves), clampN(1 - 0.25 * k, 0.5, 0.9), k * k);
+  waveBoost *= 1 - 0.03 * k;
+  wavePulse *= 1 - 0.05 * k;
 }
 
 function drawWaves() {
@@ -2124,6 +2206,14 @@ function drawMiniWaves() {
 // ========== RELAXING LOOP ==========
 let loopTrails = false;
 
+function gapText() { return loopGap.toFixed(1) + (linkedOn ? ', size and fade linked' : ', size only'); }
+// Gap m: ring radius 45*m, return spring 0.015*m, ripple fade 0.014*m, speed loss per frame 0.1*m
+function gapParams() {
+  const m = loopGap;
+  if (!linkedOn) return { ring: 45 * m, spring: 0.015, keep: 0.9, fade: 0.014 };
+  return { ring: 45 * m, spring: 0.015 * m, keep: Math.max(0.75, Math.min(0.97, 1 - 0.1 * m)), fade: 0.014 * m };
+}
+
 function initLoop() {
   loopParticles = [];
   for (let i = 0; i < loopDensity; i++) {
@@ -2148,26 +2238,28 @@ function updateLoop() {
   const cx = width / 2, cy = height / 2;
   const t = Date.now() * 0.001;
   const R = Math.max(150, Math.min(width, height) * 0.3);
+  const G = gapParams();
   for (const p of loopParticles) {
     p.angle += p.speed * loopSpeed * 0.01;
     const r = p.radius + Math.sin(t * 0.5 + p.offset) * 20;
     const tx = cx + Math.cos(p.angle) * r;
     const ty = cy + Math.sin(p.angle) * r * 0.7;
     if (p.x === undefined) { p.x = tx; p.y = ty; }
+    p.tx = tx; p.ty = ty;
     let hold = 0, ax = 0, ay = 0;
     if (mouse.down) {
       const dx = mouse.x - p.x, dy = mouse.y - p.y;
       const d = Math.hypot(dx, dy) || 1;
       if (d < R) {
         hold = 1 - d / R;
-        const pull = (d - 45) / d * 0.05 * hold;   // pull in, but keep a ring around the finger
+        const pull = (d - G.ring) / d * 0.05 * hold;   // pull in, but keep a ring (the gap) around the finger
         ax += dx * pull; ay += dy * pull;
         const swirl = 0.55 * hold * (p.speed > 0 ? 1 : 0.8);
         ax += -dy / d * swirl; ay += dx / d * swirl;
       }
     }
     // ease back to the orbit when released
-    const spring = 0.015 * (1 - hold);
+    const spring = G.spring * (1 - hold);
     ax += (tx - p.x) * spring; ay += (ty - p.y) * spring;
     for (const rp of ripples) {
       const dx = p.x - rp.x, dy = p.y - rp.y;
@@ -2178,8 +2270,8 @@ function updateLoop() {
         ax += dx / d * f; ay += dy / d * f;
       }
     }
-    p.vx = (p.vx + ax) * 0.9;
-    p.vy = (p.vy + ay) * 0.9;
+    p.vx = (p.vx + ax) * G.keep;
+    p.vy = (p.vy + ay) * G.keep;
     p.x += p.vx; p.y += p.vy;
   }
 }
@@ -2397,7 +2489,8 @@ function chime(base, vol) {
 }
 
 // Plucked string (Karplus-Strong) rendered into a buffer
-function pluck(freq, vol) {
+function pluck(freq, vol, kLink) {
+  const loss = 1 - 0.004 * (kLink || 1);   // Linked: more nodes, the string dies faster
   if (!soundOn || !audioCtx || !master) return;
   const sr = audioCtx.sampleRate, N = Math.max(2, Math.round(sr / freq)), len = Math.floor(sr * 1.4);
   const buf = audioCtx.createBuffer(1, len, sr), d = buf.getChannelData(0);
@@ -2407,7 +2500,7 @@ function pluck(freq, vol) {
   for (let i = 0; i < len; i++) {
     const a = ring[k], b = ring[(k + 1) % N];
     d[i] = a;
-    ring[k] = (a + b) * 0.5 * 0.996;
+    ring[k] = (a + b) * 0.5 * loss;
     k = (k + 1) % N;
   }
   const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
@@ -2430,8 +2523,8 @@ function soundPointerDown(p) {
   } else if (mode === 'waves') {
     const r = waveRect();
     if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) {
-      pluck(toneN(hWaves) * 2, 0.22);
-      pluck(toneM(vWaves) * 2, 0.14);
+      pluck(toneN(hWaves) * 2, 0.22, wavesK());
+      pluck(toneM(vWaves) * 2, 0.14, wavesK());
     }
   }
 }
@@ -2559,6 +2652,8 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 document.getElementById('soundToggle').onclick = () => setSound(!soundOn);
+document.getElementById('linkToggle').onclick = () => setLinked(!linkedOn);
+setLinked(linkedOn);
 
 setControls();
 loop();
