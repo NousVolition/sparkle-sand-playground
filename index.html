@@ -228,6 +228,7 @@ Third-party material is governed by its own terms.
   .tick-label.freeze { color: #fbbf24; }
   .hint { transition: opacity 0.6s; }
   .hint.faded { opacity: 0.25; }
+  @media (min-width: 701px) { .tab, .sound-btn { padding: 8px 6px; } }   /* room for tab 10 on one header row */
   header { position: relative; }
   #copyNote { position: absolute; right: 18px; bottom: 2px; font-size: 10px; line-height: 12px; color: var(--muted); opacity: 0.55; white-space: nowrap; }
   #copyNote a { color: inherit; }
@@ -247,6 +248,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="crystal">7. Crystal</button>
     <button class="tab" data-mode="magnets">8. Magnets</button>
     <button class="tab" data-mode="stretch" title="Stretch &amp; Close">9. Stretch</button>
+    <button class="tab" data-mode="ferro" title="Ferrofluid Studio">10. Ferro</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -267,6 +269,1135 @@ Third-party material is governed by its own terms.
     <p class="wave-note"><span class="dot"></span> Nodes: points that stay still. Sand collects on the lines through them.</p>
   </div>
   <div class="hint" id="hint">Pour: click and drag to pour glitter sand.</div>
+<!-- Ferrofluid Studio v6 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 10 "Ferro": Ferrofluid Studio v6 — Area-Conserving & Discrete Laplacian Surface Tension (ported) -->
+<style>
+  #ferroStage, #ferroStage * { box-sizing: border-box; margin: 0; padding: 0; user-select: none;
+  }
+  #ferroStage {
+    background: #0b0d14;
+    color: #d4d8e8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #ferroStage {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    transition: filter 0.15s ease;
+  }
+  #ferroStage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+  #ferroStage canvas:active { cursor: grabbing;
+  }
+  #ferroStage .fs-hud-top {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+    gap: 12px;
+  }
+  #ferroStage .fs-panel {
+    background: rgba(16, 20, 32, 0.84);
+    border: 1px solid rgba(130, 148, 196, 0.18);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 12px 14px;
+    pointer-events: auto;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  }
+  #ferroStage .fs-metrics-panel {
+    min-width: 280px;
+    max-width: 330px;
+  }
+  #ferroStage .fs-panel-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b96b8;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  #ferroStage .fs-metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+    font-size: 13px;
+  }
+  #ferroStage .fs-metric-label { color: #9ea8c7;
+  }
+  #ferroStage .fs-metric-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 600;
+    color: #e4e9f7;
+  }
+  #ferroStage .fs-metric-val.fs-highlight { color: #7dd3fc;
+  }
+  #ferroStage .fs-metric-val.fs-area-ok { color: #6ee7b7;
+  }
+  #ferroStage #fs-fitCanvas {
+    width: 100%;
+    height: 54px;
+    background: rgba(9, 12, 20, 0.65);
+    border-radius: 7px;
+    margin-top: 6px;
+    border: 1px solid rgba(130, 148, 196, 0.12);
+    display: block;
+  }
+  #ferroStage .fs-fit-caption {
+    font-size: 11px;
+    color: #7c87a8;
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  #ferroStage .fs-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    max-width: 680px;
+  }
+  #ferroStage button, #ferroStage select {
+    background: rgba(26, 32, 50, 0.9);
+    color: #d4d8e8;
+    border: 1px solid rgba(130, 148, 196, 0.24);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  #ferroStage button:hover, #ferroStage select:hover {
+    background: rgba(38, 47, 72, 0.95);
+    border-color: rgba(155, 175, 228, 0.42);
+  }
+  #ferroStage button.active {
+    background: rgba(67, 97, 168, 0.48);
+    border-color: #7aa2f7;
+    color: #ffffff;
+  }
+  #ferroStage .fs-hud-bottom {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+  }
+  #ferroStage .fs-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 10px 16px;
+    width: 100%;
+    max-width: 1180px;
+  }
+  #ferroStage .fs-control-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  #ferroStage .fs-control-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #a6b0cf;
+  }
+  #ferroStage .fs-control-header span:last-child {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #dce3f7;
+  }
+  #ferroStage .fs-sub-readout {
+    font-size: 11px;
+    color: #7dd3fc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    margin-top: 1px;
+  }
+  #ferroStage input[type="range"] {
+    width: 100%;
+    accent-color: #7aa2f7;
+    height: 4px;
+    background: rgba(130, 148, 196, 0.22);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  /* playground adaptations */
+  #ferroStage #fs-simCanvas { touch-action: none; }
+  #ferroStage #fs-copy { position: absolute; right: 16px; bottom: 1px; font-size: 10px; line-height: 12px; color: #8b96b8; opacity: 0.5; white-space: nowrap; pointer-events: auto; }
+  #ferroStage #fs-copy a { color: inherit; }
+  #ferroStage #fs-copy:hover { opacity: 0.9; }
+  @media (max-width: 600px) {
+    #ferroStage { overflow-y: auto; }
+    #ferroStage #fs-simCanvas { height: 400px; }
+    #ferroStage .fs-hud-top, #ferroStage .fs-hud-bottom { position: static; flex-direction: column; align-items: stretch; padding: 10px 10px 0; }
+    #ferroStage .fs-metrics-panel { min-width: 0; max-width: none; }
+    #ferroStage .fs-toolbar { justify-content: flex-start; max-width: none; }
+    #ferroStage #fs-copy { position: static; padding: 8px 10px 12px; text-align: right; white-space: normal; }
+  }
+</style>
+<div id="ferroStage" style="display:none">
+  <canvas id="fs-simCanvas"></canvas>
+
+  <div class="fs-hud-top">
+    <div class="fs-panel fs-metrics-panel">
+      <div class="fs-panel-title">Conservation &amp; Mass Gap Telemetry</div>
+      <div class="fs-metric-row">
+        <span class="fs-metric-label">area:</span>
+        <span class="fs-metric-val fs-area-ok" id="fs-areaReadout">0 px²</span>
+      </div>
+      <div class="fs-metric-row">
+        <span class="fs-metric-label">Resting target area:</span>
+        <span class="fs-metric-val" id="fs-targetAreaReadout">0 px²</span>
+      </div>
+      <div class="fs-metric-row">
+        <span class="fs-metric-label">Swirl kinetic energy E:</span>
+        <span class="fs-metric-val fs-highlight" id="fs-energyReadout">0.0000</span>
+      </div>
+      <div class="fs-metric-row">
+        <span class="fs-metric-label">Decay status:</span>
+        <span class="fs-metric-val" id="fs-statusReadout">Forcing Active</span>
+      </div>
+      <canvas id="fs-fitCanvas" width="280" height="54"></canvas>
+      <div class="fs-fit-caption">
+        <span>ln E(t) decay slope</span>
+        <span id="fs-fitPointsLabel">0 pts</span>
+      </div>
+    </div>
+
+    <div class="fs-panel fs-toolbar">
+      <button id="fs-orbitBtn" class="active">Orbit Pilot: ON</button>
+      <select id="fs-orbitPattern">
+        <option value="ring">Orbit: Harmonic Ring</option>
+        <option value="figure8">Orbit: Figure-8</option>
+        <option value="counter">Orbit: Counter-Swirl</option>
+      </select>
+      <select id="fs-presetSelect">
+        <option value="dipole">Preset: Classic Dipole</option>
+        <option value="crown">Preset: 4-Pole Crown</option>
+        <option value="wall">Preset: Sharp Wall Test</option>
+        <option value="square">Preset: Sharp Square Test</option>
+      </select>
+      <button id="fs-addNorthBtn">+ North (N)</button>
+      <button id="fs-addSouthBtn">+ South (S)</button>
+      <button id="fs-fieldLinesBtn" class="active">Field Lines: ON</button>
+      <select id="fs-paletteSelect">
+        <option value="twilight">Palette: Soft Twilight</option>
+        <option value="chrome">Palette: Obsidian Chrome</option>
+        <option value="aurora">Palette: Muted Aurora</option>
+        <option value="amber">Palette: Warm Amber</option>
+      </select>
+      <button id="fs-pauseBtn">Pause</button>
+    </div>
+  </div>
+
+  <div class="fs-hud-bottom">
+    <div class="fs-panel fs-controls-grid">
+      <div class="fs-control-item">
+        <div class="fs-control-header">
+          <span>Mass Gap Decay (Δm)</span>
+          <span id="fs-massGapVal">0.85 /s</span>
+        </div>
+        <input type="range" id="fs-massGapSlider" min="0.15" max="3.00" step="0.05" value="0.85">
+        <div class="fs-sub-readout">measured decay rate: <span id="fs-measuredDecayVal">—</span></div>
+      </div>
+
+      <div class="fs-control-item">
+        <div class="fs-control-header">
+          <span>Surface Tension (Neighbor Smooth)</span>
+          <span id="fs-tensionVal">0.38</span>
+        </div>
+        <input type="range" id="fs-tensionSlider" min="0.02" max="0.90" step="0.02" value="0.38">
+        <div class="fs-sub-readout">rounds sharp corners via r_{j±1}</div>
+      </div>
+
+      <div class="fs-control-item">
+        <div class="fs-control-header">
+          <span>Magnetic Pull</span>
+          <span id="fs-pullVal">1.00</span>
+        </div>
+        <input type="range" id="fs-pullSlider" min="0.00" max="2.40" step="0.05" value="1.00">
+      </div>
+
+      <div class="fs-control-item">
+        <div class="fs-control-header">
+          <span>Magnet Softness (ε)</span>
+          <span id="fs-softnessVal">110 px</span>
+        </div>
+        <input type="range" id="fs-softnessSlider" min="30" max="240" step="5" value="110">
+      </div>
+
+      <div class="fs-control-item">
+        <div class="fs-control-header">
+          <span>Orbit Speed</span>
+          <span id="fs-orbitSpeedVal">0.85</span>
+        </div>
+        <input type="range" id="fs-orbitSpeedSlider" min="0.10" max="2.50" step="0.05" value="0.85">
+      </div>
+
+      <div class="fs-control-item">
+        <div class="fs-control-header">
+          <span>Eye Comfort Dimmer</span>
+          <span id="fs-dimmerVal">86%</span>
+        </div>
+        <input type="range" id="fs-dimmerSlider" min="45" max="100" step="1" value="86">
+      </div>
+    </div>
+  </div>
+  <div id="fs-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div>
+</div>
+<script>
+// Ported from Michele's ferrofluid-studio-v6.html. Her code runs unchanged inside ferroBoot(),
+// which starts the first time tab 10 opens. Adaptations: ids/classes prefixed fs-, size taken from
+// the tab's canvas (not the window) with DPR scaling, and the loop idles while another tab is open.
+let ferroBooted = false;
+function ferroShow() {
+  document.getElementById('ferroStage').style.display = '';
+  if (!ferroBooted) { ferroBooted = true; ferroBoot(); }
+}
+function ferroHide() { document.getElementById('ferroStage').style.display = 'none'; }
+function ferroBoot() {
+  const stage = document.getElementById('ferroStage');
+  const canvas = document.getElementById('fs-simCanvas');
+  const ctx = canvas.getContext('2d');
+  const fitCanvas = document.getElementById('fs-fitCanvas');
+  const fitCtx = fitCanvas.getContext('2d');
+
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  let W = canvas.clientWidth;
+  let H = canvas.clientHeight;
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  let cx = W * 0.5;
+  let cy = H * 0.5;
+
+  // Fluid ring discretization (N points around cycle)
+  const N = 180;
+  const dTheta = (Math.PI * 2) / N;
+  const baseRadius = Math.min(W, H) * 0.19;
+  const targetArea = Math.PI * baseRadius * baseRadius;
+
+  let radii = new Float64Array(N);
+  let radialVel = new Float64Array(N);
+
+  // 2D Navier-Stokes style swirl grid
+  const GW = 48;
+  const GH = 32;
+  let vx = new Float32Array(GW * GH);
+  let vy = new Float32Array(GW * GH);
+  let vxNext = new Float32Array(GW * GH);
+  let vyNext = new Float32Array(GW * GH);
+
+  // Ambient flow tracer particles
+  const NUM_TRACERS = 140;
+  let tracers = [];
+
+  // Magnets
+  let magnets = [];
+  let draggedMagnet = null;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  // Simulation state
+  let orbitPilot = true;
+  let orbitPattern = 'ring';
+  let showFieldLines = true;
+  let paused = false;
+  let simTime = 0;
+
+  // Parameters
+  let massGap = 0.85;
+  let surfaceTension = 0.38;
+  let magneticPull = 1.00;
+  let epsilon = 110;
+  let orbitSpeed = 0.85;
+  let paletteKey = 'twilight';
+
+  // Decay measurement state
+  const NOISE_FLOOR = 1e-5;
+  let decayRecording = false;
+  let decayStartTime = 0;
+  let decaySamples = []; // { t, lnE }
+  let measuredDecayRate = null;
+
+  const palettes = {
+    twilight: {
+      bgTop: '#0b0e17',
+      bgBot: '#111626',
+      fluidFill: 'rgba(116, 138, 198, 0.24)',
+      fluidCore: 'rgba(152, 174, 232, 0.42)',
+      fluidStroke: 'rgba(176, 198, 248, 0.78)',
+      fieldLine: 'rgba(138, 160, 218, 0.11)',
+      tracer: 'rgba(165, 190, 245, 0.28)',
+      north: '#d98a9c',
+      south: '#7da6d9'
+    },
+    chrome: {
+      bgTop: '#090b10',
+      bgBot: '#12151e',
+      fluidFill: 'rgba(148, 158, 178, 0.24)',
+      fluidCore: 'rgba(186, 196, 214, 0.42)',
+      fluidStroke: 'rgba(210, 218, 234, 0.75)',
+      fieldLine: 'rgba(165, 175, 195, 0.10)',
+      tracer: 'rgba(195, 205, 222, 0.24)',
+      north: '#c98888',
+      south: '#849ec4'
+    },
+    aurora: {
+      bgTop: '#081014',
+      bgBot: '#0e1b22',
+      fluidFill: 'rgba(94, 176, 168, 0.22)',
+      fluidCore: 'rgba(124, 206, 194, 0.38)',
+      fluidStroke: 'rgba(148, 224, 212, 0.72)',
+      fieldLine: 'rgba(115, 192, 182, 0.10)',
+      tracer: 'rgba(140, 216, 204, 0.25)',
+      north: '#d4929e',
+      south: '#76b5c9'
+    },
+    amber: {
+      bgTop: '#100d0a',
+      bgBot: '#1b1510',
+      fluidFill: 'rgba(196, 154, 102, 0.22)',
+      fluidCore: 'rgba(222, 180, 126, 0.38)',
+      fluidStroke: 'rgba(236, 198, 148, 0.72)',
+      fieldLine: 'rgba(205, 165, 114, 0.10)',
+      tracer: 'rgba(226, 188, 138, 0.24)',
+      north: '#d6897a',
+      south: '#87a4c4'
+    }
+  };
+
+  // Compute exact enclosed polygon area from polar radii r_j
+  function computeEnclosedArea(rArr) {
+    let sum = 0;
+    const sinStep = Math.sin(dTheta);
+    for (let j = 0; j < N; j++) {
+      const r1 = rArr[j];
+      const r2 = rArr[(j + 1) % N];
+      sum += 0.5 * r1 * r2 * sinStep;
+    }
+    return sum;
+  }
+
+  // Rescale all radii uniformly so enclosed area equals resting targetArea
+  function enforceConstantArea() {
+    const currentArea = computeEnclosedArea(radii);
+    if (currentArea > 1e-6) {
+      const scale = Math.sqrt(targetArea / currentArea);
+      for (let j = 0; j < N; j++) {
+        radii[j] *= scale;
+      }
+    }
+  }
+
+  function initTracers() {
+    tracers = [];
+    for (let i = 0; i < NUM_TRACERS; i++) {
+      tracers.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        life: Math.random() * 120 + 60
+      });
+    }
+  }
+
+  function setPreset(type) {
+    magnets = [];
+    const dist = Math.min(W, H) * 0.31;
+    if (type === 'dipole') {
+      magnets.push({ x: cx - dist, y: cy, prevX: cx - dist, prevY: cy, pol: 1, phase: 0 });
+      magnets.push({ x: cx + dist, y: cy, prevX: cx + dist, prevY: cy, pol: -1, phase: Math.PI });
+      resetCircleShape();
+    } else if (type === 'crown') {
+      for (let k = 0; k < 4; k++) {
+        const ang = (k * Math.PI) / 2;
+        const mx = cx + Math.cos(ang) * dist;
+        const my = cy + Math.sin(ang) * dist;
+        magnets.push({ x: mx, y: my, prevX: mx, prevY: my, pol: k % 2 === 0 ? 1 : -1, phase: ang });
+      }
+      resetCircleShape();
+    } else if (type === 'wall') {
+      // Create a shape with sharp straight walls to observe neighbor surface tension rounding it off
+      magnets.push({ x: cx - dist * 1.15, y: cy, prevX: cx - dist * 1.15, prevY: cy, pol: 1, phase: 0 });
+      magnets.push({ x: cx + dist * 1.15, y: cy, prevX: cx + dist * 1.15, prevY: cy, pol: -1, phase: Math.PI });
+      for (let j = 0; j < N; j++) {
+        const theta = j * dTheta;
+        // D-shape with a sharp flat vertical wall on the right side
+        const cosT = Math.cos(theta);
+        if (cosT > 0.35) {
+          radii[j] = (baseRadius * 0.35) / cosT;
+        } else {
+          radii[j] = baseRadius;
+        }
+        radialVel[j] = 0;
+      }
+      enforceConstantArea();
+    } else if (type === 'square') {
+      // Sharp square shape to demonstrate rapid corner rounding under neighbor difference tension
+      magnets.push({ x: cx - dist * 1.2, y: cy - dist * 0.6, prevX: cx - dist * 1.2, prevY: cy - dist * 0.6, pol: 1, phase: 0 });
+      magnets.push({ x: cx + dist * 1.2, y: cy + dist * 0.6, prevX: cx + dist * 1.2, prevY: cy + dist * 0.6, pol: -1, phase: Math.PI });
+      for (let j = 0; j < N; j++) {
+        const theta = j * dTheta;
+        const denom = Math.max(Math.abs(Math.cos(theta)), Math.abs(Math.sin(theta)));
+        radii[j] = (baseRadius * 0.88) / denom;
+        radialVel[j] = 0;
+      }
+      enforceConstantArea();
+    }
+  }
+
+  function resetCircleShape() {
+    for (let j = 0; j < N; j++) {
+      radii[j] = baseRadius;
+      radialVel[j] = 0;
+    }
+    enforceConstantArea();
+  }
+
+  // UI Bindings
+  const areaReadout = document.getElementById('fs-areaReadout');
+  const targetAreaReadout = document.getElementById('fs-targetAreaReadout');
+  const energyReadout = document.getElementById('fs-energyReadout');
+  const statusReadout = document.getElementById('fs-statusReadout');
+  const fitPointsLabel = document.getElementById('fs-fitPointsLabel');
+  const measuredDecayVal = document.getElementById('fs-measuredDecayVal');
+
+  targetAreaReadout.textContent = `${Math.round(targetArea).toLocaleString()} px²`;
+
+  const orbitBtn = document.getElementById('fs-orbitBtn');
+  orbitBtn.addEventListener('click', () => {
+    orbitPilot = !orbitPilot;
+    orbitBtn.textContent = orbitPilot ? 'Orbit Pilot: ON' : 'Orbit Pilot: OFF';
+    orbitBtn.classList.toggle('active', orbitPilot);
+
+    if (!orbitPilot) {
+      // Stop all forcing immediately and begin recording decay
+      for (let m of magnets) {
+        m.prevX = m.x;
+        m.prevY = m.y;
+      }
+      decayRecording = true;
+      decayStartTime = simTime;
+      decaySamples = [];
+      measuredDecayRate = null;
+      measuredDecayVal.textContent = 'measuring...';
+      statusReadout.textContent = 'Free Decay (Zero Forcing)';
+    } else {
+      decayRecording = false;
+      statusReadout.textContent = 'Forcing Active';
+    }
+  });
+
+  document.getElementById('fs-orbitPattern').addEventListener('change', (e) => {
+    orbitPattern = e.target.value;
+  });
+
+  document.getElementById('fs-presetSelect').addEventListener('change', (e) => {
+    setPreset(e.target.value);
+  });
+
+  document.getElementById('fs-addNorthBtn').addEventListener('click', () => {
+    const ang = Math.random() * Math.PI * 2;
+    const dist = Math.min(W, H) * 0.30;
+    const mx = cx + Math.cos(ang) * dist;
+    const my = cy + Math.sin(ang) * dist;
+    magnets.push({ x: mx, y: my, prevX: mx, prevY: my, pol: 1, phase: ang });
+  });
+
+  document.getElementById('fs-addSouthBtn').addEventListener('click', () => {
+    const ang = Math.random() * Math.PI * 2;
+    const dist = Math.min(W, H) * 0.30;
+    const mx = cx + Math.cos(ang) * dist;
+    const my = cy + Math.sin(ang) * dist;
+    magnets.push({ x: mx, y: my, prevX: mx, prevY: my, pol: -1, phase: ang });
+  });
+
+  const fieldLinesBtn = document.getElementById('fs-fieldLinesBtn');
+  fieldLinesBtn.addEventListener('click', () => {
+    showFieldLines = !showFieldLines;
+    fieldLinesBtn.textContent = showFieldLines ? 'Field Lines: ON' : 'Field Lines: OFF';
+    fieldLinesBtn.classList.toggle('active', showFieldLines);
+  });
+
+  document.getElementById('fs-paletteSelect').addEventListener('change', (e) => {
+    paletteKey = e.target.value;
+  });
+
+  const pauseBtn = document.getElementById('fs-pauseBtn');
+  pauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    pauseBtn.classList.toggle('active', paused);
+  });
+
+  document.getElementById('fs-massGapSlider').addEventListener('input', (e) => {
+    massGap = parseFloat(e.target.value);
+    document.getElementById('fs-massGapVal').textContent = `${massGap.toFixed(2)} /s`;
+    if (!orbitPilot) {
+      decayRecording = true;
+      decayStartTime = simTime;
+      decaySamples = [];
+      measuredDecayRate = null;
+      measuredDecayVal.textContent = 'measuring...';
+    }
+  });
+
+  document.getElementById('fs-tensionSlider').addEventListener('input', (e) => {
+    surfaceTension = parseFloat(e.target.value);
+    document.getElementById('fs-tensionVal').textContent = surfaceTension.toFixed(2);
+  });
+
+  document.getElementById('fs-pullSlider').addEventListener('input', (e) => {
+    magneticPull = parseFloat(e.target.value);
+    document.getElementById('fs-pullVal').textContent = magneticPull.toFixed(2);
+  });
+
+  document.getElementById('fs-softnessSlider').addEventListener('input', (e) => {
+    epsilon = parseFloat(e.target.value);
+    document.getElementById('fs-softnessVal').textContent = `${Math.round(epsilon)} px`;
+  });
+
+  document.getElementById('fs-orbitSpeedSlider').addEventListener('input', (e) => {
+    orbitSpeed = parseFloat(e.target.value);
+    document.getElementById('fs-orbitSpeedVal').textContent = orbitSpeed.toFixed(2);
+  });
+
+  document.getElementById('fs-dimmerSlider').addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    document.getElementById('fs-dimmerVal').textContent = `${val}%`;
+    stage.style.filter = `brightness(${val}%)`;
+  });
+  stage.style.filter = 'brightness(86%)';
+
+  // Pointer interactions for dragging & double-click polarity flip
+  canvas.addEventListener('pointerdown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    for (let i = magnets.length - 1; i >= 0; i--) {
+      const m = magnets[i];
+      if (Math.hypot(px - m.x, py - m.y) < 28) {
+        draggedMagnet = m;
+        dragOffsetX = px - m.x;
+        dragOffsetY = py - m.y;
+        break;
+      }
+    }
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!draggedMagnet) return;
+    const rect = canvas.getBoundingClientRect();
+    draggedMagnet.x = e.clientX - rect.left - dragOffsetX;
+    draggedMagnet.y = e.clientY - rect.top - dragOffsetY;
+  });
+
+  window.addEventListener('pointerup', () => {
+    draggedMagnet = null;
+  });
+
+  canvas.addEventListener('dblclick', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    for (let m of magnets) {
+      if (Math.hypot(px - m.x, py - m.y) < 28) {
+        m.pol *= -1;
+        break;
+      }
+    }
+  });
+
+  function fitToTab() {
+    if (!canvas.clientWidth || !canvas.clientHeight) return;
+    if (canvas.clientWidth === W && canvas.clientHeight === H) return;
+    const oldCx = cx;
+    const oldCy = cy;
+    W = canvas.clientWidth;
+    H = canvas.clientHeight;
+    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx = W * 0.5;
+    cy = H * 0.5;
+    for (let m of magnets) {
+      m.x += cx - oldCx;
+      m.y += cy - oldCy;
+      m.prevX = m.x;
+      m.prevY = m.y;
+    }
+  }
+  window.addEventListener('resize', fitToTab);
+  if (window.ResizeObserver) new ResizeObserver(fitToTab).observe(canvas);
+
+  // Compute magnetic field vector (Bx, By) at world point (x, y) with softened 1/(r^2 + eps^2)
+  function getMagneticField(x, y) {
+    let bx = 0;
+    let by = 0;
+    const eps2 = epsilon * epsilon;
+    for (let i = 0; i < magnets.length; i++) {
+      const m = magnets[i];
+      const dx = x - m.x;
+      const dy = y - m.y;
+      const r2 = dx * dx + dy * dy + eps2;
+      const invR = 1.0 / Math.sqrt(r2);
+      const strength = (m.pol * 16000) / r2;
+      bx += strength * dx * invR;
+      by += strength * dy * invR;
+    }
+    return { bx, by };
+  }
+
+  // Step 2D swirl velocity field (Navier-Stokes advection + viscosity + mass gap decay)
+  function stepSwirlGrid(dt) {
+    // 1. Apply forcing ONLY when Orbit Pilot is ON
+    if (orbitPilot) {
+      const eps2 = epsilon * epsilon;
+      for (let m of magnets) {
+        const mvx = (m.x - m.prevX) / dt;
+        const mvy = (m.y - m.prevY) / dt;
+        if (Math.abs(mvx) < 1e-3 && Math.abs(mvy) < 1e-3) continue;
+
+        for (let gy = 0; gy < GH; gy++) {
+          const wy = ((gy + 0.5) / GH) * H;
+          for (let gx = 0; gx < GW; gx++) {
+            const wx = ((gx + 0.5) / GW) * W;
+            const dx = wx - m.x;
+            const dy = wy - m.y;
+            const r2 = dx * dx + dy * dy + eps2;
+            const w = (eps2 / r2) * 0.14 * dt;
+            const idx = gy * GW + gx;
+            vx[idx] += mvx * w;
+            vy[idx] += mvy * w;
+          }
+        }
+      }
+    }
+
+    // 2. Semi-Lagrangian self-advection + mild spatial diffusion
+    const cellW = W / GW;
+    const cellH = H / GH;
+    for (let gy = 0; gy < GH; gy++) {
+      for (let gx = 0; gx < GW; gx++) {
+        const idx = gy * GW + gx;
+        const backX = gx - (vx[idx] * dt) / cellW;
+        const backY = gy - (vy[idx] * dt) / cellH;
+
+        const sx = Math.max(0, Math.min(GW - 1.001, backX));
+        const sy = Math.max(0, Math.min(GH - 1.001, backY));
+        const x0 = Math.floor(sx);
+        const y0 = Math.floor(sy);
+        const tx = sx - x0;
+        const ty = sy - y0;
+
+        const i00 = y0 * GW + x0;
+        const i10 = y0 * GW + (x0 + 1);
+        const i01 = (y0 + 1) * GW + x0;
+        const i11 = (y0 + 1) * GW + (x0 + 1);
+
+        const avx =
+          (1 - tx) * (1 - ty) * vx[i00] +
+          tx * (1 - ty) * vx[i10] +
+          (1 - tx) * ty * vx[i01] +
+          tx * ty * vx[i11];
+        const avy =
+          (1 - tx) * (1 - ty) * vy[i00] +
+          tx * (1 - ty) * vy[i10] +
+          (1 - tx) * ty * vy[i01] +
+          tx * ty * vy[i11];
+
+        // Mild neighbor viscosity
+        const lIdx = gy * GW + Math.max(0, gx - 1);
+        const rIdx = gy * GW + Math.min(GW - 1, gx + 1);
+        const uIdx = Math.max(0, gy - 1) * GW + gx;
+        const dIdx = Math.min(GH - 1, gy + 1) * GW + gx;
+
+        const lapX = 0.25 * (vx[lIdx] + vx[rIdx] + vx[uIdx] + vx[dIdx]) - vx[idx];
+        const lapY = 0.25 * (vy[lIdx] + vy[rIdx] + vy[uIdx] + vy[dIdx]) - vy[idx];
+
+        vxNext[idx] = avx + 0.08 * lapX;
+        vyNext[idx] = avy + 0.08 * lapY;
+      }
+    }
+
+    // 3. Apply Mass Gap exponential decay: E(t) ~ exp(-massGap * t) => v(t) ~ exp(-0.5 * massGap * t)
+    const velDecay = Math.exp(-0.5 * massGap * dt);
+    let totalEnergy = 0;
+    for (let i = 0; i < GW * GH; i++) {
+      vx[i] = vxNext[i] * velDecay;
+      vy[i] = vyNext[i] * velDecay;
+      totalEnergy += 0.5 * (vx[i] * vx[i] + vy[i] * vy[i]);
+    }
+    return totalEnergy / (GW * GH);
+  }
+
+  function sampleSwirl(x, y) {
+    const gx = Math.max(0, Math.min(GW - 1.001, (x / W) * GW - 0.5));
+    const gy = Math.max(0, Math.min(GH - 1.001, (y / H) * GH - 0.5));
+    const x0 = Math.floor(gx);
+    const y0 = Math.floor(gy);
+    const tx = gx - x0;
+    const ty = gy - y0;
+    const i00 = y0 * GW + x0;
+    const i10 = y0 * GW + (x0 + 1);
+    const i01 = (y0 + 1) * GW + x0;
+    const i11 = (y0 + 1) * GW + (x0 + 1);
+    return {
+      u: (1 - tx) * (1 - ty) * vx[i00] + tx * (1 - ty) * vx[i10] + (1 - tx) * ty * vx[i01] + tx * ty * vx[i11],
+      v: (1 - tx) * (1 - ty) * vy[i00] + tx * (1 - ty) * vy[i10] + (1 - tx) * ty * vy[i01] + tx * ty * vy[i11]
+    };
+  }
+
+  // Linear least-squares regression for ln(E) = a - slope * t
+  function fitDecaySlope(samples) {
+    const n = samples.length;
+    if (n < 6) return null;
+    let sumT = 0, sumY = 0, sumTT = 0, sumTY = 0;
+    for (let i = 0; i < n; i++) {
+      const t = samples[i].t;
+      const y = samples[i].lnE;
+      sumT += t;
+      sumY += y;
+      sumTT += t * t;
+      sumTY += t * y;
+    }
+    const denom = n * sumTT - sumT * sumT;
+    if (Math.abs(denom) < 1e-9) return null;
+    const slope = (n * sumTY - sumT * sumY) / denom;
+    const intercept = (sumY - slope * sumT) / n;
+    return { decayRate: -slope, intercept, slope };
+  }
+
+  function drawFitPlot(fitResult) {
+    const fw = fitCanvas.width;
+    const fh = fitCanvas.height;
+    fitCtx.clearRect(0, 0, fw, fh);
+
+    if (decaySamples.length < 2) {
+      fitCtx.fillStyle = '#5c6685';
+      fitCtx.font = '10px sans-serif';
+      fitCtx.fillText(
+        orbitPilot ? 'Turn Orbit Pilot OFF to measure decay slope' : 'Recording decay curve...',
+        10,
+        30
+      );
+      return;
+    }
+
+    const tMin = decaySamples[0].t;
+    const tMax = Math.max(tMin + 0.25, decaySamples[decaySamples.length - 1].t);
+    let yMin = Infinity;
+    let yMax = -Infinity;
+    for (let s of decaySamples) {
+      if (s.lnE < yMin) yMin = s.lnE;
+      if (s.lnE > yMax) yMax = s.lnE;
+    }
+    if (yMax - yMin < 0.5) {
+      yMin -= 0.25;
+      yMax += 0.25;
+    }
+
+    const pad = 6;
+    const toX = (t) => pad + ((t - tMin) / (tMax - tMin)) * (fw - 2 * pad);
+    const toY = (y) => fh - pad - ((y - yMin) / (yMax - yMin)) * (fh - 2 * pad);
+
+    // Recorded points
+    fitCtx.strokeStyle = '#7dd3fc';
+    fitCtx.lineWidth = 1.5;
+    fitCtx.beginPath();
+    for (let i = 0; i < decaySamples.length; i++) {
+      const px = toX(decaySamples[i].t);
+      const py = toY(decaySamples[i].lnE);
+      if (i === 0) fitCtx.moveTo(px, py);
+      else fitCtx.lineTo(px, py);
+    }
+    fitCtx.stroke();
+
+    // Linear regression fit line
+    if (fitResult) {
+      fitCtx.strokeStyle = '#fbbf24';
+      fitCtx.setLineDash([4, 3]);
+      fitCtx.lineWidth = 1.3;
+      fitCtx.beginPath();
+      fitCtx.moveTo(toX(tMin), toY(fitResult.intercept + fitResult.slope * tMin));
+      fitCtx.lineTo(toX(tMax), toY(fitResult.intercept + fitResult.slope * tMax));
+      fitCtx.stroke();
+      fitCtx.setLineDash([]);
+    }
+  }
+
+  function stepPhysics(dt) {
+    simTime += dt;
+
+    // 1. Update magnet positions
+    for (let i = 0; i < magnets.length; i++) {
+      const m = magnets[i];
+      m.prevX = m.x;
+      m.prevY = m.y;
+
+      if (orbitPilot && m !== draggedMagnet) {
+        const orbitR = Math.min(W, H) * 0.30;
+        const baseAng = m.phase + simTime * orbitSpeed * 0.85;
+        if (orbitPattern === 'ring') {
+          m.x = cx + Math.cos(baseAng) * orbitR;
+          m.y = cy + Math.sin(baseAng) * orbitR;
+        } else if (orbitPattern === 'figure8') {
+          m.x = cx + Math.sin(baseAng) * orbitR * 1.15;
+          m.y = cy + Math.sin(baseAng * 2) * orbitR * 0.55;
+        } else if (orbitPattern === 'counter') {
+          const dir = m.pol > 0 ? 1 : -1;
+          const ang = m.phase + simTime * orbitSpeed * 0.85 * dir;
+          m.x = cx + Math.cos(ang) * orbitR;
+          m.y = cy + Math.sin(ang) * orbitR;
+        }
+      }
+    }
+
+    // 2. Step Navier-Stokes swirl field and measure kinetic energy
+    const energy = stepSwirlGrid(dt);
+    energyReadout.textContent = energy.toFixed(5);
+
+    // Record ln(E) when Orbit Pilot is OFF until reaching NOISE_FLOOR
+    if (!orbitPilot && decayRecording) {
+      if (energy > NOISE_FLOOR) {
+        decaySamples.push({
+          t: simTime - decayStartTime,
+          lnE: Math.log(energy)
+        });
+        fitPointsLabel.textContent = `${decaySamples.length} pts`;
+        const fit = fitDecaySlope(decaySamples);
+        if (fit) {
+          measuredDecayRate = fit.decayRate;
+          measuredDecayVal.textContent = `${measuredDecayRate.toFixed(3)} /s`;
+        }
+        drawFitPlot(fit);
+      } else {
+        decayRecording = false;
+        statusReadout.textContent = 'Noise Floor Reached';
+        const fit = fitDecaySlope(decaySamples);
+        if (fit) {
+          measuredDecayRate = fit.decayRate;
+          measuredDecayVal.textContent = `${measuredDecayRate.toFixed(3)} /s`;
+        }
+        drawFitPlot(fit);
+      }
+    } else if (orbitPilot) {
+      fitPointsLabel.textContent = '0 pts';
+      drawFitPlot(null);
+    }
+
+    // 3. Step ferrofluid edge radii:
+    //    (a) Magnetic pull + gentle restoring + swirl advection
+    const nextRadii = new Float64Array(N);
+    for (let j = 0; j < N; j++) {
+      const theta = j * dTheta;
+      const cosT = Math.cos(theta);
+      const sinT = Math.sin(theta);
+      const r = radii[j];
+      const px = cx + r * cosT;
+      const py = cy + r * sinT;
+
+      // Magnetic normal pressure (paramagnetic attraction proportional to |B|^2 plus Rosensweig spike modulation)
+      const { bx, by } = getMagneticField(px, py);
+      const bMag = Math.hypot(bx, by);
+      const bRadial = bx * cosT + by * sinT;
+
+      // Spike harmonic modulation aligned with field direction
+      const fieldAngle = Math.atan2(by, bx);
+      const spikeWave = 0.5 + 0.5 * Math.cos(14 * (theta - fieldAngle));
+      const magForce = magneticPull * (bMag * 18.0 * (0.45 + 0.75 * spikeWave) + Math.abs(bRadial) * 6.0);
+
+      // Gentle swirl radial advection
+      const swirl = sampleSwirl(px, py);
+      const swirlRadial = (swirl.u * cosT + swirl.v * sinT) * 0.18;
+
+      // Subtle centering elasticity so fluid stays centered around rest shape
+      const centerRestore = (baseRadius - r) * 0.65;
+
+      // Update radial velocity and position from magnetic pull
+      radialVel[j] = radialVel[j] * 0.82 + (magForce + centerRestore) * dt;
+      nextRadii[j] = Math.max(baseRadius * 0.25, r + (radialVel[j] + swirlRadial) * dt);
+    }
+
+    //    (b) Surface tension acting on neighbor differences of edge radius AFTER magnetic pull:
+    //        Move each edge point r_j toward the average of r_{j-1} and r_{j+1}
+    //        by an amount set by the Surface Tension slider.
+    const smoothAmount = Math.min(0.95, surfaceTension);
+    const subSteps = 3;
+    const subAlpha = 1 - Math.pow(1 - smoothAmount, 1 / subSteps);
+    for (let s = 0; s < subSteps; s++) {
+      for (let j = 0; j < N; j++) {
+        const rPrev = nextRadii[(j - 1 + N) % N];
+        const rNext = nextRadii[(j + 1) % N];
+        const neighborAvg = 0.5 * (rPrev + rNext);
+        radii[j] = nextRadii[j] + subAlpha * (neighborAvg - nextRadii[j]);
+      }
+      if (s < subSteps - 1) {
+        nextRadii.set(radii);
+      }
+    }
+
+    //    (c) Rescale edge radii after every step so enclosed area stays equal to resting targetArea
+    enforceConstantArea();
+
+    // Update corner panel area readout
+    const liveArea = computeEnclosedArea(radii);
+    areaReadout.textContent = `${Math.round(liveArea).toLocaleString()} px²`;
+
+    // 4. Update ambient swirl tracer particles
+    for (let tr of tracers) {
+      const sw = sampleSwirl(tr.x, tr.y);
+      tr.x += sw.u * dt * 0.75;
+      tr.y += sw.v * dt * 0.75;
+      tr.life -= 1;
+      if (tr.life <= 0 || tr.x < 0 || tr.x > W || tr.y < 0 || tr.y > H) {
+        tr.x = Math.random() * W;
+        tr.y = Math.random() * H;
+        tr.life = Math.random() * 120 + 60;
+      }
+    }
+  }
+
+  function render() {
+    const pal = palettes[paletteKey];
+
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle magnetic field lines
+    if (showFieldLines && magnets.length > 0) {
+      ctx.strokeStyle = pal.fieldLine;
+      ctx.lineWidth = 1.1;
+      const seedsPerMagnet = 14;
+      for (let m of magnets) {
+        for (let k = 0; k < seedsPerMagnet; k++) {
+          const ang = (k / seedsPerMagnet) * Math.PI * 2;
+          let fx = m.x + Math.cos(ang) * 20;
+          let fy = m.y + Math.sin(ang) * 20;
+          ctx.beginPath();
+          ctx.moveTo(fx, fy);
+          for (let step = 0; step < 34; step++) {
+            const { bx, by } = getMagneticField(fx, fy);
+            const len = Math.hypot(bx, by);
+            if (len < 1e-4) break;
+            const dir = m.pol >= 0 ? 1 : -1;
+            fx += (bx / len) * 14 * dir;
+            fy += (by / len) * 14 * dir;
+            ctx.lineTo(fx, fy);
+            if (fx < -50 || fx > W + 50 || fy < -50 || fy > H + 50) break;
+          }
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Ambient swirl tracers
+    ctx.fillStyle = pal.tracer;
+    for (let tr of tracers) {
+      ctx.beginPath();
+      ctx.arc(tr.x, tr.y, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Ferrofluid body polygon
+    ctx.beginPath();
+    for (let j = 0; j < N; j++) {
+      const theta = j * dTheta;
+      const x = cx + radii[j] * Math.cos(theta);
+      const y = cy + radii[j] * Math.sin(theta);
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    const radialGrad = ctx.createRadialGradient(cx, cy, baseRadius * 0.15, cx, cy, baseRadius * 1.45);
+    radialGrad.addColorStop(0, pal.fluidCore);
+    radialGrad.addColorStop(1, pal.fluidFill);
+    ctx.fillStyle = radialGrad;
+    ctx.fill();
+
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = pal.fluidStroke;
+    ctx.stroke();
+
+    // Inner contour ring
+    ctx.beginPath();
+    for (let j = 0; j < N; j++) {
+      const theta = j * dTheta;
+      const x = cx + radii[j] * 0.72 * Math.cos(theta);
+      const y = cy + radii[j] * 0.72 * Math.sin(theta);
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(220, 230, 255, 0.16)';
+    ctx.stroke();
+
+    // Magnets + Softness (epsilon) halos
+    for (let m of magnets) {
+      const color = m.pol > 0 ? pal.north : pal.south;
+
+      // Epsilon softening radius ring
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, epsilon, 0, Math.PI * 2);
+      ctx.strokeStyle = m.pol > 0 ? 'rgba(217, 138, 156, 0.13)' : 'rgba(125, 166, 217, 0.13)';
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Magnet body
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 16, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.stroke();
+
+      ctx.fillStyle = '#0c0f18';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(m.pol > 0 ? 'N' : 'S', m.x, m.y + 0.5);
+    }
+  }
+
+  // Initialize and start loop
+  initTracers();
+  setPreset('dipole');
+
+  let lastTime = performance.now();
+  function loop(now) {
+    if (mode !== 'ferro') { lastTime = now; requestAnimationFrame(loop); return; }
+    const dt = Math.min(0.033, Math.max(0.005, (now - lastTime) / 1000));
+    lastTime = now;
+
+    if (!paused) {
+      stepPhysics(dt);
+    }
+    render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+</script>
+<!-- end Ferrofluid Studio v6 -->
 </div>
 
 <script>
@@ -352,6 +1483,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(document.getElemen
 
 function setControls() {
   controlsDiv.innerHTML = '';
+  if (mode !== 'ferro') ferroHide();
   waveGraphs.classList.remove('visible');
   hint.classList.remove('faded');
   controlsDiv.classList.toggle('sand', mode === 'sand');
@@ -584,6 +1716,10 @@ function setControls() {
     hint.innerHTML = STC_HINT;
     controlsDiv.appendChild(stcControls);
     stcControls.style.display = '';
+  }
+  else if (mode === 'ferro') {
+    controlsDiv.innerHTML = '<span class="linked-note">Ferrofluid Studio v6 — Area-Conserving &amp; Discrete Laplacian Surface Tension</span>';
+    ferroShow();
   }
   hint.dataset.base = hint.textContent;
   applyLinkNote();
