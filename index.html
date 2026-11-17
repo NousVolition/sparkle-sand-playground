@@ -162,8 +162,8 @@
   .wave-note { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
   .wave-note .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff6b9d; margin-right: 4px; }
   @media (max-width: 700px) { .wave-graphs { padding: 10px; } .wave-graphs canvas { height: 56px; margin-bottom: 6px; } }
-  .controls.sand { gap: 10px; }
-  .controls.sand input[type="range"] { width: 70px; }
+  .controls.sand { gap: 8px; }
+  .controls.sand input[type="range"] { width: 58px; }
   .controls.sand button { padding: 6px 11px; }
   .controls.sand label { gap: 6px; }
   .controls.sand .palette { gap: 5px; }
@@ -293,11 +293,12 @@ function setControls() {
       <button id="stampBtn" data-tool="stamp">Stamp</button>
       <button id="carveBtn" data-tool="carve">Carve</button>
       <button id="ledgeBtn" data-tool="ledge">Ledge</button>
+      <button id="meltBtn" class="${meltOn ? 'active' : ''}" title="Layered: shapes stay separate. Melt: overlapping shapes blend.">${meltOn ? 'Melt' : 'Layered'}</button>
       <span class="mold-box"><canvas id="moldIcon" width="44" height="44"></canvas><select id="mold" title="Mold"></select></span>
       <label>Mold size <input type="range" id="moldSize" min="25" max="140" value="${moldSize}"></label>
       <label>Size <input type="range" id="size" min="1" max="8" value="${size}"></label>
       <label>Cling <input type="range" id="cling" min="0" max="1" step="0.05" value="${cling}"></label>
-      <button id="guideBtn" class="${guideLines ? 'active' : ''}">Guide Lines: ${guideLines ? 'On' : 'Off'}</button>
+      <button id="guideBtn" class="${guideLines ? 'active' : ''}">Guides: ${guideLines ? 'On' : 'Off'}</button>
       <button id="clearBtn">Clear</button>
       <div class="palette" id="palette"></div>
     `;
@@ -329,10 +330,11 @@ function setControls() {
     document.getElementById('cling').oninput = e => cling = +e.target.value;
     document.getElementById('guideBtn').onclick = function() {
       guideLines = !guideLines;
-      this.textContent = 'Guide Lines: ' + (guideLines ? 'On' : 'Off');
+      this.textContent = 'Guides: ' + (guideLines ? 'On' : 'Off');
       this.classList.toggle('active', guideLines);
     };
     document.getElementById('clearBtn').onclick = clearSand;
+    document.getElementById('meltBtn').onclick = () => setMelt(!meltOn);
     drawMoldIcon();
     setTool(tool);
   }
@@ -530,13 +532,31 @@ function objectAt(px, py) {
   return best;
 }
 
+function pieceCells(id) {
+  const out = [];
+  let seedType = 0;
+  for (let i = 0; i < gOwner.length; i++) {
+    if (gOwner[i] !== id || (gType[i] !== STAMP && gType[i] !== LEDGE)) continue;
+    out.push(i); seedType = gType[i];
+  }
+  if (!meltOn || seedType !== STAMP) return out;
+  // Melt: every stamp touching this one comes along as one piece
+  const seen = new Uint8Array(gType.length), C = gCols, R = gRows;
+  for (const i of out) seen[i] = 1;
+  for (let q = 0; q < out.length; q++) {
+    const i = out[q], x = i % C, y = (i / C) | 0;
+    const nb = [x > 0 ? i - 1 : -1, x < C - 1 ? i + 1 : -1, y > 0 ? i - C : -1, y < R - 1 ? i + C : -1];
+    for (const j of nb) if (j >= 0 && !seen[j] && gType[j] === STAMP) { seen[j] = 1; out.push(j); }
+  }
+  return out;
+}
+
 function liftObject(id, px, py) {
   const cells = [];
   let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1;
-  for (let i = 0; i < gOwner.length; i++) {
-    if (gOwner[i] !== id || (gType[i] !== STAMP && gType[i] !== LEDGE)) continue;
+  for (const i of pieceCells(id)) {
     const x = i % gCols, y = (i / gCols) | 0;
-    cells.push(x, y, gType[i], gColor[i]);
+    cells.push(x, y, gType[i], gColor[i], gOwner[i], gPhase[i]);
     gType[i] = EMPTY; gOwner[i] = 0;
     if (x < minx) minx = x; if (x > maxx) maxx = x;
     if (y < miny) miny = y; if (y > maxy) maxy = y;
@@ -544,23 +564,12 @@ function liftObject(id, px, py) {
   if (!cells.length) return false;
   // pre-render the piece once, with a soft glow, so dragging stays smooth
   const d = window.devicePixelRatio || 1;
-  const wCss = (maxx - minx + 1) * CELL + LIFT_PAD * 2, hCss = (maxy - miny + 1) * CELL + LIFT_PAD * 2;
-  const base = document.createElement('canvas');
-  base.width = Math.ceil(wCss * d); base.height = Math.ceil(hCss * d);
-  const bc = base.getContext('2d');
-  bc.setTransform(d, 0, 0, d, 0, 0);
-  const atlas = sandAtlas();
-  for (let k = 0; k < cells.length; k += 4) {
-    const idx = grainSprite(cells[k + 3]);
-    const lx = (cells[k] - minx + 0.5) * CELL + LIFT_PAD, ly = (cells[k + 1] - miny + 0.5) * CELL + LIFT_PAD;
-    bc.drawImage(atlas, (idx % SPR_COLS) * SPR_PX, ((idx / SPR_COLS) | 0) * SPR_PX, SPR_PX, SPR_PX,
-      lx - SPR_CSS / 2, ly - SPR_CSS / 2, SPR_CSS, SPR_CSS);
-  }
+  const { base, wCss, hCss } = renderPiece(cells, minx, miny, maxx, maxy, LIFT_PAD);
   const img = document.createElement('canvas');
   img.width = base.width; img.height = base.height;
   const ic = img.getContext('2d');
-  ic.shadowColor = 'rgba(255,255,255,0.7)';
-  ic.shadowBlur = 9 * d;
+  ic.shadowColor = 'rgba(255,255,255,0.45)';
+  ic.shadowBlur = 8 * d;
   ic.drawImage(base, 0, 0);
   ic.shadowBlur = 0;
   ic.drawImage(base, 0, 0);
@@ -580,12 +589,12 @@ function dropObject(px, py) {
   dx = Math.max(-L.minx, Math.min(gCols - 1 - L.maxx, dx));
   dy = Math.max(-L.miny, Math.min(gRows - 1 - L.maxy, dy));
   const displaced = [];
-  for (let k = 0; k < L.cells.length; k += 4) {
+  for (let k = 0; k < L.cells.length; k += 6) {
     const x = L.cells[k] + dx, y = L.cells[k + 1] + dy;
     if (x < 0 || x >= gCols || y < 0 || y >= gRows) continue;
     const i = y * gCols + x;
     if (gType[i] === LOOSE) displaced.push(x, gColor[i]);
-    gType[i] = L.cells[k + 2]; gColor[i] = L.cells[k + 3]; gOwner[i] = L.id;
+    gType[i] = L.cells[k + 2]; gColor[i] = L.cells[k + 3]; gOwner[i] = L.cells[k + 4];
   }
   // sand that was under the new spot is lifted onto the top of the piece and settles again
   const topY = (L.miny + dy) * CELL;
@@ -616,6 +625,254 @@ function drawLifted() {
 function sandHover(p) {
   if (lifted) return;
   canvas.style.cursor = tool === 'stamp' && objectAt(p.x, p.y) ? 'grab' : '';
+}
+
+// ---------- Matte molds + Melt ----------
+// Stamps and ledges render as matte kinetic sand on their own cached layer:
+// one pixel per cell, scaled up smoothly, shaded by a small 5x5 height estimate, with fine grain on top.
+// Layered: each piece is shaded on its own, with a light rim. Melt: overlapping stamps share one surface.
+let meltOn = (() => { try { return localStorage.getItem('sparkleMelt') === '1'; } catch (e) { return false; } })();
+let matteBuf = null, matteBufCtx = null, matteImg = null, mattePix = null, matteLayer = null, matteCtx = null;
+let pMT = null, pMO = null, pMC = null, mDirty = null, grainPat = null, grainPatDpr = 0;
+
+function moldColor(hex) {
+  // muted, non-shiny version of the palette color
+  const [r, g, b] = hexRgb(hex);
+  const L = 0.3 * r + 0.59 * g + 0.11 * b, k = 0.88;
+  const m = v => Math.min(255, (v + (L - v) * 0.32) * k | 0);
+  return ((255 << 24) | (m(b) << 16) | (m(g) << 8) | m(r)) >>> 0;
+}
+
+// packed ABGR color for cell (x, y), or 0 when nothing matte is drawn there
+function matteRGB(T, O, Col, PH, F, C, R, x, y, melt) {
+  const i = y * C + x;
+  let tt = T[i];
+  const own = O[i];
+  let fill = false;
+  if (tt !== STAMP && tt !== LEDGE) {
+    if (!melt || tt !== EMPTY || !F[i]) return 0;
+    tt = STAMP; fill = true;
+  }
+  let lit = 0, n = 0, r = 0, g = 0, b = 0, cn = 0, edge = false;
+  const blend = melt && tt === STAMP;
+  // F[j] marks seam cells filled in Melt; they count as surface but carry no color of their own
+  for (let dy = -2; dy <= 2; dy++) {
+    const yy = y + dy;
+    for (let dx = -2; dx <= 2; dx++) {
+      const xx = x + dx;
+      let s = false, j = 0;
+      if (xx >= 0 && yy >= 0 && xx < C && yy < R) {
+        j = yy * C + xx;
+        s = (T[j] === tt && (melt || O[j] === own)) || (blend && F[j] === 1);
+      }
+      if (!s) { if (Math.abs(dx) + Math.abs(dy) === 1) edge = true; continue; }
+      n++; lit += dx + dy;
+      if ((blend || (!dx && !dy)) && T[j] !== EMPTY) {
+        const c = Col[j]; r += c & 255; g += (c >> 8) & 255; b += (c >> 16) & 255; cn++;
+      }
+    }
+  }
+  if (!cn) return 0;
+  r /= cn; g /= cn; b /= cn;
+  // light from the top left, edges round off a little
+  let k = (1 + 0.24 * lit / 15) * (0.8 + 0.2 * n / 25);
+  k *= 0.94 + (((PH[i] * 7) >> 2) & 15) / 15 * 0.12;  // fine grain
+  if (fill) k *= 0.96;
+  r *= k; g *= k; b *= k;
+  if (edge && !melt) { const w = 0.16; r += (255 - r) * w; g += (255 - g) * w; b += (255 - b) * w; }
+  r = Math.min(255, r | 0); g = Math.min(255, g | 0); b = Math.min(255, b | 0);
+  return ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0;
+}
+
+// Melt: a gap of up to about 14 cells between two different shapes fills in, like sand settling into the seam
+const SEAM_DIRS = [1, 0, 0, 1, 1, 1, 1, -1], SEAM_REACH = 7;
+function stampOwnerAt(T, O, C, R, x, y) {
+  if (x < 0 || y < 0 || x >= C || y >= R) return 0;
+  const j = y * C + x;
+  return T[j] === STAMP ? O[j] || 1 : 0;
+}
+function seamFill(T, O, C, R, x, y) {
+  for (let k = 0; k < 8; k += 2) {
+    const ux = SEAM_DIRS[k], uy = SEAM_DIRS[k + 1];
+    let a = 0, b = 0;
+    for (let d = 1; d <= SEAM_REACH && !a; d++) a = stampOwnerAt(T, O, C, R, x + d * ux, y + d * uy);
+    if (!a) continue;
+    for (let d = 1; d <= SEAM_REACH && !b; d++) b = stampOwnerAt(T, O, C, R, x - d * ux, y - d * uy);
+    if (b && b !== a) return true;
+  }
+  return false;
+}
+
+// cell color with a soft alpha edge: the alpha follows how much of the 3x3 around it is mold,
+// so stair steps turn into smooth slopes once the layer is scaled up
+function mattePixel(T, O, Col, PH, F, C, R, x, y, melt) {
+  let cnt = 0, nb = -1;
+  for (let dy = -1; dy <= 1; dy++) {
+    const yy = y + dy;
+    if (yy < 0 || yy >= R) continue;
+    for (let dx = -1; dx <= 1; dx++) {
+      const xx = x + dx;
+      if (xx < 0 || xx >= C) continue;
+      const t = T[yy * C + xx];
+      if (t === STAMP || t === LEDGE || F[yy * C + xx]) { cnt++; if (nb < 0 || (dx === 0 || dy === 0)) nb = yy * C + xx; }
+    }
+  }
+  if (!cnt) return 0;
+  let v = matteRGB(T, O, Col, PH, F, C, R, x, y, melt);
+  if (v) { if (cnt < 9 && T[y * C + x] !== EMPTY) cnt = Math.max(cnt, 5); else if (cnt < 9) cnt = Math.max(cnt + 2, 6); }
+  else {
+    if (cnt < 3) return 0;
+    v = matteRGB(T, O, Col, PH, F, C, R, nb % C, (nb / C) | 0, melt);
+    if (!v) return 0;
+  }
+  const a = Math.max(0, Math.min(1, (cnt - 2.5) / 4.5));
+  if (a <= 0) return 0;
+  return ((v & 0xffffff) | ((a * 255 | 0) << 24)) >>> 0;
+}
+
+let fillMask = null;
+const NOFILL = { length: 0 };   // reads as undefined (no fill) everywhere
+function computeFill(F, T, O, C, R, xs, ys, xe, ye) {
+  for (let y = Math.max(0, ys); y < Math.min(R, ye); y++)
+    for (let x = Math.max(0, xs), i = y * C + x; x < Math.min(C, xe); x++, i++)
+      F[i] = T[i] === EMPTY && seamFill(T, O, C, R, x, y) ? 1 : 0;
+}
+
+function grainPattern(c) {
+  const d = window.devicePixelRatio || 1;
+  if (grainPat && grainPatDpr === d) return grainPat;
+  const S = 96;
+  const pc = document.createElement('canvas');
+  pc.width = pc.height = S;
+  const g = pc.getContext('2d');
+  const img = g.createImageData(S, S), p = img.data;
+  for (let k = 0; k < S * S; k++) {
+    const v = Math.random();
+    if (v < 0.16) { p[k * 4 + 3] = 46; }                                   // dark speck
+    else if (v > 0.9) { p[k * 4] = p[k * 4 + 1] = p[k * 4 + 2] = 255; p[k * 4 + 3] = 22; } // pale speck
+  }
+  g.putImageData(img, 0, 0);
+  grainPat = c.createPattern(pc, 'repeat');
+  grainPat.setTransform(new DOMMatrix().scale(1 / d, 1 / d));
+  grainPatDpr = d;
+  return grainPat;
+}
+
+function ensureMatteLayer() {
+  const d = window.devicePixelRatio || 1;
+  if (matteLayer && pMT && pMT.length === gType.length && matteLayer._c === gCols && matteLayer._d === d) return;
+  matteBuf = document.createElement('canvas');
+  matteBuf.width = gCols; matteBuf.height = gRows;
+  matteBufCtx = matteBuf.getContext('2d');
+  matteImg = matteBufCtx.createImageData(gCols, gRows);
+  mattePix = new Uint32Array(matteImg.data.buffer);
+  matteLayer = document.createElement('canvas');
+  matteLayer.width = Math.round(gCols * CELL * d); matteLayer.height = Math.round(gRows * CELL * d);
+  matteLayer._c = gCols; matteLayer._d = d;
+  matteCtx = matteLayer.getContext('2d');
+  matteCtx.setTransform(d, 0, 0, d, 0, 0);
+  matteCtx.imageSmoothingEnabled = true;
+  matteCtx.imageSmoothingQuality = 'high';
+  pMT = new Uint8Array(gType.length).fill(255);
+  fillMask = new Uint8Array(gType.length);
+  pMO = new Uint32Array(gType.length);
+  pMC = new Uint32Array(gType.length);
+  mDirty = new Uint8Array(tilesX * tilesY);
+}
+
+function markMatte(x, y) {
+  // shading looks 2 cells around, so changes near a tile border touch the next tile too
+  // (in Melt, seam fill reaches further)
+  const m = meltOn ? SEAM_REACH + 3 : 3;
+  const tx = (x / TILE) | 0, ty = (y / TILE) | 0, lx = x - tx * TILE, ly = y - ty * TILE;
+  const x0 = lx < m && tx > 0 ? tx - 1 : tx, x1 = lx > TILE - 1 - m && tx < tilesX - 1 ? tx + 1 : tx;
+  const y0 = ly < m && ty > 0 ? ty - 1 : ty, y1 = ly > TILE - 1 - m && ty < tilesY - 1 ? ty + 1 : ty;
+  for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) mDirty[yy * tilesX + xx] = 1;
+}
+
+function updateMatteLayer() {
+  ensureMatteLayer();
+  const T = gType, O = gOwner, Col = gColor, C = gCols, R = gRows;
+  for (let y = 0, i = 0; y < R; y++) {
+    for (let x = 0; x < C; x++, i++) {
+      const t = T[i], mt = (t === STAMP || t === LEDGE) ? t : 0;
+      if (mt !== pMT[i] || (mt && (Col[i] !== pMC[i] || O[i] !== pMO[i]))) {
+        pMT[i] = mt; pMC[i] = Col[i]; pMO[i] = O[i];
+        markMatte(x, y);
+      }
+    }
+  }
+  const any = mDirty.indexOf(1);
+  if (any < 0) return;
+  const melt = meltOn;
+  const list = [];
+  for (let k = any; k < mDirty.length; k++) {
+    if (!mDirty[k]) continue;
+    mDirty[k] = 0;
+    const tx = k % tilesX, ty = (k / tilesX) | 0;
+    const xs = tx * TILE, ys = ty * TILE, xe = Math.min(C, xs + TILE), ye = Math.min(R, ys + TILE);
+    if (melt) computeFill(fillMask, T, O, C, R, xs - 3, ys - 3, xe + 3, ye + 3);
+    for (let y = ys; y < ye; y++) for (let x = xs; x < xe; x++) mattePix[y * C + x] = mattePixel(T, O, Col, gPhase, melt ? fillMask : NOFILL, C, R, x, y, melt);
+    matteBufCtx.putImageData(matteImg, 0, 0, xs, ys, xe - xs, ye - ys);
+    list.push(xs, ys, xe, ye);
+  }
+  const mc = matteCtx, pat = grainPattern(mc);
+  for (let k = 0; k < list.length; k += 4) {
+    const xs = list[k], ys = list[k + 1], xe = list[k + 2], ye = list[k + 3];
+    const sx = Math.max(0, xs - 2), sy = Math.max(0, ys - 2), ex = Math.min(C, xe + 2), ey = Math.min(R, ye + 2);
+    mc.save();
+    mc.beginPath(); mc.rect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL); mc.clip();
+    mc.clearRect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
+    mc.drawImage(matteBuf, sx, sy, ex - sx, ey - sy, sx * CELL, sy * CELL, (ex - sx) * CELL, (ey - sy) * CELL);
+    mc.globalCompositeOperation = 'source-atop';
+    mc.fillStyle = pat;
+    mc.fillRect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
+    mc.restore();
+  }
+}
+
+// render a lifted piece the same matte way, on its own small canvas (CSS px size w x h)
+function renderPiece(cells, minx, miny, maxx, maxy, pad) {
+  const lw = maxx - minx + 1 + 4, lh = maxy - miny + 1 + 4;   // 2-cell margin for shading
+  const T = new Uint8Array(lw * lh), O = new Uint32Array(lw * lh), Col = new Uint32Array(lw * lh), PH = new Uint16Array(lw * lh);
+  for (let k = 0; k < cells.length; k += 6) {
+    const j = (cells[k + 1] - miny + 2) * lw + (cells[k] - minx + 2);
+    T[j] = cells[k + 2]; Col[j] = cells[k + 3]; O[j] = cells[k + 4]; PH[j] = cells[k + 5];
+  }
+  const sb = document.createElement('canvas'); sb.width = lw; sb.height = lh;
+  const sc = sb.getContext('2d'), im = sc.createImageData(lw, lh), px = new Uint32Array(im.data.buffer);
+  const F = new Uint8Array(lw * lh);
+  if (meltOn) computeFill(F, T, O, lw, lh, 0, 0, lw, lh);
+  for (let y = 0; y < lh; y++) for (let x = 0; x < lw; x++) px[y * lw + x] = mattePixel(T, O, Col, PH, F, lw, lh, x, y, meltOn);
+  sc.putImageData(im, 0, 0);
+  const d = window.devicePixelRatio || 1;
+  const wCss = (maxx - minx + 1) * CELL + pad * 2, hCss = (maxy - miny + 1) * CELL + pad * 2;
+  const base = document.createElement('canvas');
+  base.width = Math.ceil(wCss * d); base.height = Math.ceil(hCss * d);
+  const bc = base.getContext('2d');
+  bc.setTransform(d, 0, 0, d, 0, 0);
+  bc.imageSmoothingEnabled = true; bc.imageSmoothingQuality = 'high';
+  bc.drawImage(sb, pad - 2 * CELL, pad - 2 * CELL, lw * CELL, lh * CELL);
+  bc.globalCompositeOperation = 'source-atop';
+  bc.fillStyle = grainPattern(bc);
+  bc.fillRect(0, 0, wCss, hCss);
+  bc.globalCompositeOperation = 'source-over';
+  return { base, wCss, hCss };
+}
+
+function setMelt(on) {
+  if (lifted) dropObject(mouse.x, mouse.y);
+  meltOn = on;
+  try { localStorage.setItem('sparkleMelt', on ? '1' : '0'); } catch (e) {}
+  if (pMT) pMT.fill(255);   // reshade every mold; the shapes themselves are untouched
+  const b = document.getElementById('meltBtn');
+  if (b) { b.textContent = on ? 'Melt' : 'Layered'; b.classList.toggle('active', on); }
+  if (mode === 'sand') {
+    hint.textContent = on ? 'Melt: overlapping shapes blend into one pile and move together.'
+                          : 'Layered: each shape keeps its own edge and moves on its own.';
+    hint.classList.remove('faded');
+  }
+  if (typeof blip === 'function') blip('sine', on ? 300 : 420, on ? 200 : 520, 0.18, 0.04);
 }
 
 // ---------- Molds ----------
@@ -800,7 +1057,7 @@ function stampMold(px, py) {
   const n = Math.max(8, Math.round(2 * moldSize / CELL));
   const m = moldMask(moldName, n);
   const x0 = Math.round(px / CELL - n / 2), y0 = Math.round(py / CELL - n / 2);
-  const id = nextObjId++;
+  const id = nextObjId++, mc = moldColor(color);
   for (let y = 0; y < n; y++) {
     const gy = y0 + y;
     if (gy < 0 || gy >= gRows) continue;
@@ -810,11 +1067,9 @@ function stampMold(px, py) {
       if (gx < 0 || gx >= gCols) continue;
       const i = gy * gCols + gx;
       if (gType[i] === LEDGE) continue;
-      const edge = x === 0 || y === 0 || x === n - 1 || y === n - 1 ||
-        !m[(y - 1) * n + x] || !m[(y + 1) * n + x] || !m[y * n + x - 1] || !m[y * n + x + 1];
       gType[i] = STAMP;
       gOwner[i] = id;
-      gColor[i] = grainColor(color, edge ? 'edge' : 'inner');
+      gColor[i] = mc;
     }
   }
 }
@@ -884,8 +1139,7 @@ function ledgeAt(px, py) {
       if (gType[i] === LEDGE) continue;
       gType[i] = LEDGE;
       gOwner[i] = curLedgeId;
-      const k = 0.88 + ((Math.random() * 4) | 0) * 0.045;
-      gColor[i] = ((255 << 24) | ((215 * k) << 16) | ((190 * k) << 8) | (165 * k)) >>> 0;
+      gColor[i] = ((255 << 24) | (176 << 16) | (184 << 8) | 196) >>> 0;
     }
   }
 }
@@ -1045,7 +1299,7 @@ function drawSand() {
         const y0 = ly === 0 && ty > 0 ? ty - 1 : ty, y1 = ly === TILE - 1 && ty < tilesY - 1 ? ty + 1 : ty;
         for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) TD[yy * TX + xx] = 1;
       }
-      if (t !== EMPTY && t !== LEDGE && glints.length < 320) {
+      if (t === LOOSE && glints.length < 320) {
         const a = (ph[i] * 4 + f) & 4095;
         if (a < GLINT_LEN) glints.push(grainX(i, t), grainY(i, t), a);
       }
@@ -1065,12 +1319,14 @@ function drawSand() {
     for (let y = ys; y <= ye; y++) {
       for (let x = xs, i = y * C + xs; x <= xe; x++, i++) {
         const t = T[i];
-        if (t !== EMPTY) drawGrainOn(lc, atlas, i, t, Col[i]);
+        if (t === LOOSE) drawGrainOn(lc, atlas, i, t, Col[i]);
       }
     }
     lc.restore();
   }
+  updateMatteLayer();
   ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(matteLayer, 0, 0, C * CELL, R * CELL);
   ctx.drawImage(sandLayer, 0, 0, C * CELL, R * CELL);
   drawLifted();
   const SP = SPR_PX;
