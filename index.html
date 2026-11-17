@@ -244,9 +244,14 @@ Third-party material is governed by its own terms.
     .tabs { flex: 1; justify-content: flex-end; row-gap: 6px; }
     .tab-break { display: block; flex-basis: 100%; height: 0; }
   }
+  /* medium-wide screens: tabs get their own full-width rows under the title, so 16 tabs still take two rows */
+  @media (min-width: 701px) and (max-width: 1099px) {
+    .tabs { flex-basis: 100%; justify-content: flex-start; }
+    header { row-gap: 8px; }
+  }
   /* phones: tabs 1-15 in order, then Sound and Linked; all a bit more compact so they take fewer rows */
   @media (max-width: 700px) {
-    .tab, .sound-btn { padding: 6px 8px; font-size: 0.8rem; }
+    .tab, .sound-btn { padding: 6px 7px; font-size: 0.78rem; }
     .tabs { row-gap: 6px; }
   }
   header { position: relative; }
@@ -275,6 +280,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="zeros" title="Quantum Zeros &amp; Chaotic Drum Explorer">13. Zeros</button>
     <button class="tab" data-mode="pendulum" title="Pendulum Waves &amp; Coupled Pendulums Studio">14. Pendulum</button>
     <button class="tab" data-mode="trilogy" title="Spectral &amp; Isoperimetric Trilogy Visualizer">15. Trilogy</button>
+    <button class="tab" data-mode="blackhole" title="Black Hole Spacetime &amp; Ringdown Explorer">16. Black Hole</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -5770,6 +5776,717 @@ renderTrilogy();
 </html>
 </template>
 <!-- end Spectral & Isoperimetric Trilogy Visualizer -->
+<!-- Black Hole Spacetime & Ringdown Explorer — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 16: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-blackhole" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-blackhole">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Hole Spacetime &amp; Ringdown Explorer</title>
+<style>
+  :root {
+    --bg: #0b0e17;
+    --panel: rgba(17, 22, 36, 0.88);
+    --border: rgba(138, 164, 214, 0.2);
+    --text: #e4ebf7;
+    --muted: #93a3c2;
+    --accent: #7aa7ff;
+    --accent2: #c59bff;
+    --warm: #f6b26b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; user-select: none;
+  }
+  #app { position: relative; width: 100%; height: 100%; transition: filter 0.2s ease; }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  .topbar {
+    position: absolute; top: 14px; left: 16px; right: 16px; display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 10px; pointer-events: none; z-index: 10;
+  }
+  .brand-tabs, .top-actions {
+    display: flex; align-items: center; gap: 8px; pointer-events: auto; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 14px; padding: 6px 10px; backdrop-filter: blur(10px);
+  }
+  .title { font-size: 14px; font-weight: 600; letter-spacing: 0.3px; color: var(--text); padding: 0 8px 0 4px; }
+  button, select {
+    background: rgba(255, 255, 255, 0.06); color: var(--text); border: 1px solid var(--border); border-radius: 9px;
+    padding: 6px 11px; font-size: 12.5px; cursor: pointer; transition: all 0.15s ease;
+  }
+  button:hover, select:hover { background: rgba(122, 167, 255, 0.16); border-color: rgba(122, 167, 255, 0.45); }
+  button.active { background: rgba(122, 167, 255, 0.24); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .hud {
+    position: absolute; top: 72px; left: 16px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 15px; width: 290px; font-size: 12px; line-height: 1.5;
+    backdrop-filter: blur(10px); pointer-events: none; z-index: 9;
+  }
+  .hud h3 { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--accent); }
+  .hud p { color: var(--muted); margin-bottom: 8px; }
+  .stat-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-top: 1px solid rgba(255,255,255,0.06); }
+  .stat-val { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
+  .note { margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .controls {
+    position: absolute; bottom: 16px; left: 16px; right: 16px; display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: center; gap: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    padding: 10px 16px; backdrop-filter: blur(10px); z-index: 10;
+  }
+  .ctrl-group { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .ctrl-group label { white-space: nowrap; }
+  input[type="range"] { width: 96px; accent-color: var(--accent); cursor: pointer; }
+  .val-tag { min-width: 36px; text-align: right; color: var(--text); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="canvas"></canvas>
+
+  <div class="topbar">
+    <div class="brand-tabs">
+      <span class="title">Black Hole Explorer</span>
+      <button id="tabLensing" class="active">1. Spacetime &amp; Light</button>
+      <button id="tabRingdown">2. Colliding Black Holes (Ringdown)</button>
+    </div>
+    <div class="top-actions">
+      <button id="btnPause">⏸ Pause</button>
+      <button id="btnSound">🔇 Sound: Off</button>
+      <button id="btnHideUI">👁 Hide UI</button>
+    </div>
+  </div>
+
+  <div class="hud" id="hudPanel">
+    <h3 id="hudTitle"></h3>
+    <p id="hudDesc"></p>
+    <div id="hudStats"></div>
+  </div>
+
+  <!-- Lensing Controls -->
+  <div class="controls" id="controlsLensing">
+    <div class="ctrl-group">
+      <label>Mass</label>
+      <input type="range" id="lensMass" min="25" max="90" value="52">
+      <span class="val-tag" id="lensMassVal">52</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Grid Spin (picture only)</label>
+      <input type="range" id="lensSpin" min="-100" max="100" value="35">
+      <span class="val-tag" id="lensSpinVal">0.35</span>
+    </div>
+    <div class="ctrl-group">
+      <button id="btnSpray">✦ Launch Ray Fan</button>
+      <button id="btnOrbitSet">◎ Stable Orbits</button>
+      <button id="btnUnstable">⚠ Orbit Inside ISCO</button>
+      <button id="btnGrid" class="active">⌗ Spacetime Grid</button>
+      <button id="btnShadow" class="active">◉ Shadow Edge</button>
+      <button id="btnClearRays">Clear</button>
+    </div>
+    <div class="ctrl-group">
+      <label>Eye Dimmer</label>
+      <input type="range" id="dimmer1" min="45" max="100" value="88">
+      <span class="val-tag" id="dimmer1Val">88%</span>
+    </div>
+  </div>
+
+  <!-- Ringdown Controls -->
+  <div class="controls hidden" id="controlsRingdown">
+    <div class="ctrl-group">
+      <label>Mass Ratio</label>
+      <input type="range" id="massRatio" min="10" max="50" value="50">
+      <span class="val-tag" id="massRatioVal">1 : 1.0</span>
+    </div>
+    <div class="ctrl-group">
+      <button id="btnReplayMerger">↻ Replay Inspiral &amp; Ringdown</button>
+      <button id="btnWaveGrid" class="active">〰 Curvature Ripples</button>
+    </div>
+    <div class="ctrl-group">
+      <label>Eye Dimmer</label>
+      <input type="range" id="dimmer2" min="45" max="100" value="88">
+      <span class="val-tag" id="dimmer2Val">88%</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const app = document.getElementById('app');
+
+  let W = 0, H = 0, CX = 0, CY = 0;
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    CX = W * 0.5;
+    CY = H * 0.48;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let mode = 'lensing';
+  let paused = false;
+  let uiHidden = false;
+  let soundOn = false;
+  let audioCtx = null, osc1 = null, osc2 = null, gainNode = null;
+
+  const stars = Array.from({ length: 240 }, () => ({
+    x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.4,
+    a: 0.25 + Math.random() * 0.65, hue: 205 + Math.random() * 55
+  }));
+
+  // ---------- Spacetime units ----------
+  // Light moves at C pixels per time unit. The horizon radius is r_s = mass (pixels).
+  // Paths use the exact Schwarzschild orbit equation  u'' + u = GM/h² + (3/2) r_s u²  (u = 1/r),
+  // written as a force: a = −GM r̂/r² − (3/2) r_s h² r̂/r⁴, with GM = C² r_s / 2 (zero for light).
+  // So orbit shapes, the photon sphere (1.5 r_s), the shadow edge (2.598 r_s) and the last stable
+  // orbit (3 r_s) are exact; only the clock along each path is not.
+  const C = 4.35;
+  const B_CRIT = 1.5 * Math.sqrt(3);   // shadow edge: impact parameter 3√3/2 · r_s
+  let mass = 52;
+  let spin = 0.35;
+  let showGrid = true;
+  let showShadow = true;
+  let particles = [];
+  let dragStart = null, dragCurr = null;
+  let capturedTotal = 0;
+
+  // ---------- Ringdown ----------
+  let ratioVal = 50;
+  let showWaveGrid = true;
+  let simTime = 0;
+  let strainHistory = [];
+  const MAX_STRAIN = 260;
+  const REMNANT_SOLAR_MASSES = 68;   // about GW150914's remnant as LIGO measured it
+  const SOLAR_MASS_SECONDS = 4.925e-6;
+
+  function initAudio() {
+    if (audioCtx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+    osc1 = audioCtx.createOscillator();
+    osc2 = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+    osc1.frequency.value = 110;
+    osc2.frequency.value = 165;
+    gainNode.gain.value = 0.0;
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc1.start();
+    osc2.start();
+  }
+  function updateAudio(freq, amp) {
+    if (!soundOn || !audioCtx || !gainNode) return;
+    const now = audioCtx.currentTime;
+    osc1.frequency.setTargetAtTime(freq, now, 0.06);
+    osc2.frequency.setTargetAtTime(freq * 1.5, now, 0.06);
+    gainNode.gain.setTargetAtTime(paused ? 0 : Math.min(0.06, amp), now, 0.08);
+  }
+
+  // ---------- Launching ----------
+  function spawnRayFan() {
+    const startX = Math.max(40, CX - Math.min(W * 0.4, 380));
+    const count = 17;
+    const span = Math.min(H * 0.62, 420);
+    for (let i = 0; i < count; i++) {
+      const yOff = ((i / (count - 1)) - 0.5) * span;
+      particles.push({ x: startX, y: CY + yOff, vx: C, vy: 0, trail: [], hue: 195 + (i / count) * 85, isPhoton: true, alive: true });
+    }
+  }
+
+  function circularOrbit(rInRs, hue, nudge = 1) {
+    const rs = mass;
+    const r = rInRs * rs;
+    const GM = 0.5 * C * C * rs;
+    const v = nudge * Math.sqrt(GM / (r - 1.5 * rs));   // circular speed in the exact orbit equation
+    const angle = Math.random() * Math.PI * 2;
+    particles.push({
+      x: CX + Math.cos(angle) * r, y: CY + Math.sin(angle) * r,
+      vx: -Math.sin(angle) * v, vy: Math.cos(angle) * v,
+      trail: [], hue, isPhoton: false, alive: true
+    });
+  }
+
+  function spawnStableOrbits() {
+    [3.4, 4.2, 5.2, 6.4].forEach((rr, idx) => circularOrbit(rr, 35 + idx * 45));
+  }
+  function spawnUnstableOrbit() {
+    // circular but inside the last stable orbit (3 r_s): two stars nudged 0.4% apart,
+    // one slightly fast and one slightly slow. One escapes outward, the other falls in.
+    circularOrbit(2.6, 0, 1.004);
+    circularOrbit(2.6, 190, 0.996);
+  }
+
+  function resetRingdown() { simTime = 0; strainHistory = []; }
+
+  spawnRayFan();
+
+  // ---------- UI ----------
+  const tabLensing = document.getElementById('tabLensing');
+  const tabRingdown = document.getElementById('tabRingdown');
+  const controlsLensing = document.getElementById('controlsLensing');
+  const controlsRingdown = document.getElementById('controlsRingdown');
+  const hudTitle = document.getElementById('hudTitle');
+  const hudDesc = document.getElementById('hudDesc');
+  const hudStats = document.getElementById('hudStats');
+
+  function setMode(next) {
+    mode = next;
+    tabLensing.classList.toggle('active', mode === 'lensing');
+    tabRingdown.classList.toggle('active', mode === 'ringdown');
+    controlsLensing.classList.toggle('hidden', uiHidden || mode !== 'lensing');
+    controlsRingdown.classList.toggle('hidden', uiHidden || mode !== 'ringdown');
+    if (mode === 'lensing') {
+      hudTitle.textContent = 'Spacetime & Light';
+      hudDesc.textContent = 'Click to aim light past the hole, or drag to throw a star (short drag) or a light ray (long drag). Light aimed inside the shadow edge is captured.';
+      if (particles.length === 0) spawnRayFan();
+    } else {
+      hudTitle.textContent = 'Colliding Black Holes & Ringdown';
+      hudDesc.textContent = 'Two black holes spiral in, merge, and ring down. The ring\'s pitch and how fast it fades are both set by the remnant\'s spin, which the mass ratio decides.';
+      resetRingdown();
+    }
+  }
+  tabLensing.onclick = () => setMode('lensing');
+  tabRingdown.onclick = () => setMode('ringdown');
+
+  document.getElementById('btnPause').onclick = (e) => {
+    paused = !paused;
+    e.target.textContent = paused ? '▶ Resume' : '⏸ Pause';
+    if (paused && gainNode && audioCtx) gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.04);
+  };
+  document.getElementById('btnSound').onclick = (e) => {
+    soundOn = !soundOn;
+    if (soundOn) {
+      initAudio();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    } else if (gainNode && audioCtx) {
+      gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+    }
+    e.target.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+    e.target.classList.toggle('active', soundOn);
+  };
+  document.getElementById('btnHideUI').onclick = (e) => {
+    uiHidden = !uiHidden;
+    document.getElementById('hudPanel').classList.toggle('hidden', uiHidden);
+    controlsLensing.classList.toggle('hidden', uiHidden || mode !== 'lensing');
+    controlsRingdown.classList.toggle('hidden', uiHidden || mode !== 'ringdown');
+    e.target.textContent = uiHidden ? '👁 Show UI' : '👁 Hide UI';
+  };
+
+  const lensMass = document.getElementById('lensMass');
+  const lensSpin = document.getElementById('lensSpin');
+  lensMass.oninput = () => { mass = Number(lensMass.value); document.getElementById('lensMassVal').textContent = mass; };
+  lensSpin.oninput = () => { spin = Number(lensSpin.value) / 100; document.getElementById('lensSpinVal').textContent = spin.toFixed(2); };
+  document.getElementById('btnSpray').onclick = spawnRayFan;
+  document.getElementById('btnOrbitSet').onclick = spawnStableOrbits;
+  document.getElementById('btnUnstable').onclick = spawnUnstableOrbit;
+  document.getElementById('btnClearRays').onclick = () => { particles = []; capturedTotal = 0; };
+  document.getElementById('btnGrid').onclick = (e) => { showGrid = !showGrid; e.target.classList.toggle('active', showGrid); };
+  document.getElementById('btnShadow').onclick = (e) => { showShadow = !showShadow; e.target.classList.toggle('active', showShadow); };
+
+  const massRatio = document.getElementById('massRatio');
+  function massRatioQ() { return 0.35 + ((ratioVal - 10) / 40) * 0.65; }
+  massRatio.oninput = () => {
+    ratioVal = Number(massRatio.value);
+    document.getElementById('massRatioVal').textContent = '1 : ' + (1 / massRatioQ()).toFixed(1);
+  };
+  document.getElementById('btnReplayMerger').onclick = resetRingdown;
+  document.getElementById('btnWaveGrid').onclick = (e) => { showWaveGrid = !showWaveGrid; e.target.classList.toggle('active', showWaveGrid); };
+
+  const dimmer1 = document.getElementById('dimmer1');
+  const dimmer2 = document.getElementById('dimmer2');
+  function applyDimmer(val) {
+    dimmer1.value = val; dimmer2.value = val;
+    document.getElementById('dimmer1Val').textContent = val + '%';
+    document.getElementById('dimmer2Val').textContent = val + '%';
+    app.style.filter = `brightness(${val / 100})`;
+  }
+  dimmer1.oninput = () => applyDimmer(dimmer1.value);
+  dimmer2.oninput = () => applyDimmer(dimmer2.value);
+  applyDimmer(88);
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (mode !== 'lensing') return;
+    dragStart = { x: e.clientX, y: e.clientY };
+    dragCurr = { x: e.clientX, y: e.clientY };
+  });
+  window.addEventListener('pointermove', (e) => { if (dragStart) dragCurr = { x: e.clientX, y: e.clientY }; });
+  window.addEventListener('pointerup', (e) => {
+    if (!dragStart || mode !== 'lensing') return;
+    const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+    const dist = Math.hypot(dx, dy);
+    let vx, vy, isPhoton;
+    if (dist < 10) {
+      // aim light just past the hole
+      const toX = CX - dragStart.x, toY = CY - dragStart.y;
+      const d = Math.max(1, Math.hypot(toX, toY));
+      const ax = (toX / d) * 4.0 + (-toY / d) * 1.45;
+      const ay = (toY / d) * 4.0 + (toX / d) * 1.45;
+      const n = Math.hypot(ax, ay);
+      vx = (ax / n) * C; vy = (ay / n) * C; isPhoton = true;
+    } else if (dist > 90) {
+      vx = (dx / dist) * C; vy = (dy / dist) * C; isPhoton = true;   // light always moves at C
+    } else {
+      const sp = Math.min(0.9 * C, dist * 0.04);                      // stars stay slower than light
+      vx = (dx / dist) * sp; vy = (dy / dist) * sp; isPhoton = false;
+    }
+    particles.push({ x: dragStart.x, y: dragStart.y, vx, vy, trail: [], hue: isPhoton ? 200 : 38, isPhoton, alive: true });
+    dragStart = null; dragCurr = null;
+  });
+
+  function drawStarfield(lensStrength) {
+    for (const s of stars) {
+      let sx = s.x * W, sy = s.y * H;
+      if (lensStrength > 0) {
+        const dx = sx - CX, dy = sy - CY;
+        const r = Math.hypot(dx, dy);
+        if (r > mass * 0.95 && r < 420) {
+          const shift = (lensStrength * mass * mass * 1.35) / (r * r + 180);
+          sx += dx * shift; sy += dy * shift;
+        }
+      }
+      ctx.fillStyle = `hsla(${s.hue}, 65%, 82%, ${s.a * 0.7})`;
+      ctx.beginPath(); ctx.arc(sx, sy, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  function drawWarpedGrid() {
+    if (!showGrid) return;
+    const step = 44;
+    ctx.strokeStyle = 'rgba(122, 167, 255, 0.11)';
+    ctx.lineWidth = 1;
+    const cols = Math.ceil(W / step) + 2, rows = Math.ceil(H / step) + 2;
+    function warpPt(gx, gy) {
+      const dx = gx - CX, dy = gy - CY;
+      const r = Math.hypot(dx, dy);
+      const pull = (mass * mass * 0.72) / (r + mass * 0.85);
+      const twist = (spin * mass * 18) / (r + mass * 1.4);
+      const ang = Math.atan2(dy, dx) + twist * 0.06;
+      const nr = Math.max(mass * 0.35, r - pull);
+      return [CX + Math.cos(ang) * nr, CY + Math.sin(ang) * nr];
+    }
+    for (let c = -1; c <= cols; c++) {
+      ctx.beginPath();
+      for (let r = -1; r <= rows; r++) { const [wx, wy] = warpPt(c * step, r * step); if (r === -1) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy); }
+      ctx.stroke();
+    }
+    for (let r = -1; r <= rows; r++) {
+      ctx.beginPath();
+      for (let c = -1; c <= cols; c++) { const [wx, wy] = warpPt(c * step, r * step); if (c === -1) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy); }
+      ctx.stroke();
+    }
+  }
+
+  // exact-shape acceleration (see the note at the top)
+  function accel(p, px, py, vx, vy) {
+    const rs = mass;
+    const dx = px - CX, dy = py - CY;
+    const r2 = dx * dx + dy * dy;
+    const r = Math.sqrt(r2);
+    const h = dx * vy - dy * vx;                    // angular momentum per unit mass
+    const GM = p.isPhoton ? 0 : 0.5 * C * C * rs;
+    const k = GM / (r2 * r) + (1.5 * rs * h * h) / (r2 * r2 * r);
+    return [-k * dx, -k * dy];
+  }
+
+  function stepLensing() {
+    const rs = mass;
+    const photonR = rs * 1.5;
+    let activeCount = 0;
+    const subSteps = 8;
+    const dt = 1 / subSteps;
+
+    for (const p of particles) {
+      if (!p.alive) continue;
+      activeCount++;
+      for (let s = 0; s < subSteps; s++) {
+        // velocity Verlet
+        const [ax, ay] = accel(p, p.x, p.y, p.vx, p.vy);
+        const hvx = p.vx + 0.5 * ax * dt, hvy = p.vy + 0.5 * ay * dt;
+        p.x += hvx * dt; p.y += hvy * dt;
+        const [bx, by] = accel(p, p.x, p.y, hvx, hvy);
+        p.vx = hvx + 0.5 * bx * dt; p.vy = hvy + 0.5 * by * dt;
+        if (Math.hypot(p.x - CX, p.y - CY) <= rs) { p.alive = false; capturedTotal++; break; }
+      }
+      p.trail.push([p.x, p.y]);
+      if (p.trail.length > 90) p.trail.shift();
+      if (p.x < -160 || p.x > W + 160 || p.y < -160 || p.y > H + 160) p.alive = false;
+    }
+    if (particles.length > 95) particles = particles.filter(p => p.alive).slice(-75);
+
+    ctx.fillStyle = '#0b0e17';
+    ctx.fillRect(0, 0, W, H);
+    drawStarfield(1.0);
+    drawWarpedGrid();
+
+    if (showShadow) {
+      const shR = rs * B_CRIT;
+      const grad = ctx.createRadialGradient(CX, CY, rs * 0.92, CX, CY, shR * 1.3);
+      grad.addColorStop(0, 'rgba(130, 175, 255, 0.0)');
+      grad.addColorStop(0.5, 'rgba(155, 195, 255, 0.18)');
+      grad.addColorStop(0.75, 'rgba(220, 190, 255, 0.26)');
+      grad.addColorStop(1, 'rgba(110, 140, 220, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(CX, CY, shR * 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(195, 218, 255, 0.42)';
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(CX, CY, shR, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // last stable orbit (3 r_s)
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 6]);
+    ctx.beginPath(); ctx.arc(CX, CY, rs * 3, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // photon sphere (1.5 r_s)
+    ctx.strokeStyle = 'rgba(246, 178, 107, 0.32)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(CX, CY, photonR, 0, Math.PI * 2); ctx.stroke();
+
+    // event horizon
+    const bhGrad = ctx.createRadialGradient(CX - rs * 0.2, CY - rs * 0.2, rs * 0.1, CX, CY, rs);
+    bhGrad.addColorStop(0, '#040509');
+    bhGrad.addColorStop(0.88, '#060810');
+    bhGrad.addColorStop(1, '#18243f');
+    ctx.fillStyle = bhGrad;
+    ctx.beginPath(); ctx.arc(CX, CY, rs, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(150, 190, 255, 0.55)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(CX, CY, rs, 0, Math.PI * 2); ctx.stroke();
+
+    for (const p of particles) {
+      if (p.trail.length < 2) continue;
+      for (let i = 1; i < p.trail.length; i++) {
+        const alpha = (i / p.trail.length) * (p.alive ? 0.72 : 0.25);
+        ctx.strokeStyle = `hsla(${p.hue}, 82%, 72%, ${alpha})`;
+        ctx.lineWidth = p.isPhoton ? 1.7 : 2.1;
+        ctx.beginPath();
+        ctx.moveTo(p.trail[i - 1][0], p.trail[i - 1][1]);
+        ctx.lineTo(p.trail[i][0], p.trail[i][1]);
+        ctx.stroke();
+      }
+      if (p.alive) {
+        ctx.fillStyle = `hsl(${p.hue}, 90%, 82%)`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.isPhoton ? 2.5 : 3.3, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    if (dragStart && dragCurr) {
+      ctx.strokeStyle = 'rgba(246, 178, 107, 0.7)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(dragStart.x, dragStart.y); ctx.lineTo(dragCurr.x, dragCurr.y); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    hudStats.innerHTML = `
+      <div class="stat-row"><span>Event horizon r<sub>s</sub></span><span class="stat-val">${rs} px</span></div>
+      <div class="stat-row"><span>Photon sphere (orange), 1.5 r<sub>s</sub></span><span class="stat-val">${Math.round(photonR)} px</span></div>
+      <div class="stat-row"><span>Shadow edge (dashed), 2.60 r<sub>s</sub></span><span class="stat-val">${Math.round(rs * B_CRIT)} px</span></div>
+      <div class="stat-row"><span>Last stable orbit (green), 3 r<sub>s</sub></span><span class="stat-val">${rs * 3} px</span></div>
+      <div class="stat-row"><span>Moving now / captured</span><span class="stat-val">${activeCount} / ${capturedTotal}</span></div>
+      <div class="note">Path shapes follow Schwarzschild's equation exactly. The grid's spin twist is a picture only.</div>
+    `;
+    updateAudio(95 + Math.abs(spin) * 65, activeCount > 0 ? 0.022 : 0.008);
+  }
+
+  // ---------- Ringdown physics ----------
+  // Remnant spin from the mass ratio (fit for non-spinning black holes, Rezzolla et al. 2008)
+  function remnantSpin(q) {
+    const nu = q / ((1 + q) * (1 + q));
+    return Math.sqrt(12) * nu - 3.871 * nu * nu + 4.028 * nu * nu * nu;
+  }
+  // Main ringing mode (l = m = 2) from the spin (fits by Berti, Cardoso & Will 2006)
+  function qnm(j) {
+    const Mw = 1.5251 - 1.1568 * Math.pow(1 - j, 0.1292);   // M·ω (pitch)
+    const Q = 0.7000 + 1.4187 * Math.pow(1 - j, -0.4990);   // quality: how many wobbles before it fades
+    return { Mw, Q };
+  }
+  const REF = qnm(remnantSpin(1.0));
+  const VIS_RING_FREQ = 14.5;   // on-screen pitch for equal masses
+
+  function stepRingdown() {
+    if (!paused) simTime += 0.016;
+    const q = massRatioQ();
+    const j = remnantSpin(q);
+    const { Mw, Q } = qnm(j);
+    const ringFreq = VIS_RING_FREQ * Mw / REF.Mw;     // on-screen pitch
+    const ringDecay = ringFreq / (2 * Q);             // on-screen fade rate, tied to the pitch by Q
+    const Msec = REMNANT_SOLAR_MASSES * SOLAR_MASS_SECONDS;
+    const fHz = Mw / (2 * Math.PI * Msec);
+    const tauMs = (2 * Q / Mw) * Msec * 1000;
+
+    const mergerT = 7.2;
+    const Omega0 = 2.1;
+    let phaseName = 'Inspiral';
+    let strain = 0;
+    let freqAudio = 75;
+
+    ctx.fillStyle = '#0b0e17';
+    ctx.fillRect(0, 0, W, H);
+    drawStarfield(0);
+
+    if (simTime < mergerT) {
+      // chirp: separation ∝ (time left)^(1/4), orbital speed ∝ (time left)^(−3/8), wave amplitude ∝ (orbital speed)^(2/3)
+      const rem = Math.max(0.08, 1 - simTime / mergerT);
+      const sep = 175 * Math.pow(rem, 0.25);
+      const angle = Omega0 * mergerT * (8 / 5) * (1 - Math.pow(rem, 5 / 8));
+      const Om = Omega0 * Math.pow(rem, -3 / 8);
+      const amp = Math.min(1, 0.35 * Math.pow(Om / Omega0, 2 / 3));
+      strain = amp * Math.cos(2 * angle);           // the wave runs at twice the orbital rate
+      freqAudio = 60 + Om * 30;
+
+      const r1 = 22 + 12 * (1 / (1 + q));
+      const r2 = 22 + 12 * (q / (1 + q));
+      const d1 = sep * (q / (1 + q));
+      const d2 = sep * (1 / (1 + q));
+      const x1 = CX + Math.cos(angle) * d1, y1 = CY + Math.sin(angle) * d1;
+      const x2 = CX - Math.cos(angle) * d2, y2 = CY - Math.sin(angle) * d2;
+
+      if (showWaveGrid) {
+        for (let i = 0; i < 14; i++) {
+          const rad = 45 + i * 38 + ((simTime * 110) % 38);
+          const fade = Math.max(0, 1 - rad / 580) * (0.14 + 0.22 * amp);
+          ctx.strokeStyle = `rgba(138, 180, 255, ${fade})`;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.12) {
+            const quad = Math.cos(2 * (a - angle) - rad * 0.028) * (10 * amp);
+            const px = CX + Math.cos(a) * (rad + quad), py = CY + Math.sin(a) * (rad + quad);
+            if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+      }
+      for (const [bx, by, br] of [[x1, y1, r1], [x2, y2, r2]]) {
+        const g = ctx.createRadialGradient(bx, by, br * 0.8, bx, by, br * 2.1);
+        g.addColorStop(0, 'rgba(135, 180, 255, 0.35)');
+        g.addColorStop(1, 'rgba(135, 180, 255, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(bx, by, br * 2.1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#05070d';
+        ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(175, 208, 255, 0.7)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.stroke();
+      }
+    } else {
+      const dtM = simTime - mergerT;
+      const decay = Math.exp(-dtM * ringDecay);
+      const wobble = decay * Math.cos(dtM * ringFreq);
+      strain = wobble;
+      freqAudio = 210 * (0.65 + 0.35 * decay);
+      phaseName = decay > 0.04 ? 'Ringdown' : 'Settled';
+      const baseR = 44;
+
+      if (showWaveGrid) {
+        for (let i = 0; i < 14; i++) {
+          const rad = 55 + i * 38 + ((simTime * 125) % 38);
+          const waveAge = Math.max(0, dtM - rad / 180);
+          const localAmp = Math.exp(-waveAge * ringDecay);
+          const fade = Math.max(0, 1 - rad / 580) * (0.08 + 0.28 * localAmp);
+          ctx.strokeStyle = `rgba(197, 155, 255, ${fade})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.12) {
+            const quad = Math.cos(2 * a - rad * 0.032 + dtM * 6) * (14 * localAmp);
+            const px = CX + Math.cos(a) * (rad + quad), py = CY + Math.sin(a) * (rad + quad);
+            if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+      }
+
+      // the oval (l = 2) wobble of the new horizon
+      const glow = ctx.createRadialGradient(CX, CY, baseR * 0.85, CX, CY, baseR * 2.4);
+      glow.addColorStop(0, `rgba(197, 155, 255, ${0.22 + 0.25 * decay})`);
+      glow.addColorStop(1, 'rgba(122, 167, 255, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(CX, CY, baseR * 2.4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#05070d';
+      ctx.strokeStyle = 'rgba(205, 180, 255, 0.8)';
+      ctx.lineWidth = 2.1;
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.05; a += 0.06) {
+        const r = baseR * (1 + 0.28 * wobble * Math.cos(2 * a));
+        const px = CX + Math.cos(a) * r, py = CY + Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+
+    if (!paused) {
+      strainHistory.push(strain);
+      if (strainHistory.length > MAX_STRAIN) strainHistory.shift();
+    }
+
+    if (!uiHidden) {
+      const boxW = 250, boxH = 88;
+      const bx = W - boxW - 16, by = 72;
+      ctx.fillStyle = 'rgba(17, 22, 36, 0.86)';
+      ctx.strokeStyle = 'rgba(138, 164, 214, 0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(bx, by, boxW, boxH, 12); else ctx.rect(bx, by, boxW, boxH);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#93a3c2';
+      ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('Gravitational wave strain h(t)', bx + 12, by + 18);
+      const midY = by + 52;
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath(); ctx.moveTo(bx + 12, midY); ctx.lineTo(bx + boxW - 12, midY); ctx.stroke();
+      if (strainHistory.length > 1) {
+        ctx.strokeStyle = '#c59bff';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        for (let i = 0; i < strainHistory.length; i++) {
+          const px = bx + 12 + (i / MAX_STRAIN) * (boxW - 24);
+          const py = midY - strainHistory[i] * 26;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    }
+
+    hudStats.innerHTML = `
+      <div class="stat-row"><span>Stage</span><span class="stat-val">${phaseName}</span></div>
+      <div class="stat-row"><span>Wave strain |h|</span><span class="stat-val">${Math.abs(strain).toFixed(3)}</span></div>
+      <div class="stat-row"><span>Remnant spin</span><span class="stat-val">${j.toFixed(3)}</span></div>
+      <div class="stat-row"><span>Quality Q (wobbles × π per fade)</span><span class="stat-val">${Q.toFixed(2)}</span></div>
+      <div class="stat-row"><span>Wobbles while it fades to 37%</span><span class="stat-val">${(Q / Math.PI).toFixed(2)}</span></div>
+      <div class="stat-row"><span>For a ${REMNANT_SOLAR_MASSES} M<sub>☉</sub> remnant: pitch</span><span class="stat-val">${fHz.toFixed(0)} Hz</span></div>
+      <div class="stat-row"><span>…fade time</span><span class="stat-val">${tauMs.toFixed(1)} ms</span></div>
+      <div class="note">Pitch and fade both come from the spin, so there is no separate decay knob. Equal masses give about 250 Hz and 4 ms, close to LIGO's first detection.</div>
+    `;
+    updateAudio(freqAudio, Math.abs(strain) * 0.045);
+  }
+
+  function loop() {
+    if (mode === 'lensing') { if (!paused) stepLensing(); }
+    else stepRingdown();
+    requestAnimationFrame(loop);
+  }
+  setMode('lensing');
+  loop();
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end Black Hole Spacetime & Ringdown Explorer -->
 </div>
 
 <script>
@@ -9974,7 +10691,7 @@ function drawStretch() {
 // globals can't touch the playground. The small shim below runs first inside the frame:
 // while another tab is open it holds the page's animation frames and timers, freezes its
 // clock and suspends its sound, then picks up where it left off.
-const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy'];
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole'];
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
