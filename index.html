@@ -283,6 +283,8 @@ function setControls() {
   waveGraphs.classList.remove('visible');
   hint.classList.remove('faded');
   controlsDiv.classList.toggle('sand', mode === 'sand');
+  if (lifted) dropObject(mouse.x, mouse.y);
+  canvas.style.cursor = '';
   ripples = [];
   
   if (mode === 'sand') {
@@ -416,9 +418,9 @@ function setControls() {
 
 const TOOL_HINTS = {
   pour: 'Pour: click and drag to pour glitter sand. Cling sets how steep it piles.',
-  stamp: 'Stamp: pick a mold, then click to stamp it in the chosen color.',
+  stamp: 'Stamp: click empty space to stamp the mold. Drag a placed shape or ledge to move it.',
   carve: 'Carve: drag through sand to dig it out. Size sets the brush.',
-  ledge: 'Ledge: drag to draw a ledge. Sand lands and piles on it.'
+  ledge: 'Ledge: drag to draw a ledge. Sand lands and piles on it. Use Stamp to move a ledge.'
 };
 
 function setTool(t) {
@@ -477,7 +479,7 @@ function initSandGrid() {
   const nr = Math.max(1, Math.floor(height / CELL));
   if (gType && nc === gCols && nr === gRows) return;
   const t = new Uint8Array(nc * nr), c = new Uint32Array(nc * nr);
-  const s = new Uint8Array(nc * nr), ph = new Uint16Array(nc * nr);
+  const s = new Uint8Array(nc * nr), ph = new Uint16Array(nc * nr), ow = new Uint32Array(nc * nr);
   for (let i = 0; i < ph.length; i++) ph[i] = (Math.random() * 1024) | 0;
   if (gType) {
     const dy = nr - gRows; // keep the floor where it is
@@ -486,12 +488,12 @@ function initSandGrid() {
       if (ny < 0 || ny >= nr) continue;
       for (let x = 0; x < Math.min(gCols, nc); x++) {
         const o = y * gCols + x, n = ny * nc + x;
-        t[n] = gType[o]; c[n] = gColor[o]; s[n] = gSticky[o];
+        t[n] = gType[o]; c[n] = gColor[o]; s[n] = gSticky[o]; ow[n] = gOwner ? gOwner[o] : 0;
       }
     }
     for (const p of flying) p.y += dy * CELL;
   }
-  gType = t; gColor = c; gSticky = s; gPhase = ph; gCols = nc; gRows = nr;
+  gType = t; gColor = c; gSticky = s; gPhase = ph; gOwner = ow; gCols = nc; gRows = nr;
   sandBuf.width = nc; sandBuf.height = nr;
   sandImg = sandBufCtx.createImageData(nc, nr);
   sandPix = new Uint32Array(sandImg.data.buffer);
@@ -499,7 +501,121 @@ function initSandGrid() {
 
 function clearSand() {
   flying = [];
-  if (gType) { gType.fill(0); }
+  if (gType) { gType.fill(0); gOwner.fill(0); }
+  lifted = null;
+}
+
+// ---------- Moving placed stamps and ledges ----------
+// Every stamp and every ledge stroke gets an id stored per grid cell (gOwner).
+// With the Stamp tool, pressing on a placed piece lifts it; releasing sets it down.
+let gOwner = null;
+let nextObjId = 1, curLedgeId = 0;
+let lifted = null;
+const LIFT_PAD = 10;
+
+function objectAt(px, py) {
+  if (!gOwner) return 0;
+  const cx = Math.floor(px / CELL), cy = Math.floor(py / CELL), R = 4;
+  let best = 0, bd = 1e9;
+  for (let y = cy - R; y <= cy + R; y++) {
+    if (y < 0 || y >= gRows) continue;
+    for (let x = cx - R; x <= cx + R; x++) {
+      if (x < 0 || x >= gCols) continue;
+      const i = y * gCols + x, id = gOwner[i];
+      if (!id || (gType[i] !== STAMP && gType[i] !== LEDGE)) continue;
+      const d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+      if (d < bd) { bd = d; best = id; }
+    }
+  }
+  return best;
+}
+
+function liftObject(id, px, py) {
+  const cells = [];
+  let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1;
+  for (let i = 0; i < gOwner.length; i++) {
+    if (gOwner[i] !== id || (gType[i] !== STAMP && gType[i] !== LEDGE)) continue;
+    const x = i % gCols, y = (i / gCols) | 0;
+    cells.push(x, y, gType[i], gColor[i]);
+    gType[i] = EMPTY; gOwner[i] = 0;
+    if (x < minx) minx = x; if (x > maxx) maxx = x;
+    if (y < miny) miny = y; if (y > maxy) maxy = y;
+  }
+  if (!cells.length) return false;
+  // pre-render the piece once, with a soft glow, so dragging stays smooth
+  const d = window.devicePixelRatio || 1;
+  const wCss = (maxx - minx + 1) * CELL + LIFT_PAD * 2, hCss = (maxy - miny + 1) * CELL + LIFT_PAD * 2;
+  const base = document.createElement('canvas');
+  base.width = Math.ceil(wCss * d); base.height = Math.ceil(hCss * d);
+  const bc = base.getContext('2d');
+  bc.setTransform(d, 0, 0, d, 0, 0);
+  const atlas = sandAtlas();
+  for (let k = 0; k < cells.length; k += 4) {
+    const idx = grainSprite(cells[k + 3]);
+    const lx = (cells[k] - minx + 0.5) * CELL + LIFT_PAD, ly = (cells[k + 1] - miny + 0.5) * CELL + LIFT_PAD;
+    bc.drawImage(atlas, (idx % SPR_COLS) * SPR_PX, ((idx / SPR_COLS) | 0) * SPR_PX, SPR_PX, SPR_PX,
+      lx - SPR_CSS / 2, ly - SPR_CSS / 2, SPR_CSS, SPR_CSS);
+  }
+  const img = document.createElement('canvas');
+  img.width = base.width; img.height = base.height;
+  const ic = img.getContext('2d');
+  ic.shadowColor = 'rgba(255,255,255,0.7)';
+  ic.shadowBlur = 9 * d;
+  ic.drawImage(base, 0, 0);
+  ic.shadowBlur = 0;
+  ic.drawImage(base, 0, 0);
+  lifted = { id, cells, minx, miny, maxx, maxy, img, wCss, hCss, grabX: px, grabY: py };
+  canvas.style.cursor = 'grabbing';
+  if (typeof blip === 'function') blip('sine', 520, 880, 0.12, 0.05);
+  return true;
+}
+
+function dropObject(px, py) {
+  const L = lifted;
+  lifted = null;
+  canvas.style.cursor = '';
+  if (!L || !gType) return;
+  let dx = Math.round((px - L.grabX) / CELL), dy = Math.round((py - L.grabY) / CELL);
+  // keep the whole piece on the canvas
+  dx = Math.max(-L.minx, Math.min(gCols - 1 - L.maxx, dx));
+  dy = Math.max(-L.miny, Math.min(gRows - 1 - L.maxy, dy));
+  const displaced = [];
+  for (let k = 0; k < L.cells.length; k += 4) {
+    const x = L.cells[k] + dx, y = L.cells[k + 1] + dy;
+    if (x < 0 || x >= gCols || y < 0 || y >= gRows) continue;
+    const i = y * gCols + x;
+    if (gType[i] === LOOSE) displaced.push(x, gColor[i]);
+    gType[i] = L.cells[k + 2]; gColor[i] = L.cells[k + 3]; gOwner[i] = L.id;
+  }
+  // sand that was under the new spot is lifted onto the top of the piece and settles again
+  const topY = (L.miny + dy) * CELL;
+  for (let k = 0; k < displaced.length && flying.length < MAX_FLYING * 2; k += 2) {
+    flying.push({
+      x: (displaced[k] + 0.5) * CELL + (Math.random() - 0.5) * 2,
+      y: topY - CELL * (1 + Math.random() * 4),
+      vx: (Math.random() - 0.5) * 1.5, vy: 0, c: displaced[k + 1]
+    });
+  }
+  if (typeof blip === 'function') blip('triangle', 720, 360, 0.15, 0.06);
+}
+
+function drawLifted() {
+  if (!lifted) return;
+  const L = lifted;
+  const x = L.minx * CELL - LIFT_PAD + (mouse.x - L.grabX);
+  const y = L.miny * CELL - LIFT_PAD + (mouse.y - L.grabY) - 4; // a small lift
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.globalAlpha = 0.6;
+  ctx.drawImage(L.img, x + 3, y + 7, L.wCss, L.hCss);   // soft drop shadow
+  ctx.globalAlpha = 1;
+  ctx.drawImage(L.img, x, y, L.wCss, L.hCss);
+  ctx.restore();
+}
+
+function sandHover(p) {
+  if (lifted) return;
+  canvas.style.cursor = tool === 'stamp' && objectAt(p.x, p.y) ? 'grab' : '';
 }
 
 // ---------- Molds ----------
@@ -684,6 +800,7 @@ function stampMold(px, py) {
   const n = Math.max(8, Math.round(2 * moldSize / CELL));
   const m = moldMask(moldName, n);
   const x0 = Math.round(px / CELL - n / 2), y0 = Math.round(py / CELL - n / 2);
+  const id = nextObjId++;
   for (let y = 0; y < n; y++) {
     const gy = y0 + y;
     if (gy < 0 || gy >= gRows) continue;
@@ -696,6 +813,7 @@ function stampMold(px, py) {
       const edge = x === 0 || y === 0 || x === n - 1 || y === n - 1 ||
         !m[(y - 1) * n + x] || !m[(y + 1) * n + x] || !m[y * n + x - 1] || !m[y * n + x + 1];
       gType[i] = STAMP;
+      gOwner[i] = id;
       gColor[i] = grainColor(color, edge ? 'edge' : 'inner');
     }
   }
@@ -740,6 +858,7 @@ function carveAt(px, py) {
       const t = gType[i];
       if (t !== LOOSE && t !== STAMP) continue;
       gType[i] = EMPTY;
+      gOwner[i] = 0;
       // push some grains out to the sides of the brush
       if (Math.random() < 0.3 && flying.length < MAX_FLYING) {
         const d = Math.sqrt(d2) || 1;
@@ -764,6 +883,7 @@ function ledgeAt(px, py) {
       const i = gy * gCols + gx;
       if (gType[i] === LEDGE) continue;
       gType[i] = LEDGE;
+      gOwner[i] = curLedgeId;
       const k = 0.88 + ((Math.random() * 4) | 0) * 0.045;
       gColor[i] = ((255 << 24) | ((215 * k) << 16) | ((190 * k) << 8) | (165 * k)) >>> 0;
     }
@@ -774,13 +894,19 @@ function sandDown(p) {
   initSandGrid();
   hint.classList.add('faded');
   lastPt = { x: p.x, y: p.y };
-  if (tool === 'stamp') stampMold(p.x, p.y);
+  if (lifted) dropObject(p.x, p.y);
+  if (tool === 'stamp') {
+    // press on a placed shape or ledge to pick it up; press on empty space to stamp
+    const id = objectAt(p.x, p.y);
+    if (!(id && liftObject(id, p.x, p.y))) stampMold(p.x, p.y);
+  }
   else if (tool === 'carve') carveAt(p.x, p.y);
-  else if (tool === 'ledge') ledgeAt(p.x, p.y);
+  else if (tool === 'ledge') { curLedgeId = nextObjId++; ledgeAt(p.x, p.y); }
 }
 
 function sandMove(p) {
-  if (!mouse.down || !lastPt) return;
+  if (!mouse.down) sandHover(p);
+  if (!mouse.down || !lastPt || lifted) return;
   if (tool === 'carve') eachOnSegment(lastPt, p, (6 + size * 4) * 0.5, carveAt);
   else if (tool === 'ledge') eachOnSegment(lastPt, p, CELL * 0.7, ledgeAt);
   lastPt = { x: p.x, y: p.y };
@@ -946,6 +1072,7 @@ function drawSand() {
   }
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(sandLayer, 0, 0, C * CELL, R * CELL);
+  drawLifted();
   const SP = SPR_PX;
   for (const p of flying) {
     const idx = grainSprite(p.c);
@@ -2136,7 +2263,7 @@ canvas.addEventListener('mousemove', e => {
   if (mode === 'sand') sandMove(p);
   soundPointerMove();
 });
-window.addEventListener('mouseup', () => { mouse.down = false; draggingBubble = null; });
+window.addEventListener('mouseup', () => { mouse.down = false; draggingBubble = null; if (lifted) dropObject(mouse.x, mouse.y); });
 
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
@@ -2158,7 +2285,7 @@ canvas.addEventListener('touchmove', e => {
   if (mode === 'sand') sandMove(p);
   soundPointerMove();
 }, {passive: false});
-window.addEventListener('touchend', () => { mouse.down = false; draggingBubble = null; });
+window.addEventListener('touchend', () => { mouse.down = false; draggingBubble = null; if (lifted) dropObject(mouse.x, mouse.y); });
 
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
