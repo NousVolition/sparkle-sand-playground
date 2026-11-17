@@ -1,4 +1,18 @@
 <!DOCTYPE html>
+<!--
+Copyright © 2026 NousVolition. All rights reserved.
+
+This notice applies to material in this repository for which NousVolition
+holds the copyright, including original code, formal proof files, research
+writing, and figures.
+
+Copying, modifying, or distributing that material requires prior written
+permission from the copyright holder, except as permitted by applicable law,
+GitHub's Terms of Service, or a separate license from the copyright holder.
+This applies to both commercial and noncommercial reuse.
+
+Third-party material is governed by its own terms.
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -214,6 +228,10 @@
   .tick-label.freeze { color: #fbbf24; }
   .hint { transition: opacity 0.6s; }
   .hint.faded { opacity: 0.25; }
+  header { position: relative; }
+  #copyNote { position: absolute; right: 18px; bottom: 2px; font-size: 10px; line-height: 12px; color: var(--muted); opacity: 0.55; white-space: nowrap; }
+  #copyNote a { color: inherit; }
+  #copyNote:hover { opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -232,6 +250,7 @@
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
+  <div id="copyNote">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div>
 </header>
 
 <div class="controls" id="controls">
