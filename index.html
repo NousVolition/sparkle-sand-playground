@@ -198,6 +198,12 @@
   .swatch.set.follow { outline: 1px dashed rgba(255,255,255,0.6); outline-offset: 2px; }
   .tick-label { font-size: 0.8rem; color: var(--muted); min-width: 96px; font-variant-numeric: tabular-nums; }
   .tick-label:empty { display: none; }
+  #restBox { position: absolute; top: 10px; right: 10px; z-index: 3; border-radius: 6px; overflow: hidden; }
+  #restBox canvas { background: transparent; display: block; width: 220px; height: 96px; }
+  #restBox.collapsed canvas { display: none; }
+  #restToggle { position: absolute; top: 2px; right: 4px; background: none; border: none; color: var(--muted); font-size: 0.7rem; cursor: pointer; padding: 2px 4px; z-index: 1; }
+  #restBox.collapsed #restToggle { position: static; background: rgba(10,14,22,0.85); border: 1px solid var(--border); border-radius: 12px; padding: 4px 10px; }
+  @media (max-width: 600px) { #restBox { top: auto; bottom: var(--rest-bottom, 90px); } }
   .tick-label.freeze { color: #fbbf24; }
   .hint { transition: opacity 0.6s; }
   .hint.faded { opacity: 0.25; }
@@ -207,11 +213,13 @@
 <header>
   <h1>Tension, Waves & Sparkle Sand</h1>
   <div class="tabs">
-    <button class="tab active" data-mode="sand">1. Sparkle Kinetic Sand</button>
-    <button class="tab" data-mode="loop">2. Relaxing Loop</button>
-    <button class="tab" data-mode="bubbles">3. Soap Bubbles</button>
-    <button class="tab" data-mode="plate">4. Sound & Sand Plate</button>
-    <button class="tab" data-mode="waves">5. 1D to 2D Waves</button>
+    <button class="tab active" data-mode="sand">1. Kinetic Sand</button>
+    <button class="tab" data-mode="loop">2. Loop</button>
+    <button class="tab" data-mode="bubbles">3. Bubbles</button>
+    <button class="tab" data-mode="plate">4. Sand Plate</button>
+    <button class="tab" data-mode="waves">5. Waves</button>
+    <button class="tab" data-mode="silk">6. Silk</button>
+    <button class="tab" data-mode="crystal">7. Crystal</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -267,7 +275,9 @@ const LINK_NOTES = {
   loop: 'Linked: bigger gap heals faster',
   plate: 'Linked: finer pattern settles faster',
   waves: 'Linked: more nodes, pluck fades faster',
-  bubbles: 'Linked: higher tension merges sooner, calms faster'
+  bubbles: 'Linked: higher tension merges sooner, calms faster',
+  silk: 'Linked: smoother flow, wider strokes, trails fade faster',
+  crystal: 'Linked: more humidity, vapor bursts settle faster'
 };
 function applyLinkNote() {
   if (!LINK_NOTES[mode] || hint.dataset.base === undefined) return;
@@ -450,6 +460,54 @@ function setControls() {
     document.getElementById('vw').oninput = e => { vWaves = +e.target.value; reshakeWaves(); };
     document.getElementById('resetWaves').onclick = resetWaveParticles;
     resetWaveParticles();
+  }
+  else if (mode === 'silk') {
+    hint.textContent = 'Drag to paint luminous silk currents.';
+    controlsDiv.innerHTML = `
+      <label>Flow Mode: <select id="silkMode">${Object.keys(SILK_MODES).map(k => `<option value="${k}">${SILK_MODES[k]}</option>`).join('')}</select></label>
+      <label>Palette: <select id="silkPal">${silkPaletteOptions()}</select></label>
+      <label>Smoothness: <input type="range" id="silkSmooth" min="0.5" max="2" step="0.05" value="${silk.smooth}"></label>
+      <label>Trail Glow: <input type="range" id="silkGlow" min="0" max="1" step="0.05" value="${silk.glow}"></label>
+      <button id="silkPause">${silkPaused ? 'Resume' : 'Pause'}</button>
+      <button id="silkClear">Clear</button>
+      <button id="soundBtn">${soundOn ? 'Sound: On' : 'Sound: Off'}</button>
+      <span class="tick-label" id="tickLabel"></span>
+    `;
+    const ms = document.getElementById('silkMode'), ps = document.getElementById('silkPal');
+    ms.value = silk.mode; ps.value = silkPaletteValue();
+    ms.onchange = () => { silk.mode = ms.value; saveSilk(); };
+    ps.onchange = () => setSilkPalette(ps.value);
+    document.getElementById('silkSmooth').oninput = e => { silk.smooth = +e.target.value; saveSilk(); };
+    document.getElementById('silkGlow').oninput = e => { silk.glow = +e.target.value; saveSilk(); };
+    document.getElementById('silkPause').onclick = function() { silkPaused = !silkPaused; this.textContent = silkPaused ? 'Resume' : 'Pause'; this.classList.toggle('active', silkPaused); };
+    document.getElementById('silkClear').onclick = silkClear;
+    document.getElementById('soundBtn').onclick = () => setSound(!soundOn);
+    document.getElementById('soundBtn').classList.toggle('active', soundOn);
+    if (!sX || silkInitW !== width || silkInitH !== height) { silkInit(); silkInitW = width; silkInitH = height; }
+  }
+  else if (mode === 'crystal') {
+    hint.textContent = 'Watch water vapor diffuse inward and freeze onto the hexagonal crystal seed, or click anywhere on the crystal to seed extra frost branches!';
+    controlsDiv.innerHTML = `
+      <label>Crystal Style: <select id="cryStyle">${Object.keys(CRY_STYLES).map(k => `<option value="${k}">${CRY_STYLES[k].label}</option>`).join('')}</select></label>
+      <label>Humidity: <input type="range" id="cryHum" min="0" max="1" step="0.05" value="${cry.humidity}"></label>
+      <label>Ice Tint: <select id="cryTint">${cryTintOptions()}</select></label>
+      <button id="cryNew">Grow New Crystal</button>
+      <button id="cryPause">${cryPaused ? 'Resume' : 'Pause'}</button>
+      <button id="cryGuides" class="${cry.guides ? 'active' : ''}">6-Fold Guides</button>
+      <button id="soundBtn">${soundOn ? 'Sound: On' : 'Sound: Off'}</button>
+      <span class="tick-label" id="tickLabel"></span>
+    `;
+    const cs = document.getElementById('cryStyle'), ct = document.getElementById('cryTint');
+    cs.value = cry.style; ct.value = cryTintValue();
+    cs.onchange = () => { cry.style = cs.value; saveCry(); if (cS) cryReset(); };
+    ct.onchange = () => setCryTint(ct.value);
+    document.getElementById('cryHum').oninput = e => { cry.humidity = +e.target.value; saveCry(); };
+    document.getElementById('cryNew').onclick = () => { if (!cS) cryInit(); else cryReset(); };
+    document.getElementById('cryPause').onclick = function() { cryPaused = !cryPaused; this.textContent = cryPaused ? 'Resume' : 'Pause'; this.classList.toggle('active', cryPaused); };
+    document.getElementById('cryGuides').onclick = function() { cry.guides = !cry.guides; saveCry(); this.classList.toggle('active', cry.guides); };
+    document.getElementById('soundBtn').onclick = () => setSound(!soundOn);
+    document.getElementById('soundBtn').classList.toggle('active', soundOn);
+    if (!cS) cryInit();
   }
   hint.dataset.base = hint.textContent;
   applyLinkNote();
@@ -1680,10 +1738,12 @@ const CLASSIC_COLORS = {
   bubbles: ['#f472b6', '#facc15', '#34d399', '#60a5fa', '#c084fc'],
   plate: ['#facc15', '#fde68a', '#fb923c'],
   waves: ['#67e8f9', '#ff6b9d', '#a5f3fc'],
+  silk: ['#ffd8c4', '#ffb4a2', '#f4978e', '#ffc8dd', '#ff8fab'],
+  crystal: ['#fde68a', '#bbf7d0', '#a5f3fc', '#f0abfc', '#e0f2fe'],
 };
-const COLOR_TABS = ['loop', 'bubbles', 'plate', 'waves'];
+const COLOR_TABS = ['loop', 'bubbles', 'plate', 'waves', 'silk', 'crystal'];
 const SHIFT_RATE = 0.22; // colors per second while Shift is on
-let colorState = { loop: {}, bubbles: {}, plate: {}, waves: {} };
+let colorState = { loop: {}, bubbles: {}, plate: {}, waves: {}, silk: {}, crystal: {} };
 
 try {
   const saved = JSON.parse(localStorage.getItem('sparkleTabColors') || 'null');
@@ -2319,6 +2379,837 @@ function drawLoop() {
   drawRipples();
 }
 
+// ========== SILK ==========
+// Thin luminous threads ride a smooth flow field. Each thread keeps a short history of
+// positions (typed arrays, one shared ring index) and is drawn as a crisp arc that fades
+// toward its tail. Strokes are batched by color and alpha level, so a frame is a few dozen strokes.
+const SILK_PALETTES = {
+  peach: { label: 'Peach & Rose Silk', colors: ['#ffd8c4', '#ffb4a2', '#f4978e', '#ffc8dd', '#ff8fab'] },
+  bio:   { label: 'Bioluminescent Blue', colors: ['#22d3ee', '#38bdf8', '#5eead4', '#a5f3fc', '#0ea5e9'] },
+  lapis: { label: 'Lapis & Indigo', colors: ['#fcd34d', '#fff7d6', '#ffffff', '#818cf8', '#4f46e5'] },
+  north: { label: 'Northern Lights', colors: ['#34d399', '#4ade80', '#2dd4bf', '#a78bfa', '#f472b6'] },
+  prism: { label: 'Prism Rainbow', colors: ['#f472b6', '#4ade80', '#facc15', '#60a5fa', '#fb923c', '#c084fc'] },
+};
+const SILK_MODES = {
+  aurora: 'Silk Aurora Ribbons',
+  vortex: 'Vortex Whirlpools',
+  mandala6: '6-Fold Mandala Silk',
+  kaleido8: '8-Fold Kaleidoscope',
+};
+const SILK_L = 40;           // history slots per thread
+const SILK_ALPHA_LEVELS = 8;
+let silk = (() => {
+  const d = { mode: 'vortex', pal: 'prism', smooth: 1, glow: 0.55 };
+  try { Object.assign(d, JSON.parse(localStorage.getItem('sparkleSilk') || '{}')); } catch (e) {}
+  if (!SILK_MODES[d.mode]) d.mode = 'vortex';
+  if (!SILK_PALETTES[d.pal]) d.pal = 'prism';
+  return d;
+})();
+let silkPaused = false, silkInitW = 0, silkInitH = 0;
+let silkN = 0, silkAmb = 0, silkAmbMax = 0, silkHead = 0, silkBrushPtr = 0, silkT = 0;
+let sX, sY, sVX, sVY, sHX, sHY, sAge, sLife, sBright, sCol;
+let silkLast = null, silkSpeed = 0, silkFrameMs = 16, silkLastStamp = 0, silkAdaptAt = 0;
+let SFX = 0, SFY = 0, silkBrushScale = 1;
+
+function saveSilk() { try { localStorage.setItem('sparkleSilk', JSON.stringify(silk)); } catch (e) {} }
+
+function silkInit() {
+  const small = width < 600;
+  silkAmbMax = Math.round(Math.max(250, Math.min(small ? 300 : 620, width * height / 1400)));
+  silkAmb = silkAmbMax;
+  const brush = small ? 260 : 450;
+  silkN = silkAmbMax + brush;
+  sX = new Float32Array(silkN); sY = new Float32Array(silkN);
+  sVX = new Float32Array(silkN); sVY = new Float32Array(silkN);
+  sHX = new Float32Array(silkN * SILK_L); sHY = new Float32Array(silkN * SILK_L);
+  sAge = new Uint16Array(silkN); sLife = new Float32Array(silkN);
+  sBright = new Float32Array(silkN); sCol = new Uint8Array(silkN);
+  silkBrushPtr = silkAmbMax;
+  for (let i = 0; i < silkAmbMax; i++) silkSpawn(i, true);
+  for (let i = silkAmbMax; i < silkN; i++) sLife[i] = 0;
+}
+
+function silkSpawn(i, first) {
+  sX[i] = Math.random() * width; sY[i] = Math.random() * height;
+  silkField(sX[i], sY[i]);
+  sVX[i] = SFX; sVY[i] = SFY;
+  sAge[i] = 0;
+  sLife[i] = 120 + Math.random() * 320 + (first ? Math.random() * 200 : 0);
+  sBright[i] = 0;
+  sCol[i] = (Math.random() * 255) | 0;
+}
+
+function silkColors() {
+  return tabColorList('silk') || SILK_PALETTES[silk.pal].colors;
+}
+function silkK() { return linkedOn ? silk.smooth : 1; }
+
+// Stream function psi in units of S = half the short side; velocity = (dpsi/dv, -dpsi/du)
+function silkField(x, y) {
+  const S = Math.min(width, height) * 0.5, cx = width / 2, cy = height / 2;
+  const u = (x - cx) / S, v = (y - cy) / S, s = silk.smooth, t = silkT;
+  let pu = 0, pv = 0;
+  const m = silk.mode;
+  if (m === 'aurora') {
+    // long gentle ribbons drifting sideways
+    pv += 1;
+    const a = 2.0 * u / s + 0.25 * t, b = 1.3 * v / s - 0.15 * t, c = 3.3 * u / s - 2.1 * v / s + 0.4 * t;
+    pu += 0.35 * Math.cos(a) * (2.0 / s) * Math.cos(b) + 0.2 * Math.cos(c) * (3.3 / s);
+    pv += -0.35 * Math.sin(a) * Math.sin(b) * (1.3 / s) - 0.2 * Math.cos(c) * (2.1 / s);
+    const d = 1.1 * u / s + 0.9 * v / s - 0.1 * t;
+    pu += 0.25 * Math.cos(d) * (1.1 / s); pv += 0.25 * Math.cos(d) * (0.9 / s);
+  } else if (m === 'vortex') {
+    // several whirlpools wandering slowly, alternating spin
+    const R2 = (0.42 * s) * (0.42 * s);
+    for (let k = 0; k < 5; k++) {
+      const ox = 0.85 * Math.cos(0.05 * t * (k + 1) + k * 1.3) * (width / S) * 0.5;
+      const oy = 0.75 * Math.sin(0.04 * t * (k + 2) + k * 2.1) * (height / S) * 0.5;
+      const du = u - ox, dv = v - oy;
+      const g = (k & 1 ? -0.55 : 0.6) * Math.exp(-(du * du + dv * dv) / R2);
+      pu += g * -2 * du / R2; pv += g * -2 * dv / R2;
+    }
+    const a = 1.7 * u / s + 0.2 * t, b = 1.4 * v / s - 0.17 * t;
+    pu += 0.12 * Math.cos(a) * (1.7 / s) * Math.cos(b);
+    pv += -0.12 * Math.sin(a) * Math.sin(b) * (1.4 / s);
+  } else {
+    const N = m === 'mandala6' ? 6 : 8, mirror = m === 'kaleido8';
+    const r = Math.hypot(u, v) + 1e-4, th = Math.atan2(v, u);
+    let pr = 0, pth = 0;
+    const T = [[0.34, 4.0, 1, 0.3, 0.13], [0.2, 7.0, 2, -0.25, -0.09], [0.16, 2.4, 1, 0.17, 0.05]];
+    for (let j = 0; j < 3; j++) {
+      const [A, K, mm, w, wr] = T[j];
+      const ph = mirror ? 0 : wr * t * 2;
+      const sr = Math.sin(K * r / s + w * t + j), cr = Math.cos(K * r / s + w * t + j);
+      const ang = N * mm * th + ph;
+      pr += A * cr * (K / s) * Math.cos(ang);
+      pth += -A * sr * N * mm * Math.sin(ang);
+    }
+    pr += 0.35 * Math.cos(2.5 * r / s - 0.2 * t) * (2.5 / s);   // rings: circular currents
+    const c = Math.cos(th), sn = Math.sin(th);
+    pu = pr * c - pth * sn / r;
+    pv = pr * sn + pth * c / r;
+  }
+  // soft speed limit keeps arcs a similar length everywhere
+  const gx = pv, gy = -pu, g = Math.hypot(gx, gy);
+  const k = 3.1 / (0.5 + g);
+  SFX = gx * k; SFY = gy * k;
+}
+
+function silkPlace(i, x, y, vx, vy, bright, life) {
+  sX[i] = x; sY[i] = y; sVX[i] = vx; sVY[i] = vy;
+  sAge[i] = 0; sLife[i] = life; sBright[i] = bright;
+  sCol[i] = (Math.random() * 255) | 0;
+}
+
+// the pointer is a brush: dense bright clusters along the path, copied around the center in the symmetric modes
+function silkBrush() {
+  if (!mouse.down || !silkLast) return;
+  const dx = mouse.x - silkLast.x, dy = mouse.y - silkLast.y, d = Math.hypot(dx, dy);
+  silkSpeed = silkSpeed * 0.8 + d * 0.2;
+  const n = Math.round(Math.min(50, 4 + d * 1.0) * silkBrushScale);
+  const rB = 16 * silkK();
+  const cx = width / 2, cy = height / 2;
+  const N = silk.mode === 'mandala6' ? 6 : silk.mode === 'kaleido8' ? 8 : 1, mirror = silk.mode === 'kaleido8';
+  const copies = N * (mirror ? 2 : 1);
+  const per = Math.max(2, Math.round(n / Math.sqrt(copies)));
+  for (let q = 0; q < per; q++) {
+    const f = Math.random();
+    const a = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * rB;
+    const ox = Math.cos(a) * rr, oy = Math.sin(a) * rr;
+    const px = silkLast.x + dx * f + ox - cx, py = silkLast.y + dy * f + oy - cy;
+    // drag velocity, plus a push outward with a curl so the cluster blooms
+    const sw = Math.random() < 0.5 ? 1 : -1;
+    const ex = Math.cos(a), ey = Math.sin(a);
+    const vx = dx * 0.35 + ex * 1.6 - ey * sw * 1.2, vy = dy * 0.35 + ey * 1.6 + ex * sw * 1.2;
+    const life = 90 + Math.random() * 140;
+    for (let c = 0; c < copies; c++) {
+      const flip = mirror && (c & 1);
+      const ang = (2 * Math.PI / N) * (mirror ? c >> 1 : c);
+      const ca = Math.cos(ang), sa = Math.sin(ang);
+      const qx = px, qy = flip ? -py : py, wx = vx, wy = flip ? -vy : vy;
+      const i = silkBrushPtr;
+      silkBrushPtr = silkBrushPtr + 1 >= silkN ? silkAmbMax : silkBrushPtr + 1;
+      silkPlace(i, cx + qx * ca - qy * sa, cy + qx * sa + qy * ca, wx * ca - wy * sa, wx * sa + wy * ca, 1, life);
+    }
+  }
+  silkLast = { x: mouse.x, y: mouse.y };
+}
+
+function silkDown(p) { silkLast = { x: p.x, y: p.y }; }
+
+function updateSilk() {
+  if (!sX) silkInit();
+  silkT += 1 / 60;
+  silkBrush();
+  if (!mouse.down) silkSpeed *= 0.9;
+  const L = SILK_L, W = width, H = height, k = silkK();
+  silkHead = (silkHead + 1) % L;
+  const h = silkHead;
+  let dev = 0, devN = 0;
+  for (let i = 0; i < silkN; i++) {
+    if (sLife[i] <= 0) {
+      if (i < silkAmb) silkSpawn(i); else continue;
+    }
+    silkField(sX[i], sY[i]);
+    dev += Math.abs(SFX - sVX[i]) + Math.abs(SFY - sVY[i]); devN++;
+    const br = sBright[i];
+    const relax = br > 0.05 ? 0.035 : 0.14;
+    sVX[i] += (SFX - sVX[i]) * relax; sVY[i] += (SFY - sVY[i]) * relax;
+    sX[i] += sVX[i]; sY[i] += sVY[i];
+    sHX[i * L + h] = sX[i]; sHY[i * L + h] = sY[i];
+    if (sAge[i] < 65535) sAge[i]++;
+    sLife[i] -= 1;
+    if (br > 0) sBright[i] = br * (1 - 0.012 * k);
+    const x = sX[i], y = sY[i];
+    if (x < -40 || x > W + 40 || y < -40 || y > H + 40) sLife[i] = Math.min(sLife[i], 0);
+  }
+  silkDev = devN ? dev / devN : 0;
+  // keep about 60fps: thin out the ambient threads if frames run long
+  const now = performance.now();
+  if (silkLastStamp) silkFrameMs = silkFrameMs * 0.95 + Math.min(100, now - silkLastStamp) * 0.05;
+  silkLastStamp = now;
+  if (now > silkAdaptAt) {
+    silkAdaptAt = now + 1000;
+    if (silkFrameMs > 19.5) { if (silkAmb > 150) silkAmb = Math.round(silkAmb * 0.85); silkBrushScale = Math.max(0.3, silkBrushScale * 0.85); }
+    else if (silkFrameMs < 17.2) { silkAmb = Math.min(silkAmbMax, Math.round(silkAmb * 1.15) + 5); silkBrushScale = Math.min(1, silkBrushScale * 1.12); }
+  }
+}
+
+function drawSilk() {
+  ctx.fillStyle = '#04060f';
+  ctx.fillRect(0, 0, width, height);
+  if (!sX) silkInit();
+  const cols = silkColors(), nc = cols.length;
+  const split = followSplitting('silk'), ft = followTick();
+  const L = SILK_L, h = silkHead, k = silkK();
+  // Trail Glow sets the arc length; with Linked on, smoother flow means shorter (faster fading) arcs
+  const len = Math.max(6, Math.min(L - 1, Math.round((8 + silk.glow * 30) / k)));
+  const A = SILK_ALPHA_LEVELS, groups = nc * (split ? 2 : 1);
+  const paths = new Array(groups * A);
+  for (let q = 0; q < paths.length; q++) paths[q] = new Path2D();
+  const glowPath = new Array(groups);
+  for (let q = 0; q < groups; q++) glowPath[q] = new Path2D();
+  const cx = width / 2, cy = height / 2, inner = Math.min(width, height) * 0.22;
+  const pointerOn = mouse.x !== undefined && mouse.x > 0;
+  const bands = 4;
+  for (let i = 0; i < silkN; i++) {
+    if (sLife[i] <= 0 && i >= silkAmb) continue;
+    const age = sAge[i];
+    const c = Math.min(age, len);
+    if (c < 2) continue;
+    let gi = sCol[i] % nc;
+    if (split) {
+      const near = pointerOn ? Math.hypot(sX[i] - mouse.x, sY[i] - mouse.y) < 180 : Math.hypot(sX[i] - cx, sY[i] - cy) < inner;
+      gi = gi * 2 + (near ? 1 : 0);
+    }
+    // whole-thread fade at birth and end of life
+    const fade = Math.min(1, age / 12, Math.max(0, sLife[i]) / 25) * (0.55 + 0.45 * Math.min(1, sBright[i] * 2 + 0.6));
+    const base = i * L;
+    for (let b = 0; b < bands; b++) {
+      const s0 = Math.floor(b * c / bands), s1 = Math.floor((b + 1) * c / bands);
+      if (s1 <= s0) continue;
+      const al = fade * (1 - b / bands) * (1 - 0.5 * b / bands);
+      const ai = Math.round(al * (A - 1));
+      if (ai <= 0) continue;
+      const P = paths[gi * A + ai];
+      let j = (h - s0 + L) % L;
+      P.moveTo(sHX[base + j], sHY[base + j]);
+      for (let s = s0 + 1; s <= s1; s++) {
+        j = (h - s + L) % L;
+        P.lineTo(sHX[base + j], sHY[base + j]);
+      }
+    }
+    if (sBright[i] > 0.55 && c >= 4) {
+      const j0 = h, j1 = (h - 3 + L) % L;
+      glowPath[gi].moveTo(sHX[base + j0], sHY[base + j0]);
+      glowPath[gi].lineTo(sHX[base + j1], sHY[base + j1]);
+    }
+  }
+  ctx.save();
+  ctx.lineCap = 'butt';
+  for (let g = 0; g < groups; g++) {
+    let col = hexToRgbCached(cols[split ? g >> 1 : g]), dx = 0;
+    if (split) { const st = followStyle(col, (g & 1) === 1, ft); col = st.c; dx = st.dx; }
+    if (dx) ctx.translate(dx, 0);
+    ctx.strokeStyle = rgbStr(col);
+    ctx.lineWidth = 1.5;
+    for (let a = 1; a < A; a++) {
+      ctx.globalAlpha = a / (A - 1);
+      ctx.stroke(paths[g * A + a]);
+    }
+    // soft added glow on the heads of freshly painted threads
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = rgbStr(lighten(col, 0.4));
+    ctx.stroke(glowPath[g]);
+    ctx.globalCompositeOperation = 'source-over';
+    if (dx) ctx.translate(-dx, 0);
+  }
+  ctx.restore();
+}
+
+function silkClear() {
+  if (!sX) return;
+  for (let i = 0; i < silkN; i++) { if (i < silkAmbMax) silkSpawn(i); else sLife[i] = 0; }
+}
+
+function silkPaletteOptions() {
+  let o = Object.keys(SILK_PALETTES).map(k => `<option value="${k}">${SILK_PALETTES[k].label}</option>`).join('');
+  o += '<optgroup label="Shared sets">' + Object.keys(COLOR_SETS).map(k => `<option value="set:${k}">${COLOR_SETS[k].label}</option>`).join('') + '</optgroup>';
+  o += '<option value="follow">Follow my work</option>';
+  return o;
+}
+function silkPaletteValue() {
+  const st = colorState.silk;
+  if (st && st.set === 'follow') return 'follow';
+  if (st && st.set && COLOR_SETS[st.set]) return 'set:' + st.set;
+  return silk.pal;
+}
+function setSilkPalette(v) {
+  if (v === 'follow') setTabColors('silk', FOLLOW_WRITE, 'follow');
+  else if (v.startsWith('set:')) setTabColors('silk', COLOR_SETS[v.slice(4)].colors, v.slice(4));
+  else { setTabColors('silk', null); silk.pal = v; saveSilk(); }
+}
+
+// ===== Rest meter: how far each tab is from rest, over time (log scale) =====
+// Based on Michele's rest-meter.js (restMeter / sampleRestMeter / fitHealRate / drawRestMeter),
+// widened to every tab. The slope of the falling line after you let go is the healing rate (the gap).
+const restMeter = { hist: [], times: [], hist2: [], max: 600, releasedAt: null, rate: null, wasDown: false,
+  tab: null, unit: 0.5, state: '',
+  // starts folded on phones (it would cover the play area); remembers your choice
+  collapsed: (() => { try { const v = localStorage.getItem('sparkleRest'); return v === null ? window.innerWidth < 600 : v === '0'; } catch (e) { return false; } })() };
+let silkDev = 0;
+
+// what "distance from rest" means on each tab, and the smallest step above calm that counts (unit)
+const REST_DEF = {
+  loop:    { label: 'distance from rest (log)', unit: 0.5 },     // mean px from home (her original)
+  bubbles: { label: 'bubble motion (log)', unit: 0.01 },         // total speed²
+  plate:   { label: 'distance from still lines (log)', unit: 0.002, second: true },  // mean |field| at grains; faint: grain energy
+  waves:   { label: 'distance from still lines (log)', unit: 0.002, second: true },
+  silk:    { label: 'threads off the flow (log)', unit: 0.01 },  // mean |velocity - flow|
+  crystal: { label: 'vapor change per step (log)', unit: 0.0005 }, // mean |change| of the vapor field, thousandths
+};
+
+function sampleRestMeter(list, pressed, nowMs) {
+  let sum = 0, n = 0;
+  for (const p of list) {
+    if (p.tx === undefined || p.x === undefined) continue;
+    sum += Math.hypot(p.x - p.tx, p.y - p.ty); n++;
+  }
+  return sampleRestMeterValue(n ? sum / n : 0, pressed, nowMs);
+}
+
+function sampleRestMeterValue(d, pressed, nowMs, d2) {
+  const m = restMeter;
+  // skip the first 0.8s on a tab: start-up values would set a false calm line
+  if (m.enteredAt && nowMs - m.enteredAt < 800) return;
+  m.hist.push(d); m.times.push(nowMs); m.hist2.push(d2 || 0);
+  if (m.hist.length > m.max) { m.hist.shift(); m.times.shift(); m.hist2.shift(); }
+  if (m.wasDown && !pressed) { m.releasedAt = nowMs; m.rate = null; }   // just let go
+  if (pressed) m.releasedAt = null;
+  m.wasDown = pressed;
+  if (m.releasedAt !== null) m.rate = fitHealRate(m) ?? m.rate;
+  m.state = restState(m, pressed);
+  return d;
+}
+
+// Straight-line fit of ln(distance above calm) against time, using samples since release.
+function fitHealRate(m) {
+  const calm = Math.min(...m.hist);                 // resting level (e.g. the specks' lag)
+  const ts = [], as = [];
+  for (let i = 0; i < m.hist.length; i++) {
+    if (m.times[i] < m.releasedAt) continue;
+    ts.push((m.times[i] - m.releasedAt) / 1000); as.push(m.hist[i] - calm);
+  }
+  if (ts.length < 6) return null;
+  // the return can swing past home and back, so fit the falling envelope (the highest value still to come)
+  for (let i = as.length - 2; i >= 0; i--) as[i] = Math.max(as[i], as[i + 1]);
+  const a0 = as[0], xs = [], ys = [];
+  for (let i = 0; i < as.length; i++) {
+    const above = as[i];
+    if (above <= Math.max(m.unit, 0.03 * a0)) break;   // down at the resting wobble
+    if (above > 0.6 * a0) continue;                       // skip the first quick snap
+    xs.push(ts[i]); ys.push(Math.log(above));
+  }
+  if (xs.length < 4) return null;
+  const n = xs.length, mx = xs.reduce((a, b) => a + b) / n, my = ys.reduce((a, b) => a + b) / n;
+  let sxy = 0, sxx = 0;
+  for (let i = 0; i < n; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
+  return sxx > 0 ? -sxy / sxx : null;               // per second; positive means healing
+}
+
+// plain words from the last 1.5 s: falling straight, flat above calm, or rising
+function restState(m, pressed) {
+  const H = m.hist, T = m.times, n = H.length;
+  if (n < 10) return '';
+  const calm = Math.min(...H), now = T[n - 1];
+  if (H[n - 1] - calm < Math.max(m.unit * 2, 0.05 * (Math.max(...H) - calm))) return 'at rest (floor)';
+  let sx = 0, sy = 0, sxx = 0, sxy = 0, k = 0;
+  for (let i = n - 1; i >= 0 && T[i] > now - 1500; i--) {
+    const x = (T[i] - now) / 1000, y = Math.log(Math.max(m.unit, H[i] - calm));
+    sx += x; sy += y; sxx += x * x; sxy += x * y; k++;
+  }
+  const slope = k > 8 ? (k * sxy - sx * sy) / Math.max(1e-9, k * sxx - sx * sx) : 0;
+  m.shortSlope = slope;
+  // how sure is that slope? (t = slope / its standard error); jitter near the floor gives small t
+  let tStat = 0;
+  if (k > 8) {
+    const mx = sx / k, my = sy / k, Sxx = sxx - k * mx * mx;
+    let rss = 0;
+    for (let i = n - 1, j = 0; j < k; i--, j++) {
+      const x = (T[i] - now) / 1000, y = Math.log(Math.max(m.unit, H[i] - calm));
+      const e = y - (my + slope * (x - mx)); rss += e * e;
+    }
+    const se = Math.sqrt(rss / (k - 2) / Math.max(1e-9, Sxx));
+    tStat = se > 0 ? slope / se : (slope ? 99 * Math.sign(slope) : 0);
+  }
+  if (slope > 0.25 && tStat > 5) return 'push-in winning (stretch)';
+  if (slope < -0.25 && tStat < -5) return 'healing steadily (slope = gap)';
+  if (pressed) return 'holding';
+  // flat: a jittery level that keeps dipping back to the calm line is a noisy floor, not a drift
+  let mean = 0, j = 0;
+  for (let i = n - 1; i >= 0 && T[i] > now - 1500; i--, j++) mean += H[i];
+  mean /= Math.max(1, j);
+  let sd = 0;
+  for (let i = n - 1; i >= n - j; i--) sd += (H[i] - mean) * (H[i] - mean);
+  sd = Math.sqrt(sd / Math.max(1, j));
+  if (mean - calm < 4.5 * sd) return 'at rest (noisy floor)';
+  if (m.tab === 'crystal') return 'still growing: vapor keeps flowing';
+  return 'no floor: something drifts';
+}
+
+function drawRestMeter(ctx, x, y, w, h, color) {
+  const m = restMeter, H = m.hist, u = m.unit;
+  ctx.save();
+  ctx.fillStyle = 'rgba(10,14,22,0.85)'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(148,163,184,0.35)'; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  const plot = (arr, style, lw, floor) => {
+    const lo = Math.log(Math.max(floor, Math.min(...arr))), hi = Math.log(Math.max(floor * 4, ...arr)) + 0.1;
+    ctx.beginPath();
+    for (let i = 0; i < arr.length; i++) {
+      const px = x + 6 + (w - 12) * (i + m.max - arr.length) / (m.max - 1);
+      const py = y + h - 30 - (h - 46) * (Math.log(Math.max(floor, arr[i])) - lo) / (hi - lo || 1);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.strokeStyle = style; ctx.lineWidth = lw; ctx.stroke();
+  };
+  if (H.length > 2) {
+    if (REST_DEF[m.tab] && REST_DEF[m.tab].second) plot(m.hist2, rgbStr(color, 0.35), 1, 1e-4);
+    plot(H, rgbStr(color), 1.5, u);
+  }
+  ctx.fillStyle = '#cbd5e1'; ctx.font = '11px system-ui, sans-serif';
+  ctx.fillText(REST_DEF[m.tab] ? REST_DEF[m.tab].label : 'distance from rest (log)', x + 8, y + 13);
+  ctx.fillText(m.rate ? `heal rate ≈ ${m.rate.toFixed(2)} per second` : 'press, then let go', x + 8, y + h - 18);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText(m.state, x + 8, y + h - 5);
+  ctx.restore();
+}
+// ===== end rest meter =====
+
+// ---- wiring: one meter for whichever tab is open, in a small foldable box at the top right ----
+function restBox() {
+  let box = document.getElementById('restBox');
+  if (box) return box;
+  box = document.createElement('div');
+  box.id = 'restBox';
+  box.innerHTML = '<button id="restToggle" title="Show or hide the distance from rest graph"></button><canvas id="restCanvas"></canvas>';
+  document.getElementById('canvas-container').appendChild(box);
+  document.getElementById('restToggle').onclick = () => {
+    restMeter.collapsed = !restMeter.collapsed;
+    try { localStorage.setItem('sparkleRest', restMeter.collapsed ? '0' : '1'); } catch (e) {}
+    paintRestBox();
+  };
+  paintRestBox();
+  return box;
+}
+function paintRestBox() {
+  const box = document.getElementById('restBox');
+  if (!box) return;
+  box.classList.toggle('collapsed', restMeter.collapsed);
+  document.getElementById('restToggle').textContent = restMeter.collapsed ? 'Rest meter ▸' : '▾';
+}
+
+function meanAbsField(list, rect, field) {
+  let s = 0, e = 0, n = 0;
+  for (let i = 0; i < list.length; i += 4) {
+    const p = list[i];
+    field((p.x - rect.x) / rect.w, (p.y - rect.y) / rect.h);
+    s += Math.abs(fieldF); e += p.vx * p.vx + p.vy * p.vy; n++;
+  }
+  return n ? [s / n, e / n] : [0, 0];
+}
+
+function restFrame() {
+  const def = REST_DEF[mode];
+  const box = restBox();
+  box.style.display = def ? '' : 'none';
+  if (!def) return;
+  const m = restMeter, now = performance.now();
+  if (m.tab !== mode) {
+    m.tab = mode; m.unit = def.unit; m.hist = []; m.times = []; m.hist2 = [];
+    m.rate = null; m.wasDown = false; m.releasedAt = now; m.enteredAt = now;   // opening a tab counts as a release
+  }
+  const pressed = !!mouse.down;
+  if (mode === 'loop') sampleRestMeter(loopParticles, pressed, now);
+  else if (mode === 'bubbles') { let e = 0; for (const b of bubbles) e += b.vx * b.vx + b.vy * b.vy; sampleRestMeterValue(e, pressed, now); }
+  else if (mode === 'plate') { const [f, e] = particles.length ? meanAbsField(particles, plateRect(), plateField) : [0, 0]; sampleRestMeterValue(f, pressed, now, e); }
+  else if (mode === 'waves') { const [f, e] = waveParticles.length ? meanAbsField(waveParticles, waveRect(), waveField) : [0, 0]; sampleRestMeterValue(f, pressed, now, e); }
+  else if (mode === 'silk') sampleRestMeterValue(silkDev, pressed, now);
+  else if (mode === 'crystal') sampleRestMeterValue(cryDev, pressed, now);
+  if (m.collapsed) return;
+  const cv = document.getElementById('restCanvas');
+  const small = width < 600;
+  const W = small ? 168 : 220, Hh = small ? 84 : 96, d = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(W * d) || cv.height !== Math.round(Hh * d)) {
+    cv.width = Math.round(W * d); cv.height = Math.round(Hh * d);
+    cv.style.width = W + 'px'; cv.style.height = Hh + 'px';
+  }
+  const g = cv.getContext('2d');
+  g.setTransform(d, 0, 0, d, 0, 0);
+  g.clearRect(0, 0, W, Hh);
+  const col = mode === 'silk' ? hexToRgbCached(silkColors()[0]) : tabColorList(mode) ? tabRGB(mode, 0) : hexToRgbCached((CLASSIC_COLORS[mode] || ['#67e8f9'])[0]);
+  drawRestMeter(g, 0, 0, W, Hh, col);
+}
+
+// ========== CRYSTAL (Reiter's hexagonal snowflake model) ==========
+// Each hex cell holds water s. Frozen cells (s >= 1) and their neighbors are "receptive":
+// they keep their water and gain gamma each step. Everything else diffuses (alpha).
+// The far edge is held at the background humidity beta, so vapor keeps flowing inward.
+const CRY_STYLES = {
+  // rate = model steps per frame at middle humidity, so each style takes about 20s to reach full size
+  fern:   { label: 'Feathery Fern Dendrite', beta: 0.47, gamma: 0.0003, alpha: 1.0, rate: 0.6 },
+  stellar:{ label: 'Classic Stellar Star',   beta: 0.60, gamma: 0.0030, alpha: 1.0, rate: 0.35 },
+  plate:  { label: 'Faceted Hexagonal Plate', beta: 0.90, gamma: 0.0500, alpha: 1.0, rate: 0.07 },
+};
+const CRY_TINTS = {
+  violet:    { label: 'Twilight Violet',  colors: ['#f5d0fe', '#c4b5fd', '#a78bfa', '#818cf8', '#e0e7ff'] },
+  pearl:     { label: 'Iridescent Pearl', colors: ['#fde68a', '#bbf7d0', '#a5f3fc', '#f0abfc', '#e0f2fe'] },
+  champagne: { label: 'Champagne Ice',    colors: ['#fff7e6', '#fde68a', '#fcd9b6', '#fef3c7', '#ffffff'] },
+};
+let cry = (() => {
+  const d = { style: 'fern', tint: 'pearl', humidity: 0.5, guides: false };
+  try { Object.assign(d, JSON.parse(localStorage.getItem('sparkleCrystal') || '{}')); } catch (e) {}
+  if (!CRY_STYLES[d.style]) d.style = 'fern';
+  if (!CRY_TINTS[d.tint]) d.tint = 'pearl';
+  return d;
+})();
+let cryPaused = false, cryAcc = 0;
+let cryC = 0, cryR = 0, cryN = 0, cryHex = 4, cryW = 0, cryH = 0, cryOX = 0, cryOY = 0;
+let cOwner, cS, cU, cRec, cFrozen, cNb, cEdge, cFreezeR, cryFrozenList = [], crySeeds = [];
+let cryLayer = null, cryLayerCtx = null, cryVapor = null, cryVaporCtx = null, cryVaporImg = null, cryVaporPix = null;
+let cryDev = 0, cryNewFrozen = 0, cryLastTinkle = 0, cryFrame = 0, cryInitW = 0, cryInitH = 0;
+
+function saveCry() { try { localStorage.setItem('sparkleCrystal', JSON.stringify(cry)); } catch (e) {} }
+function cryColors() { return tabColorList('crystal') || CRY_TINTS[cry.tint].colors; }
+function cryK() { return linkedOn ? cry.humidity / 0.5 : 1; }
+function cryParams() {
+  const st = CRY_STYLES[cry.style], h = cry.humidity;   // 0..1, 0.5 = the style's own values
+  return {
+    beta: Math.min(0.97, st.beta * (0.85 + 0.3 * h)),
+    gamma: st.gamma * (0.4 + 1.2 * h),
+    // Linked: the same humidity number also sets how fast vapor spreads (bursts settle faster)
+    alpha: st.alpha * (linkedOn ? 0.6 + 0.8 * h : 1),
+  };
+}
+function cryCenter(i) {
+  const r = (i / cryC) | 0, c = i - r * cryC;
+  return [cryOX + (c + 0.5 * (r & 1)) * cryW, cryOY + r * cryH];
+}
+function cryCellAt(x, y) {
+  const r = Math.round((y - cryOY) / cryH);
+  if (r < 0 || r >= cryR) return -1;
+  const c = Math.round((x - cryOX) / cryW - 0.5 * (r & 1));
+  if (c < 0 || c >= cryC) return -1;
+  return r * cryC + c;
+}
+
+function cryInit() {
+  cryHex = width < 600 ? 3.6 : 4.2;
+  cryW = Math.sqrt(3) * cryHex; cryH = 1.5 * cryHex;
+  cryC = Math.ceil(width / cryW) + 1; cryR = Math.ceil(height / cryH) + 1;
+  cryOX = (width - (cryC - 0.5) * cryW) / 2; cryOY = (height - (cryR - 1) * cryH) / 2;
+  cryN = cryC * cryR;
+  cS = new Float32Array(cryN); cU = new Float32Array(cryN);
+  cRec = new Uint8Array(cryN); cFrozen = new Uint8Array(cryN); cEdge = new Uint8Array(cryN);
+  cFreezeR = new Float32Array(cryN); cOwner = new Int16Array(cryN);
+  cNb = new Int32Array(cryN * 6);
+  const EV = [[-1, -1], [0, -1], [-1, 0], [1, 0], [-1, 1], [0, 1]], OD = [[0, -1], [1, -1], [-1, 0], [1, 0], [0, 1], [1, 1]];
+  for (let r = 0; r < cryR; r++) for (let c = 0; c < cryC; c++) {
+    const i = r * cryC + c, T = r & 1 ? OD : EV;
+    for (let k = 0; k < 6; k++) {
+      const cc = c + T[k][0], rr = r + T[k][1];
+      cNb[i * 6 + k] = cc < 0 || rr < 0 || cc >= cryC || rr >= cryR ? -1 : rr * cryC + cc;
+      if (cNb[i * 6 + k] < 0) cEdge[i] = 1;
+    }
+  }
+  const d = window.devicePixelRatio || 1;
+  cryLayer = document.createElement('canvas');
+  cryLayer.width = Math.round(width * d); cryLayer.height = Math.round(height * d);
+  cryLayerCtx = cryLayer.getContext('2d'); cryLayerCtx.setTransform(d, 0, 0, d, 0, 0);
+  cryVapor = document.createElement('canvas'); cryVapor.width = cryC; cryVapor.height = cryR;
+  cryVaporCtx = cryVapor.getContext('2d');
+  cryVaporImg = cryVaporCtx.createImageData(cryC, cryR); cryVaporPix = new Uint32Array(cryVaporImg.data.buffer);
+  cryInitW = width; cryInitH = height;
+  cryReset();
+}
+
+function cryReset() {
+  const { beta } = cryParams();
+  cS.fill(beta); cRec.fill(0); cFrozen.fill(0);
+  cryFrozenList = []; crySeeds = [];
+  cryLayerCtx.clearRect(0, 0, width, height);
+  crySeed(width / 2, height / 2, Math.min(width, height) * 0.4);
+}
+// a cell may freeze only inside the reach of its nearest seed, so crystals stop at a set size
+// hexagonal distance, with the corners along the arms (0, 60, 120 degrees)
+function cryHexDist(dx, dy) {
+  const a = Math.abs(dy), b = Math.abs(dy * 0.5 + dx * 0.8660254), c = Math.abs(dy * 0.5 - dx * 0.8660254);
+  return Math.max(a, b, c) / 0.8660254;
+}
+function cryNearestSeed(x, y) {
+  let best = 1e9, bs = null;
+  for (const s of crySeeds) { const d = Math.hypot(x - s[0], y - s[1]); if (d < best) { best = d; bs = s; } }
+  return bs;
+}
+// when an arm tip reaches the seed's set size, that crystal is finished (like a real flake leaving the cloud)
+// each ice cell belongs to the crystal it grew from (taken from a frozen neighbor)
+function cryOwnerOf(i) {
+  for (let k = 0; k < 6; k++) { const j = cNb[i * 6 + k]; if (j >= 0 && cFrozen[j]) return cOwner[j]; }
+  return -1;
+}
+function cryInReach(i) {
+  const o = cryOwnerOf(i);
+  if (o < 0) return false;
+  cOwner[i] = o;
+  const [x, y] = cryCenter(i), s = crySeeds[o];
+  if (!s || s[3]) return false;
+  if (cryHexDist(x - s[0], y - s[1]) > s[2]) { s[3] = true; return false; }
+  return true;
+}
+
+function cryFreeze(i) {
+  if (cFrozen[i]) return;
+  cFrozen[i] = 1; cRec[i] = 1;
+  for (let k = 0; k < 6; k++) { const j = cNb[i * 6 + k]; if (j >= 0) cRec[j] = 1; }
+  cryFrozenList.push(i);
+  // ring position: distance to the nearest seed, for the tint gradient
+  const [x, y] = cryCenter(i);
+  const sd = crySeeds[cOwner[i]] || crySeeds[0];
+  cFreezeR[i] = sd ? Math.hypot(x - sd[0], y - sd[1]) : 0;
+  cryDrawCell(i);
+  cryNewFrozen++;
+}
+
+function crySeed(x, y, lim) {
+  const i = cryCellAt(x, y);
+  if (i < 0 || cEdge[i]) return;
+  const [cx, cy] = cryCenter(i);
+  crySeeds.push([cx, cy, lim || (22 + Math.random() * 40), false]);
+  cOwner[i] = crySeeds.length - 1;
+  cS[i] = 1; cryFreeze(i);
+}
+
+// a click on the crystal: a puff of vapor and a few new frost buds around the spot
+function cryFrost(x, y) {
+  const R = 7 * cryHex, R2 = R * R;
+  const r0 = Math.max(0, Math.floor((y - R - cryOY) / cryH)), r1 = Math.min(cryR - 1, Math.ceil((y + R - cryOY) / cryH));
+  for (let r = r0; r <= r1; r++) for (let c = 0; c < cryC; c++) {
+    const i = r * cryC + c, [cx, cy] = cryCenter(i), d2 = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+    if (d2 > R2 || cEdge[i]) continue;
+    if (!cFrozen[i]) cS[i] = Math.min(0.99, cS[i] + 0.5 * (1 - d2 / R2));
+    if (cRec[i] && !cFrozen[i] && Math.random() < 0.35) {
+      const o = cryOwnerOf(i);
+      if (o >= 0) { cOwner[i] = o; cS[i] = 1; cryFreeze(i); }
+    }
+  }
+}
+
+function crystalDown(p) {
+  const i = cryCellAt(p.x, p.y);
+  if (i < 0) return;
+  // on or next to ice: seed frost branches; empty space: a new seed
+  let near = false;
+  const R = 3 * cryHex;
+  for (let a = 0; a < 7 && !near; a++) {
+    const j = cryCellAt(p.x + (a ? Math.cos(a) * R : 0), p.y + (a ? Math.sin(a) * R : 0));
+    if (j >= 0 && cFrozen[j]) near = true;
+  }
+  if (near) {
+    // frost restarts growth of that crystal a little past where it stopped
+    const ci = cryCellAt(p.x, p.y), s = ci >= 0 && cFrozen[ci] ? crySeeds[cOwner[ci]] : cryNearestSeed(p.x, p.y);
+    if (s) { s[2] = Math.max(s[2], cryHexDist(p.x - s[0], p.y - s[1])) + 6 * cryHex; s[3] = false; }
+    cryFrost(p.x, p.y);
+  }
+  else { crySeed(p.x, p.y); cryFrost(p.x, p.y); }
+  if (soundOn) blip('sine', 1567.98, 1568, 0.25, 0.04);
+}
+
+function cryStep(P) {
+  const N = cryN, S = cS, U = cU, Rc = cRec, NB = cNb, E = cEdge, a2 = P.alpha / 2, g = P.gamma, b = P.beta;
+  for (let i = 0; i < N; i++) U[i] = Rc[i] ? 0 : S[i];
+  let dev = 0, dn = 0;
+  const fresh = [];
+  for (let i = 0; i < N; i++) {
+    if (E[i]) { S[i] = b; continue; }
+    const o = i * 6;
+    const avg = (U[NB[o]] + U[NB[o + 1]] + U[NB[o + 2]] + U[NB[o + 3]] + U[NB[o + 4]] + U[NB[o + 5]]) / 6;
+    const u = U[i];
+    const ns = u + a2 * (avg - u) + (Rc[i] ? S[i] + g : 0);
+    if (!Rc[i]) { dev += Math.abs(ns - S[i]); dn++; }
+    S[i] = ns;
+    if (ns >= 1 && !cFrozen[i]) fresh.push(i);
+  }
+  for (const i of fresh) if (cryInReach(i)) cryFreeze(i);
+  return dn ? dev / dn : 0;
+}
+
+function updateCrystal() {
+  if (!cS) cryInit();
+  cryFrame++;
+  const P = cryParams();
+  // more humidity: faster growth (and, through beta, branchier)
+  cryAcc += CRY_STYLES[cry.style].rate * (0.6 + 0.8 * cry.humidity);
+  const steps = Math.min(4, Math.floor(cryAcc));
+  cryAcc -= steps;
+  if (steps) {
+    let dev = 0;
+    for (let k = 0; k < steps; k++) dev += cryStep(P);
+    cryDev = dev / steps * 1000;   // vapor change per model step, in thousandths
+  }
+  if (cryNewFrozen && soundOn && performance.now() - cryLastTinkle > 180) {
+    const notes = [1318.5, 1567.98, 1760, 2093, 2349.3, 2637];
+    const f = notes[(Math.random() * notes.length) | 0];
+    blip('sine', f, f * 1.002, 0.35, Math.min(0.035, 0.01 + cryNewFrozen * 0.0015));
+    cryLastTinkle = performance.now();
+  }
+  cryNewFrozen = 0;
+}
+
+function cryHexPath(g, x, y, r) {
+  g.moveTo(x, y - r);
+  for (let k = 1; k < 6; k++) { const a = -Math.PI / 2 + k * Math.PI / 3; g.lineTo(x + r * Math.cos(a), y + r * Math.sin(a)); }
+  g.closePath();
+}
+function cryCellColor(i) {
+  const cols = cryColors(), n = cols.length;
+  const f = (cFreezeR[i] / (Math.min(width, height) * 0.45)) * (n - 1);
+  const k = Math.max(0, Math.min(n - 1.001, f)), a = Math.floor(k), t = k - a;
+  return mixRGB(hexToRgbCached(cols[a]), hexToRgbCached(cols[a + 1]), t);
+}
+function cryDrawCell(i) {
+  const g = cryLayerCtx, [x, y] = cryCenter(i), c = cryCellColor(i);
+  // a soft lit facet: light toward the top left, a thin darker rim gives the cell texture
+  const lit = 0.9 + 0.1 * Math.random();
+  g.beginPath(); cryHexPath(g, x, y, cryHex * 0.98);
+  g.fillStyle = rgbStr([c[0] * lit | 0, c[1] * lit | 0, c[2] * lit | 0], 0.82);
+  g.fill();
+  g.strokeStyle = rgbStr([c[0] * 0.55 | 0, c[1] * 0.55 | 0, c[2] * 0.6 | 0], 0.7);
+  g.lineWidth = 0.7; g.stroke();
+  g.beginPath(); cryHexPath(g, x - cryHex * 0.18, y - cryHex * 0.2, cryHex * 0.38);
+  g.fillStyle = 'rgba(255,255,255,0.18)'; g.fill();
+}
+function cryRepaint() {
+  if (!cryLayerCtx) return;
+  cryLayerCtx.clearRect(0, 0, width, height);
+  for (const i of cryFrozenList) cryDrawCell(i);
+}
+
+function drawCrystal() {
+  if (!cS || cryInitW !== width || cryInitH !== height) cryInit();
+  const g0 = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
+  g0.addColorStop(0, '#0d1b3a'); g0.addColorStop(1, '#03060f');
+  ctx.fillStyle = g0; ctx.fillRect(0, 0, width, height);
+  // vapor: faint blue haze where the air is wetter
+  if (cryFrame % 3 === 0 || !cryVaporPix[0]) {
+    const b = cryParams().beta;
+    for (let i = 0; i < cryN; i++) {
+      const v = cFrozen[i] ? 0 : Math.max(0, Math.min(1, cS[i] / Math.max(0.3, b)));
+      const a = (v * v * 26) | 0;
+      cryVaporPix[i] = ((a << 24) | (255 << 16) | (200 << 8) | 140) >>> 0;
+    }
+    cryVaporCtx.putImageData(cryVaporImg, 0, 0);
+  }
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(cryVapor, cryOX - cryW / 2, cryOY - cryH / 2, cryC * cryW, cryR * cryH);
+  if (cry.guides) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,212,255,0.16)'; ctx.lineWidth = 1;
+    const cx = width / 2, cy = height / 2, L = Math.hypot(width, height);
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + k * Math.PI / 3; ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * L, cy + Math.sin(a) * L); }
+    for (let r = 60; r < L / 2; r += 60) cryHexPath(ctx, cx, cy, r);
+    ctx.stroke();
+    ctx.restore();
+  }
+  const split = followSplitting('crystal');
+  if (!split) ctx.drawImage(cryLayer, 0, 0, width, height);
+  else cryDrawFollow();
+  // subtle glints on the ice
+  const n = cryFrozenList.length;
+  if (n) {
+    const spk = sparkleSprite(), t = performance.now() / 1000;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < Math.min(14, (n / 40) | 0); k++) {
+      const idx = cryFrozenList[(Math.imul(k + 1, 2654435761) >>> 0) % n];
+      const ph = (t * 0.5 + k * 0.37) % 1, tw = Math.sin(ph * Math.PI);
+      const [x, y] = cryCenter(idx);
+      const s = 9 * (0.5 + 0.5 * tw);
+      ctx.globalAlpha = 0.55 * tw;
+      ctx.drawImage(spk, x - s / 2, y - s / 2, s, s);
+    }
+    ctx.restore();
+  }
+}
+
+// Follow my work freeze: the ice near the pointer (or the middle) turns gold, the rest turns deep blue and slides left
+let cryTint = null, cryTintCtx = null;
+function cryDrawFollow() {
+  const ft = followTick();
+  if (!cryTint || cryTint.width !== cryLayer.width) {
+    cryTint = document.createElement('canvas'); cryTint.width = cryLayer.width; cryTint.height = cryLayer.height;
+    cryTintCtx = cryTint.getContext('2d');
+  }
+  const pointerOn = mouse.x !== undefined && mouse.x > 0;
+  const ox = pointerOn ? mouse.x : width / 2, oy = pointerOn ? mouse.y : height / 2, R = pointerOn ? 180 : Math.min(width, height) * 0.22;
+  const base = hexToRgbCached(cryColors()[1]);
+  const d = window.devicePixelRatio || 1;
+  for (const ov of [true, false]) {
+    const st = followStyle(base, ov, ft), tc = cryTintCtx;
+    tc.setTransform(1, 0, 0, 1, 0, 0); tc.globalCompositeOperation = 'source-over';
+    tc.clearRect(0, 0, cryTint.width, cryTint.height);
+    tc.drawImage(cryLayer, 0, 0);
+    tc.globalCompositeOperation = 'source-atop';
+    tc.fillStyle = rgbStr(st.c, 0.8); tc.fillRect(0, 0, cryTint.width, cryTint.height);
+    ctx.save();
+    ctx.beginPath();
+    if (ov) ctx.arc(ox, oy, R, 0, Math.PI * 2);
+    else { ctx.rect(-100, -100, width + 200, height + 200); ctx.arc(ox, oy, R, 0, Math.PI * 2, true); }
+    ctx.clip();
+    ctx.drawImage(cryTint, st.dx, 0, width, height);
+    ctx.restore();
+  }
+}
+
+function cryTintOptions() {
+  let o = Object.keys(CRY_TINTS).map(k => `<option value="${k}">${CRY_TINTS[k].label}</option>`).join('');
+  o += '<optgroup label="Shared sets">' + Object.keys(COLOR_SETS).map(k => `<option value="set:${k}">${COLOR_SETS[k].label}</option>`).join('') + '</optgroup>';
+  o += '<option value="follow">Follow my work</option>';
+  return o;
+}
+function cryTintValue() {
+  const st = colorState.crystal;
+  if (st && st.set === 'follow') return 'follow';
+  if (st && st.set && COLOR_SETS[st.set]) return 'set:' + st.set;
+  return cry.tint;
+}
+function setCryTint(v) {
+  if (v === 'follow') setTabColors('crystal', FOLLOW_WRITE, 'follow');
+  else if (v.startsWith('set:')) setTabColors('crystal', COLOR_SETS[v.slice(4)].colors, v.slice(4));
+  else { setTabColors('crystal', null); cry.tint = v; saveCry(); }
+  cryRepaint();
+}
+
 // ========== SOUND (shared layer) ==========
 // One master gain + soft compressor. Each tab can run a "bed" (continuous voices)
 // plus short one-shot sounds. Everything starts only after a user click.
@@ -2461,6 +3352,23 @@ function startBed(tab) {
     bed = b;
   } else if (tab === 'bubbles') {
     bed = makeBed(tab, 0);  // no bed; pops are one-shots
+  } else if (tab === 'silk') {
+    const b = makeBed(tab, 1);
+    const src = audioCtx.createBufferSource(); src.buffer = getNoise(); src.loop = true;
+    const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 0.8;
+    const ng = audioCtx.createGain(); ng.gain.value = 0;
+    src.connect(bp); bp.connect(ng); ng.connect(b.out);
+    // a faint high shimmer: two detuned sines that beat slowly
+    const s1 = osc('sine', 1318.5), s2 = osc('sine', 1321.3), sg = audioCtx.createGain(); sg.gain.value = 0;
+    s1.connect(sg); s2.connect(sg); sg.connect(b.out);
+    b.frame = () => {
+      const t = audioCtx.currentTime, v = Math.min(1, silkSpeed / 25);
+      ng.gain.setTargetAtTime(0.004 + v * 0.05, t, 0.1);
+      bp.frequency.setTargetAtTime(700 + v * 3200, t, 0.1);
+      sg.gain.setTargetAtTime(0.002 + v * 0.012, t, 0.15);
+    };
+    addNodes(b, [src, bp, ng, s1, s2, sg]);
+    bed = b;
   }
 }
 
@@ -2520,6 +3428,8 @@ function soundPointerDown(p) {
   } else if (mode === 'plate') {
     blip('triangle', toneN(waveN) * 4, toneN(waveN) * 3.9, 0.5, 0.07);
     blip('sine', toneM(waveM) * 2, toneM(waveM) * 2, 0.7, 0.05);
+  } else if (mode === 'silk') {
+    chime(880 + Math.random() * 440, 0.03);
   } else if (mode === 'waves') {
     const r = waveRect();
     if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) {
@@ -2563,6 +3473,7 @@ function soundFrame() {
 // ========== MAIN LOOP ==========
 function loop() {
   updateTickLabel();
+  document.documentElement.style.setProperty('--rest-bottom', (hint.offsetHeight + 28) + 'px');
   soundFrame();
   if (mode === 'sand') {
     updateSand();
@@ -2579,7 +3490,15 @@ function loop() {
   } else if (mode === 'waves') {
     if (!followHolding('waves')) updateWaves();
     drawWaves();
+  } else if (mode === 'silk') {
+    if (!followHolding('silk') && !silkPaused) updateSilk();
+    else if (mouse.down) silkLast = { x: mouse.x, y: mouse.y };
+    drawSilk();
+  } else if (mode === 'crystal') {
+    if (!followHolding('crystal') && !cryPaused) updateCrystal();
+    drawCrystal();
   }
+  restFrame();
   requestAnimationFrame(loop);
 }
 
@@ -2603,6 +3522,8 @@ canvas.addEventListener('mousedown', e => {
   if (mode === 'loop') loopDown(p.x, p.y);
   if (mode === 'plate') plateDown(p.x, p.y);
   if (mode === 'waves') wavesDown(p.x, p.y);
+  if (mode === 'silk') silkDown(p);
+  if (mode === 'crystal') crystalDown(p);
   soundPointerDown(p);
 });
 canvas.addEventListener('mousemove', e => {
@@ -2624,6 +3545,8 @@ canvas.addEventListener('touchstart', e => {
   if (mode === 'loop') loopDown(p.x, p.y);
   if (mode === 'plate') plateDown(p.x, p.y);
   if (mode === 'waves') wavesDown(p.x, p.y);
+  if (mode === 'silk') silkDown(p);
+  if (mode === 'crystal') crystalDown(p);
   soundPointerDown(p);
 }, {passive: false});
 canvas.addEventListener('touchmove', e => {
