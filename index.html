@@ -84,6 +84,13 @@
     flex-wrap: wrap;
     min-height: 56px;
   }
+  #tab-stretch .stc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  #tab-stretch .control-group { display: flex; align-items: center; gap: 6px; }
+  #tab-stretch .btn.active-toggle { background: #2d3b55; border-color: #79c0ff; color: #79c0ff; font-weight: 600; }
+  #tab-stretch .btn.primary { background: #7ee787; color: #080b10; font-weight: 600; border-color: #7ee787; }
+  #tab-stretch label { font-size: 0.8rem; color: var(--muted); }
+  #tab-stretch span { font-size: 0.85rem; }
+  .mag-pct { min-width: 3.2em; color: var(--text); font-variant-numeric: tabular-nums; }
   .controls label {
     font-size: 0.85rem;
     color: var(--muted);
@@ -213,13 +220,15 @@
 <header>
   <h1>Tension, Waves & Sparkle Sand</h1>
   <div class="tabs">
-    <button class="tab active" data-mode="sand">1. Kinetic Sand</button>
+    <button class="tab active" data-mode="sand">1. Sand</button>
     <button class="tab" data-mode="loop">2. Loop</button>
     <button class="tab" data-mode="bubbles">3. Bubbles</button>
-    <button class="tab" data-mode="plate">4. Sand Plate</button>
+    <button class="tab" data-mode="plate">4. Plate</button>
     <button class="tab" data-mode="waves">5. Waves</button>
     <button class="tab" data-mode="silk">6. Silk</button>
     <button class="tab" data-mode="crystal">7. Crystal</button>
+    <button class="tab" data-mode="magnets">8. Magnets</button>
+    <button class="tab" data-mode="stretch" title="Stretch &amp; Close">9. Stretch</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -277,7 +286,8 @@ const LINK_NOTES = {
   waves: 'Linked: more nodes, pluck fades faster',
   bubbles: 'Linked: higher tension merges sooner, calms faster',
   silk: 'Linked: smoother flow, wider strokes, trails fade faster',
-  crystal: 'Linked: more humidity, vapor bursts settle faster'
+  crystal: 'Linked: more humidity, vapor bursts settle faster',
+  magnets: 'Linked: stronger surface tension, smaller spikes, the fluid snaps back faster'
 };
 function applyLinkNote() {
   if (!LINK_NOTES[mode] || hint.dataset.base === undefined) return;
@@ -334,6 +344,7 @@ function setControls() {
     controlsDiv.innerHTML = `
       <button id="pourBtn" data-tool="pour">Pour</button>
       <button id="stampBtn" data-tool="stamp">Stamp</button>
+      <button id="dropBtn" class="${stampDrop ? 'active' : ''}" title="Stamp drop. On: stamped molds fall and land. Off: they stamp in place." style="padding:6px 8px">Drop: ${stampDrop ? 'On' : 'Off'}</button>
       <button id="carveBtn" data-tool="carve">Carve</button>
       <button id="ledgeBtn" data-tool="ledge">Ledge</button>
       <button id="meltBtn" class="${meltOn ? 'active' : ''}" title="Layered: shapes stay separate. Melt: overlapping shapes blend.">${meltOn ? 'Melt' : 'Layered'}</button>
@@ -378,6 +389,7 @@ function setControls() {
     };
     document.getElementById('clearBtn').onclick = clearSand;
     document.getElementById('meltBtn').onclick = () => setMelt(!meltOn);
+    document.getElementById('dropBtn').onclick = () => { setStampDrop(!stampDrop); setTool('stamp'); hint.textContent = stampDrop ? 'Stamp drop: stamped molds fall, land and settle. Turn it off to stamp in place.' : 'Stamp drop off: molds stamp right where you click.'; };
     drawMoldIcon();
     setTool(tool);
   }
@@ -509,6 +521,51 @@ function setControls() {
     document.getElementById('soundBtn').classList.toggle('active', soundOn);
     if (!cS) cryInit();
   }
+  else if (mode === 'magnets') {
+    hint.textContent = 'Drag a magnet to pull the fluid. Double-click a magnet to flip it. Shift-click to remove one.';
+    const pct = v => Math.round(v * 100) + '%';
+    controlsDiv.innerHTML = `
+      <button id="magAddP">+ Pole (+)</button>
+      <button id="magAddN">+ Pole (-)</button>
+      <button id="magLines" class="${mag.lines ? 'active' : ''}">Field Lines: ${mag.lines ? 'On' : 'Off'}</button>
+      <label>Preset: <select id="magPreset">${Object.keys(MAG_PRESETS).map(k => `<option value="${k}">${MAG_PRESETS[k]}</option>`).join('')}</select></label>
+      <label>Magnet Pull <input type="range" id="magPull" min="0" max="1.5" step="0.01" value="${mag.pull}"><span class="mag-pct" id="magPullV">${pct(mag.pull)}</span></label>
+      <label>Spacing <input type="range" id="magSpacing" min="0.5" max="1.5" step="0.01" value="${mag.spacing}"><span class="mag-pct" id="magSpacingV">${pct(mag.spacing)}</span></label>
+      <label>Surface Tension <input type="range" id="magTension" min="0" max="1" step="0.01" value="${mag.tension}"><span class="mag-pct" id="magTensionV">${pct(mag.tension)}</span></label>
+      <label>Fluid Volume <input type="range" id="magVolume" min="0.3" max="1.5" step="0.01" value="${mag.volume}"><span class="mag-pct" id="magVolumeV">${pct(mag.volume)}</span></label>
+      <label>Colors: <select id="magPal">${magPaletteOptions()}</select></label>
+      <button id="magPause">${magPaused ? 'Resume' : 'Pause'}</button>
+      <button id="soundBtn">${soundOn ? 'Sound: On' : 'Sound: Off'}</button>
+      <span class="tick-label" id="tickLabel"></span>
+    `;
+    const pr = document.getElementById('magPreset'), pl = document.getElementById('magPal');
+    pr.value = mag.preset; pl.value = magPaletteValue();
+    pr.onchange = () => { mag.preset = pr.value; saveMag(); magInit(); };
+    pl.onchange = () => setMagPalette(pl.value);
+    const bind = (id, key, after) => {
+      document.getElementById(id).oninput = e => {
+        mag[key] = +e.target.value; saveMag();
+        document.getElementById(id + 'V').textContent = pct(mag[key]);
+        if (after) after();
+      };
+    };
+    bind('magPull', 'pull');
+    bind('magSpacing', 'spacing', () => { const keep = magPoles.map(p => ({ ...p })); magPreset(mag.preset); if (keep.length !== magPoles.length) { magPoles = keep; } magLinesKey = ''; });
+    bind('magTension', 'tension');
+    bind('magVolume', 'volume');
+    document.getElementById('magAddP').onclick = () => magAddPole(1);
+    document.getElementById('magAddN').onclick = () => magAddPole(-1);
+    document.getElementById('magLines').onclick = function() { mag.lines = !mag.lines; saveMag(); this.textContent = 'Field Lines: ' + (mag.lines ? 'On' : 'Off'); this.classList.toggle('active', mag.lines); };
+    document.getElementById('magPause').onclick = function() { magPaused = !magPaused; this.textContent = magPaused ? 'Resume' : 'Pause'; this.classList.toggle('active', magPaused); };
+    document.getElementById('soundBtn').onclick = () => setSound(!soundOn);
+    document.getElementById('soundBtn').classList.toggle('active', soundOn);
+    if (!mX || magInitW !== width || magInitH !== height) magInit();
+  }
+  else if (mode === 'stretch') {
+    hint.innerHTML = STC_HINT;
+    controlsDiv.appendChild(stcControls);
+    stcControls.style.display = '';
+  }
   hint.dataset.base = hint.textContent;
   applyLinkNote();
 }
@@ -598,6 +655,7 @@ function initSandGrid() {
 
 function clearSand() {
   flying = [];
+  if (typeof fallingMolds !== 'undefined') fallingMolds = [];
   if (gType) { gType.fill(0); gOwner.fill(0); }
   lifted = null;
 }
@@ -1288,7 +1346,7 @@ function sandDown(p) {
   if (tool === 'stamp') {
     // press on a placed shape or ledge to pick it up; press on empty space to stamp
     const id = objectAt(p.x, p.y);
-    if (!(id && liftObject(id, p.x, p.y))) stampMold(p.x, p.y);
+    if (!(id && liftObject(id, p.x, p.y))) { if (stampDrop) spawnFallingMold(p.x, p.y); else stampMold(p.x, p.y); }
   }
   else if (tool === 'carve') carveAt(p.x, p.y);
   else if (tool === 'ledge') { curLedgeId = nextObjId++; ledgeAt(p.x, p.y); }
@@ -1389,6 +1447,7 @@ function updateSand() {
   initSandGrid();
   sandFrame++;
   pourSand();
+  updateFallingMolds();
   updateFlying();
   updateGrid();
   sandFrame++;
@@ -1462,6 +1521,7 @@ function drawSand() {
   updateMatteLayer();
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(matteLayer, 0, 0, C * CELL, R * CELL);
+  drawFallingMolds();
   drawLifted();
   const SP = SPR_PX;
   for (const p of flying) {
@@ -1740,10 +1800,11 @@ const CLASSIC_COLORS = {
   waves: ['#67e8f9', '#ff6b9d', '#a5f3fc'],
   silk: ['#ffd8c4', '#ffb4a2', '#f4978e', '#ffc8dd', '#ff8fab'],
   crystal: ['#fde68a', '#bbf7d0', '#a5f3fc', '#f0abfc', '#e0f2fe'],
+  magnets: ['#38bdf8', '#2563eb'],
 };
-const COLOR_TABS = ['loop', 'bubbles', 'plate', 'waves', 'silk', 'crystal'];
+const COLOR_TABS = ['loop', 'bubbles', 'plate', 'waves', 'silk', 'crystal', 'magnets'];
 const SHIFT_RATE = 0.22; // colors per second while Shift is on
-let colorState = { loop: {}, bubbles: {}, plate: {}, waves: {}, silk: {}, crystal: {} };
+let colorState = { loop: {}, bubbles: {}, plate: {}, waves: {}, silk: {}, crystal: {}, magnets: {} };
 
 try {
   const saved = JSON.parse(localStorage.getItem('sparkleTabColors') || 'null');
@@ -2688,7 +2749,8 @@ const REST_DEF = {
   plate:   { label: 'distance from still lines (log)', unit: 0.002, second: true },  // mean |field| at grains; faint: grain energy
   waves:   { label: 'distance from still lines (log)', unit: 0.002, second: true },
   silk:    { label: 'threads off the flow (log)', unit: 0.01 },  // mean |velocity - flow|
-  crystal: { label: 'vapor change per step (log)', unit: 0.0005 }, // mean |change| of the vapor field, thousandths
+  crystal: { label: 'vapor change per step (log)', unit: 0.0005 },
+  magnets: { label: 'fluid motion (log)', unit: 0.001 },   // mean particle speed, px per step // mean |change| of the vapor field, thousandths
 };
 
 function sampleRestMeter(list, pressed, nowMs) {
@@ -2857,6 +2919,7 @@ function restFrame() {
   else if (mode === 'waves') { const [f, e] = waveParticles.length ? meanAbsField(waveParticles, waveRect(), waveField) : [0, 0]; sampleRestMeterValue(f, pressed, now, e); }
   else if (mode === 'silk') sampleRestMeterValue(silkDev, pressed, now);
   else if (mode === 'crystal') sampleRestMeterValue(cryDev, pressed, now);
+  else if (mode === 'magnets') sampleRestMeterValue(magSpeed, pressed || !!magDrag, now);
   if (m.collapsed) return;
   const cv = document.getElementById('restCanvas');
   const small = width < 600;
@@ -3210,6 +3273,1166 @@ function setCryTint(v) {
   cryRepaint();
 }
 
+// ---------- Falling molds (Stamp drop: On) ----------
+// A stamped mold appears where you click, falls with gravity, lands on the floor, a ledge,
+// another mold or a sand pile, squashes a little, sheds a few crumbs, then becomes a normal mold.
+let stampDrop = (() => { try { return localStorage.getItem('sparkleStampDrop') === '1'; } catch (e) { return false; } })();
+let fallingMolds = [];
+function setStampDrop(on) {
+  stampDrop = !!on;
+  try { localStorage.setItem('sparkleStampDrop', on ? '1' : '0'); } catch (e) {}
+  const b = document.getElementById('dropBtn');
+  if (b) { b.textContent = 'Drop: ' + (on ? 'On' : 'Off'); b.classList.toggle('active', on); }
+  if (mode === 'sand') {
+    hint.textContent = on ? 'Stamp drop: stamped molds fall, land and settle. Turn it off to stamp in place.'
+                          : 'Stamp drop off: molds stamp right where you click.';
+    hint.classList.remove('faded');
+  }
+}
+function spawnFallingMold(px, py) {
+  initSandGrid();
+  const n = Math.max(8, Math.round(2 * moldSize / CELL));
+  const m = moldMask(moldName, n);
+  const id = nextObjId++, mc = moldColor(color);
+  const rel = [];          // x, y offsets of filled cells
+  let minx = 1e9, maxx = -1, miny = 1e9, maxy = -1;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (!m[y * n + x]) continue;
+    rel.push(x, y);
+    if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y;
+  }
+  if (!rel.length) return;
+  const cells = [];
+  for (let k = 0; k < rel.length; k += 2) cells.push(rel[k], rel[k + 1], STAMP, mc, id, (Math.random() * 1024) | 0);
+  const { base, wCss, hCss } = renderPiece(cells, minx, miny, maxx, maxy, 4);
+  const x0 = Math.round(px / CELL - n / 2);
+  fallingMolds.push({
+    id, mc, rel, cells, minx, miny, maxx, maxy, img: base, wCss, hCss,
+    x0: Math.max(-minx, Math.min(gCols - 1 - maxx, x0)), yPx: py - n / 2 * CELL, vy: 0, land: -1, n,
+  });
+}
+// would the mold collide with anything if its top-left grid row were y0?
+function fallHits(F, y0) {
+  const r = F.rel, C = gCols, R = gRows;
+  for (let k = 0; k < r.length; k += 2) {
+    const y = y0 + r[k + 1];
+    if (y < 0) continue;
+    if (y >= R) return true;
+    const t = gType[y * C + F.x0 + r[k]];
+    if (t !== EMPTY) return true;
+  }
+  return false;
+}
+function updateFallingMolds() {
+  if (!fallingMolds.length) return;
+  const keep = [];
+  for (const F of fallingMolds) {
+    if (F.land >= 0) {
+      // landed: a short squash, then the mold joins the sand
+      F.land++;
+      if (F.land >= 14) { commitFallingMold(F); continue; }
+      keep.push(F); continue;
+    }
+    F.vy = Math.min(F.vy + 0.45, 22);
+    const cur = Math.floor(F.yPx / CELL);
+    const next = Math.floor((F.yPx + F.vy) / CELL);
+    let landedAt = null;
+    for (let y = cur + 1; y <= next; y++) if (fallHits(F, y)) { landedAt = y - 1; break; }
+    if (landedAt === null) { F.yPx += F.vy; keep.push(F); continue; }
+    F.yPx = landedAt * CELL;
+    F.impact = Math.min(1, F.vy / 14);
+    F.land = 0; F.vy = 0;
+    if (soundOn) {
+      blip('sine', 150, 55, 0.22, 0.1 + 0.08 * F.impact);
+      blip('triangle', 320, 120, 0.08, 0.03);
+    }
+    keep.push(F);
+  }
+  fallingMolds = keep;
+}
+function commitFallingMold(F) {
+  const y0 = Math.floor(F.yPx / CELL), r = F.rel, C = gCols, R = gRows;
+  // cells at the top edge of the mold may crumble off as loose grains (a soft kinetic-sand slump)
+  const n = F.n, mask = new Uint8Array(n * n);
+  for (let k = 0; k < r.length; k += 2) mask[r[k + 1] * n + r[k]] = 1;
+  const topBand = F.miny + (F.maxy - F.miny) * 0.35;
+  const displaced = [];
+  let crumbs = 0;
+  for (let k = 0; k < r.length; k += 2) {
+    const x = F.x0 + r[k], y = y0 + r[k + 1];
+    if (y < 0 || y >= R || x < 0 || x >= C) continue;
+    const i = y * C + x;
+    const mx = r[k], my = r[k + 1];
+    const edge = mx === 0 || my === 0 || mx === n - 1 || my === n - 1 ||
+      !mask[my * n + mx - 1] || !mask[my * n + mx + 1] || !mask[(my - 1) * n + mx];
+    if (edge && my < topBand && Math.random() < 0.05 + 0.08 * (F.impact || 0) && crumbs < 40) {
+      crumbs++;
+      flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: (mx < n / 2 ? -1 : 1) * (0.4 + Math.random() * 1.2), vy: -0.5 - Math.random(), c: pourColor(color) });
+      continue;
+    }
+    if (gType[i] === LOOSE) displaced.push(x, gColor[i]);
+    if (gType[i] === LEDGE || gType[i] === STAMP) continue;
+    gType[i] = STAMP; gOwner[i] = F.id; gColor[i] = F.mc;
+  }
+  const topY = (y0 + F.miny) * CELL;
+  for (let k = 0; k < displaced.length && flying.length < MAX_FLYING * 2; k += 2) {
+    flying.push({ x: (displaced[k] + 0.5) * CELL, y: topY - CELL * (1 + Math.random() * 4), vx: (Math.random() - 0.5) * 1.5, vy: 0, c: displaced[k + 1] });
+  }
+}
+function drawFallingMolds() {
+  for (const F of fallingMolds) {
+    const x = (F.x0 + F.minx) * CELL - 4, yTop = F.yPx + F.miny * CELL - 4;
+    let sy = 1, sx = 1;
+    if (F.land >= 0) {
+      // squash: flatter at impact, springs back
+      const t = F.land / 14, a = 0.13 * (F.impact || 0.5) * Math.exp(-3 * t) * Math.cos(t * Math.PI * 1.5);
+      sy = 1 - a; sx = 1 + a * 0.7;
+    }
+    const w = F.wCss * sx, h = F.hCss * sy;
+    const bottom = yTop + F.hCss;
+    ctx.drawImage(F.img, x + (F.wCss - w) / 2, bottom - h, w, h);
+  }
+}
+
+// ========== MAGNETS (ferrofluid between magnet poles) ==========
+// The fluid is a few hundred particles held together by a soft pressure / cohesion rule
+// (double-density relaxation). Each particle is pulled up the gradient of |B|^2 from the poles.
+// The surface is a metaball field traced with marching squares; spikes are drawn along the surface
+// where the field crosses it, growing with Magnet Pull (Rosensweig-style).
+const MAG_PRESETS = {
+  quadcross: 'Quadrupole Cross',
+  ring: 'Magnetic Ring',
+  dipole: 'Dipole',
+  quad: 'Quadrupole',
+  twin: 'Gliding Twin Drops',
+};
+const MAG_PALETTES = {
+  cobalt: { label: 'Electric Cobalt', colors: ['#38bdf8', '#2563eb'] },
+  violet: { label: 'Neon Violet', colors: ['#d8b4fe', '#7c3aed'] },
+  magma:  { label: 'Magma Red', colors: ['#fb7185', '#be123c'] },
+  lime:   { label: 'Toxic Lime', colors: ['#bef264', '#15803d'] },
+};
+let mag = (() => {
+  const d = { pull: 0.6, spacing: 1, tension: 0.5, volume: 1, preset: 'quadcross', lines: true, palette: 'cobalt' };
+  try { Object.assign(d, JSON.parse(localStorage.getItem('sparkleMagnets') || '{}')); } catch (e) {}
+  if (!MAG_PRESETS[d.preset]) d.preset = 'quadcross';
+  if (!MAG_PALETTES[d.palette]) d.palette = 'cobalt';
+  return d;
+})();
+function saveMag() { try { localStorage.setItem('sparkleMagnets', JSON.stringify(mag)); } catch (e) {} }
+
+let magPoles = [];                 // { x, y, s (+1/-1), glide: null | {...} }
+let magP = null, magN = 0;         // particles: x, y, vx, vy, px, py interleaved arrays
+let mX, mY, mVX, mVY, mPX, mPY, mOwn = null, magTwin = [];
+let magDrag = null, magDragOff = { x: 0, y: 0 }, magLastTap = { t: 0, pole: null }, magPress = null;
+let magInitW = 0, magInitH = 0, magT = 0, magSpeed = 0, magSpike = 0, magLinesKey = '', magLinesPath = null;
+let magLoops = [];                 // drawn drops this frame
+let magPaused = false;
+const MAG_H = 15;
+const MAG_TUNE = { rho0: 2.0, kP: 0.08, kN: 0.3, coh0: 0.15, coh1: 0.3, fK: 0.25, cap: 0.08, rk: 1.7, th: 1.2 };                  // particle interaction radius (px)
+
+function magColors() {
+  return tabColorList('magnets') || MAG_PALETTES[mag.palette].colors;
+}
+function magR() { return Math.min(width, height) * (0.2 + 0.16 * mag.spacing); }
+function magPoleW() { return 10 + 10 * mag.spacing; }
+function magTargetN() {
+  const area = Math.max(0.35, Math.min(1, (width * height) / (1280 * 678)));
+  return Math.round((70 + 230 * mag.volume) * area);
+}
+
+function magPreset(name) {
+  const cx = width / 2, cy = height / 2, R = magR();
+  const P = [];
+  if (name === 'quadcross') {
+    P.push([0, -1, 1], [1, 0, -1], [0, 1, 1], [-1, 0, -1]);
+  } else if (name === 'quad') {
+    const a = 0.7071;
+    P.push([-a, -a, 1], [a, -a, -1], [a, a, 1], [-a, a, -1]);
+  } else if (name === 'ring') {
+    for (let k = 0; k < 6; k++) { const t = -Math.PI / 2 + k * Math.PI / 3; P.push([Math.cos(t), Math.sin(t), k & 1 ? -1 : 1]); }
+  } else if (name === 'dipole') {
+    P.push([-1, 0, 1], [1, 0, -1]);
+  } else if (name === 'twin') {
+    P.push([-0.34, 0, 1], [0.34, 0, 1]);
+  }
+  magPoles = P.map(([x, y, s], k) => ({
+    x: cx + x * R, y: cy + y * R, s,
+    glide: name === 'twin' ? { bx: x * R, by: y * R, ph: 0 } : null,   // the twins glide together, side by side
+  }));
+  magLinesKey = '';
+}
+
+function magSeedDrops() {
+  const n = magTargetN();
+  magN = n;
+  mX = new Float32Array(n); mY = new Float32Array(n); mVX = new Float32Array(n); mVY = new Float32Array(n);
+  mPX = new Float32Array(n); mPY = new Float32Array(n);
+  const centers = mag.preset === 'twin' ? magPoles.map(p => [p.x, p.y]) : [[width / 2, height / 2]];
+  mOwn = new Uint8Array(n);
+  magTwin = mag.preset === 'twin' ? magPoles.slice() : [];
+  const sp = MAG_H * 0.36;   // start a little packed; pressure spreads it out
+  for (let i = 0; i < n; i++) {
+    const c = centers[i % centers.length], k = (i / centers.length) | 0;
+    // a sunflower spiral packs particles evenly in a disc
+    const r = sp * Math.sqrt(k + 0.5) * 0.95, t = k * 2.39996;
+    mX[i] = c[0] + r * Math.cos(t); mY[i] = c[1] + r * Math.sin(t);
+    mOwn[i] = i % centers.length;
+    mVX[i] = mVY[i] = 0;
+  }
+}
+// change the particle count without resetting the drops (volume slider)
+function magResize() {
+  const n = magTargetN();
+  if (!mX || n === magN) return;
+  const cp = (a) => { const b = new Float32Array(n); b.set(a.subarray(0, Math.min(n, magN))); return b; };
+  const old = magN;
+  mX = cp(mX); mY = cp(mY); mVX = cp(mVX); mVY = cp(mVY); mPX = cp(mPX); mPY = cp(mPY);
+  const ow = new Uint8Array(n); ow.set(mOwn.subarray(0, Math.min(n, magN))); mOwn = ow;
+  for (let i = old; i < n; i++) {
+    const j = (Math.random() * old) | 0;   // new fluid appears inside the existing fluid
+    mX[i] = mX[j] + (Math.random() - 0.5) * 4; mY[i] = mY[j] + (Math.random() - 0.5) * 4; mOwn[i] = mOwn[j];
+  }
+  magN = n;
+}
+function magInit() {
+  magPreset(mag.preset);
+  magSeedDrops();
+  magInitW = width; magInitH = height;
+}
+
+// field of the poles: 2D monopoles with a soft core
+function magB(x, y, out) {
+  let bx = 0, by = 0;
+  const w2 = magPoleW() * magPoleW();
+  for (const p of magPoles) {
+    const dx = x - p.x, dy = y - p.y, r2 = dx * dx + dy * dy + w2;
+    bx += p.s * dx / r2; by += p.s * dy / r2;
+  }
+  out[0] = bx; out[1] = by;
+}
+const _b = [0, 0];
+function magB2(x, y) { magB(x, y, _b); return _b[0] * _b[0] + _b[1] * _b[1]; }
+// Twin preset: each drop feels only its own pole, so the two drops follow their poles separately;
+// with enough volume they touch, join, and each half stays held by its pole (an hourglass)
+let magOwnPole = null;
+function magB2one(x, y) {
+  const p = magOwnPole, w2 = magPoleW() * magPoleW();
+  const dx = x - p.x, dy = y - p.y, r2 = dx * dx + dy * dy + w2;
+  return (dx * dx + dy * dy) / (r2 * r2);
+}
+
+// linked: surface tension sets both the spike size and how quickly the fluid relaxes
+function magLinkK() { return linkedOn ? mag.tension / 0.5 : 1; }
+
+let mHead = null, mNext = null, mGW = 0, mGH = 0;
+function magStep() {
+  const n = magN, X = mX, Y = mY, VX = mVX, VY = mVY, PX = mPX, PY = mPY, h = MAG_H, h2 = h * h;
+  const pull = mag.pull, R = magR();
+  // force scale: about the same push at the ring radius for any canvas size
+  const fK = pull * MAG_TUNE.fK * R * R * R / 1000;
+  const k = magLinkK();
+  const damp = linkedOn ? 0.86 - 0.08 * (k - 1) : 0.86;
+  const e = 1.5;
+  const twin = mag.preset === 'twin' && mOwn && magTwin.every(p => magPoles.includes(p));
+  let sp = 0;
+  for (let i = 0; i < n; i++) {
+    const x = X[i], y = Y[i];
+    let B2 = magB2;
+    if (twin) { magOwnPole = magTwin[mOwn[i]]; B2 = magB2one; }
+    let fx = (B2(x + e, y) - B2(x - e, y)) / (2 * e) * fK;
+    let fy = (B2(x, y + e) - B2(x, y - e)) / (2 * e) * fK;
+    const fm = Math.hypot(fx, fy), cap = MAG_TUNE.cap;
+    if (fm > cap) { fx *= cap / fm; fy *= cap / fm; }
+    VX[i] = (VX[i] + fx) * damp; VY[i] = (VY[i] + fy) * damp;
+    PX[i] = x; PY[i] = y;
+    X[i] = x + VX[i]; Y[i] = y + VY[i];
+  }
+  // neighbor grid
+  const GW = Math.ceil(width / h) + 2, GH = Math.ceil(height / h) + 2;
+  if (!mHead || mGW !== GW || mGH !== GH) { mHead = new Int32Array(GW * GH); mGW = GW; mGH = GH; }
+  if (!mNext || mNext.length < n) mNext = new Int32Array(Math.max(n, 512));
+  mHead.fill(-1);
+  for (let i = 0; i < n; i++) {
+    const gx = Math.max(0, Math.min(GW - 1, ((X[i] / h) | 0) + 1)), gy = Math.max(0, Math.min(GH - 1, ((Y[i] / h) | 0) + 1));
+    const c = gy * GW + gx; mNext[i] = mHead[c]; mHead[c] = i;
+  }
+  // double-density relaxation: pressure keeps spacing, negative pressure is the cohesion (surface tension)
+  const rho0 = MAG_TUNE.rho0, kP = MAG_TUNE.kP, kN = MAG_TUNE.kN, coh = MAG_TUNE.coh0 + MAG_TUNE.coh1 * mag.tension;
+  for (let i = 0; i < n; i++) {
+    const x = X[i], y = Y[i];
+    const gx = Math.max(0, Math.min(GW - 1, ((x / h) | 0) + 1)), gy = Math.max(0, Math.min(GH - 1, ((y / h) | 0) + 1));
+    let rho = 0, rhoN = 0;
+    for (let yy = gy - 1; yy <= gy + 1; yy++) {
+      if (yy < 0 || yy >= GH) continue;
+      for (let xx = gx - 1; xx <= gx + 1; xx++) {
+        if (xx < 0 || xx >= GW) continue;
+        for (let j = mHead[yy * GW + xx]; j >= 0; j = mNext[j]) {
+          if (j === i) continue;
+          const dx = X[j] - x, dy = Y[j] - y, d2 = dx * dx + dy * dy;
+          if (d2 >= h2) continue;
+          const q = 1 - Math.sqrt(d2) / h;
+          rho += q * q; rhoN += q * q * q;
+        }
+      }
+    }
+    let P = kP * (rho - rho0);
+    if (P < 0) P *= coh;
+    const PN = kN * rhoN;
+    let dxs = 0, dys = 0;
+    for (let yy = gy - 1; yy <= gy + 1; yy++) {
+      if (yy < 0 || yy >= GH) continue;
+      for (let xx = gx - 1; xx <= gx + 1; xx++) {
+        if (xx < 0 || xx >= GW) continue;
+        for (let j = mHead[yy * GW + xx]; j >= 0; j = mNext[j]) {
+          if (j === i) continue;
+          const dx = X[j] - x, dy = Y[j] - y, d2 = dx * dx + dy * dy;
+          if (d2 >= h2 || d2 < 1e-6) continue;
+          const r = Math.sqrt(d2), q = 1 - r / h;
+          const D = 0.5 * (P * q + PN * q * q);
+          const ux = dx / r * D, uy = dy / r * D;
+          X[j] += ux; Y[j] += uy; dxs -= ux; dys -= uy;
+        }
+      }
+    }
+    X[i] += dxs; Y[i] += dys;
+  }
+  // walls, and velocity from the corrected positions
+  for (let i = 0; i < n; i++) {
+    if (X[i] < 4) X[i] = 4; else if (X[i] > width - 4) X[i] = width - 4;
+    if (Y[i] < 4) Y[i] = 4; else if (Y[i] > height - 4) Y[i] = height - 4;
+    VX[i] = X[i] - PX[i]; VY[i] = Y[i] - PY[i];
+    sp += Math.abs(VX[i]) + Math.abs(VY[i]);
+  }
+  return n ? sp / n : 0;
+}
+
+function updateMagnets() {
+  if (!mX || magInitW !== width || magInitH !== height) magInit();
+  magResize();
+  magT += 1 / 60;
+  // gliding poles (Twin preset) drift slowly on small loops; a dragged pole stops gliding
+  const R = magR();
+  for (const p of magPoles) {
+    if (!p.glide || p === magDrag) continue;
+    const g = p.glide, t = magT * 0.35 + g.ph;
+    p.x = width / 2 + g.bx + Math.cos(t) * R * 0.3;
+    p.y = height / 2 + g.by + Math.sin(t * 1.3) * R * 0.25;
+    magLinesKey = '';
+  }
+  let s = 0;
+  s += magStep(); s += magStep();
+  magSpeed = s / 2;
+}
+
+// ---------- surface: metaball field + marching squares ----------
+let mfG = 6, mfW = 0, mfH = 0, mfF = null, mfL1 = null, mfL2 = null, mfPX = null, mfPY = null, mfSeen = null;
+function magField() {
+  const g = width < 600 ? 5 : 6;
+  const W = Math.ceil(width / g) + 2, H = Math.ceil(height / g) + 2;
+  if (!mfF || mfW !== W || mfH !== H || mfG !== g) {
+    mfG = g; mfW = W; mfH = H;
+    mfF = new Float32Array(W * H);
+    mfL1 = new Int32Array(W * H * 2); mfL2 = new Int32Array(W * H * 2);
+    mfPX = new Float32Array(W * H * 2); mfPY = new Float32Array(W * H * 2);
+    mfSeen = new Uint8Array(W * H * 2);
+  }
+  const F = mfF; F.fill(0);
+  const Rk = MAG_H * MAG_TUNE.rk, R2 = Rk * Rk, rc = Math.ceil(Rk / g);
+  for (let i = 0; i < magN; i++) {
+    const x = mX[i], y = mY[i], ci = Math.round(x / g), cj = Math.round(y / g);
+    for (let j = Math.max(0, cj - rc); j <= Math.min(H - 1, cj + rc); j++) {
+      const dy = j * g - y, dy2 = dy * dy;
+      if (dy2 >= R2) continue;
+      for (let ii = Math.max(0, ci - rc); ii <= Math.min(W - 1, ci + rc); ii++) {
+        const dx = ii * g - x, d2 = dx * dx + dy2;
+        if (d2 >= R2) continue;
+        const q = 1 - d2 / R2;
+        F[j * W + ii] += q * q;
+      }
+    }
+  }
+}
+function magFieldAt(x, y) {
+  const g = mfG, fx = x / g, fy = y / g, i = Math.floor(fx), j = Math.floor(fy);
+  if (i < 0 || j < 0 || i >= mfW - 1 || j >= mfH - 1) return 0;
+  const a = fx - i, b = fy - j, W = mfW, F = mfF, o = j * W + i;
+  return (F[o] * (1 - a) + F[o + 1] * a) * (1 - b) + (F[o + W] * (1 - a) + F[o + W + 1] * a) * b;
+}
+function magContours() {
+  const W = mfW, H = mfH, F = mfF, g = mfG, T = MAG_TUNE.th, L1 = mfL1, L2 = mfL2, PX = mfPX, PY = mfPY;
+  const used = [];
+  const pt = (id) => {
+    if (L1[id] === -2) {
+      L1[id] = -1; L2[id] = -1; used.push(id);
+      const n = id >> 1, i = n % W, j = (n / W) | 0;
+      if ((id & 1) === 0) { const a = F[n], b = F[n + 1], t = (T - a) / (b - a || 1e-6); PX[id] = (i + t) * g; PY[id] = j * g; }
+      else { const a = F[n], b = F[n + W], t = (T - a) / (b - a || 1e-6); PX[id] = i * g; PY[id] = (j + t) * g; }
+    }
+  };
+  const link = (a, b) => {
+    pt(a); pt(b);
+    if (L1[a] < 0) L1[a] = b; else L2[a] = b;
+    if (L1[b] < 0) L1[b] = a; else L2[b] = a;
+  };
+  L1.fill(-2);
+  for (let j = 0; j < H - 1; j++) for (let i = 0; i < W - 1; i++) {
+    const n = j * W + i;
+    const a = F[n] >= T, b = F[n + 1] >= T, c = F[n + W + 1] >= T, d = F[n + W] >= T;
+    const cs = (a ? 8 : 0) | (b ? 4 : 0) | (c ? 2 : 0) | (d ? 1 : 0);
+    if (cs === 0 || cs === 15) continue;
+    const top = 2 * n, bottom = 2 * (n + W), left = 2 * n + 1, right = 2 * (n + 1) + 1;
+    switch (cs) {
+      case 1: case 14: link(left, bottom); break;
+      case 2: case 13: link(bottom, right); break;
+      case 3: case 12: link(left, right); break;
+      case 4: case 11: link(top, right); break;
+      case 6: case 9: link(top, bottom); break;
+      case 7: case 8: link(left, top); break;
+      case 5: case 10: {
+        const ctr = (F[n] + F[n + 1] + F[n + W] + F[n + W + 1]) / 4 >= T;
+        if ((cs === 5) === ctr) { link(left, top); link(bottom, right); }
+        else { link(top, right); link(left, bottom); }
+      }
+    }
+  }
+  const loops = [];
+  const seen = mfSeen;
+  for (const id of used) seen[id] = 0;
+  for (const id0 of used) {
+    if (seen[id0]) continue;
+    const xs = [], ys = [];
+    let prev = -1, cur = id0;
+    while (cur >= 0 && !seen[cur]) {
+      seen[cur] = 1; xs.push(PX[cur]); ys.push(PY[cur]);
+      const nx = L1[cur] !== prev ? L1[cur] : L2[cur];
+      prev = cur; cur = nx;
+    }
+    if (xs.length > 4) loops.push([xs, ys]);
+  }
+  return loops;
+}
+
+// resample a loop every `step` px and smooth it a little
+function magResample(xs, ys, step) {
+  const n = xs.length, ox = [], oy = [];
+  let carry = 0;
+  for (let k = 0; k < n; k++) {
+    const x0 = xs[k], y0 = ys[k], x1 = xs[(k + 1) % n], y1 = ys[(k + 1) % n];
+    const L = Math.hypot(x1 - x0, y1 - y0);
+    let t = carry;
+    while (t < L) { const f = t / L; ox.push(x0 + (x1 - x0) * f); oy.push(y0 + (y1 - y0) * f); t += step; }
+    carry = t - L;
+  }
+  for (let pass = 0; pass < 3; pass++) {
+    const m = ox.length, ax = ox.slice(), ay = oy.slice();
+    for (let k = 0; k < m; k++) {
+      const a = (k - 1 + m) % m, b = (k + 1) % m;
+      ox[k] = (ax[a] + 2 * ax[k] + ax[b]) / 4; oy[k] = (ay[a] + 2 * ay[k] + ay[b]) / 4;
+    }
+  }
+  return [ox, oy];
+}
+
+// build the drawn drops: outline with spikes
+function magBuildDrops() {
+  magField();
+  const raw = magContours();
+  const out = [];
+  const pull = mag.pull, R = magR();
+  const k = magLinkK();
+  // spikes grow past about 35% pull; surface tension makes them shorter and wider
+  const onset = Math.max(0, Math.min(1, (pull - 0.3) / 1.0));
+  const tens = linkedOn ? 1.35 - 0.7 * Math.min(1.4, mag.tension * k / 1) : 1.2 - 0.5 * mag.tension;
+  const lam = 15 + 16 * mag.tension;
+  const Bref = 1 / (R * 0.55);
+  let spikeSum = 0, spikeN = 0;
+  for (const [xs0, ys0] of raw) {
+    const [xs, ys] = magResample(xs0, ys0, 2.5);
+    const m = xs.length;
+    if (m < 8) continue;
+    let A = 0, cx = 0, cy = 0, per = 0;
+    for (let i = 0; i < m; i++) {
+      const j = (i + 1) % m, cr = xs[i] * ys[j] - xs[j] * ys[i];
+      A += cr; cx += (xs[i] + xs[j]) * cr; cy += (ys[i] + ys[j]) * cr;
+      per += Math.hypot(xs[j] - xs[i], ys[j] - ys[i]);
+    }
+    A /= 2;
+    if (Math.abs(A) < 30) continue;
+    cx /= 6 * A; cy /= 6 * A;
+    // which side is outside? test one point
+    const tx0 = xs[1] - xs[m - 1], ty0 = ys[1] - ys[m - 1], tl = Math.hypot(tx0, ty0) || 1;
+    let sgn = 1;
+    if (magFieldAt(xs[0] + ty0 / tl * 3, ys[0] - tx0 / tl * 3) > MAG_TUNE.th) sgn = -1;
+    // a hole (fluid around empty space) has its outside pointing toward its own center
+    let dsum = 0;
+    const nx = new Float32Array(m), ny = new Float32Array(m);
+    for (let i = 0; i < m; i++) {
+      const a = (i - 4 + m) % m, b = (i + 4) % m;   // a wider tangent keeps neighboring spikes from crossing
+      const tx = xs[b] - xs[a], ty = ys[b] - ys[a], l = Math.hypot(tx, ty) || 1;
+      nx[i] = sgn * ty / l; ny[i] = -sgn * tx / l;
+      dsum += nx[i] * (xs[i] - cx) + ny[i] * (ys[i] - cy);
+    }
+    const hole = dsum < 0;
+    if (hole && Math.abs(A) < 700) continue;      // tiny gaps inside the fluid are not drawn
+    const dr0 = Math.sqrt(Math.abs(A) / Math.PI);
+    const M = Math.max(6, Math.round(per / lam));
+    // spike phase runs along the outline (even spacing in necks too), anchored at the point
+    // straight right of the center so the spikes stay put from frame to frame
+    let i0 = 0, best = -1e9;
+    for (let i = 0; i < m; i++) { const v = (xs[i] - cx) - Math.abs(ys[i] - cy) * 3; if (v > best) { best = v; i0 = i; } }
+    const arc = new Float32Array(m);
+    for (let q = 1; q < m; q++) {
+      const a = (i0 + q - 1) % m, b = (i0 + q) % m;
+      arc[b] = arc[a] + Math.hypot(xs[b] - xs[a], ys[b] - ys[a]);
+    }
+    const px = new Float32Array(m), py = new Float32Array(m);
+    for (let i = 0; i < m; i++) {
+      let d = 0;
+      if (!hole) {
+        magB(xs[i], ys[i], _b);
+        const bn = Math.abs(_b[0] * nx[i] + _b[1] * ny[i]) / Bref;
+        const bm = Math.min(1.6, bn);
+        let amp = tens * (1.5 + pull * 3 + onset * (5 + 60 * bm * bm)) * Math.min(1, dr0 / 45);
+        // tendrils reach toward a pole but stop short of it
+        let pd = 1e9;
+        for (const q of magPoles) pd = Math.min(pd, Math.hypot(q.x - xs[i], q.y - ys[i]));
+        amp = Math.min(amp, Math.max(0, pd - 16) * 0.8);
+        const u = ((arc[i] / per) * M % 1 + 1) % 1 - 0.5;   // -0.5..0.5 across one spike
+        // parts of the outline that face back toward the middle (a neck) get no spikes
+        const rx = xs[i] - cx, ry = ys[i] - cy, rl = Math.hypot(rx, ry) || 1;
+        amp *= Math.max(0, Math.min(1, (nx[i] * rx + ny[i] * ry) / rl * 2 + 0.4));
+        const wid = 0.5 - 0.25 * onset;
+        const f = Math.max(0, 1 - Math.abs(u) / wid);
+        d = amp * f * f * (onset > 0 ? 1 : 0.4) - 0.6;
+        spikeSum += amp * onset; spikeN++;
+      }
+      px[i] = xs[i] + nx[i] * d; py[i] = ys[i] + ny[i] * d;
+    }
+    out.push({ px, py, cx, cy, r: Math.sqrt(Math.abs(A) / Math.PI), hole });
+  }
+  magSpike = spikeN ? spikeSum / spikeN : 0;
+  return out;
+}
+
+// ---------- drawing ----------
+let magBg = null;
+function magBackground() {
+  const d = window.devicePixelRatio || 1;
+  if (magBg && magBg.width === Math.round(width * d) && magBg.height === Math.round(height * d)) return magBg;
+  magBg = document.createElement('canvas');
+  magBg.width = Math.round(width * d); magBg.height = Math.round(height * d);
+  const g = magBg.getContext('2d');
+  g.setTransform(d, 0, 0, d, 0, 0);
+  const gr = g.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
+  gr.addColorStop(0, '#0b1224'); gr.addColorStop(1, '#04060c');
+  g.fillStyle = gr; g.fillRect(0, 0, width, height);
+  g.strokeStyle = 'rgba(148,163,184,0.06)'; g.lineWidth = 1;
+  g.beginPath();
+  for (let x = 0.5; x < width; x += 40) { g.moveTo(x, 0); g.lineTo(x, height); }
+  for (let y = 0.5; y < height; y += 40) { g.moveTo(0, y); g.lineTo(width, y); }
+  g.stroke();
+  return magBg;
+}
+
+function magFieldLines() {
+  const key = magPoles.map(p => `${p.x | 0},${p.y | 0},${p.s}`).join(';') + '|' + mag.spacing + '|' + width + 'x' + height;
+  if (key === magLinesKey && magLinesPath) return magLinesPath;
+  magLinesKey = key;
+  const path = new Path2D();
+  const srcs = magPoles.filter(p => p.s > 0), dir = srcs.length ? 1 : -1;
+  const from = srcs.length ? srcs : magPoles;
+  const step = 6, b = [0, 0];
+  for (const p of from) {
+    const nL = 16;
+    for (let k = 0; k < nL; k++) {
+      const a = (k + 0.5) / nL * Math.PI * 2;
+      let x = p.x + Math.cos(a) * 12, y = p.y + Math.sin(a) * 12;
+      path.moveTo(x, y);
+      for (let s = 0; s < 260; s++) {
+        magB(x, y, b);
+        const l = Math.hypot(b[0], b[1]) || 1;
+        x += dir * b[0] / l * step; y += dir * b[1] / l * step;
+        path.lineTo(x, y);
+        if (x < -60 || y < -60 || x > width + 60 || y > height + 60) break;
+        let hit = false;
+        for (const q of magPoles) if (q !== p && (x - q.x) * (x - q.x) + (y - q.y) * (y - q.y) < 100) { hit = true; break; }
+        if (hit) break;
+      }
+    }
+  }
+  magLinesPath = path;
+  return path;
+}
+
+function magDropPath(dr, dx) {
+  const p = new Path2D(), m = dr.px.length;
+  p.moveTo(dr.px[0] + dx, dr.py[0]);
+  for (let i = 1; i < m; i++) p.lineTo(dr.px[i] + dx, dr.py[i]);
+  p.closePath();
+  return p;
+}
+// one pass of drops in a given edge / core color
+function magDrawDrops(drops, edge, core, dx) {
+  const deep = mixRGB(core, [4, 6, 22], 0.82);
+  // holes are drawn in background color on top of their drop
+  for (const dr of drops) {
+    if (dr.hole) continue;
+    const path = magDropPath(dr, dx);
+    // glow
+    ctx.save();
+    ctx.globalAlpha = 0.22; ctx.strokeStyle = rgbStr(edge); ctx.lineWidth = 7; ctx.lineJoin = 'round';
+    ctx.stroke(path);
+    ctx.restore();
+    const r = Math.max(10, dr.r);
+    const gr = ctx.createRadialGradient(dr.cx + dx - r * 0.12, dr.cy - r * 0.12, 0, dr.cx + dx, dr.cy, r * 1.02);
+    gr.addColorStop(0, rgbStr(mixRGB(core, [255, 255, 255], 0.08)));
+    gr.addColorStop(0.4, rgbStr(deep));
+    gr.addColorStop(0.62, rgbStr(mixRGB(deep, core, 0.35)));
+    gr.addColorStop(0.8, rgbStr(core));
+    gr.addColorStop(0.93, rgbStr(edge));
+    gr.addColorStop(1, rgbStr(edge));
+    ctx.fillStyle = gr;
+    ctx.fill(path);
+    ctx.strokeStyle = rgbStr(mixRGB(edge, [255, 255, 255], 0.35), 0.9); ctx.lineWidth = 1.1;
+    ctx.stroke(path);
+  }
+  for (const dr of drops) {
+    if (!dr.hole) continue;
+    const path = magDropPath(dr, dx);
+    ctx.fillStyle = '#070b17'; ctx.fill(path);
+    ctx.strokeStyle = rgbStr(edge, 0.8); ctx.lineWidth = 1.1; ctx.stroke(path);
+  }
+}
+
+function magDrawPoles() {
+  for (const p of magPoles) {
+    const col = p.s > 0 ? [244, 63, 94] : [56, 189, 248];
+    const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 34);
+    glow.addColorStop(0, rgbStr(col, 0.45)); glow.addColorStop(1, rgbStr(col, 0));
+    ctx.fillStyle = glow; ctx.fillRect(p.x - 34, p.y - 34, 68, 68);
+    const body = ctx.createRadialGradient(p.x - 3, p.y - 4, 1, p.x, p.y, 12);
+    body.addColorStop(0, rgbStr(mixRGB(col, [255, 255, 255], 0.7)));
+    body.addColorStop(0.5, rgbStr(col)); body.addColorStop(1, rgbStr(mixRGB(col, [0, 0, 0], 0.45)));
+    ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI * 2);
+    ctx.fillStyle = body; ctx.fill();
+    ctx.strokeStyle = p === magDrag ? '#fff' : 'rgba(255,255,255,0.55)'; ctx.lineWidth = p === magDrag ? 2 : 1; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(p.s > 0 ? '+' : '−', p.x, p.y + 0.5);
+  }
+  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+}
+
+function drawMagnets() {
+  if (!mX || magInitW !== width || magInitH !== height) magInit();
+  ctx.drawImage(magBackground(), 0, 0, width, height);
+  if (mag.lines) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(125,170,255,0.16)'; ctx.lineWidth = 1;
+    ctx.stroke(magFieldLines());
+    ctx.restore();
+  }
+  const drops = magBuildDrops();
+  magLoops = drops;
+  const cols = magColors();
+  if (!followSplitting('magnets')) {
+    const edge = tabColorList('magnets') ? tabRGB('magnets', 0) : hexToRgbCached(cols[0]);
+    const core = tabColorList('magnets') ? mixRGB(tabRGB('magnets', 0.5), [20, 40, 160], 0.45) : hexToRgbCached(cols[1]);
+    magDrawDrops(drops, edge, core, 0);
+  } else {
+    // Follow my work, tick 23: fluid near the pointer turns gold and stays, the rest turns blue and slides left
+    const ft = followTick();
+    const base = tabRGB('magnets', 0);
+    const pointerOn = mouse.x > 0;
+    const ox = pointerOn ? mouse.x : width / 2, oy = pointerOn ? mouse.y : height / 2, RR = pointerOn ? 160 : Math.min(width, height) * 0.2;
+    for (const ov of [true, false]) {
+      const st = followStyle(base, ov, ft);
+      ctx.save();
+      ctx.beginPath();
+      if (ov) ctx.arc(ox, oy, RR, 0, Math.PI * 2);
+      else { ctx.rect(-100, -100, width + 200, height + 200); ctx.arc(ox, oy, RR, 0, Math.PI * 2, true); }
+      ctx.clip();
+      magDrawDrops(drops, st.c, mixRGB(st.c, [10, 20, 90], 0.55), st.dx);
+      ctx.restore();
+    }
+  }
+  magDrawPoles();
+}
+
+// ---------- pointer ----------
+function magPoleAt(x, y, touch) {
+  const R = touch ? 26 : 18;
+  let best = null, bd = R * R;
+  for (const p of magPoles) { const d = (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y); if (d < bd) { bd = d; best = p; } }
+  return best;
+}
+function magRemove(p) {
+  magPoles = magPoles.filter(q => q !== p);
+  if (magDrag === p) magDrag = null;
+  magLinesKey = '';
+  if (soundOn) blip('sine', 300, 120, 0.2, 0.05);
+}
+function magFlip(p) {
+  p.s = -p.s; magLinesKey = '';
+  if (soundOn) blip('triangle', p.s > 0 ? 330 : 440, p.s > 0 ? 440 : 330, 0.18, 0.05);
+}
+function magAddPole(s) {
+  if (!mX) magInit();
+  const R = magR();
+  let best = null, bestD = -1;
+  for (let k = 0; k < 24; k++) {
+    const a = Math.random() * Math.PI * 2, r = R * (0.8 + Math.random() * 0.5);
+    const x = Math.max(20, Math.min(width - 20, width / 2 + Math.cos(a) * r)), y = Math.max(20, Math.min(height - 20, height / 2 + Math.sin(a) * r));
+    let d = 1e9;
+    for (const p of magPoles) d = Math.min(d, Math.hypot(p.x - x, p.y - y));
+    if (d > bestD) { bestD = d; best = { x, y }; }
+  }
+  magPoles.push({ x: best.x, y: best.y, s, glide: null });
+  magLinesKey = '';
+  if (soundOn) blip('sine', 520, 780, 0.15, 0.04);
+}
+function magnetsDown(p, e) {
+  const touch = !!(e && e.touches);
+  const pole = magPoleAt(p.x, p.y, touch);
+  if (!pole) { magDrag = null; return; }
+  if (e && e.shiftKey) { magRemove(pole); return; }
+  const now = performance.now();
+  if (magLastTap.pole === pole && now - magLastTap.t < 330) {
+    magFlip(pole); magLastTap = { t: 0, pole: null }; magDrag = null; return;
+  }
+  magLastTap = { t: now, pole };
+  magDrag = pole; pole.glide = null;
+  magDragOff = { x: pole.x - p.x, y: pole.y - p.y };
+  if (touch) {
+    // long-press removes the pole
+    const start = { x: p.x, y: p.y };
+    clearTimeout(magPress);
+    magPress = setTimeout(() => {
+      if (mouse.down && magDrag === pole && Math.hypot(mouse.x - start.x, mouse.y - start.y) < 10) magRemove(pole);
+    }, 600);
+  }
+}
+function magnetsFrame() {
+  if (magDrag) {
+    if (!mouse.down) magDrag = null;
+    else {
+      magDrag.x = Math.max(6, Math.min(width - 6, mouse.x + magDragOff.x));
+      magDrag.y = Math.max(6, Math.min(height - 6, mouse.y + magDragOff.y));
+      magLinesKey = '';
+    }
+  }
+}
+function magPaletteOptions() {
+  let o = Object.keys(MAG_PALETTES).map(k => `<option value="${k}">${MAG_PALETTES[k].label}</option>`).join('');
+  o += '<optgroup label="Shared sets">' + Object.keys(COLOR_SETS).map(k => `<option value="set:${k}">${COLOR_SETS[k].label}</option>`).join('') + '</optgroup>';
+  o += '<option value="follow">Follow my work</option>';
+  return o;
+}
+function magPaletteValue() {
+  const st = colorState.magnets;
+  if (st && st.set === 'follow') return 'follow';
+  if (st && st.set && COLOR_SETS[st.set]) return 'set:' + st.set;
+  return mag.palette;
+}
+function setMagPalette(v) {
+  if (v === 'follow') setTabColors('magnets', FOLLOW_WRITE, 'follow');
+  else if (v.startsWith('set:')) setTabColors('magnets', COLOR_SETS[v.slice(4)].colors, v.slice(4));
+  else { setTabColors('magnets', null); mag.palette = v; saveMag(); }
+}
+
+// ========== STRETCH & CLOSE (ported from Michele's playground v5, tab 6) ==========
+// Her solver and drawing code below are unchanged. Adaptations only:
+//  - it draws into its own 960x500 offscreen canvas (stcCanvas), which the main loop scales onto the page;
+//  - "activeTab === 'stretch'" became "mode === 'stretch'";
+//  - her controls live in a persistent block (#tab-stretch) that setControls moves into the controls bar;
+//  - everything is wrapped in one function so her names (SC, render, plot, ...) stay private.
+const stcCanvas = document.createElement('canvas');
+// drawn at 2x so it stays sharp when scaled up (her code keeps using 960x500 coordinates)
+const STC_RES = 2;
+stcCanvas.width = 960 * STC_RES; stcCanvas.height = 500 * STC_RES;
+stcCanvas.getContext('2d').setTransform(STC_RES, 0, 0, STC_RES, 0, 0);
+const stcControls = (() => {
+  const d = document.createElement('div');
+  d.id = 'tab-stretch';
+  d.innerHTML = `
+      <div class="stc-row">
+      <div class="control-group">
+        <label>Start Scale:</label>
+        <button class="btn" data-scale="16">×16</button>
+        <button class="btn" data-scale="32">×32</button>
+        <button class="btn active-toggle" data-scale="64">×64</button>
+        <button class="btn" data-scale="128">×128</button>
+      </div>
+      <div class="control-group">
+        <label>Viscosity ν:</label>
+        <input type="range" id="stretchNu" min="0" max="9" step="1" value="6">
+        <span id="stretchNuVal">0.050</span>
+      </div>
+      <div class="control-group">
+        <label>Run to t:</label>
+        <input type="range" id="stretchTEnd" min="0.2" max="4" step="0.1" value="1.5">
+        <span id="stretchTEndVal">1.5</span>
+      </div>
+      <button class="btn primary" id="stretchPause">⏸ Pause</button>
+      <button class="btn" id="stretchHalf">½ Half Step: Off</button>
+      <span id="stretchPeak" style="color:#7ee787; font-weight:600;">Peak ratio: –</span>
+      </div>`;
+  d.style.display = 'none';
+  document.body.appendChild(d);
+  return d;
+})();
+const STC_HINT = 'Two opposite vortex patches side by side on a periodic square. Production is −Σ ∂<sub>i</sub>ω ∂<sub>i</sub>u<sub>j</sub> ∂<sub>j</sub>ω, dissipation is ν Σ|Δω|², and dP/dt = 2(production − dissipation). Spectral derivatives, 2/3-rule dealiasing, RK4 with a CFL time step; <b>Half Step</b> reruns from the same start at dt/2.';
+(() => {
+  // ---- solver core (SC-BEGIN) ----
+  const SC = (() => {
+    const N = 128, L = 2 * Math.PI, NN = N * N, dA = (L / N) * (L / N);
+    const rev = new Uint16Array(N);
+    for (let i = 0; i < N; i++) { let r = 0, x = i; for (let b = 0; b < 7; b++) { r = (r << 1) | (x & 1); x >>= 1; } rev[i] = r; }
+    const cosT = new Float64Array(N / 2), sinT = new Float64Array(N / 2);
+    for (let i = 0; i < N / 2; i++) { cosT[i] = Math.cos(2 * Math.PI * i / N); sinT[i] = Math.sin(2 * Math.PI * i / N); }
+    const kx = new Float64Array(N);
+    for (let i = 0; i < N; i++) kx[i] = i < N / 2 ? i : i - N;
+    const kCut = N / 3;
+    const mask = new Float64Array(NN), k2 = new Float64Array(NN), invK2 = new Float64Array(NN);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const n = j * N + i, q = kx[i] * kx[i] + kx[j] * kx[j];
+      mask[n] = (Math.abs(kx[i]) < kCut && Math.abs(kx[j]) < kCut) ? 1 : 0;
+      k2[n] = q; invK2[n] = q > 0 ? 1 / q : 0;
+    }
+    const kMax2 = 2 * Math.pow(Math.floor((N - 1) / 3), 2);
+    const lr = new Float64Array(N), li = new Float64Array(N);
+
+    function fft1(re, im, inv) {
+      for (let i = 0; i < N; i++) { const r = rev[i]; if (r > i) { let t = re[i]; re[i] = re[r]; re[r] = t; t = im[i]; im[i] = im[r]; im[r] = t; } }
+      const sgn = inv ? 1 : -1;
+      for (let size = 2; size <= N; size <<= 1) {
+        const half = size >> 1, step = N / size;
+        for (let s = 0; s < N; s += size) {
+          for (let k = 0; k < half; k++) {
+            const wr = cosT[k * step], wi = sgn * sinT[k * step];
+            const a = s + k, b = a + half;
+            const xr = re[b] * wr - im[b] * wi, xi = re[b] * wi + im[b] * wr;
+            re[b] = re[a] - xr; im[b] = im[a] - xi;
+            re[a] += xr; im[a] += xi;
+          }
+        }
+      }
+    }
+    function fft2(re, im, inv) {
+      for (let j = 0; j < N; j++) {
+        const o = j * N;
+        for (let i = 0; i < N; i++) { lr[i] = re[o + i]; li[i] = im[o + i]; }
+        fft1(lr, li, inv);
+        for (let i = 0; i < N; i++) { re[o + i] = lr[i]; im[o + i] = li[i]; }
+      }
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) { lr[j] = re[j * N + i]; li[j] = im[j * N + i]; }
+        fft1(lr, li, inv);
+        for (let j = 0; j < N; j++) { re[j * N + i] = lr[j]; im[j * N + i] = li[j]; }
+      }
+      if (inv) { const s = 1 / NN; for (let n = 0; n < NN; n++) { re[n] *= s; im[n] *= s; } }
+    }
+
+    const tIm = new Float64Array(NN);
+    // out = real grid field of (i kx)^ax (i ky)^ay * w * sign * (weight or 1)
+    function toGrid(fr, fi, ax, ay, weight, sign, out) {
+      for (let j = 0; j < N; j++) {
+        const ky = kx[j];
+        for (let i = 0; i < N; i++) {
+          const n = j * N + i, w = (weight ? weight[n] : 1) * sign;
+          let ar = fr[n] * w, ai = fi[n] * w, t;
+          for (let a = 0; a < ax; a++) { t = ar; ar = -kx[i] * ai; ai = kx[i] * t; }
+          for (let a = 0; a < ay; a++) { t = ar; ar = -ky * ai; ai = ky * t; }
+          out[n] = ar; tIm[n] = ai;
+        }
+      }
+      fft2(out, tIm, true);
+    }
+
+    const gu = new Float64Array(NN), gv = new Float64Array(NN), gwx = new Float64Array(NN), gwy = new Float64Array(NN);
+    const jr = new Float64Array(NN), ji = new Float64Array(NN);
+    const gw = new Float64Array(NN), gux = new Float64Array(NN), guy = new Float64Array(NN), gvx = new Float64Array(NN), glap = new Float64Array(NN);
+
+    // omega = -Lap psi ; u = dpsi/dy ; v = -dpsi/dx
+    function velocity(s) {
+      toGrid(s.re, s.im, 0, 1, invK2, 1, gu);
+      toGrid(s.re, s.im, 1, 0, invK2, -1, gv);
+    }
+    function rhs(s, nu, oRe, oIm) {
+      velocity(s);
+      toGrid(s.re, s.im, 1, 0, null, 1, gwx);
+      toGrid(s.re, s.im, 0, 1, null, 1, gwy);
+      for (let n = 0; n < NN; n++) { jr[n] = gu[n] * gwx[n] + gv[n] * gwy[n]; ji[n] = 0; }
+      fft2(jr, ji, false);
+      for (let n = 0; n < NN; n++) {
+        oRe[n] = (-jr[n] * mask[n]) - nu * k2[n] * s.re[n];
+        oIm[n] = (-ji[n] * mask[n]) - nu * k2[n] * s.im[n];
+      }
+    }
+
+    function Run(amp, nu) {
+      this.nu = nu; this.t = 0; this.steps = 0;
+      this.re = new Float64Array(NN); this.im = new Float64Array(NN);
+      const sig = 0.5, d = 0.6, c = Math.PI;
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+        const x = i * L / N, y = j * L / N;
+        const r1 = (x - (c - d)) ** 2 + (y - c) ** 2, r2 = (x - (c + d)) ** 2 + (y - c) ** 2;
+        this.re[j * N + i] = amp * (Math.exp(-r1 / (sig * sig)) - Math.exp(-r2 / (sig * sig)));
+      }
+      fft2(this.re, this.im, false);
+      for (let n = 0; n < NN; n++) { this.re[n] *= mask[n]; this.im[n] *= mask[n]; }
+      this.re[0] = 0; this.im[0] = 0;
+      this.k = [0, 1, 2, 3].map(() => ({ re: new Float64Array(NN), im: new Float64Array(NN) }));
+      this.tmp = { re: new Float64Array(NN), im: new Float64Array(NN) };
+    }
+    Run.prototype.maxSpeed = function () {
+      velocity(this);
+      let m = 0;
+      for (let n = 0; n < NN; n++) { const q = gu[n] * gu[n] + gv[n] * gv[n]; if (q > m) m = q; }
+      return Math.sqrt(m);
+    };
+    Run.prototype.stableDt = function (cfl) {
+      const dx = L / N, um = this.maxSpeed();
+      const dAdv = um > 0 ? cfl * dx / um : 0.1;
+      const dDif = this.nu > 0 ? 2.0 / (this.nu * kMax2) : 1e9;
+      return Math.min(dAdv, dDif, 0.05);
+    };
+    Run.prototype.step = function (dt) {
+      const s = this, k = this.k, tmp = this.tmp, nu = this.nu;
+      rhs(s, nu, k[0].re, k[0].im);
+      for (let n = 0; n < NN; n++) { tmp.re[n] = s.re[n] + 0.5 * dt * k[0].re[n]; tmp.im[n] = s.im[n] + 0.5 * dt * k[0].im[n]; }
+      rhs(tmp, nu, k[1].re, k[1].im);
+      for (let n = 0; n < NN; n++) { tmp.re[n] = s.re[n] + 0.5 * dt * k[1].re[n]; tmp.im[n] = s.im[n] + 0.5 * dt * k[1].im[n]; }
+      rhs(tmp, nu, k[2].re, k[2].im);
+      for (let n = 0; n < NN; n++) { tmp.re[n] = s.re[n] + dt * k[2].re[n]; tmp.im[n] = s.im[n] + dt * k[2].im[n]; }
+      rhs(tmp, nu, k[3].re, k[3].im);
+      const c = dt / 6;
+      for (let n = 0; n < NN; n++) {
+        s.re[n] += c * (k[0].re[n] + 2 * k[1].re[n] + 2 * k[2].re[n] + k[3].re[n]);
+        s.im[n] += c * (k[0].im[n] + 2 * k[1].im[n] + 2 * k[2].im[n] + k[3].im[n]);
+      }
+      this.t += dt; this.steps++;
+    };
+    // diagnostics; fills vorticity grid when out given
+    Run.prototype.measure = function (out) {
+      const s = this;
+      velocity(s);
+      toGrid(s.re, s.im, 0, 0, null, 1, gw);
+      toGrid(s.re, s.im, 1, 0, null, 1, gwx);
+      toGrid(s.re, s.im, 0, 1, null, 1, gwy);
+      toGrid(s.re, s.im, 1, 1, invK2, 1, gux);   // du/dx = psi_xy ; dv/dy = -du/dx
+      toGrid(s.re, s.im, 0, 2, invK2, 1, guy);   // du/dy = psi_yy
+      toGrid(s.re, s.im, 2, 0, invK2, -1, gvx);  // dv/dx = -psi_xx
+      toGrid(s.re, s.im, 0, 0, k2, -1, glap);    // Lap w
+      let E = 0, Z = 0, P = 0, prod = 0, lap2 = 0, wmax = 0;
+      for (let n = 0; n < NN; n++) {
+        const wx = gwx[n], wy = gwy[n], ux = gux[n];
+        E += 0.5 * (gu[n] * gu[n] + gv[n] * gv[n]);
+        Z += gw[n] * gw[n];
+        P += wx * wx + wy * wy;
+        prod -= wx * wx * ux + wx * wy * (gvx[n] + guy[n]) - wy * wy * ux;
+        lap2 += glap[n] * glap[n];
+        const a = Math.abs(gw[n]); if (a > wmax) wmax = a;
+      }
+      if (out) out.set(gw);
+      const diss = this.nu * lap2 * dA;
+      return { t: this.t, E: E * dA, Z: Z * dA, P: P * dA, prod: prod * dA, diss, ratio: diss > 0 ? prod * dA / diss : 0,
+               width: Math.sqrt(Z / P), wmax };
+    };
+    return { N, Run };
+  })();
+  // ---- solver core (SC-END) ----
+(() => {
+  const canvas = stcCanvas;
+  const ctx = canvas.getContext('2d');
+  const N = SC.N;
+  const field = new Float64Array(N * N);
+  const img = document.createElement('canvas');
+  img.width = N; img.height = N;
+  const ictx = img.getContext('2d');
+  const imgData = ictx.createImageData(N, N);
+
+  let scale = 64, nu = 0.05, tEnd = 1.5, running = true, halfOn = false;
+  let main = null, half = null, hist = [], histHalf = [], colorMax = 1, done = false;
+  let stats = null, statsHalf = null, lastBudget = null;
+
+  const nuValues = [0.001, 0.002, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.2];
+  function nuFromSlider() { return nuValues[parseInt(document.getElementById('stretchNu').value, 10)]; }
+  function newStats() { return { peak: -Infinity, peakT: 0, above: 0, prev: null }; }
+  function track(st, m, dt) {
+    if (m.ratio > st.peak) { st.peak = m.ratio; st.peakT = m.t; }
+    if (st.prev !== null && dt > 0) {
+      const a = st.prev - 1, b = m.ratio - 1;
+      if (a >= 0 && b >= 0) st.above += dt;
+      else if (a >= 0 || b >= 0) st.above += dt * Math.max(a, b) / (Math.abs(a) + Math.abs(b));
+    }
+    st.prev = m.ratio;
+  }
+
+  function reset() {
+    nu = nuFromSlider();
+    main = new SC.Run(scale, nu);
+    half = halfOn ? new SC.Run(scale, nu) : null;
+    hist = []; histHalf = []; done = false; lastBudget = null;
+    stats = newStats(); statsHalf = halfOn ? newStats() : null;
+    const m = main.measure(field);
+    colorMax = m.wmax || 1;
+    hist.push(m); track(stats, m, 0);
+    if (half) { const h = half.measure(); histHalf.push(h); track(statsHalf, h, 0); }
+  }
+
+  function advance() {
+    const dt = main.stableDt(0.5);
+    const before = hist[hist.length - 1];
+    main.step(dt);
+    const m = main.measure();
+    hist.push(m); track(stats, m, dt);
+    lastBudget = { measured: (m.P - before.P) / dt, predicted: (m.prod - m.diss) + (before.prod - before.diss) };
+    if (half) {
+      half.step(dt / 2); half.step(dt / 2);
+      const h = half.measure();
+      histHalf.push(h); track(statsHalf, h, dt);
+    }
+    if (main.t >= tEnd) done = true;
+  }
+
+  document.querySelectorAll('#tab-stretch [data-scale]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tab-stretch [data-scale]').forEach(b => b.classList.remove('active-toggle'));
+      btn.classList.add('active-toggle');
+      scale = parseInt(btn.dataset.scale, 10);
+      reset();
+    });
+  });
+  document.getElementById('stretchPause').addEventListener('click', e => {
+    running = !running;
+    e.target.textContent = running ? '⏸ Pause' : '▶ Run';
+  });
+  document.getElementById('stretchHalf').addEventListener('click', e => {
+    halfOn = !halfOn;
+    e.target.textContent = halfOn ? '½ Half Step: On' : '½ Half Step: Off';
+    e.target.classList.toggle('active-toggle', halfOn);
+    reset();
+  });
+  const nuSlider = document.getElementById('stretchNu');
+  nuSlider.addEventListener('input', () => { document.getElementById('stretchNuVal').textContent = nuFromSlider().toFixed(3); });
+  nuSlider.addEventListener('change', reset);
+  const tSlider = document.getElementById('stretchTEnd');
+  tSlider.addEventListener('input', () => {
+    tEnd = parseFloat(tSlider.value);
+    document.getElementById('stretchTEndVal').textContent = tEnd.toFixed(1);
+    if (main && main.t < tEnd) done = false;
+  });
+
+  function drawField(x0, y0, size) {
+    const d = imgData.data;
+    for (let n = 0; n < N * N; n++) {
+      const v = Math.max(-1, Math.min(1, field[n] / colorMax));
+      const a = Math.sqrt(Math.abs(v));
+      const base = [7, 9, 14];
+      const tgt = v >= 0 ? [255, 123, 114] : [121, 192, 255];
+      // row j is y; draw y upward
+      const i = n % N, j = (n / N) | 0;
+      const p = ((N - 1 - j) * N + i) * 4;
+      d[p] = base[0] + (tgt[0] - base[0]) * a;
+      d[p + 1] = base[1] + (tgt[1] - base[1]) * a;
+      d[p + 2] = base[2] + (tgt[2] - base[2]) * a;
+      d[p + 3] = 255;
+    }
+    ictx.putImageData(imgData, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, x0, y0, size, size);
+    ctx.strokeStyle = '#263042';
+    ctx.strokeRect(x0, y0, size, size);
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Vorticity ω (pink +, blue −), periodic 128×128', x0, y0 - 8);
+  }
+
+  function plot(x0, y0, w, h, title, series, opts) {
+    ctx.strokeStyle = '#263042';
+    ctx.strokeRect(x0, y0, w, h);
+    let lo = Infinity, hi = -Infinity;
+    series.forEach(s => s.data.forEach(p => { const v = opts.log ? Math.log10(Math.max(p[1], 1e-300)) : p[1]; if (v < lo) lo = v; if (v > hi) hi = v; }));
+    if (opts.refLine !== undefined) { lo = Math.min(lo, opts.refLine); hi = Math.max(hi, opts.refLine); }
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    if (opts.zero) lo = Math.min(lo, 0);
+    if (hi - lo < 1e-9) { hi += 0.5; lo -= 0.5; }
+    const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+    const tx = t => x0 + (t / tEnd) * w;
+    const ty = v => y0 + h - ((v - lo) / (hi - lo)) * h;
+    if (opts.refLine !== undefined) {
+      ctx.strokeStyle = '#8b949e'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, ty(opts.refLine)); ctx.lineTo(x0 + w, ty(opts.refLine)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    series.forEach(s => {
+      ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2;
+      ctx.beginPath();
+      s.data.forEach((p, k) => {
+        const v = opts.log ? Math.log10(Math.max(p[1], 1e-300)) : p[1];
+        const X = tx(Math.min(p[0], tEnd)), Y = ty(v);
+        k === 0 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y);
+      });
+      ctx.stroke();
+    });
+    ctx.fillStyle = '#8b949e'; ctx.font = '12px sans-serif';
+    ctx.fillText(title, x0 + 6, y0 + 15);
+    const fmt = v => opts.log ? '1e' + v.toFixed(2) : v.toPrecision(3);
+    ctx.fillText(fmt(hi - pad), x0 + w - 70, y0 + 15);
+    ctx.fillText(fmt(lo + pad), x0 + w - 70, y0 + h - 5);
+  }
+
+  function render() {
+    if (mode === 'stretch') {
+      if (!main) reset();
+      if (running && !done) {
+        const t0 = performance.now();
+        let n = 0;
+        while (!done && (n < 1 || performance.now() - t0 < 28)) { advance(); n++; }
+        main.measure(field);
+      }
+      ctx.fillStyle = '#07090e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawField(20, 40, 420);
+
+      const px = 470, pw = 470, ph = 132;
+      const series = [{ data: hist.map(m => [m.t, m.ratio]), color: '#7ee787' }];
+      if (half) series.push({ data: histHalf.map(m => [m.t, m.ratio]), color: '#ff7b72', width: 1.5 });
+      plot(px, 30, pw, ph, 'ratio = production / dissipation' + (half ? '   (green dt, pink dt/2)' : ''), series, { refLine: 1, zero: true });
+      plot(px, 30 + ph + 22, pw, ph, 'P = Σ|∇ω|² (log scale)', [{ data: hist.map(m => [m.t, m.P]), color: '#79c0ff' }], { log: true });
+      plot(px, 30 + 2 * (ph + 22), pw, ph, 'width = √(Σω² / Σ|∇ω|²)', [{ data: hist.map(m => [m.t, m.width]), color: '#f5d08a' }], {});
+
+      const cur = hist[hist.length - 1];
+      ctx.fillStyle = '#8b949e'; ctx.font = '12px sans-serif';
+      let line = `×${scale}   ν = ${nu.toPrecision(2)}   t = ${cur.t.toFixed(3)} / ${tEnd.toFixed(1)}   steps = ${main.steps}`;
+      if (lastBudget) {
+        const rel = Math.abs(lastBudget.measured - lastBudget.predicted) / Math.max(Math.abs(lastBudget.predicted), 1e-12);
+        line += `   budget: dP/dt ${lastBudget.measured.toExponential(3)} vs 2(prod−diss) ${lastBudget.predicted.toExponential(3)} (${(rel * 100).toFixed(2)}%)`;
+      }
+      ctx.fillText(line, 20, 490);
+
+      document.getElementById('stretchPeak').textContent =
+        `Peak ratio: ${stats.peak.toFixed(3)} at t = ${stats.peakT.toFixed(3)}  ·  Time above 1: ${stats.above.toFixed(3)}` +
+        (statsHalf ? `  |  dt/2: ${statsHalf.peak.toFixed(3)}, above 1: ${statsHalf.above.toFixed(3)}` : '');
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+})();
+// draw her 960x500 picture onto the page, scaled to fit and centered
+function drawStretch() {
+  ctx.fillStyle = '#07090e';
+  ctx.fillRect(0, 0, width, height);
+  // keep clear of the hint box at the bottom
+  const avail = Math.max(120, height - (hint.offsetHeight + 28));
+  const k = Math.min(width / 960, avail / 500);
+  const w = 960 * k, h = 500 * k;
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(stcCanvas, (width - w) / 2, Math.max(0, (avail - h) / 2), w, h);
+}
+
 // ========== SOUND (shared layer) ==========
 // One master gain + soft compressor. Each tab can run a "bed" (continuous voices)
 // plus short one-shot sounds. Everything starts only after a user click.
@@ -3369,6 +4592,21 @@ function startBed(tab) {
     };
     addNodes(b, [src, bp, ng, s1, s2, sg]);
     bed = b;
+  } else if (tab === 'magnets') {
+    // a soft magnetic hum: low tones through a lowpass that opens as the pull and the spikes grow
+    const b = makeBed(tab, 1);
+    const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 160; lp.Q.value = 2;
+    const hg = audioCtx.createGain(); hg.gain.value = 0;
+    lp.connect(hg); hg.connect(b.out);
+    const a = osc('sawtooth', 60), c = osc('sawtooth', 60.4), d = osc('sine', 120);
+    [a, c, d].forEach(o => o.connect(lp));
+    b.frame = () => {
+      const t = audioCtx.currentTime, sp = Math.min(1, magSpike / 40);
+      hg.gain.setTargetAtTime(0.012 + 0.03 * Math.min(1.5, mag.pull) / 1.5 + 0.03 * sp, t, 0.15);
+      lp.frequency.setTargetAtTime(140 + 260 * mag.pull + 900 * sp, t, 0.15);
+    };
+    addNodes(b, [a, c, d, lp, hg]);
+    bed = b;
   }
 }
 
@@ -3497,6 +4735,12 @@ function loop() {
   } else if (mode === 'crystal') {
     if (!followHolding('crystal') && !cryPaused) updateCrystal();
     drawCrystal();
+  } else if (mode === 'magnets') {
+    magnetsFrame();
+    if (!followHolding('magnets') && !magPaused) updateMagnets();
+    drawMagnets();
+  } else if (mode === 'stretch') {
+    drawStretch();
   }
   restFrame();
   requestAnimationFrame(loop);
@@ -3524,6 +4768,7 @@ canvas.addEventListener('mousedown', e => {
   if (mode === 'waves') wavesDown(p.x, p.y);
   if (mode === 'silk') silkDown(p);
   if (mode === 'crystal') crystalDown(p);
+  if (mode === 'magnets') magnetsDown(p, e);
   soundPointerDown(p);
 });
 canvas.addEventListener('mousemove', e => {
@@ -3547,6 +4792,7 @@ canvas.addEventListener('touchstart', e => {
   if (mode === 'waves') wavesDown(p.x, p.y);
   if (mode === 'silk') silkDown(p);
   if (mode === 'crystal') crystalDown(p);
+  if (mode === 'magnets') magnetsDown(p, e);
   soundPointerDown(p);
 }, {passive: false});
 canvas.addEventListener('touchmove', e => {
