@@ -258,6 +258,44 @@ Third-party material is governed by its own terms.
     .tabs { row-gap: 6px; }
   }
   header { position: relative; }
+  /* Pull-down menu for choosing the playground (replaces the rows of tab buttons; the buttons stay in the page, hidden) */
+  .tabs .tab, .tabs .tab-break { display: none; }
+  header { flex-wrap: nowrap; padding-top: 10px; padding-bottom: 16px; gap: 12px; }
+  header h1 { flex: none; white-space: nowrap; }
+  header .tabs { flex: none; flex-basis: auto; justify-content: flex-end; flex-wrap: nowrap; }
+  .tabs .sound-btn { padding: 8px 12px; font-size: 0.85rem; }
+  .playnav { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .pn-wrap { position: relative; flex: 0 1 560px; min-width: 0; }
+  .pn-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 14px; min-height: 40px; background: #0b0e14; color: var(--text, #e6e6f0); border: 1px solid var(--accent); border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; text-align: left; }
+  .pn-btn:hover, .pn-btn[aria-expanded="true"] { background: #141a26; }
+  .pn-btn:focus-visible, .pn-arrow:focus-visible, .pn-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pn-cur { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pn-caret { flex: none; color: var(--accent); font-size: 0.9rem; }
+  .pn-arrow { flex: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text, #e6e6f0); font-size: 1.5rem; line-height: 1; cursor: pointer; }
+  .pn-arrow:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  .pn-list { position: absolute; z-index: 1000; top: calc(100% + 6px); left: 0; right: 0; min-width: 300px; max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; background: #10141e; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); padding: 6px; }
+  .pn-list[hidden] { display: none; }
+  .pn-group { padding: 10px 10px 4px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .pn-opt { display: flex; gap: 8px; align-items: baseline; width: 100%; padding: 9px 10px; min-height: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--text, #e6e6f0); font-size: 0.95rem; text-align: left; cursor: pointer; }
+  .pn-opt .pn-num { flex: none; min-width: 2em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .pn-opt:hover, .pn-opt.pn-focus { background: #1c2333; }
+  .pn-opt[aria-selected="true"] { background: var(--accent); color: #000; font-weight: 600; }
+  .pn-opt[aria-selected="true"] .pn-num { color: #000; }
+  @media (min-width: 701px) { header h1 { font-size: 1.25rem; } }
+  @media (max-width: 1100px) and (min-width: 701px) { header h1 { font-size: 1.05rem; } }
+  /* phones: title with Sound and Linked on the first row, the menu with its arrows on a full-width second row */
+  @media (max-width: 700px) {
+    header { flex-wrap: wrap; row-gap: 8px; column-gap: 8px; padding: 8px 12px 16px; }
+    header h1 { font-size: clamp(0.78rem, 3.4vw, 1rem); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    header .tabs { order: 2; flex-wrap: nowrap; gap: 6px; }
+    header .playnav { order: 3; flex: 1 1 100%; }
+    .pn-wrap { flex: 1 1 auto; }
+    .tabs .sound-btn { padding: 6px 9px; font-size: 0.78rem; }
+    .pn-btn { font-size: 0.95rem; min-height: 44px; }
+    .pn-arrow { width: 44px; height: 44px; }
+    .pn-list { position: fixed; left: 8px; right: 8px; top: var(--pn-top, 100px); min-width: 0; max-height: calc(100vh - var(--pn-top, 100px) - 10px); }
+    .pn-opt { min-height: 44px; }
+  }
   #copyNote { position: absolute; right: 18px; bottom: 2px; font-size: 10px; line-height: 12px; color: var(--muted); opacity: 0.55; white-space: nowrap; }
   #copyNote a { color: inherit; }
   #copyNote:hover { opacity: 0.9; }
@@ -266,6 +304,14 @@ Third-party material is governed by its own terms.
 <body>
 <header>
   <h1>Tension, Waves & Sparkle Sand</h1>
+  <nav class="playnav" id="playNav" aria-label="Choose a playground">
+    <button class="pn-arrow" id="playPrev" title="Previous playground" aria-label="Previous playground">&#8249;</button>
+    <div class="pn-wrap">
+      <button class="pn-btn" id="playMenuBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="playList" title="Choose a playground"><span class="pn-cur" id="playCur">1. Sand</span><span class="pn-caret" aria-hidden="true">&#9662;</span></button>
+      <div class="pn-list" id="playList" role="listbox" aria-label="Playgrounds" tabindex="-1" hidden></div>
+    </div>
+    <button class="pn-arrow" id="playNext" title="Next playground" aria-label="Next playground">&#8250;</button>
+  </nav>
   <div class="tabs">
     <button class="tab active" data-mode="sand">1. Sand</button>
     <button class="tab" data-mode="loop">2. Loop</button>
@@ -290,6 +336,12 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="fireflies" title="Cymatics &amp; Synchronized Fireflies Studio">20. Fireflies</button>
     <button class="tab" data-mode="horned" title="4D Topology: Alexander Horned Sphere &amp; Exotic Smoothness Studio v2">21. Horned</button>
     <button class="tab" data-mode="nonorient" title="4D Non-Orientable Surfaces Studio v2">22. Non-Orientable</button>
+    <button class="tab" data-mode="penteract" title="5D Penteract &amp; 8D E₈ Root System Studio v2">23. 5D / E₈</button>
+    <button class="tab" data-mode="leech" title="24D Leech Lattice Projection Studio v2">24. Leech</button>
+    <button class="tab" data-mode="pentlite" title="5D Penteract &amp; 8D E8 Root System Explorer (Lite)">25. 5D Lite</button>
+    <button class="tab" data-mode="hopf" title="4D Hopf Fibration Studio v2 (S³ → S²)">26. Hopf</button>
+    <button class="tab" data-mode="bh2" title="Black Hole Spacetime &amp; Ringdown Explorer (Einstein Ring version)">27. Black Hole B</button>
+    <button class="tab" data-mode="bh3" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -10942,6 +10994,3753 @@ window.__travelerPoint = travelerPoint;
 </html>
 </template>
 <!-- end 4D Non-Orientable Surfaces Studio v2 -->
+<!-- 5D Penteract & 8D E₈ Root System Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 23: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-penteract" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-penteract">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5D Penteract & 8D E₈ Root System Studio v2</title>
+<style>
+  :root {
+    --bg: #090c14;
+    --panel: rgba(14, 19, 32, 0.86);
+    --border: rgba(130, 170, 255, 0.2);
+    --text: #e6eeff;
+    --muted: #8fa3cc;
+    --accent: #67e8f9;
+    --accent2: #c084fc;
+    --accent3: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+
+  .hud-top {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .pill-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
+    pointer-events: auto;
+  }
+  button {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9px;
+    padding: 6px 11px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.16s ease;
+  }
+  button:hover {
+    background: rgba(103, 232, 249, 0.14);
+    border-color: rgba(103, 232, 249, 0.45);
+  }
+  button.active {
+    background: linear-gradient(135deg, rgba(103, 232, 249, 0.25), rgba(192, 132, 252, 0.25));
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(103, 232, 249, 0.25);
+  }
+
+  .panel-left {
+    position: fixed;
+    top: 72px;
+    left: 14px;
+    width: 300px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+  }
+  .panel-left::-webkit-scrollbar { width: 5px; }
+  .panel-left::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .desc {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slider-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .slider-head span:last-child {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 5px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+  }
+  .stats-box {
+    background: rgba(0, 0, 0, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .stat-item span {
+    display: block;
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+  .stat-item strong {
+    font-size: 13.5px;
+    color: #fff;
+  }
+
+  .hidden-ui .panel-left,
+  .hidden-ui .hud-top .hideable {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .panel-left, .hideable { transition: opacity 0.2s ease; }
+
+  @media (max-width: 680px) {
+    .panel-left {
+      top: auto;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      width: auto;
+      max-height: 44vh;
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="hud-top">
+  <div class="pill-bar hideable">
+    <button id="modeE8" class="active">✦ 8D E₈ Root System (240)</button>
+    <button id="modeE6">❖ 6D E₆ Root System (72)</button>
+    <button id="mode5DPoly">⬡ 5D Polytopes (Penteract)</button>
+    <button id="mode5DKnot">∞ 5D Surface Unknotting</button>
+  </div>
+
+  <div class="pill-bar">
+    <button id="btnDrift" class="active hideable">⟳ Auto-Drift: On</button>
+    <button id="btnPalette" class="hideable">🎨 Aurora</button>
+    <button id="btnSnap" class="hideable">📷 Save PNG</button>
+    <button id="btnHideUI">👁 Hide UI</button>
+  </div>
+</div>
+
+<div class="panel-left" id="sidePanel">
+  <div>
+    <div class="section-title" id="modeTitle">8D E₈ Root System (240 Roots)</div>
+    <p class="desc" id="modeDesc">
+      The 240 roots of E₈ in ℝ⁸, all of length √2: 112 integer roots (±1, ±1, 0⁶) plus 128 half-integer roots (±½)⁸ with an even number of minus signs, joined by 6,720 nearest-neighbour edges (60° apart).
+    </p>
+  </div>
+
+  <div class="stats-box" id="statsBox">
+    <div class="stat-item"><span>Vertices / Roots</span><strong id="statV">240</strong></div>
+    <div class="stat-item"><span>Edges (60° Neighbors)</span><strong id="statE">6,720</strong></div>
+    <div class="stat-item"><span>Ambient Dimension</span><strong id="statD">8D (ℝ⁸)</strong></div>
+    <div class="stat-item"><span>Key Invariant</span><strong id="statI">det(E₈) = 1</strong></div>
+  </div>
+
+  <!-- E8 / E6 Controls -->
+  <div id="controlsRoots" style="display:flex; flex-direction:column; gap:10px;">
+    <div>
+      <div class="section-title">Projection & Subset</div>
+      <div class="btn-grid">
+        <button id="btnCoxeter" class="active">Coxeter Plane</button>
+        <button id="btnTilt8D">8D Hyper-Tilt</button>
+        <button id="btnSubAll" class="active">All Roots</button>
+        <button id="btnSubInt">Integer Roots</button>
+        <button id="btnSubSpin">Half-Integer Roots</button>
+        <button id="btnSimple" class="active">★ Simple Roots</button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-head"><span>Edge Opacity</span><span id="valEdgeOp">22%</span></div>
+      <input type="range" id="slEdgeOp" min="0" max="80" value="22">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>Plane X₁X₇ Tilt</span><span id="valR1">0.35</span></div>
+      <input type="range" id="slR1" min="-314" max="314" value="35">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>Plane X₂X₈ Tilt</span><span id="valR2">-0.25</span></div>
+      <input type="range" id="slR2" min="-314" max="314" value="-25">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>Plane X₃X₆ Tilt</span><span id="valR3">0.50</span></div>
+      <input type="range" id="slR3" min="-314" max="314" value="50">
+    </div>
+  </div>
+
+  <!-- 5D Polytope Controls -->
+  <div id="controls5DPoly" style="display:none; flex-direction:column; gap:10px;">
+    <div>
+      <div class="section-title">5D Regular Polytope</div>
+      <div class="btn-grid">
+        <button id="btnPenteract" class="active">5D Penteract (32)</button>
+        <button id="btnOrthoplex">5D Orthoplex (10)</button>
+        <button id="btnSimplex">5D Simplex (6)</button>
+        <button id="btnSubcube">Highlight 4D Cell</button>
+      </div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>4D Plane (XW)</span><span id="val5XW">0.45</span></div>
+      <input type="range" id="sl5XW" min="-314" max="314" value="45">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>5D Plane (XV)</span><span id="val5XV">0.60</span></div>
+      <input type="range" id="sl5XV" min="-314" max="314" value="60">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>5D Plane (WV)</span><span id="val5WV">-0.40</span></div>
+      <input type="range" id="sl5WV" min="-314" max="314" value="-40">
+    </div>
+  </div>
+
+  <!-- 5D Unknotting Controls -->
+  <div id="controls5DKnot" style="display:none; flex-direction:column; gap:10px;">
+    <div>
+      <div class="section-title">5D Surface Unknotting (2 + 2 &lt; 5)</div>
+      <div class="btn-grid">
+        <button id="btnCollide4D">4D Collision (v=0)</button>
+        <button id="btnUnknot5D">5D Unknot (v=1)</button>
+      </div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>5th-Axis Lift (v)</span><span id="valLift5">0.65</span></div>
+      <input type="range" id="slLift5" min="0" max="100" value="65">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>4D Twist (XW)</span><span id="valKnotXW">0.35</span></div>
+      <input type="range" id="slKnotXW" min="-314" max="314" value="35">
+    </div>
+  </div>
+
+  <!-- Common Visual Comfort Controls -->
+  <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; display:flex; flex-direction:column; gap:8px;">
+    <div class="slider-row">
+      <div class="slider-head"><span>Eye Comfort Brightness</span><span id="valBright">88%</span></div>
+      <input type="range" id="slBright" min="35" max="115" value="88">
+    </div>
+    <div class="slider-row">
+      <div class="slider-head"><span>Zoom Scale</span><span id="valZoom">1.00x</span></div>
+      <input type="range" id="slZoom" min="45" max="220" value="100">
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function fitCanvas() {
+    canvas.width = Math.round(window.innerWidth * devicePixelRatio);
+    canvas.height = Math.round(window.innerHeight * devicePixelRatio);
+    W = canvas.width;
+    H = canvas.height;
+  }
+  fitCanvas();
+
+  window.addEventListener('resize', () => {
+    fitCanvas();
+  });
+
+  // State
+  let mode = 'E8'; // 'E8', 'E6', '5DPOLY', '5DKNOT'
+  let autoDrift = true;
+  let time = 0;
+  // Coxeter view starts face-on so the rings (8 rings of 30 for E8) are visible
+  let camYaw = 0, camPitch = 0;
+  function faceOn(on) { camYaw = on ? 0 : 0.35; camPitch = on ? 0 : 0.25; }
+  let dragging = false, lastX = 0, lastY = 0;
+
+  let paletteIdx = 0;
+  const palettes = [
+    { name: 'Aurora', bg: '#070b14', c1: '#38bdf8', c2: '#c084fc', c3: '#34d399', star: '#fbbf24' },
+    { name: 'Twilight', bg: '#0c0816', c1: '#818cf8', c2: '#f472b6', c3: '#22d3ee', star: '#fde047' },
+    { name: 'Amber', bg: '#110c07', c1: '#fbbf24', c2: '#fb7185', c3: '#38bdf8', star: '#a7f3d0' },
+    { name: 'Emerald', bg: '#06110e', c1: '#34d399', c2: '#60a5fa', c3: '#facc15', star: '#f472b6' }
+  ];
+
+  // E8 / E6 state
+  let coxeterBlend = 1.0; // 1 = Coxeter plane picture, 0 = 8D rotated projection
+  let targetCoxeter = 1.0;
+  let rootFilter = 'ALL'; // 'ALL', 'INT', 'SPIN'
+  let showSimple = true;
+
+  // 5D Polytope state
+  let poly5Type = 'PENTERACT'; // 'PENTERACT', 'ORTHOPLEX', 'SIMPLEX'
+  let highlight4DCell = false;
+
+  function norm8(a) { return Math.hypot(...a); }
+  function dot8(a, b) { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
+
+  // Build E8 roots (240 in R^8)
+  const e8Roots = [];
+  // 112 integer roots: permutations of (+-1, +-1, 0,0,0,0,0,0)
+  for (let i = 0; i < 8; i++) {
+    for (let j = i + 1; j < 8; j++) {
+      for (const s1 of [-1, 1]) {
+        for (const s2 of [-1, 1]) {
+          const v = new Array(8).fill(0);
+          v[i] = s1;
+          v[j] = s2;
+          e8Roots.push({ v, type: 'INT' });
+        }
+      }
+    }
+  }
+  // 128 half-integer roots: (+-1/2)^8 with an even number of minus signs
+  for (let mask = 0; mask < 256; mask++) {
+    let minusCount = 0;
+    const v = new Array(8);
+    for (let b = 0; b < 8; b++) {
+      if ((mask >> b) & 1) {
+        v[b] = -0.5;
+        minusCount++;
+      } else {
+        v[b] = 0.5;
+      }
+    }
+    if (minusCount % 2 === 0) {
+      e8Roots.push({ v, type: 'SPIN' });
+    }
+  }
+
+  // 8 simple roots of E8 (they form the E8 diagram: arms of length 4, 2, 1)
+  const e8SimpleVectors = [
+    [1, -1, 0, 0, 0, 0, 0, 0],
+    [0, 1, -1, 0, 0, 0, 0, 0],
+    [0, 0, 1, -1, 0, 0, 0, 0],
+    [0, 0, 0, 1, -1, 0, 0, 0],
+    [0, 0, 0, 0, 1, -1, 0, 0],
+    [0, 0, 0, 0, 0, 1, -1, 0],
+    [0, 0, 0, 0, 0, 1, 1, 0],
+    [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5]
+  ];
+  function indicesOf(roots, vectors) {
+    const set = new Set();
+    vectors.forEach(sv => {
+      const idx = roots.findIndex(r => r.v.every((val, k) => Math.abs(val - sv[k]) < 1e-6));
+      if (idx >= 0) set.add(idx);
+    });
+    return set;
+  }
+  const e8SimpleIndices = indicesOf(e8Roots, e8SimpleVectors);
+
+  // Coxeter plane: the plane where the Coxeter element w (product of the simple
+  // reflections) turns by 2*pi/h. Built by averaging the orbit of a seed vector
+  // with weights cos(2*pi*k/h), sin(2*pi*k/h), then orthonormalizing.
+  function reflect(x, alpha) {
+    const d = dot8(x, alpha);          // every root has length^2 = 2
+    return x.map((xi, i) => xi - d * alpha[i]);
+  }
+  function coxeterPlane(simple, h) {
+    const w = x => { let cur = x.slice(); for (const a of simple) cur = reflect(cur, a); return cur; };
+    let x = [1.2, -0.7, 0.4, 1.5, -1.1, 0.3, 0.8, -0.5];
+    let b1 = new Array(8).fill(0), b2 = new Array(8).fill(0);
+    for (let k = 0; k < h; k++) {
+      const c = Math.cos(2 * Math.PI * k / h), s = Math.sin(2 * Math.PI * k / h);
+      for (let i = 0; i < 8; i++) { b1[i] += c * x[i]; b2[i] += s * x[i]; }
+      x = w(x);
+    }
+    const n1 = norm8(b1); b1 = b1.map(v => v / n1);
+    const d12 = dot8(b1, b2); b2 = b2.map((v, i) => v - d12 * b1[i]);
+    const n2 = norm8(b2); b2 = b2.map(v => v / n2);
+    return [b1, b2];
+  }
+  const [cx8a, cx8b] = coxeterPlane(e8SimpleVectors, 30);
+
+  const e8CoxeterCoords = e8Roots.map(r => ({ x: dot8(r.v, cx8a), y: dot8(r.v, cx8b) }));
+  const e8Edges = [];
+  for (let i = 0; i < e8Roots.length; i++) {
+    for (let j = i + 1; j < e8Roots.length; j++) {
+      if (Math.abs(dot8(e8Roots[i].v, e8Roots[j].v) - 1.0) < 1e-5) e8Edges.push([i, j]);
+    }
+  }
+
+  // E6 inside E8: the roots orthogonal to e6 - e7 and e7 - e8, i.e. v[5] == v[6] == v[7].
+  const e6Roots = e8Roots.filter(r => Math.abs(r.v[5] - r.v[6]) < 1e-6 && Math.abs(r.v[6] - r.v[7]) < 1e-6);
+  const e6Edges = [];
+  for (let i = 0; i < e6Roots.length; i++) {
+    for (let j = i + 1; j < e6Roots.length; j++) {
+      if (Math.abs(dot8(e6Roots[i].v, e6Roots[j].v) - 1.0) < 1e-5) e6Edges.push([i, j]);
+    }
+  }
+  // E6's own simple roots: pick "positive" roots with a generic direction, then keep
+  // the positive roots that are not a sum of two positive roots.
+  const gen = [0.91, 0.83, 0.77, 0.61, 0.53, 0.37, 0.29, 0.13];
+  const e6Pos = e6Roots.filter(r => dot8(r.v, gen) > 0).map(r => r.v);
+  const isSum = v => e6Pos.some(a => e6Pos.some(b => v.every((x, k) => Math.abs(x - a[k] - b[k]) < 1e-9)));
+  const e6SimpleVectors = e6Pos.filter(v => !isSum(v));
+  const e6SimpleIndices = indicesOf(e6Roots, e6SimpleVectors);
+  // E6 in its own Coxeter plane (12-fold symmetry)
+  const [cx6a, cx6b] = coxeterPlane(e6SimpleVectors, 12);
+  const e6CoxeterCoords = e6Roots.map(r => ({ x: dot8(r.v, cx6a), y: dot8(r.v, cx6b) }));
+
+  // 5D Polytopes builders
+  function build5DPolytope(type) {
+    const verts = [];
+    const edges = [];
+    if (type === 'PENTERACT') {
+      for (let mask = 0; mask < 32; mask++) {
+        const v = [];
+        for (let b = 0; b < 5; b++) v.push(((mask >> b) & 1) ? 1 : -1);
+        verts.push(v);
+      }
+      for (let i = 0; i < 32; i++) {
+        for (let b = 0; b < 5; b++) {
+          const j = i ^ (1 << b);
+          if (i < j) edges.push([i, j]);
+        }
+      }
+    } else if (type === 'ORTHOPLEX') {
+      for (let d = 0; d < 5; d++) {
+        for (const s of [-1.6, 1.6]) {
+          const v = [0, 0, 0, 0, 0];
+          v[d] = s;
+          verts.push(v);
+        }
+      }
+      for (let i = 0; i < verts.length; i++) {
+        for (let j = i + 1; j < verts.length; j++) {
+          // Connect all pairs except opposite points (i ^ 1 == j)
+          if ((i ^ 1) !== j) edges.push([i, j]);
+        }
+      }
+    } else if (type === 'SIMPLEX') {
+      // Regular 5-simplex: the 6 corners e_1..e_6 of R^6, written in an orthonormal
+      // basis of the hyperplane x_1 + ... + x_6 = 1 (Helmert basis). All 15 edges equal.
+      for (let i = 0; i < 6; i++) {
+        const v = [];
+        for (let k = 1; k <= 5; k++) {
+          const c = 1 / Math.sqrt(k * (k + 1));
+          v.push(i < k ? c : (i === k ? -k * c : 0));
+        }
+        verts.push(v.map(x => x * 2.2));
+      }
+      for (let i = 0; i < 6; i++) {
+        for (let j = i + 1; j < 6; j++) edges.push([i, j]);
+      }
+    }
+    return { verts, edges };
+  }
+
+  // Exposed for checking
+  const simplex = build5DPolytope('SIMPLEX');
+  window.__check = {
+    e8Roots: e8Roots.length, e8Edges: e8Edges.length, e8Simple: e8SimpleIndices.size,
+    e6Roots: e6Roots.length, e6Edges: e6Edges.length, e6Simple: e6SimpleVectors.length,
+    simplexEdgeLengths: [...new Set(simplex.edges.map(([i, j]) =>
+      Math.hypot(...simplex.verts[i].map((x, k) => x - simplex.verts[j][k])).toFixed(6)))]
+  };
+
+  // Rotation helpers
+  function rotPlane(vec, i, j, theta) {
+    const c = Math.cos(theta), s = Math.sin(theta);
+    const vi = vec[i], vj = vec[j];
+    vec[i] = vi * c - vj * s;
+    vec[j] = vi * s + vj * c;
+  }
+
+  function project3Dto2D(x, y, z, scale) {
+    // Camera orbit
+    const cy = Math.cos(camYaw), sy = Math.sin(camYaw);
+    const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
+    const x1 = x * cy - z * sy;
+    const z1 = x * sy + z * cy;
+    const y2 = y * cp - z1 * sp;
+    const z2 = y * sp + z1 * cp;
+    const persp = 4.6 / (4.6 - z2 * 0.45);
+    return {
+      sx: W * 0.5 + x1 * scale * persp,
+      sy: H * 0.5 + y2 * scale * persp,
+      z: z2,
+      persp
+    };
+  }
+
+  // UI Wiring
+  const modeBtns = {
+    E8: document.getElementById('modeE8'),
+    E6: document.getElementById('modeE6'),
+    '5DPOLY': document.getElementById('mode5DPoly'),
+    '5DKNOT': document.getElementById('mode5DKnot')
+  };
+
+  function setMode(m) {
+    mode = m;
+    faceOn((m === 'E8' || m === 'E6') && targetCoxeter === 1.0);
+    Object.entries(modeBtns).forEach(([k, btn]) => btn.classList.toggle('active', k === m));
+    document.getElementById('controlsRoots').style.display = (m === 'E8' || m === 'E6') ? 'flex' : 'none';
+    document.getElementById('controls5DPoly').style.display = (m === '5DPOLY') ? 'flex' : 'none';
+    document.getElementById('controls5DKnot').style.display = (m === '5DKNOT') ? 'flex' : 'none';
+
+    if (m === 'E8') {
+      document.getElementById('modeTitle').textContent = '8D E₈ Root System (240 Roots)';
+      document.getElementById('modeDesc').textContent =
+        'The 240 roots of E₈ in ℝ⁸, all of length √2: 112 integer roots (±1, ±1, 0⁶) plus 128 half-integer roots (±½)⁸ with an even number of minus signs, joined by 6,720 nearest-neighbour edges (60° apart). Coxeter plane view: 30-fold symmetry.';
+      document.getElementById('statV').textContent = '240';
+      document.getElementById('statE').textContent = '6,720';
+      document.getElementById('statD').textContent = '8D (ℝ⁸)';
+      document.getElementById('statI').textContent = 'det(E₈) = 1';
+    } else if (m === 'E6') {
+      document.getElementById('modeTitle').textContent = '6D E₆ Root System (72 Roots)';
+      document.getElementById('modeDesc').textContent =
+        'A 6-dimensional slice of E₈ (the roots perpendicular to an A₂ inside it): 72 roots and 720 nearest-neighbour edges. Its symmetry group is the symmetry group of the 27 lines on a cubic surface. Coxeter plane view: 12-fold symmetry.';
+      document.getElementById('statV').textContent = '72';
+      document.getElementById('statE').textContent = '720';
+      document.getElementById('statD').textContent = '6D (ℝ⁶)';
+      document.getElementById('statI').textContent = 'det(E₆) = 3';
+    } else if (m === '5DPOLY') {
+      update5DStats();
+    } else if (m === '5DKNOT') {
+      document.getElementById('modeTitle').textContent = '5D Surface Unknotting (2 + 2 < 5)';
+      document.getElementById('modeDesc').textContent =
+        'In 4D, two 2D sheets in general position meet at isolated points (2 + 2 = 4). In 5D they generically miss each other (2 + 2 < 5): lifting one along the 5th coordinate (v) pulls the crossing apart. Related theorem: every 2-sphere in ℝ⁵ is unknotted (Zeeman; Haefliger for smooth).';
+      document.getElementById('statV').textContent = '2 Sheets';
+      document.getElementById('statE').textContent = 'S² ↪ ℝ⁵';
+      document.getElementById('statD').textContent = '5D (ℝ⁵)';
+      document.getElementById('statI').textContent = 'All 2-Knots Untie';
+    }
+  }
+
+  function update5DStats() {
+    if (poly5Type === 'PENTERACT') {
+      document.getElementById('modeTitle').textContent = '5D Penteract (5-Cube)';
+      document.getElementById('modeDesc').textContent =
+        '32 vertices, 80 edges, 80 square faces, 40 cubic cells, and 10 tesseract hyper-cells—meeting your HypercubeIso bound with equality: 80 = (32/2)·log₂(32).';
+      document.getElementById('statV').textContent = '32';
+      document.getElementById('statE').textContent = '80';
+      document.getElementById('statD').textContent = '5D (ℝ⁵)';
+      document.getElementById('statI').textContent = '10 Tesseracts';
+    } else if (poly5Type === 'ORTHOPLEX') {
+      document.getElementById('modeTitle').textContent = '5D Orthoplex (Cross-Polytope)';
+      document.getElementById('modeDesc').textContent =
+        'Dual of the 5D penteract: 10 vertices on the 5 coordinate axes, joined by 40 edges, bounded by 32 facets that are 4-simplices (5-cells).';
+      document.getElementById('statV').textContent = '10';
+      document.getElementById('statE').textContent = '40';
+      document.getElementById('statD').textContent = '5D (ℝ⁵)';
+      document.getElementById('statI').textContent = '32 5-Cells';
+    } else {
+      document.getElementById('modeTitle').textContent = '5D Simplex (Hexateron)';
+      document.getElementById('modeDesc').textContent =
+        'The simplest regular 5-dimensional polytope: 6 mutually equidistant vertices, 15 equal edges, 20 triangular faces, 15 tetrahedra, and 6 5-cell hyper-facets.';
+      document.getElementById('statV').textContent = '6';
+      document.getElementById('statE').textContent = '15';
+      document.getElementById('statD').textContent = '5D (ℝ⁵)';
+      document.getElementById('statI').textContent = 'Self-Dual';
+    }
+  }
+
+  Object.entries(modeBtns).forEach(([k, btn]) => btn.addEventListener('click', () => setMode(k)));
+
+  document.getElementById('btnDrift').addEventListener('click', (e) => {
+    autoDrift = !autoDrift;
+    e.target.textContent = autoDrift ? '⟳ Auto-Drift: On' : '⏸ Auto-Drift: Off';
+    e.target.classList.toggle('active', autoDrift);
+  });
+
+  document.getElementById('btnPalette').addEventListener('click', (e) => {
+    paletteIdx = (paletteIdx + 1) % palettes.length;
+    e.target.textContent = '🎨 ' + palettes[paletteIdx].name;
+  });
+
+  document.getElementById('btnHideUI').addEventListener('click', (e) => {
+    document.body.classList.toggle('hidden-ui');
+    const hidden = document.body.classList.contains('hidden-ui');
+    e.target.textContent = hidden ? '👁 Show UI' : '👁 Hide UI';
+  });
+
+  document.getElementById('btnSnap').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = `higher-dim-${mode.toLowerCase()}-studio.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  // Root buttons
+  document.getElementById('btnCoxeter').addEventListener('click', () => {
+    targetCoxeter = 1.0;
+    faceOn(true);
+    document.getElementById('btnCoxeter').classList.add('active');
+    document.getElementById('btnTilt8D').classList.remove('active');
+  });
+  document.getElementById('btnTilt8D').addEventListener('click', () => {
+    targetCoxeter = 0.0;
+    faceOn(false);
+    document.getElementById('btnTilt8D').classList.add('active');
+    document.getElementById('btnCoxeter').classList.remove('active');
+  });
+
+  function setRootFilter(f) {
+    rootFilter = f;
+    document.getElementById('btnSubAll').classList.toggle('active', f === 'ALL');
+    document.getElementById('btnSubInt').classList.toggle('active', f === 'INT');
+    document.getElementById('btnSubSpin').classList.toggle('active', f === 'SPIN');
+  }
+  document.getElementById('btnSubAll').addEventListener('click', () => setRootFilter('ALL'));
+  document.getElementById('btnSubInt').addEventListener('click', () => setRootFilter('INT'));
+  document.getElementById('btnSubSpin').addEventListener('click', () => setRootFilter('SPIN'));
+
+  document.getElementById('btnSimple').addEventListener('click', (e) => {
+    showSimple = !showSimple;
+    e.target.classList.toggle('active', showSimple);
+  });
+
+  // 5D Polytope buttons
+  function setPoly5(t) {
+    poly5Type = t;
+    document.getElementById('btnPenteract').classList.toggle('active', t === 'PENTERACT');
+    document.getElementById('btnOrthoplex').classList.toggle('active', t === 'ORTHOPLEX');
+    document.getElementById('btnSimplex').classList.toggle('active', t === 'SIMPLEX');
+    update5DStats();
+  }
+  document.getElementById('btnPenteract').addEventListener('click', () => setPoly5('PENTERACT'));
+  document.getElementById('btnOrthoplex').addEventListener('click', () => setPoly5('ORTHOPLEX'));
+  document.getElementById('btnSimplex').addEventListener('click', () => setPoly5('SIMPLEX'));
+  document.getElementById('btnSubcube').addEventListener('click', (e) => {
+    highlight4DCell = !highlight4DCell;
+    e.target.classList.toggle('active', highlight4DCell);
+  });
+
+  // 5D Unknotting buttons
+  document.getElementById('btnCollide4D').addEventListener('click', () => {
+    document.getElementById('slLift5').value = 0;
+    document.getElementById('valLift5').textContent = '0.00';
+  });
+  document.getElementById('btnUnknot5D').addEventListener('click', () => {
+    document.getElementById('slLift5').value = 100;
+    document.getElementById('valLift5').textContent = '1.00';
+  });
+
+  // Slider value labels
+  const bindSlider = (id, labelId, fmt) => {
+    const el = document.getElementById(id);
+    const lb = document.getElementById(labelId);
+    el.addEventListener('input', () => { lb.textContent = fmt(Number(el.value)); });
+  };
+  bindSlider('slEdgeOp', 'valEdgeOp', v => `${v}%`);
+  bindSlider('slR1', 'valR1', v => (v / 100).toFixed(2));
+  bindSlider('slR2', 'valR2', v => (v / 100).toFixed(2));
+  bindSlider('slR3', 'valR3', v => (v / 100).toFixed(2));
+  bindSlider('sl5XW', 'val5XW', v => (v / 100).toFixed(2));
+  bindSlider('sl5XV', 'val5XV', v => (v / 100).toFixed(2));
+  bindSlider('sl5WV', 'val5WV', v => (v / 100).toFixed(2));
+  bindSlider('slLift5', 'valLift5', v => (v / 100).toFixed(2));
+  bindSlider('slKnotXW', 'valKnotXW', v => (v / 100).toFixed(2));
+  bindSlider('slBright', 'valBright', v => `${v}%`);
+  bindSlider('slZoom', 'valZoom', v => `${(v / 100).toFixed(2)}x`);
+
+  // Mouse / touch orbit
+  canvas.addEventListener('pointerdown', e => {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    camYaw += (e.clientX - lastX) * 0.006;
+    camPitch += (e.clientY - lastY) * 0.006;
+    camPitch = Math.max(-1.45, Math.min(1.45, camPitch));
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointerup', () => { dragging = false; });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const sl = document.getElementById('slZoom');
+    const nv = Math.max(45, Math.min(220, Number(sl.value) - e.deltaY * 0.06));
+    sl.value = nv;
+    document.getElementById('valZoom').textContent = `${(nv / 100).toFixed(2)}x`;
+  }, { passive: false });
+
+  // The two sheets of the 5D tab. Both pass through the origin, and that is
+  // their only common point when the lift is 0 (so the markers sit on the crossing).
+  function sheetPoint(isB, u, s, liftV) {
+    if (!isB) {
+      return [u, s, 0.25 * Math.sin(u * 1.6), 0.25 * Math.sin(s * 1.6), 0];
+    }
+    const bump = Math.exp(-(u * u + s * s) * 1.2) * liftV * 1.65;
+    return [0.22 * Math.sin(s * 1.6), 0.22 * Math.sin(u * 1.6), u, s, bump];
+  }
+
+  function render() {
+    if (autoDrift) time += 0.008;
+    coxeterBlend += (targetCoxeter - coxeterBlend) * 0.08;
+
+    const pal = palettes[paletteIdx];
+    const bright = Number(document.getElementById('slBright').value) / 100;
+    const zoom = Number(document.getElementById('slZoom').value) / 100;
+
+    ctx.save();
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle radial ambient glow
+    const grad = ctx.createRadialGradient(W * 0.5, H * 0.5, 20, W * 0.5, H * 0.5, Math.max(W, H) * 0.55);
+    grad.addColorStop(0, 'rgba(56, 189, 248, 0.07)');
+    grad.addColorStop(0.5, 'rgba(192, 132, 252, 0.03)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    const baseScale = Math.min(W, H) * 0.25 * zoom;
+
+    if (mode === 'E8' || mode === 'E6') {
+      const roots = mode === 'E8' ? e8Roots : e6Roots;
+      const edges = mode === 'E8' ? e8Edges : e6Edges;
+      const cxCoords = mode === 'E8' ? e8CoxeterCoords : e6CoxeterCoords;
+      const simpleSet = mode === 'E8' ? e8SimpleIndices : e6SimpleIndices;
+
+      const r1 = Number(document.getElementById('slR1').value) / 100 + (autoDrift ? time * 0.35 : 0);
+      const r2 = Number(document.getElementById('slR2').value) / 100 + (autoDrift ? time * 0.23 : 0);
+      const r3 = Number(document.getElementById('slR3').value) / 100 + (autoDrift ? time * 0.17 : 0);
+      const edgeOp = Number(document.getElementById('slEdgeOp').value) / 100;
+
+      const proj = roots.map((r, idx) => {
+        const v = r.v.slice();
+        rotPlane(v, 0, 6, r1);
+        rotPlane(v, 1, 7, r2);
+        rotPlane(v, 2, 5, r3);
+        rotPlane(v, 3, 4, r1 * 0.5);
+
+        // 3D coordinates from tilted 8D
+        const tx = v[0] + 0.45 * v[3] - 0.35 * v[6];
+        const ty = v[1] + 0.45 * v[4] + 0.35 * v[7];
+        const tz = v[2] + 0.55 * v[5];
+
+        // Coxeter plane coordinates
+        const spinAng = autoDrift ? time * 0.18 : 0;
+        const cx = (cxCoords[idx].x * Math.cos(spinAng) - cxCoords[idx].y * Math.sin(spinAng)) * 1.18;
+        const cy = (cxCoords[idx].x * Math.sin(spinAng) + cxCoords[idx].y * Math.cos(spinAng)) * 1.18;
+        const cz = 0;   // the Coxeter picture is flat: a plane seen face-on
+
+        const bx = cx * coxeterBlend + tx * (1 - coxeterBlend);
+        const by = cy * coxeterBlend + ty * (1 - coxeterBlend);
+        const bz = cz * coxeterBlend + tz * (1 - coxeterBlend);
+
+        const p = project3Dto2D(bx, by, bz, baseScale);
+        const visible = rootFilter === 'ALL' || r.type === rootFilter;
+        const isSimple = showSimple && simpleSet.has(idx);
+        return { ...p, type: r.type, visible, isSimple };
+      });
+
+      // Draw edges: grouped into 3 paths (one per colour) so 6,720 edges cost 3 strokes
+      if (edgeOp > 0.005) {
+        ctx.lineWidth = 1.0 * devicePixelRatio;
+        const groups = { INT: new Path2D(), SPIN: new Path2D(), MIX: new Path2D() };
+        for (let k = 0; k < edges.length; k++) {
+          const [i, j] = edges[k];
+          const a = proj[i], b = proj[j];
+          if (!a.visible || !b.visible) continue;
+          const g = a.type === b.type ? groups[a.type] : groups.MIX;
+          g.moveTo(a.sx, a.sy);
+          g.lineTo(b.sx, b.sy);
+        }
+        ctx.strokeStyle = `rgba(56, 189, 248, ${edgeOp * 0.55})`;  ctx.stroke(groups.INT);
+        ctx.strokeStyle = `rgba(192, 132, 252, ${edgeOp * 0.55})`; ctx.stroke(groups.SPIN);
+        ctx.strokeStyle = `rgba(52, 211, 153, ${edgeOp * 0.42})`;  ctx.stroke(groups.MIX);
+      }
+
+      // Sort & draw vertices
+      const order = proj.map((p, i) => ({ p, i })).sort((a, b) => a.p.z - b.p.z);
+      for (const { p } of order) {
+        if (!p.visible) continue;
+        const rad = (p.isSimple ? 6.2 : 3.4) * devicePixelRatio * Math.max(0.7, p.persp);
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, rad, 0, Math.PI * 2);
+        if (p.isSimple) {
+          ctx.fillStyle = pal.star;
+          ctx.shadowColor = pal.star;
+          ctx.shadowBlur = 12 * devicePixelRatio;
+        } else {
+          ctx.fillStyle = p.type === 'INT' ? pal.c1 : pal.c2;
+          ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    } else if (mode === '5DPOLY') {
+      const { verts, edges } = build5DPolytope(poly5Type);
+      const aXW = Number(document.getElementById('sl5XW').value) / 100 + (autoDrift ? time * 0.55 : 0);
+      const aXV = Number(document.getElementById('sl5XV').value) / 100 + (autoDrift ? time * 0.42 : 0);
+      const aWV = Number(document.getElementById('sl5WV').value) / 100 + (autoDrift ? time * 0.31 : 0);
+
+      const proj = verts.map((raw, idx) => {
+        const v = raw.slice();
+        rotPlane(v, 0, 3, aXW);
+        rotPlane(v, 0, 4, aXV);
+        rotPlane(v, 3, 4, aWV);
+        rotPlane(v, 1, 3, aXW * 0.4);
+
+        // Perspective 5D -> 4D -> 3D
+        const d5 = 3.2 / (3.2 - v[4] * 0.55);
+        const x4 = v[0] * d5, y4 = v[1] * d5, z4 = v[2] * d5, w4 = v[3] * d5;
+        const d4 = 3.2 / (3.2 - w4 * 0.55);
+        const p = project3Dto2D(x4 * d4 * 0.85, y4 * d4 * 0.85, z4 * d4 * 0.85, baseScale);
+        const in4DCell = highlight4DCell && poly5Type === 'PENTERACT' && raw[4] > 0;
+        return { ...p, w5: v[4], in4DCell };
+      });
+
+      // Edges
+      for (const [i, j] of edges) {
+        const a = proj[i], b = proj[j];
+        const cellEdge = a.in4DCell && b.in4DCell;
+        ctx.lineWidth = (cellEdge ? 2.4 : 1.35) * devicePixelRatio;
+        ctx.strokeStyle = cellEdge ? pal.star : 'rgba(103, 232, 249, 0.42)';
+        ctx.beginPath();
+        ctx.moveTo(a.sx, a.sy);
+        ctx.lineTo(b.sx, b.sy);
+        ctx.stroke();
+      }
+
+      // Vertices
+      proj.forEach(p => {
+        const rad = (p.in4DCell ? 5.2 : 3.8) * devicePixelRatio * Math.max(0.75, p.persp);
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, rad, 0, Math.PI * 2);
+        ctx.fillStyle = p.in4DCell ? pal.star : (p.w5 >= 0 ? pal.c1 : pal.c2);
+        ctx.fill();
+      });
+    } else if (mode === '5DKNOT') {
+      const liftV = Number(document.getElementById('slLift5').value) / 100;
+      const aXW = Number(document.getElementById('slKnotXW').value) / 100 + (autoDrift ? time * 0.45 : 0);
+
+      const to2D = v5 => {
+        const v = v5.slice();
+        rotPlane(v, 0, 3, aXW);
+        rotPlane(v, 2, 4, aXW * 0.75);
+        rotPlane(v, 1, 2, 0.45);
+        // Project 5D -> 3D
+        const px = v[0] + 0.55 * v[3];
+        const py = v[1] + 0.45 * v[4];
+        const pz = v[2] - 0.45 * v[3] + 0.55 * v[4];
+        return project3Dto2D(px, py, pz, baseScale * 0.85);
+      };
+
+      const gridN = 22;
+      const drawSheet = (isB) => {
+        ctx.lineWidth = 1.2 * devicePixelRatio;
+        for (let i = 0; i <= gridN; i++) {
+          const u = ((i / gridN) * 2 - 1) * 1.35;
+          ctx.beginPath();
+          for (let j = 0; j <= gridN; j++) {
+            const s = ((j / gridN) * 2 - 1) * 1.35;
+            const p = to2D(sheetPoint(isB, u, s, liftV));
+            if (j === 0) ctx.moveTo(p.sx, p.sy);
+            else ctx.lineTo(p.sx, p.sy);
+          }
+          ctx.strokeStyle = isB ? 'rgba(192, 132, 252, 0.62)' : 'rgba(56, 189, 248, 0.62)';
+          ctx.stroke();
+        }
+      };
+      drawSheet(false);
+      drawSheet(true);
+
+      // Markers: the centre of each sheet. At v = 0 they are the same point (the crossing).
+      const pA = to2D(sheetPoint(false, 0, 0, liftV));
+      const pB = to2D(sheetPoint(true, 0, 0, liftV));
+
+      ctx.setLineDash([5 * devicePixelRatio, 5 * devicePixelRatio]);
+      ctx.strokeStyle = liftV < 0.08 ? '#fb7185' : pal.star;
+      ctx.lineWidth = 2 * devicePixelRatio;
+      ctx.beginPath();
+      ctx.moveTo(pA.sx, pA.sy);
+      ctx.lineTo(pB.sx, pB.sy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      [pA, pB].forEach(pt => {
+        ctx.beginPath();
+        ctx.arc(pt.sx, pt.sy, 5.5 * devicePixelRatio, 0, Math.PI * 2);
+        ctx.fillStyle = liftV < 0.08 ? '#fb7185' : pal.star;
+        ctx.fill();
+      });
+    }
+
+    // Apply eye-comfort brightness once to the finished frame.
+    if (Math.abs(bright - 1) > 0.005) {
+      ctx.filter = `brightness(${bright})`;
+      ctx.drawImage(canvas, 0, 0);
+      ctx.filter = 'none';
+    }
+
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end 5D Penteract & 8D E₈ Root System Studio v2 -->
+<!-- 24D Leech Lattice Projection Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 24: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-leech" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-leech">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>24D Leech Lattice Projection Studio v2</title>
+<style>
+  :root {
+    --bg: #070913;
+    --panel: rgba(14, 18, 34, 0.86);
+    --border: rgba(130, 160, 255, 0.22);
+    --text: #e6ecff;
+    --muted: #93a1c8;
+    --accent: #7aa2ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+  .hud {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 350px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    transition: opacity 0.25s ease;
+  }
+  .hud.hidden { opacity: 0; pointer-events: none; }
+  h1 { font-size: 1.05rem; font-weight: 650; margin-bottom: 4px; letter-spacing: 0.01em; }
+  .sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+  .row { margin-bottom: 11px; }
+  label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  label span { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 11px; }
+  button {
+    background: rgba(122, 162, 255, 0.14);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover { background: rgba(122, 162, 255, 0.28); }
+  button.active {
+    background: rgba(122, 162, 255, 0.36);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 0.74rem;
+    background: rgba(0,0,0,0.28);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 10px;
+  }
+  .stats div span { display: block; color: var(--muted); font-size: 0.68rem; }
+  .note { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+  .toggle-ui {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button class="toggle-ui" id="hideBtn">Hide UI</button>
+<div class="hud" id="hud">
+  <h1>24D Leech Lattice (&Lambda;<sub>24</sub>)</h1>
+  <div class="sub">All 196,560 shortest vectors, built here from the 24-bit Golay code and projected from &Ropf;<sup>24</sup> to your screen. Every dot is a real vector.</div>
+  <div class="btns" id="shellBtns">
+    <button class="active" data-shell="all">All Shells</button>
+    <button data-shell="0"><span class="dot" id="d0"></span>(±4)² 0²² · 1,104</button>
+    <button data-shell="1"><span class="dot" id="d1"></span>Octads (±2)⁸ · 97,152</button>
+    <button data-shell="2"><span class="dot" id="d2"></span>(∓3)(±1)²³ · 98,304</button>
+  </div>
+  <div class="row">
+    <label>Tilt Out of the 23-Fold Plane <span id="tiltVal">0.00 rad</span></label>
+    <input type="range" id="tilt" min="0" max="1.57" step="0.01" value="0" />
+  </div>
+  <div class="row">
+    <label>Symmetry Frequency <span id="freqVal">1</span></label>
+    <input type="range" id="freq" min="1" max="11" step="1" value="1" />
+  </div>
+  <div class="row">
+    <label>Glow <span id="glowVal">1.50</span></label>
+    <input type="range" id="glow" min="0.2" max="4" step="0.05" value="1.5" />
+  </div>
+  <div class="row">
+    <label>Eye Comfort Brightness <span id="brightVal">85%</span></label>
+    <input type="range" id="bright" min="0.25" max="1.2" step="0.05" value="0.85" />
+  </div>
+  <div class="btns">
+    <button id="pauseBtn">Pause Spin</button>
+    <button id="paletteBtn">Palette: Aurora</button>
+  </div>
+  <div class="stats">
+    <div><span>Shortest Vectors (counted)</span><strong id="sTotal">…</strong></div>
+    <div><span>Golay Codewords</span><strong id="sCode">…</strong></div>
+    <div><span>Octads (Weight 8)</span><strong id="sOct">…</strong></div>
+    <div><span>Dodecads (Weight 12)</span><strong id="sDod">…</strong></div>
+    <div><span>All Same Length?</span><strong id="sNorm">…</strong></div>
+    <div><span>Roots (length √2)</span><strong>0 — none</strong></div>
+  </div>
+  <div class="note">
+    <b>How it's built:</b> the Golay code is spanned by the 23 shifts of the quadratic-residue pattern mod 23, plus a parity bit and the all-ones word. Coordinates are scaled by √8, so every shortest vector has squared length 32 here (4 in the usual scale).<br><br>
+    <b>Why 23-fold:</b> shifting coordinates 0…22 around a circle is a symmetry of this code, so the picture repeats 23 times around the centre. The Leech lattice has no roots, so it has no Coxeter plane; this 23-fold view is a real symmetry instead.<br><br>
+    <b>History:</b> Leech found the lattice in 1965 via the Golay code (1949). It can also be built from three copies of E₈ (a Turyn-style construction), which is not drawn here.
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.width = Math.round(window.innerWidth * devicePixelRatio);
+  H = canvas.height = Math.round(window.innerHeight * devicePixelRatio);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------- 1. The extended Golay code (24 bits, 4096 codewords) ----------
+const Q = [];
+for (let i = 1; i < 23; i++) { const r = (i * i) % 23; if (!Q.includes(r)) Q.push(r); }
+const gens = [];
+for (let s = 0; s < 23; s++) {
+  let w = 0;
+  for (const x of Q) w |= 1 << ((x + s) % 23);
+  w |= 1 << 23;               // parity bit at position 23 ("infinity"): pattern has 11 ones
+  gens.push(w >>> 0);
+}
+gens.push(0xFFFFFF);          // all-ones word
+const basis = [];
+for (const g of gens) {
+  let v = g;
+  for (const b of basis) v = Math.min(v, (v ^ b) >>> 0);
+  if (v) { basis.push(v); basis.sort((a, b) => b - a); }
+}
+let code = [0];
+for (const b of basis) code = code.concat(code.map(c => (c ^ b) >>> 0));
+const popcount = x => { let n = 0; while (x) { n += x & 1; x >>>= 1; } return n; };
+const weights = code.map(popcount);
+const octads = code.filter((c, i) => weights[i] === 8);
+const dodecads = code.filter((c, i) => weights[i] === 12).length;
+
+// ---------- 2. The 196,560 shortest Leech vectors (scaled by sqrt 8) ----------
+const N = 1104 + octads.length * 128 + code.length * 24;
+const vecs = new Int8Array(N * 24);
+const shellOf = new Uint8Array(N);
+let n = 0;
+function put(v, shell) { vecs.set(v, n * 24); shellOf[n] = shell; n++; }
+// (a) (±4, ±4, 0^22)
+for (let i = 0; i < 24; i++) for (let j = i + 1; j < 24; j++)
+  for (const a of [-4, 4]) for (const b of [-4, 4]) {
+    const v = new Int8Array(24); v[i] = a; v[j] = b; put(v, 0);
+  }
+// (b) (±2)^8 on an octad, even number of minus signs
+for (const o of octads) {
+  const idx = [];
+  for (let j = 0; j < 24; j++) if ((o >>> j) & 1) idx.push(j);
+  for (let m = 0; m < 256; m++) {
+    if (popcount(m) % 2) continue;
+    const v = new Int8Array(24);
+    for (let k = 0; k < 8; k++) v[idx[k]] = ((m >> k) & 1) ? -2 : 2;
+    put(v, 1);
+  }
+}
+// (c) (-3, 1^23) with the -3 anywhere, then signs flipped on a Golay codeword
+for (let i = 0; i < 24; i++) for (const c of code) {
+  const v = new Int8Array(24);
+  for (let j = 0; j < 24; j++) {
+    const base = j === i ? -3 : 1;
+    v[j] = ((c >>> j) & 1) ? -base : base;
+  }
+  put(v, 2);
+}
+let allNorm32 = true;
+for (let k = 0; k < N && allNorm32; k++) {
+  let s = 0;
+  for (let j = 0; j < 24; j++) { const x = vecs[k * 24 + j]; s += x * x; }
+  if (s !== 32) allNorm32 = false;
+}
+document.getElementById('sTotal').textContent = N.toLocaleString();
+document.getElementById('sCode').textContent = code.length.toLocaleString() + ' (2¹²)';
+document.getElementById('sOct').textContent = octads.length.toLocaleString();
+document.getElementById('sDod').textContent = dodecads.toLocaleString();
+document.getElementById('sNorm').textContent = allNorm32 ? 'Yes (32)' : 'No';
+window.__check = { codewords: code.length, octads: octads.length, dodecads, vectors: N, allNorm32 };
+
+// ---------- 3. Projection planes from the 23-fold symmetry ----------
+let freq = 1;
+const PX = new Float32Array(N), PY = new Float32Array(N), PZ = new Float32Array(N);
+function buildProjection() {
+  const cx = new Float32Array(24), cy = new Float32Array(24), cz = new Float32Array(24);
+  const f2 = (freq * 5) % 23 || 2;   // a second frequency for depth
+  for (let j = 0; j < 23; j++) {
+    cx[j] = Math.cos(2 * Math.PI * freq * j / 23);
+    cy[j] = Math.sin(2 * Math.PI * freq * j / 23);
+    cz[j] = Math.cos(2 * Math.PI * f2 * j / 23);
+  }
+  cz[23] = 1;                         // the fixed coordinate goes into depth only
+  const sc = 1 / Math.sqrt(23 / 2 * 32);
+  for (let k = 0; k < N; k++) {
+    let x = 0, y = 0, z = 0;
+    const o = k * 24;
+    for (let j = 0; j < 24; j++) { const v = vecs[o + j]; x += v * cx[j]; y += v * cy[j]; z += v * cz[j]; }
+    PX[k] = x * sc; PY[k] = y * sc; PZ[k] = z * sc;
+  }
+}
+buildProjection();
+
+// ---------- 4. UI ----------
+let shell = 'all', tilt = 0, glow = 1.5, bright = 0.85, spinning = true, spin = 0;
+let dragging = false, lastX = 0, zoom = 1;
+const palettes = [
+  { name: 'Aurora',   c: [[255, 214, 102], [110, 240, 200], [110, 150, 255]] },
+  { name: 'Twilight', c: [[255, 120, 190], [190, 110, 255], [90, 200, 255]] },
+  { name: 'Amber',    c: [[255, 240, 180], [255, 150, 60], [255, 90, 90]] }
+];
+let palIdx = 0;
+function paintDots() {
+  for (let s = 0; s < 3; s++) document.getElementById('d' + s).style.background = `rgb(${palettes[palIdx].c[s].join(',')})`;
+}
+paintDots();
+
+document.querySelectorAll('#shellBtns button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#shellBtns button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); shell = b.dataset.shell;
+});
+document.getElementById('tilt').oninput = e => { tilt = +e.target.value; document.getElementById('tiltVal').textContent = tilt.toFixed(2) + ' rad'; };
+document.getElementById('freq').oninput = e => { freq = +e.target.value; document.getElementById('freqVal').textContent = freq; buildProjection(); };
+document.getElementById('glow').oninput = e => { glow = +e.target.value; document.getElementById('glowVal').textContent = glow.toFixed(2); };
+document.getElementById('bright').oninput = e => { bright = +e.target.value; document.getElementById('brightVal').textContent = Math.round(bright * 100) + '%'; };
+document.getElementById('pauseBtn').onclick = e => { spinning = !spinning; e.target.textContent = spinning ? 'Pause Spin' : 'Resume Spin'; };
+document.getElementById('paletteBtn').onclick = e => {
+  palIdx = (palIdx + 1) % palettes.length; e.target.textContent = 'Palette: ' + palettes[palIdx].name; paintDots();
+};
+document.getElementById('hideBtn').onclick = e => {
+  const hud = document.getElementById('hud');
+  hud.classList.toggle('hidden');
+  e.target.textContent = hud.classList.contains('hidden') ? 'Show UI' : 'Hide UI';
+};
+canvas.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; });
+window.addEventListener('pointerup', () => dragging = false);
+window.addEventListener('pointermove', e => { if (dragging) { spin += (e.clientX - lastX) * 0.006; lastX = e.clientX; } });
+canvas.addEventListener('wheel', e => { zoom = Math.max(0.5, Math.min(3, zoom * (e.deltaY > 0 ? 0.93 : 1.07))); }, { passive: true });
+
+// ---------- 5. Render: every vector is splatted into a glow buffer ----------
+const S = 760;                                   // square buffer, scaled to screen
+const off = document.createElement('canvas'); off.width = off.height = S;
+const offCtx = off.getContext('2d');
+const img = offCtx.createImageData(S, S);
+const acc = new Float32Array(S * S * 3);
+
+function render() {
+  if (spinning && !dragging) spin += 0.003;
+  acc.fill(0);
+  const pal = palettes[palIdx].c;
+  const cs = Math.cos(spin), sn = Math.sin(spin), ct = Math.cos(tilt), st = Math.sin(tilt);
+  const scale = S * 0.8 * zoom;
+  const want = shell === 'all' ? -1 : +shell;
+  const wgt = [1.4, 0.3, 0.3];               // big shells are dense, so each dot is fainter
+  for (let k = 0; k < N; k++) {
+    const sh = shellOf[k];
+    if (want >= 0 && sh !== want) continue;
+    const x0 = PX[k] * cs - PY[k] * sn;
+    const y0 = PX[k] * sn + PY[k] * cs;
+    const y = y0 * ct - PZ[k] * st;
+    const px = (S / 2 + x0 * scale) | 0, py = (S / 2 + y * scale) | 0;
+    if (px < 0 || py < 0 || px >= S || py >= S) continue;
+    const a = (py * S + px) * 3, w = wgt[sh] * (want >= 0 ? 3 : 1), c = pal[sh];
+    acc[a] += c[0] * w; acc[a + 1] += c[1] * w; acc[a + 2] += c[2] * w;
+  }
+  const d = img.data, g = glow * bright / 255;
+  for (let i = 0, p = 0; i < S * S; i++, p += 3) {
+    d[i * 4]     = 7 + 248 * (1 - Math.exp(-acc[p] * g));
+    d[i * 4 + 1] = 9 + 246 * (1 - Math.exp(-acc[p + 1] * g));
+    d[i * 4 + 2] = 19 + 236 * (1 - Math.exp(-acc[p + 2] * g));
+    d[i * 4 + 3] = 255;
+  }
+  offCtx.putImageData(img, 0, 0);
+  ctx.fillStyle = '#070913';
+  ctx.fillRect(0, 0, W, H);
+  const side = Math.min(W, H) * 0.98;
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(off, (W - side) / 2, (H - side) / 2, side, side);
+  requestAnimationFrame(render);
+}
+render();
+</script>
+</body>
+</html>
+</template>
+<!-- end 24D Leech Lattice Projection Studio v2 -->
+<!-- 5D Penteract & 8D E8 Root System Explorer (Lite) — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 25: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-pentlite" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-pentlite">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>5D Penteract &amp; 8D E8 Root System Explorer (Lite)</title>
+<style>
+  :root {
+    --bg: #080b16;
+    --panel: rgba(15, 20, 38, 0.88);
+    --border: rgba(125, 175, 255, 0.24);
+    --text: #eaf0ff;
+    --muted: #95a4cc;
+    --accent: #6ee7b7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .hud {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 345px;
+    max-width: calc(100vw - 32px);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    transition: opacity 0.25s ease;
+  }
+  .hud.hidden { opacity: 0; pointer-events: none; }
+  h1 { font-size: 1.04rem; font-weight: 650; margin-bottom: 4px; }
+  .sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; line-height: 1.35; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 11px; }
+  button {
+    background: rgba(110, 231, 183, 0.12);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.76rem;
+    cursor: pointer;
+  }
+  button:hover { background: rgba(110, 231, 183, 0.24); }
+  button.active {
+    background: rgba(110, 231, 183, 0.32);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .row { margin-bottom: 10px; }
+  label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  label span { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  .toggle-ui { position: fixed; top: 16px; right: 16px; z-index: 20; }
+  .info {
+    font-size: 0.74rem;
+    color: var(--muted);
+    background: rgba(0,0,0,0.28);
+    padding: 8px 10px;
+    border-radius: 8px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button class="toggle-ui" id="hideBtn">Hide UI</button>
+<div class="hud" id="hud">
+  <h1>5D Penteract &amp; 8D E<sub>8</sub> Explorer</h1>
+  <div class="sub">Zero-lag projection studio: explore the 240 roots of E<sub>8</sub> or watch 4D surface collisions untie in 5D (2 + 2 &lt; 5).</div>
+  <div class="btns" id="tabBtns">
+    <button class="active" data-tab="e8">8D E<sub>8</sub> Mandala (240)</button>
+    <button data-tab="penteract">5D Penteract (32)</button>
+    <button data-tab="unknot">5D Unknotting (2+2&lt;5)</button>
+  </div>
+  <div id="e8Controls">
+    <div class="btns" id="e8Filter">
+      <button class="active" data-f="all">All 240 Roots</button>
+      <button data-f="int">112 Integer</button>
+      <button data-f="spin">128 Spinor</button>
+    </div>
+    <div class="row">
+      <label>8D Hyperplane Tilt <span id="tiltVal">0.40 rad</span></label>
+      <input type="range" id="tilt8" min="0" max="1.57" step="0.01" value="0.40" />
+    </div>
+  </div>
+  <div id="fiveControls" style="display:none;">
+    <div class="row">
+      <label>4th Dimension (XW) <span id="xwVal">0.45 rad</span></label>
+      <input type="range" id="xw" min="-3.14" max="3.14" step="0.01" value="0.45" />
+    </div>
+    <div class="row">
+      <label>5th Dimension Lift (V) <span id="vVal">0.65</span></label>
+      <input type="range" id="vlift" min="0" max="1.5" step="0.01" value="0.65" />
+    </div>
+  </div>
+  <div class="row">
+    <label>Eye Comfort Brightness <span id="brightVal">85%</span></label>
+    <input type="range" id="bright" min="0.25" max="1.2" step="0.05" value="0.85" />
+  </div>
+  <div class="btns">
+    <button id="pauseBtn">Pause</button>
+    <button id="edgeBtn" class="active">Edges: On</button>
+  </div>
+  <div class="info" id="infoBox">
+    <strong>E<sub>8</sub> Root Lattice:</strong> 112 integer roots (&plusmn;1, &plusmn;1, 0<sup>6</sup>) + 128 even-parity Hamming spinor roots (&plusmn;&frac12;<sup>8</sup>) = 240 minimal vectors arranged in 8 concentric 30-fold Coxeter rings.
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth * devicePixelRatio;
+  H = canvas.height = window.innerHeight * devicePixelRatio;
+}
+window.addEventListener('resize', resize);
+resize();
+
+let tab = 'e8';
+let e8Filter = 'all';
+let tilt8 = 0.40;
+let xw = 0.45;
+let vlift = 0.65;
+let bright = 0.85;
+let paused = false;
+let showEdges = true;
+let rotX = 0.35, rotY = 0.4, zoom = 1.0;
+let dragging = false, lastX = 0, lastY = 0;
+
+// Precompute 240 E8 roots once
+const e8Roots = [];
+(function initE8() {
+  // 112 integer roots
+  for (let i = 0; i < 8; i++) {
+    for (let j = i + 1; j < 8; j++) {
+      for (const s1 of [-1, 1]) {
+        for (const s2 of [-1, 1]) {
+          const v = new Array(8).fill(0);
+          v[i] = s1; v[j] = s2;
+          e8Roots.push({ v, kind: 'int' });
+        }
+      }
+    }
+  }
+  // 128 spinor roots (even number of minus signs)
+  for (let mask = 0; mask < 256; mask++) {
+    let neg = 0;
+    const v = new Array(8);
+    for (let b = 0; b < 8; b++) {
+      if ((mask >> b) & 1) { v[b] = -0.5; neg++; } else { v[b] = 0.5; }
+    }
+    if (neg % 2 === 0) e8Roots.push({ v, kind: 'spin' });
+  }
+})();
+
+// Precompute 5D Penteract (32 vertices, 80 edges)
+const pVerts = [];
+const pEdges = [];
+for (let m = 0; m < 32; m++) {
+  pVerts.push([
+    (m & 1) ? 1 : -1,
+    (m & 2) ? 1 : -1,
+    (m & 4) ? 1 : -1,
+    (m & 8) ? 1 : -1,
+    (m & 16) ? 1 : -1
+  ]);
+}
+for (let i = 0; i < 32; i++) {
+  for (let b = 0; b < 5; b++) {
+    const j = i ^ (1 << b);
+    if (i < j) pEdges.push([i, j]);
+  }
+}
+
+canvas.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('pointerup', () => dragging = false);
+window.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastX) * 0.006;
+  rotX += (e.clientY - lastY) * 0.006;
+  lastX = e.clientX; lastY = e.clientY;
+});
+canvas.addEventListener('wheel', e => {
+  zoom = Math.max(0.45, Math.min(2.4, zoom * (e.deltaY > 0 ? 0.93 : 1.07)));
+}, { passive: true });
+
+document.querySelectorAll('#tabBtns button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabBtns button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); tab = b.dataset.tab;
+  document.getElementById('e8Controls').style.display = tab === 'e8' ? 'block' : 'none';
+  document.getElementById('fiveControls').style.display = tab === 'e8' ? 'none' : 'block';
+  const info = document.getElementById('infoBox');
+  if (tab === 'e8') {
+    info.innerHTML = '<strong>E<sub>8</sub> Root Lattice:</strong> 112 integer roots (&plusmn;1, &plusmn;1, 0<sup>6</sup>) + 128 even-parity Hamming spinor roots (&plusmn;&frac12;<sup>8</sup>) = 240 minimal vectors arranged in 8 concentric 30-fold Coxeter rings.';
+  } else if (tab === 'penteract') {
+    info.innerHTML = '<strong>5D Penteract:</strong> 32 vertices, 80 edges, 80 square faces, 40 cubes, and 10 tesseract hyper-cells obeying your <code>HypercubeIso</code> bound.';
+  } else {
+    info.innerHTML = '<strong>5D Surface Unknotting (2 + 2 &lt; 5):</strong> Two 2D sheets that collide in 4D separate cleanly along the 5th coordinate <em>v</em> without ever intersecting.';
+  }
+});
+document.querySelectorAll('#e8Filter button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#e8Filter button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); e8Filter = b.dataset.f;
+});
+document.getElementById('tilt8').oninput = e => {
+  tilt8 = parseFloat(e.target.value);
+  document.getElementById('tiltVal').textContent = tilt8.toFixed(2) + ' rad';
+};
+document.getElementById('xw').oninput = e => {
+  xw = parseFloat(e.target.value);
+  document.getElementById('xwVal').textContent = xw.toFixed(2) + ' rad';
+};
+document.getElementById('vlift').oninput = e => {
+  vlift = parseFloat(e.target.value);
+  document.getElementById('vVal').textContent = vlift.toFixed(2);
+};
+document.getElementById('bright').oninput = e => {
+  bright = parseFloat(e.target.value);
+  document.getElementById('brightVal').textContent = Math.round(bright * 100) + '%';
+};
+document.getElementById('pauseBtn').onclick = e => {
+  paused = !paused; e.target.textContent = paused ? 'Resume' : 'Pause';
+};
+document.getElementById('edgeBtn').onclick = e => {
+  showEdges = !showEdges; e.target.classList.toggle('active', showEdges);
+  e.target.textContent = 'Edges: ' + (showEdges ? 'On' : 'Off');
+};
+document.getElementById('hideBtn').onclick = e => {
+  const hud = document.getElementById('hud');
+  hud.classList.toggle('hidden');
+  e.target.textContent = hud.classList.contains('hidden') ? 'Show UI' : 'Hide UI';
+};
+
+// Coxeter plane basis vectors for 30-fold E8 symmetry
+const coxA = [0.511, 0.301, 0.195, 0.118, -0.118, -0.195, -0.301, -0.511];
+const coxB = [0.158, -0.422, 0.486, -0.251, -0.251, 0.486, -0.422, 0.158];
+
+function proj3D(x, y, z, cx, cy, scale) {
+  const cy1 = Math.cos(rotY), sy1 = Math.sin(rotY);
+  const x1 = x * cy1 - z * sy1;
+  const z1 = x * sy1 + z * cy1;
+  const cx1 = Math.cos(rotX), sx1 = Math.sin(rotX);
+  const y2 = y * cx1 - z1 * sx1;
+  const z2 = y * sx1 + z1 * cx1;
+  const p = 2.2 / (2.5 + z2);
+  return { x: cx + x1 * scale * p, y: cy + y2 * scale * p, z: z2 };
+}
+
+let t = 0;
+function render() {
+  if (!paused) t += 0.01;
+  ctx.fillStyle = '#080b16';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = Math.min(1, bright);
+
+  const cx = W * 0.5, cy = H * 0.5;
+  const scale = Math.min(W, H) * 0.36 * zoom;
+
+  if (tab === 'e8') {
+    const pts = [];
+    for (let i = 0; i < e8Roots.length; i++) {
+      const r = e8Roots[i];
+      if (e8Filter !== 'all' && r.kind !== e8Filter) continue;
+      let u = 0, v = 0, w = 0;
+      for (let d = 0; d < 8; d++) {
+        const ang = (d * Math.PI) / 15 + t * 0.25;
+        u += r.v[d] * (coxA[d] * Math.cos(tilt8) + Math.cos(ang) * 0.36 * Math.sin(tilt8));
+        v += r.v[d] * (coxB[d] * Math.cos(tilt8) + Math.sin(ang) * 0.36 * Math.sin(tilt8));
+        w += r.v[d] * Math.sin(d * 0.9 + t * 0.4) * 0.32 * Math.sin(tilt8);
+      }
+      pts.push({ ...proj3D(u * 1.15, v * 1.15, w, cx, cy, scale), kind: r.kind });
+    }
+    if (showEdges) {
+      ctx.strokeStyle = 'rgba(110, 231, 183, 0.14)';
+      ctx.lineWidth = 1 * devicePixelRatio;
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        ctx.moveTo(pts[i].x, pts[i].y);
+        ctx.lineTo(pts[j].x, pts[j].y);
+      }
+      ctx.stroke();
+    }
+    for (const p of pts) {
+      ctx.fillStyle = p.kind === 'int' ? '#6ee7b7' : '#7aa2ff';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, (p.kind === 'int' ? 3.2 : 2.7) * devicePixelRatio, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (tab === 'penteract') {
+    const pts = pVerts.map(v => {
+      const a4 = xw + t * 0.45;
+      const a5 = vlift + t * 0.32;
+      const x1 = v[0] * Math.cos(a4) - v[3] * Math.sin(a4);
+      const w1 = v[0] * Math.sin(a4) + v[3] * Math.cos(a4);
+      const y1 = v[1] * Math.cos(a5) - v[4] * Math.sin(a5);
+      const v1 = v[1] * Math.sin(a5) + v[4] * Math.cos(a5);
+      const p4 = 1.8 / (2.4 + w1 * 0.45);
+      const p5 = 1.8 / (2.4 + v1 * 0.45);
+      return { ...proj3D(x1 * p4 * p5 * 0.85, y1 * p4 * p5 * 0.85, v[2] * p4 * p5 * 0.85, cx, cy, scale), w: w1, v: v1 };
+    });
+    if (showEdges) {
+      ctx.strokeStyle = 'rgba(125, 185, 255, 0.38)';
+      ctx.lineWidth = 1.3 * devicePixelRatio;
+      ctx.beginPath();
+      for (const [i, j] of pEdges) {
+        ctx.moveTo(pts[i].x, pts[i].y);
+        ctx.lineTo(pts[j].x, pts[j].y);
+      }
+      ctx.stroke();
+    }
+    for (const p of pts) {
+      ctx.fillStyle = p.v > 0 ? '#6ee7b7' : '#93c5fd';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3.6 * devicePixelRatio, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    // 5D Surface Unknotting: two 2D sheets separated along 5th coordinate v
+    const grid = 14;
+    for (let sheet = 0; sheet < 2; sheet++) {
+      ctx.strokeStyle = sheet === 0 ? 'rgba(110, 231, 183, 0.55)' : 'rgba(122, 162, 255, 0.55)';
+      ctx.lineWidth = 1.2 * devicePixelRatio;
+      const vOffset = (sheet === 0 ? -1 : 1) * vlift * 0.55;
+      for (let i = 0; i <= grid; i++) {
+        ctx.beginPath();
+        for (let j = 0; j <= grid; j++) {
+          const u = (i / grid - 0.5) * 1.5;
+          const s = (j / grid - 0.5) * 1.5;
+          const x = sheet === 0 ? u : s * Math.cos(xw) - vOffset * Math.sin(xw);
+          const y = sheet === 0 ? s : u;
+          const z = (sheet === 0 ? 1 : -1) * 0.25 * Math.sin(u * 2 + t) * Math.cos(s * 2) + vOffset * 0.65;
+          const p = proj3D(x, y, z, cx, cy, scale);
+          if (j === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+      }
+    }
+  }
+
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(render);
+}
+render();
+</script>
+</body>
+</html></template>
+<!-- end 5D Penteract & 8D E8 Root System Explorer (Lite) -->
+<!-- 4D Hopf Fibration Studio v2 (S³ → S²) — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 26: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-hopf" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-hopf">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>4D Hopf Fibration Studio v2 (S³ → S²)</title>
+<style>
+  :root {
+    --bg: #070913;
+    --panel: rgba(14, 18, 36, 0.86);
+    --border: rgba(130, 160, 255, 0.22);
+    --text: #e9eeff;
+    --muted: #98a6d4;
+    --accent: #6ce5ff;
+    --accent2: #b97aff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+  }
+  #mainCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  #mainCanvas:active { cursor: grabbing; }
+
+  #hud {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 315px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+    z-index: 10;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #hud.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-16px);
+  }
+  h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .section {
+    margin-bottom: 13px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  button {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.16s ease;
+  }
+  button:hover {
+    background: rgba(108, 229, 255, 0.16);
+    border-color: var(--accent);
+  }
+  button.active {
+    background: linear-gradient(135deg, rgba(108,229,255,0.28), rgba(185,122,255,0.28));
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .control-row {
+    margin-bottom: 9px;
+  }
+  .control-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .control-header span:last-child {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 5px;
+  }
+  .toggle-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .toggle-row button {
+    flex: 1 1 45%;
+  }
+
+  #sphereBox {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 220px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+    z-index: 10;
+    text-align: center;
+    transition: opacity 0.25s ease;
+  }
+  #sphereBox.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #sphereBox .box-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 2px;
+  }
+  #sphereBox .box-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  #baseSphere {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    cursor: crosshair;
+    display: block;
+    margin: 0 auto 8px auto;
+    background: radial-gradient(circle at 35% 30%, #1c284d, #090d1c 75%);
+    box-shadow: inset 0 0 18px rgba(108,229,255,0.22), 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .sphere-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .sphere-actions button {
+    flex: 1;
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+
+  #toggleHudBtn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 7px 11px;
+    font-size: 11.5px;
+  }
+  #statsBadge {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="mainCanvas"></canvas>
+
+<button id="toggleHudBtn" title="Toggle UI">👁 Hide UI</button>
+
+<div id="hud">
+  <h1>4D Hopf Fibration Studio</h1>
+  <div class="subtitle">True stereographic projection S³ → ℝ³. Every point on the base globe S² lifts to a circle in S³; any two of these circles are linked once, and in the projection each one is an exact circle (Villarceau circles on nested tori).</div>
+
+  <div class="section">
+    <div class="section-title">Fibration Presets</div>
+    <div class="preset-grid">
+      <button class="preset-btn active" data-preset="tori">Nested Tori</button>
+      <button class="preset-btn" data-preset="linked">Linked Pair</button>
+      <button class="preset-btn" data-preset="rose">4-Petal Rose</button>
+      <button class="preset-btn" data-preset="spiral">Polar Spiral</button>
+      <button class="preset-btn" data-preset="clifford">Clifford Ring</button>
+      <button class="preset-btn" data-preset="custom">Custom Paint</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">4D Hypersphere Rotation (S³)</div>
+    <div class="control-row">
+      <div class="control-header"><span>XW Plane Tilt</span><span id="xwVal">0.35 rad</span></div>
+      <input type="range" id="xwSlider" min="-3.14" max="3.14" step="0.01" value="0.35" />
+    </div>
+    <div class="control-row">
+      <div class="control-header"><span>YW Plane Tilt</span><span id="ywVal">0.20 rad</span></div>
+      <input type="range" id="ywSlider" min="-3.14" max="3.14" step="0.01" value="0.20" />
+    </div>
+    <div class="control-row">
+      <div class="control-header"><span>ZW Plane Tilt</span><span id="zwVal">0.00 rad</span></div>
+      <input type="range" id="zwSlider" min="-3.14" max="3.14" step="0.01" value="0.00" />
+    </div>
+    <div class="toggle-row">
+      <button id="driftBtn" class="active">✦ 4D Drift: On</button>
+      <button id="beadsBtn" class="active">● Phase Beads: On</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Structure & Appearance</div>
+    <div class="control-row">
+      <div class="control-header"><span>Fiber Density</span><span id="densityVal">72 fibers</span></div>
+      <input type="range" id="densitySlider" min="16" max="140" step="4" value="72" />
+    </div>
+    <div class="control-row">
+      <div class="control-header"><span>Eye Brightness</span><span id="brightVal">85%</span></div>
+      <input type="range" id="brightSlider" min="35" max="115" step="5" value="85" />
+    </div>
+    <div class="toggle-row">
+      <button id="polarBtn" class="active">│ Polar Axis: On</button>
+      <button id="linkSpotBtn">◎ Link Pair: Off</button>
+    </div>
+    <div class="toggle-row" style="margin-top:6px;">
+      <button id="paletteBtn">🎨 Palette: Aurora</button>
+      <button id="saveBtn">📷 Save Art</button>
+    </div>
+    <div id="statsBadge">72 linked Villarceau fibers active</div>
+  </div>
+</div>
+
+<div id="sphereBox">
+  <div class="box-title">Base Sphere (S²) Painter</div>
+  <div class="box-sub">Drag on globe to paint custom 4D fibers</div>
+  <canvas id="baseSphere" width="170" height="170"></canvas>
+  <div class="sphere-actions">
+    <button id="rotateGlobeBtn">↻ Spin S²</button>
+    <button id="clearPaintBtn">✕ Clear</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const mainCanvas = document.getElementById('mainCanvas');
+  const ctx = mainCanvas.getContext('2d');
+  const sphereCanvas = document.getElementById('baseSphere');
+  const sctx = sphereCanvas.getContext('2d');
+
+  let W = mainCanvas.width = window.innerWidth;
+  let H = mainCanvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    W = mainCanvas.width = window.innerWidth;
+    H = mainCanvas.height = window.innerHeight;
+  });
+
+  // State
+  let preset = 'tori';
+  let xw = 0.35, yw = 0.20, zw = 0.0;
+  let drift4D = true;
+  let showBeads = true;
+  let showPolar = true;
+  let linkSpotlight = false;
+  let fiberDensity = 72;
+  let brightness = 0.85;
+  let paletteIdx = 0;
+
+  // 3D Camera
+  let camYaw = 0.55, camPitch = 0.38, camZoom = 140;   // true stereographic circles are larger, so start further back
+  let isDraggingMain = false, lastMX = 0, lastMY = 0;
+
+  // Base Sphere S2 state
+  let globeYaw = 0.4;
+  let isPainting = false;
+  let customPoints = []; // array of {x, y, z, hue} on unit S2
+
+  const palettes = [
+    { name: 'Aurora', fn: (t, lat) => `hsla(${(175 + t * 140 + lat * 45) % 360}, 88%, ${56 * brightness}%,` },
+    { name: 'Solaris', fn: (t, lat) => `hsla(${(18 + t * 65 + lat * 35) % 360}, 92%, ${56 * brightness}%,` },
+    { name: 'Twilight', fn: (t, lat) => `hsla(${(245 + t * 95 + lat * 40) % 360}, 85%, ${60 * brightness}%,` },
+    { name: 'Emerald', fn: (t, lat) => `hsla(${(125 + t * 80 + lat * 30) % 360}, 82%, ${52 * brightness}%,` }
+  ];
+
+  // UI Elements
+  const xwSlider = document.getElementById('xwSlider');
+  const ywSlider = document.getElementById('ywSlider');
+  const zwSlider = document.getElementById('zwSlider');
+  const densitySlider = document.getElementById('densitySlider');
+  const brightSlider = document.getElementById('brightSlider');
+
+  xwSlider.oninput = () => { xw = parseFloat(xwSlider.value); document.getElementById('xwVal').textContent = xw.toFixed(2) + ' rad'; };
+  ywSlider.oninput = () => { yw = parseFloat(ywSlider.value); document.getElementById('ywVal').textContent = yw.toFixed(2) + ' rad'; };
+  zwSlider.oninput = () => { zw = parseFloat(zwSlider.value); document.getElementById('zwVal').textContent = zw.toFixed(2) + ' rad'; };
+  densitySlider.oninput = () => {
+    fiberDensity = parseInt(densitySlider.value, 10);
+    document.getElementById('densityVal').textContent = fiberDensity + ' fibers';
+    rebuildBasePoints();
+  };
+  brightSlider.oninput = () => {
+    brightness = parseInt(brightSlider.value, 10) / 100;
+    document.getElementById('brightVal').textContent = Math.round(brightness * 100) + '%';
+  };
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      preset = btn.dataset.preset;
+      if (preset === 'custom' && customPoints.length === 0) {
+        // Seed a friendly starter wave on S2
+        for (let i = 0; i < 40; i++) {
+          const a = (i / 40) * Math.PI * 2;
+          const theta = Math.PI * 0.48 + 0.25 * Math.sin(3 * a);
+          customPoints.push({
+            x: Math.sin(theta) * Math.cos(a),
+            y: Math.cos(theta),
+            z: Math.sin(theta) * Math.sin(a),
+            t: i / 40
+          });
+        }
+      }
+      rebuildBasePoints();
+    };
+  });
+
+  const driftBtn = document.getElementById('driftBtn');
+  driftBtn.onclick = () => {
+    drift4D = !drift4D;
+    driftBtn.textContent = drift4D ? '✦ 4D Drift: On' : '✦ 4D Drift: Off';
+    driftBtn.classList.toggle('active', drift4D);
+  };
+
+  const beadsBtn = document.getElementById('beadsBtn');
+  beadsBtn.onclick = () => {
+    showBeads = !showBeads;
+    beadsBtn.textContent = showBeads ? '● Phase Beads: On' : '● Phase Beads: Off';
+    beadsBtn.classList.toggle('active', showBeads);
+  };
+
+  const polarBtn = document.getElementById('polarBtn');
+  polarBtn.onclick = () => {
+    showPolar = !showPolar;
+    polarBtn.textContent = showPolar ? '│ Polar Axis: On' : '│ Polar Axis: Off';
+    polarBtn.classList.toggle('active', showPolar);
+  };
+
+  const linkSpotBtn = document.getElementById('linkSpotBtn');
+  linkSpotBtn.onclick = () => {
+    linkSpotlight = !linkSpotlight;
+    linkSpotBtn.textContent = linkSpotlight ? '◎ Link Pair: On' : '◎ Link Pair: Off';
+    linkSpotBtn.classList.toggle('active', linkSpotlight);
+  };
+
+  const paletteBtn = document.getElementById('paletteBtn');
+  paletteBtn.onclick = () => {
+    paletteIdx = (paletteIdx + 1) % palettes.length;
+    paletteBtn.textContent = '🎨 Palette: ' + palettes[paletteIdx].name;
+  };
+
+  document.getElementById('saveBtn').onclick = () => {
+    const link = document.createElement('a');
+    link.download = 'hopf-fibration-4d-art.png';
+    link.href = mainCanvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const toggleHudBtn = document.getElementById('toggleHudBtn');
+  toggleHudBtn.onclick = () => {
+    const hud = document.getElementById('hud');
+    const sbox = document.getElementById('sphereBox');
+    const hidden = hud.classList.toggle('hidden');
+    sbox.classList.toggle('hidden', hidden);
+    toggleHudBtn.textContent = hidden ? '👁 Show UI' : '👁 Hide UI';
+  };
+
+  // Main Canvas Orbit & Zoom
+  mainCanvas.addEventListener('mousedown', e => {
+    isDraggingMain = true;
+    lastMX = e.clientX;
+    lastMY = e.clientY;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDraggingMain) return;
+    const dx = e.clientX - lastMX;
+    const dy = e.clientY - lastMY;
+    lastMX = e.clientX;
+    lastMY = e.clientY;
+    camYaw += dx * 0.007;
+    camPitch = Math.max(-1.45, Math.min(1.45, camPitch + dy * 0.007));
+  });
+  window.addEventListener('mouseup', () => { isDraggingMain = false; });
+  mainCanvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    camZoom = Math.max(85, Math.min(480, camZoom - e.deltaY * 0.18));
+  }, { passive: false });
+
+  // Touch support for Main Canvas
+  mainCanvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      isDraggingMain = true;
+      lastMX = e.touches[0].clientX;
+      lastMY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+  mainCanvas.addEventListener('touchmove', e => {
+    if (!isDraggingMain || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - lastMX;
+    const dy = e.touches[0].clientY - lastMY;
+    lastMX = e.touches[0].clientX;
+    lastMY = e.touches[0].clientY;
+    camYaw += dx * 0.007;
+    camPitch = Math.max(-1.45, Math.min(1.45, camPitch + dy * 0.007));
+  }, { passive: true });
+  mainCanvas.addEventListener('touchend', () => { isDraggingMain = false; });
+
+  // Base Sphere (S2) Interactive Painting
+  function paintOnSphere(clientX, clientY) {
+    const rect = sphereCanvas.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const R = rect.width * 0.44;
+    const nx = (clientX - rect.left - cx) / R;
+    const ny = -(clientY - rect.top - cy) / R;
+    const r2 = nx * nx + ny * ny;
+    if (r2 > 0.98) return;
+    const nz = Math.sqrt(Math.max(0, 1 - r2));
+
+    // Unrotate by globeYaw around Y axis
+    const cosY = Math.cos(-globeYaw), sinY = Math.sin(-globeYaw);
+    const sx = nx * cosY + nz * sinY;
+    const sy = ny;
+    const sz = -nx * sinY + nz * cosY;
+
+    if (preset !== 'custom') {
+      preset = 'custom';
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.preset === 'custom');
+      });
+    }
+    customPoints.push({ x: sx, y: sy, z: sz, t: (customPoints.length % 60) / 60 });
+    if (customPoints.length > 160) customPoints.shift();
+    rebuildBasePoints();
+  }
+
+  sphereCanvas.addEventListener('mousedown', e => {
+    isPainting = true;
+    paintOnSphere(e.clientX, e.clientY);
+  });
+  window.addEventListener('mousemove', e => {
+    if (isPainting) paintOnSphere(e.clientX, e.clientY);
+  });
+  window.addEventListener('mouseup', () => { isPainting = false; });
+
+  document.getElementById('rotateGlobeBtn').onclick = () => {
+    globeYaw += 0.65;
+  };
+  document.getElementById('clearPaintBtn').onclick = () => {
+    customPoints = [];
+    if (preset === 'custom') rebuildBasePoints();
+  };
+
+  // Generate base points on S2 for active preset
+  let activeS2Points = [];
+  function rebuildBasePoints() {
+    activeS2Points = [];
+    const N = fiberDensity;
+    if (preset === 'tori') {
+      const rings = [0.42, 0.78, 1.15, 1.52];
+      const perRing = Math.max(6, Math.floor(N / rings.length));
+      rings.forEach((theta, rIdx) => {
+        for (let i = 0; i < perRing; i++) {
+          const phi = (i / perRing) * Math.PI * 2 + rIdx * 0.25;
+          activeS2Points.push({
+            x: Math.sin(theta) * Math.cos(phi),
+            y: Math.cos(theta),
+            z: Math.sin(theta) * Math.sin(phi),
+            t: i / perRing,
+            lat: rIdx / rings.length,
+            isSpotlight: (rIdx === 1 && i === 0) || (rIdx === 2 && i === Math.floor(perRing / 3))
+          });
+        }
+      });
+    } else if (preset === 'linked') {
+      // Two prominent linked tori + spotlight pair
+      const rings = [0.65, 1.18];
+      const perRing = Math.max(8, Math.floor(N / 2));
+      rings.forEach((theta, rIdx) => {
+        for (let i = 0; i < perRing; i++) {
+          const phi = (i / perRing) * Math.PI * 2;
+          activeS2Points.push({
+            x: Math.sin(theta) * Math.cos(phi),
+            y: Math.cos(theta),
+            z: Math.sin(theta) * Math.sin(phi),
+            t: i / perRing,
+            lat: rIdx * 0.6,
+            isSpotlight: i === 0
+          });
+        }
+      });
+    } else if (preset === 'rose') {
+      for (let i = 0; i < N; i++) {
+        const u = (i / N) * Math.PI * 2;
+        const theta = Math.PI * 0.5 + 0.46 * Math.sin(4 * u);
+        activeS2Points.push({
+          x: Math.sin(theta) * Math.cos(u),
+          y: Math.cos(theta),
+          z: Math.sin(theta) * Math.sin(u),
+          t: i / N,
+          lat: 0.5 + 0.5 * Math.sin(4 * u),
+          isSpotlight: i === 0 || i === Math.floor(N / 4)
+        });
+      }
+    } else if (preset === 'spiral') {
+      for (let i = 0; i < N; i++) {
+        const frac = (i + 0.5) / N;
+        const theta = 0.22 + frac * (Math.PI - 0.55);
+        const phi = frac * Math.PI * 6;
+        activeS2Points.push({
+          x: Math.sin(theta) * Math.cos(phi),
+          y: Math.cos(theta),
+          z: Math.sin(theta) * Math.sin(phi),
+          t: frac,
+          lat: frac,
+          isSpotlight: i === Math.floor(N * 0.3) || i === Math.floor(N * 0.65)
+        });
+      }
+    } else if (preset === 'clifford') {
+      for (let i = 0; i < N; i++) {
+        const phi = (i / N) * Math.PI * 2;
+        const theta = Math.PI * 0.5;
+        activeS2Points.push({
+          x: Math.sin(theta) * Math.cos(phi),
+          y: Math.cos(theta),
+          z: Math.sin(theta) * Math.sin(phi),
+          t: i / N,
+          lat: 0.5,
+          isSpotlight: i === 0 || i === Math.floor(N / 2)
+        });
+      }
+    } else if (preset === 'custom') {
+      activeS2Points = customPoints.map((p, idx) => ({
+        ...p,
+        lat: (p.y + 1) * 0.5,
+        isSpotlight: idx === 0 || idx === Math.floor(customPoints.length / 2)
+      }));
+    }
+    document.getElementById('statsBadge').textContent = `${activeS2Points.length} fibers · every pair linked once`;
+  }
+
+  rebuildBasePoints();
+
+  // Hopf Lift: S2 point (a, b, c) -> circle in S3 parameterized by psi in [0, 2pi)
+  // Using standard Hopf map: (z0, z1) in C^2 with |z0|^2 + |z1|^2 = 1
+  // Here y is polar axis (North = +1, South = -1)
+  function hopfFiberPoint4D(a, b, c, psi) {
+    // Map (a, c, b) where b is vertical axis in [-1, 1]
+    const denom = Math.sqrt(Math.max(1e-6, 2 * (1 + b)));
+    const x1 = ((1 + b) * Math.cos(psi)) / denom;
+    const x2 = ((1 + b) * Math.sin(psi)) / denom;
+    const x3 = (a * Math.cos(psi) - c * Math.sin(psi)) / denom;
+    const x4 = (a * Math.sin(psi) + c * Math.cos(psi)) / denom;
+    return [x1, x2, x3, x4];
+  }
+
+  // Rotate 4D vector across XW, YW, ZW planes
+  function rotate4D(v, aXW, aYW, aZW) {
+    let [x, y, z, w] = v;
+    let c = Math.cos(aXW), s = Math.sin(aXW);
+    [x, w] = [x * c - w * s, x * s + w * c];
+
+    c = Math.cos(aYW); s = Math.sin(aYW);
+    [y, w] = [y * c - w * s, y * s + w * c];
+
+    c = Math.cos(aZW); s = Math.sin(aZW);
+    [z, w] = [z * c - w * s, z * s + w * c];
+    return [x, y, z, w];
+  }
+
+  // True stereographic projection S3 -> R3 from the pole (0, 0, 0, 1).
+  // Every Hopf fiber becomes an exact circle (or a straight line if it passes
+  // through the pole). Points very close to the pole go off to infinity, so we
+  // return null there and the drawing breaks the line.
+  function stereo3D(v4) {
+    const [x, y, z, w] = v4;
+    const denom = 1 - w;
+    if (denom < 0.004) return null;
+    return [x / denom, z / denom, y / denom];
+  }
+  // Draw a closed 4D curve: break the path where it runs off to infinity.
+  function strokeFiber(pointAt, segs) {
+    ctx.beginPath();
+    let pen = false;
+    for (let s = 0; s <= segs; s++) {
+      const p3 = stereo3D(pointAt((s / segs) * Math.PI * 2));
+      if (!p3 || Math.abs(p3[0]) + Math.abs(p3[1]) + Math.abs(p3[2]) > 60) { pen = false; continue; }
+      const sc = projectToScreen(p3);
+      if (!pen) { ctx.moveTo(sc.sx, sc.sy); pen = true; } else ctx.lineTo(sc.sx, sc.sy);
+    }
+    ctx.stroke();
+  }
+
+  // 3D Camera projection to 2D screen
+  function projectToScreen(p3) {
+    let [x, y, z] = p3;
+    const cy = Math.cos(camYaw), sy = Math.sin(camYaw);
+    [x, z] = [x * cy - z * sy, x * sy + z * cy];
+
+    const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
+    [y, z] = [y * cp - z * sp, y * sp + z * cp];
+
+    const fov = 4.6;
+    const scale = (camZoom * fov) / Math.max(0.8, fov + z);
+    return {
+      sx: W * 0.5 + x * scale,
+      sy: H * 0.5 - y * scale,
+      depth: z
+    };
+  }
+
+  // Render mini S2 Base Sphere
+  function drawBaseSphere() {
+    const sw = sphereCanvas.width;
+    const sh = sphereCanvas.height;
+    sctx.clearRect(0, 0, sw, sh);
+    const cx = sw / 2, cy = sh / 2, R = sw * 0.44;
+
+    // Latitude & longitude wireframe on S2
+    sctx.strokeStyle = 'rgba(130, 170, 255, 0.16)';
+    sctx.lineWidth = 1;
+    [-0.5, 0, 0.5].forEach(latY => {
+      const rLat = Math.sqrt(Math.max(0, 1 - latY * latY)) * R;
+      sctx.beginPath();
+      sctx.ellipse(cx, cy - latY * R, rLat, rLat * 0.28, 0, 0, Math.PI * 2);
+      sctx.stroke();
+    });
+
+    const cosG = Math.cos(globeYaw), sinG = Math.sin(globeYaw);
+    const pal = palettes[paletteIdx];
+
+    activeS2Points.forEach(pt => {
+      const rx = pt.x * cosG + pt.z * sinG;
+      const ry = pt.y;
+      const rz = -pt.x * sinG + pt.z * cosG;
+      const px = cx + rx * R;
+      const py = cy - ry * R;
+      const front = rz >= -0.05;
+      sctx.fillStyle = pal.fn(pt.t, pt.lat) + (front ? '0.95)' : '0.25)');
+      sctx.beginPath();
+      sctx.arc(px, py, pt.isSpotlight && linkSpotlight ? 4.2 : (front ? 2.6 : 1.7), 0, Math.PI * 2);
+      sctx.fill();
+    });
+  }
+
+  let time = 0;
+  function animate() {
+    time += 0.016;
+    if (drift4D && !isDraggingMain) {
+      xw = 0.38 * Math.sin(time * 0.42);
+      yw = 0.32 * Math.cos(time * 0.31);
+      xwSlider.value = xw.toFixed(2);
+      ywSlider.value = yw.toFixed(2);
+      document.getElementById('xwVal').textContent = xw.toFixed(2) + ' rad';
+      document.getElementById('ywVal').textContent = yw.toFixed(2) + ' rad';
+    }
+
+    // Soft trail fade
+    ctx.fillStyle = 'rgba(7, 9, 19, 0.34)';
+    ctx.fillRect(0, 0, W, H);
+
+    const pal = palettes[paletteIdx];
+    const segs = 96;
+
+    // Optional central polar fiber (S2 South Pole b = -1)
+    // (With no 4D tilt it passes through the projection pole, so it shows as the
+    // straight vertical axis that all the other circles wind around.)
+    if (showPolar) {
+      ctx.strokeStyle = `rgba(210, 230, 255, ${0.42 * brightness})`;
+      ctx.lineWidth = 1.6;
+      strokeFiber(psi => rotate4D([0, 0, Math.cos(psi), Math.sin(psi)], xw, yw, zw), 240);
+    }
+
+    // Draw each Hopf circle
+    activeS2Points.forEach((pt, idx) => {
+      const isSpot = linkSpotlight && pt.isSpotlight;
+      const alpha = linkSpotlight ? (isSpot ? 0.95 : 0.14) : 0.62;
+      ctx.strokeStyle = pal.fn(pt.t, pt.lat) + alpha + ')';
+      ctx.lineWidth = isSpot ? 3.2 : 1.35;
+
+      let beadScreen = null;
+      const beadPsi = ((time * 1.15 + pt.t * Math.PI * 2) % (Math.PI * 2));
+
+      strokeFiber(psi => rotate4D(hopfFiberPoint4D(pt.x, pt.y, pt.z, psi), xw, yw, zw), segs);
+
+      const b3 = stereo3D(rotate4D(hopfFiberPoint4D(pt.x, pt.y, pt.z, beadPsi), xw, yw, zw));
+      if (showBeads && b3 && (!linkSpotlight || isSpot)) {
+        beadScreen = projectToScreen(b3);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.88 * brightness})`;
+        ctx.beginPath();
+        ctx.arc(beadScreen.sx, beadScreen.sy, isSpot ? 3.6 : 2.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    drawBaseSphere();
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end 4D Hopf Fibration Studio v2 (S³ → S²) -->
+<!-- Black Hole Spacetime & Ringdown Explorer (Einstein Ring version) — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 27: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-bh2" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-bh2">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Hole Spacetime &amp; Ringdown Explorer</title>
+<style>
+  :root {
+    --bg: #0b0e17;
+    --panel: rgba(17, 22, 36, 0.88);
+    --border: rgba(138, 164, 214, 0.2);
+    --text: #e4ebf7;
+    --muted: #93a3c2;
+    --accent: #7aa7ff;
+    --accent2: #c59bff;
+    --warm: #f6b26b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  #app {
+    position: relative;
+    width: 100%; height: 100%;
+    transition: filter 0.2s ease;
+  }
+  canvas {
+    display: block;
+    width: 100%; height: 100%;
+    cursor: crosshair;
+  }
+  .topbar {
+    position: absolute;
+    top: 14px; left: 16px; right: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .brand-tabs, .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px 10px;
+    backdrop-filter: blur(10px);
+  }
+  .title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--text);
+    padding: 0 8px 0 4px;
+  }
+  button, select {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 6px 11px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button:hover, select:hover {
+    background: rgba(122, 167, 255, 0.16);
+    border-color: rgba(122, 167, 255, 0.45);
+  }
+  button.active {
+    background: rgba(122, 167, 255, 0.24);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .hud {
+    position: absolute;
+    top: 72px; left: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 15px;
+    width: 265px;
+    font-size: 12px;
+    line-height: 1.5;
+    backdrop-filter: blur(10px);
+    pointer-events: none;
+    z-index: 9;
+  }
+  .hud h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--accent);
+  }
+  .hud p { color: var(--muted); margin-bottom: 8px; }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .stat-val { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .controls {
+    position: absolute;
+    bottom: 16px; left: 16px; right: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 10px 16px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .ctrl-group label { white-space: nowrap; }
+  input[type="range"] {
+    width: 96px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .val-tag {
+    min-width: 36px;
+    text-align: right;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-size: 11.5px;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="canvas"></canvas>
+
+  <div class="topbar">
+    <div class="brand-tabs">
+      <span class="title">Black Hole Explorer</span>
+      <button id="tabLensing" class="active">1. Spacetime &amp; Lensing</button>
+      <button id="tabRingdown">2. Colliding Black Holes (Ringdown)</button>
+    </div>
+    <div class="top-actions">
+      <button id="btnPause">⏸ Pause</button>
+      <button id="btnSound">🔇 Sound: Off</button>
+      <button id="btnHideUI">👁 Hide UI</button>
+    </div>
+  </div>
+
+  <div class="hud" id="hudPanel">
+    <h3 id="hudTitle">Spacetime &amp; Gravitational Lensing</h3>
+    <p id="hudDesc">Click or drag anywhere in space to launch light rays and orbiting particles around the event horizon.</p>
+    <div id="hudStats"></div>
+  </div>
+
+  <!-- Lensing Controls -->
+  <div class="controls" id="controlsLensing">
+    <div class="ctrl-group">
+      <label>Mass</label>
+      <input type="range" id="lensMass" min="25" max="90" value="52">
+      <span class="val-tag" id="lensMassVal">52</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Frame Spin</label>
+      <input type="range" id="lensSpin" min="-100" max="100" value="35">
+      <span class="val-tag" id="lensSpinVal">0.35</span>
+    </div>
+    <div class="ctrl-group">
+      <button id="btnSpray">✦ Launch Ray Fan</button>
+      <button id="btnOrbitSet">◎ Stable Orbit Ring</button>
+      <button id="btnGrid" class="active">⌗ Spacetime Grid</button>
+      <button id="btnEinstein" class="active">◉ Einstein Ring</button>
+      <button id="btnClearRays">Clear</button>
+    </div>
+    <div class="ctrl-group">
+      <label>Eye Dimmer</label>
+      <input type="range" id="dimmer1" min="45" max="100" value="88">
+      <span class="val-tag" id="dimmer1Val">88%</span>
+    </div>
+  </div>
+
+  <!-- Ringdown Controls -->
+  <div class="controls hidden" id="controlsRingdown">
+    <div class="ctrl-group">
+      <label>Mass Ratio</label>
+      <input type="range" id="massRatio" min="10" max="50" value="38">
+      <span class="val-tag" id="massRatioVal">1 : 1.3</span>
+    </div>
+    <div class="ctrl-group">
+      <label>Wave Decay</label>
+      <input type="range" id="ringDamp" min="15" max="80" value="38">
+      <span class="val-tag" id="ringDampVal">0.38</span>
+    </div>
+    <div class="ctrl-group">
+      <button id="btnReplayMerger">↻ Replay Inspiral &amp; Ringdown</button>
+      <button id="btnWaveGrid" class="active">〰 Curvature Ripples</button>
+    </div>
+    <div class="ctrl-group">
+      <label>Eye Dimmer</label>
+      <input type="range" id="dimmer2" min="45" max="100" value="88">
+      <span class="val-tag" id="dimmer2Val">88%</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const app = document.getElementById('app');
+
+  let W = 0, H = 0, CX = 0, CY = 0;
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    CX = W * 0.5;
+    CY = H * 0.48;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // State
+  let mode = 'lensing'; // 'lensing' | 'ringdown'
+  let paused = false;
+  let uiHidden = false;
+  let soundOn = false;
+  let audioCtx = null, osc1 = null, osc2 = null, gainNode = null;
+
+  // Starfield
+  const stars = Array.from({ length: 240 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: 0.5 + Math.random() * 1.4,
+    a: 0.25 + Math.random() * 0.65,
+    hue: 205 + Math.random() * 55
+  }));
+
+  // Lensing state
+  let mass = 52;
+  let spin = 0.35;
+  let showGrid = true;
+  let showEinstein = true;
+  let particles = [];
+  let dragStart = null;
+  let dragCurr = null;
+
+  // Ringdown state
+  let ratioVal = 38; // 10..50 -> q in [0.35, 1.0]
+  let ringDamp = 0.38;
+  let showWaveGrid = true;
+  let simTime = 0;
+  let strainHistory = [];
+  const MAX_STRAIN = 260;
+
+  function initAudio() {
+    if (audioCtx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+    osc1 = audioCtx.createOscillator();
+    osc2 = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+    osc1.frequency.value = 110;
+    osc2.frequency.value = 165;
+    gainNode.gain.value = 0.0;
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc1.start();
+    osc2.start();
+  }
+
+  function updateAudio(freq, amp) {
+    if (!soundOn || !audioCtx || !gainNode) return;
+    const now = audioCtx.currentTime;
+    osc1.frequency.setTargetAtTime(freq, now, 0.06);
+    osc2.frequency.setTargetAtTime(freq * 1.5, now, 0.06);
+    gainNode.gain.setTargetAtTime(paused ? 0 : Math.min(0.06, amp), now, 0.08);
+  }
+
+  // Spawn initial ray fan for Lensing
+  function spawnRayFan() {
+    const startX = Math.max(40, CX - Math.min(W * 0.4, 380));
+    const count = 17;
+    const span = Math.min(H * 0.62, 420);
+    for (let i = 0; i < count; i++) {
+      const yOff = ((i / (count - 1)) - 0.5) * span;
+      particles.push({
+        x: startX,
+        y: CY + yOff,
+        vx: 4.3,
+        vy: 0,
+        trail: [],
+        hue: 195 + (i / count) * 85,
+        isPhoton: true,
+        alive: true
+      });
+    }
+  }
+
+  function spawnStableOrbits() {
+    const radii = [mass * 2.1, mass * 2.8, mass * 3.6, mass * 4.5];
+    radii.forEach((r, idx) => {
+      const vCirc = Math.sqrt((mass * 18.5) / r);
+      const angle = idx * 0.9;
+      particles.push({
+        x: CX + Math.cos(angle) * r,
+        y: CY + Math.sin(angle) * r,
+        vx: -Math.sin(angle) * vCirc,
+        vy: Math.cos(angle) * vCirc,
+        trail: [],
+        hue: 35 + idx * 45,
+        isPhoton: false,
+        alive: true
+      });
+    });
+  }
+
+  function resetRingdown() {
+    simTime = 0;
+    strainHistory = [];
+  }
+
+  spawnRayFan();
+
+  // UI Bindings
+  const tabLensing = document.getElementById('tabLensing');
+  const tabRingdown = document.getElementById('tabRingdown');
+  const controlsLensing = document.getElementById('controlsLensing');
+  const controlsRingdown = document.getElementById('controlsRingdown');
+  const hudTitle = document.getElementById('hudTitle');
+  const hudDesc = document.getElementById('hudDesc');
+  const hudStats = document.getElementById('hudStats');
+
+  function setMode(next) {
+    mode = next;
+    tabLensing.classList.toggle('active', mode === 'lensing');
+    tabRingdown.classList.toggle('active', mode === 'ringdown');
+    controlsLensing.classList.toggle('hidden', mode !== 'lensing');
+    controlsRingdown.classList.toggle('hidden', mode !== 'ringdown');
+    if (mode === 'lensing') {
+      hudTitle.textContent = 'Spacetime & Gravitational Lensing';
+      hudDesc.textContent = 'Click or drag anywhere in space to fire light rays or stars. Grazing rays whip around the photon sphere.';
+      if (particles.length === 0) spawnRayFan();
+    } else {
+      hudTitle.textContent = 'Colliding Black Holes & Ringdown';
+      hudDesc.textContent = 'Two black holes spiral inward, merge into a wobbly horizon, and ring down into a smooth sphere.';
+      resetRingdown();
+    }
+  }
+
+  tabLensing.onclick = () => setMode('lensing');
+  tabRingdown.onclick = () => setMode('ringdown');
+
+  document.getElementById('btnPause').onclick = (e) => {
+    paused = !paused;
+    e.target.textContent = paused ? '▶ Resume' : '⏸ Pause';
+    if (paused && gainNode && audioCtx) gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.04);
+  };
+
+  document.getElementById('btnSound').onclick = (e) => {
+    soundOn = !soundOn;
+    if (soundOn) {
+      initAudio();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    } else if (gainNode && audioCtx) {
+      gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+    }
+    e.target.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+    e.target.classList.toggle('active', soundOn);
+  };
+
+  document.getElementById('btnHideUI').onclick = (e) => {
+    uiHidden = !uiHidden;
+    document.getElementById('hudPanel').classList.toggle('hidden', uiHidden);
+    controlsLensing.classList.toggle('hidden', uiHidden || mode !== 'lensing');
+    controlsRingdown.classList.toggle('hidden', uiHidden || mode !== 'ringdown');
+    e.target.textContent = uiHidden ? '👁 Show UI' : '👁 Hide UI';
+  };
+
+  // Lensing controls
+  const lensMass = document.getElementById('lensMass');
+  const lensSpin = document.getElementById('lensSpin');
+  lensMass.oninput = () => {
+    mass = Number(lensMass.value);
+    document.getElementById('lensMassVal').textContent = mass;
+  };
+  lensSpin.oninput = () => {
+    spin = Number(lensSpin.value) / 100;
+    document.getElementById('lensSpinVal').textContent = spin.toFixed(2);
+  };
+  document.getElementById('btnSpray').onclick = spawnRayFan;
+  document.getElementById('btnOrbitSet').onclick = spawnStableOrbits;
+  document.getElementById('btnClearRays').onclick = () => { particles = []; };
+  document.getElementById('btnGrid').onclick = (e) => {
+    showGrid = !showGrid;
+    e.target.classList.toggle('active', showGrid);
+  };
+  document.getElementById('btnEinstein').onclick = (e) => {
+    showEinstein = !showEinstein;
+    e.target.classList.toggle('active', showEinstein);
+  };
+
+  // Ringdown controls
+  const massRatio = document.getElementById('massRatio');
+  const ringDampEl = document.getElementById('ringDamp');
+  massRatio.oninput = () => {
+    ratioVal = Number(massRatio.value);
+    const q = 0.35 + ((ratioVal - 10) / 40) * 0.65;
+    document.getElementById('massRatioVal').textContent = '1 : ' + (1 / q).toFixed(1);
+  };
+  ringDampEl.oninput = () => {
+    ringDamp = Number(ringDampEl.value) / 100;
+    document.getElementById('ringDampVal').textContent = ringDamp.toFixed(2);
+  };
+  document.getElementById('btnReplayMerger').onclick = resetRingdown;
+  document.getElementById('btnWaveGrid').onclick = (e) => {
+    showWaveGrid = !showWaveGrid;
+    e.target.classList.toggle('active', showWaveGrid);
+  };
+
+  // Eye Dimmers synced
+  const dimmer1 = document.getElementById('dimmer1');
+  const dimmer2 = document.getElementById('dimmer2');
+  function applyDimmer(val) {
+    dimmer1.value = val;
+    dimmer2.value = val;
+    document.getElementById('dimmer1Val').textContent = val + '%';
+    document.getElementById('dimmer2Val').textContent = val + '%';
+    app.style.filter = `brightness(${val / 100})`;
+  }
+  dimmer1.oninput = () => applyDimmer(dimmer1.value);
+  dimmer2.oninput = () => applyDimmer(dimmer2.value);
+  applyDimmer(88);
+
+  // Canvas pointer interactions
+  canvas.addEventListener('pointerdown', (e) => {
+    if (mode !== 'lensing') return;
+    dragStart = { x: e.clientX, y: e.clientY };
+    dragCurr = { x: e.clientX, y: e.clientY };
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (dragStart) dragCurr = { x: e.clientX, y: e.clientY };
+  });
+  window.addEventListener('pointerup', (e) => {
+    if (!dragStart || mode !== 'lensing') return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    const dist = Math.hypot(dx, dy);
+    let vx, vy, isPhoton;
+    if (dist < 10) {
+      // Aim slightly past the black hole for dramatic lensing
+      const toX = CX - dragStart.x;
+      const toY = CY - dragStart.y;
+      const d = Math.max(1, Math.hypot(toX, toY));
+      const perpX = -toY / d;
+      const perpY = toX / d;
+      const aimX = (toX / d) * 4.0 + perpX * 1.45;
+      const aimY = (toY / d) * 4.0 + perpY * 1.45;
+      vx = aimX; vy = aimY; isPhoton = true;
+    } else {
+      vx = Math.max(-7, Math.min(7, dx * 0.04));
+      vy = Math.max(-7, Math.min(7, dy * 0.04));
+      isPhoton = dist > 90;
+    }
+    particles.push({
+      x: dragStart.x,
+      y: dragStart.y,
+      vx, vy,
+      trail: [],
+      hue: isPhoton ? 200 : 38,
+      isPhoton,
+      alive: true
+    });
+    dragStart = null;
+    dragCurr = null;
+  });
+
+  function drawStarfield(lensStrength) {
+    for (const s of stars) {
+      let sx = s.x * W;
+      let sy = s.y * H;
+      if (lensStrength > 0) {
+        const dx = sx - CX;
+        const dy = sy - CY;
+        const r = Math.hypot(dx, dy);
+        if (r > mass * 0.95 && r < 420) {
+          const shift = (lensStrength * mass * mass * 1.35) / (r * r + 180);
+          sx += dx * shift;
+          sy += dy * shift;
+        }
+      }
+      ctx.fillStyle = `hsla(${s.hue}, 65%, 82%, ${s.a * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawWarpedGrid() {
+    if (!showGrid) return;
+    const step = 44;
+    ctx.strokeStyle = 'rgba(122, 167, 255, 0.11)';
+    ctx.lineWidth = 1;
+    const cols = Math.ceil(W / step) + 2;
+    const rows = Math.ceil(H / step) + 2;
+
+    function warpPt(gx, gy) {
+      const dx = gx - CX;
+      const dy = gy - CY;
+      const r = Math.hypot(dx, dy);
+      const pull = (mass * mass * 0.72) / (r + mass * 0.85);
+      const twist = (spin * mass * 18) / (r + mass * 1.4);
+      const ang = Math.atan2(dy, dx) + twist * 0.06;
+      const nr = Math.max(mass * 0.35, r - pull);
+      return [CX + Math.cos(ang) * nr, CY + Math.sin(ang) * nr];
+    }
+
+    for (let c = -1; c <= cols; c++) {
+      ctx.beginPath();
+      for (let r = -1; r <= rows; r++) {
+        const [wx, wy] = warpPt(c * step, r * step);
+        if (r === -1) ctx.moveTo(wx, wy);
+        else ctx.lineTo(wx, wy);
+      }
+      ctx.stroke();
+    }
+    for (let r = -1; r <= rows; r++) {
+      ctx.beginPath();
+      for (let c = -1; c <= cols; c++) {
+        const [wx, wy] = warpPt(c * step, r * step);
+        if (c === -1) ctx.moveTo(wx, wy);
+        else ctx.lineTo(wx, wy);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function stepLensing() {
+    const rs = mass;
+    const photonR = rs * 1.5;
+    let activeCount = 0;
+    let capturedCount = 0;
+
+    for (const p of particles) {
+      if (!p.alive) continue;
+      activeCount++;
+      const subSteps = 3;
+      const dt = 1 / subSteps;
+      for (let s = 0; s < subSteps; s++) {
+        const dx = CX - p.x;
+        const dy = CY - p.y;
+        const r2 = dx * dx + dy * dy;
+        const r = Math.sqrt(r2);
+        if (r <= rs * 0.96) {
+          p.alive = false;
+          capturedCount++;
+          break;
+        }
+        // Relativistic-style effective potential bending + frame dragging
+        const invR3 = 1 / (r2 * r + 120);
+        const grav = p.isPhoton ? (rs * 29.0) : (rs * 18.5);
+        const relBoost = p.isPhoton ? (1 + (2.4 * rs * rs) / (r2 + 200)) : (1 + (1.3 * rs * rs) / (r2 + 250));
+        let ax = dx * grav * relBoost * invR3;
+        let ay = dy * grav * relBoost * invR3;
+
+        // Frame dragging tangential swirl
+        const drag = (spin * rs * rs * 14.0) / (r2 * r + 600);
+        ax += -dy * drag;
+        ay += dx * drag;
+
+        p.vx += ax * dt;
+        p.vy += ay * dt;
+        if (p.isPhoton) {
+          const spd = Math.hypot(p.vx, p.vy) || 1;
+          p.vx = (p.vx / spd) * 4.35;
+          p.vy = (p.vy / spd) * 4.35;
+        }
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
+
+      p.trail.push([p.x, p.y]);
+      if (p.trail.length > 75) p.trail.shift();
+
+      if (p.x < -120 || p.x > W + 120 || p.y < -120 || p.y > H + 120) {
+        p.alive = false;
+      }
+    }
+
+    if (particles.length > 95) {
+      particles = particles.filter(p => p.alive).slice(-75);
+    }
+
+    // Draw background
+    ctx.fillStyle = '#0b0e17';
+    ctx.fillRect(0, 0, W, H);
+    drawStarfield(1.0);
+    drawWarpedGrid();
+
+    // Einstein Ring & Accretion Halo
+    if (showEinstein) {
+      const einR = rs * 2.08;
+      const grad = ctx.createRadialGradient(CX, CY, rs * 0.92, CX, CY, einR * 1.45);
+      grad.addColorStop(0, 'rgba(130, 175, 255, 0.0)');
+      grad.addColorStop(0.35, 'rgba(155, 195, 255, 0.22)');
+      grad.addColorStop(0.55, 'rgba(220, 190, 255, 0.32)');
+      grad.addColorStop(1, 'rgba(110, 140, 220, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(CX, CY, einR * 1.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(195, 218, 255, 0.36)';
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.arc(CX, CY, einR, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Photon sphere subtle ring
+    ctx.strokeStyle = 'rgba(246, 178, 107, 0.28)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(CX, CY, photonR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Event Horizon
+    const bhGrad = ctx.createRadialGradient(CX - rs * 0.2, CY - rs * 0.2, rs * 0.1, CX, CY, rs);
+    bhGrad.addColorStop(0, '#040509');
+    bhGrad.addColorStop(0.88, '#060810');
+    bhGrad.addColorStop(1, '#18243f');
+    ctx.fillStyle = bhGrad;
+    ctx.beginPath();
+    ctx.arc(CX, CY, rs, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(150, 190, 255, 0.55)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(CX, CY, rs, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Trails & Particles
+    for (const p of particles) {
+      if (p.trail.length < 2) continue;
+      for (let i = 1; i < p.trail.length; i++) {
+        const alpha = (i / p.trail.length) * (p.alive ? 0.72 : 0.25);
+        ctx.strokeStyle = `hsla(${p.hue}, 82%, 72%, ${alpha})`;
+        ctx.lineWidth = p.isPhoton ? 1.7 : 2.1;
+        ctx.beginPath();
+        ctx.moveTo(p.trail[i - 1][0], p.trail[i - 1][1]);
+        ctx.lineTo(p.trail[i][0], p.trail[i][1]);
+        ctx.stroke();
+      }
+      if (p.alive) {
+        ctx.fillStyle = `hsl(${p.hue}, 90%, 82%)`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.isPhoton ? 2.5 : 3.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Aim line
+    if (dragStart && dragCurr) {
+      ctx.strokeStyle = 'rgba(246, 178, 107, 0.7)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(dragStart.x, dragStart.y);
+      ctx.lineTo(dragCurr.x, dragCurr.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    hudStats.innerHTML = `
+      <div class="stat-row"><span>Event Horizon Radius</span><span class="stat-val">${rs} px</span></div>
+      <div class="stat-row"><span>Photon Sphere</span><span class="stat-val">${Math.round(photonR)} px</span></div>
+      <div class="stat-row"><span>Active Rays / Stars</span><span class="stat-val">${activeCount}</span></div>
+    `;
+
+    updateAudio(95 + Math.abs(spin) * 65, activeCount > 0 ? 0.022 : 0.008);
+  }
+
+  function stepRingdown() {
+    if (!paused) simTime += 0.016;
+
+    const q = 0.35 + ((ratioVal - 10) / 40) * 0.65; // mass ratio <= 1
+    const mergerT = 7.2;
+    let phaseName = '1. Inspiral (Orbital Dance)';
+    let strain = 0;
+    let freqHz = 75;
+
+    ctx.fillStyle = '#0b0e17';
+    ctx.fillRect(0, 0, W, H);
+    drawStarfield(0);
+
+    if (simTime < mergerT) {
+      // Inspiral phase
+      const rem = Math.max(0.08, 1 - simTime / mergerT);
+      const sep = 175 * Math.pow(rem, 0.42);
+      const omega = 1.65 * Math.pow(rem, -0.62);
+      const angle = simTime * (2.1 + (1 - rem) * 5.6);
+      const amp = 0.25 + 0.75 * Math.pow(1 - rem, 1.35);
+      strain = amp * Math.cos(angle * 2);
+      freqHz = 72 + (1 - rem) * 185;
+
+      const r1 = 22 + 12 * (1 / (1 + q));
+      const r2 = 22 + 12 * (q / (1 + q));
+      const d1 = sep * (q / (1 + q));
+      const d2 = sep * (1 / (1 + q));
+
+      const x1 = CX + Math.cos(angle) * d1;
+      const y1 = CY + Math.sin(angle) * d1;
+      const x2 = CX - Math.cos(angle) * d2;
+      const y2 = CY - Math.sin(angle) * d2;
+
+      // Spiral gravitational ripples
+      if (showWaveGrid) {
+        const rings = 14;
+        for (let i = 0; i < rings; i++) {
+          const rad = 45 + i * 38 + ((simTime * 110) % 38);
+          const fade = Math.max(0, 1 - rad / 580) * (0.14 + 0.22 * amp);
+          ctx.strokeStyle = `rgba(138, 180, 255, ${fade})`;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.12) {
+            const quad = Math.cos(2 * (a - angle) - rad * 0.028) * (10 * amp);
+            const px = CX + Math.cos(a) * (rad + quad);
+            const py = CY + Math.sin(a) * (rad + quad);
+            if (a === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+      }
+
+      // Draw two black holes with soft glow
+      for (const [bx, by, br] of [[x1, y1, r1], [x2, y2, r2]]) {
+        const g = ctx.createRadialGradient(bx, by, br * 0.8, bx, by, br * 2.1);
+        g.addColorStop(0, 'rgba(135, 180, 255, 0.35)');
+        g.addColorStop(1, 'rgba(135, 180, 255, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(bx, by, br * 2.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#05070d';
+        ctx.beginPath();
+        ctx.arc(bx, by, br, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(175, 208, 255, 0.7)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(bx, by, br, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else {
+      // Merger & Ringdown phase
+      const dtM = simTime - mergerT;
+      const decay = Math.exp(-dtM * ringDamp * 1.45);
+      const ringFreq = 14.5;
+      const wobble = decay * Math.cos(dtM * ringFreq);
+      strain = wobble;
+      freqHz = 210 * (0.65 + 0.35 * decay);
+      phaseName = decay > 0.04 ? '2. Merger & Ringdown (Shedding Waves)' : '3. Calm Spherical Equilibrium';
+
+      const baseR = 44;
+
+      if (showWaveGrid) {
+        const rings = 14;
+        for (let i = 0; i < rings; i++) {
+          const rad = 55 + i * 38 + ((simTime * 125) % 38);
+          const waveAge = Math.max(0, dtM - rad / 180);
+          const localAmp = Math.exp(-waveAge * ringDamp * 1.25);
+          const fade = Math.max(0, 1 - rad / 580) * (0.08 + 0.28 * localAmp);
+          ctx.strokeStyle = `rgba(197, 155, 255, ${fade})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.12) {
+            const quad = Math.cos(2 * a - rad * 0.032 + dtM * 6) * (14 * localAmp);
+            const px = CX + Math.cos(a) * (rad + quad);
+            const py = CY + Math.sin(a) * (rad + quad);
+            if (a === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+      }
+
+      // Quadrupole ringing horizon (l=2 mode oscillating between oblate and prolate)
+      const glow = ctx.createRadialGradient(CX, CY, baseR * 0.85, CX, CY, baseR * 2.4);
+      glow.addColorStop(0, `rgba(197, 155, 255, ${0.22 + 0.25 * decay})`);
+      glow.addColorStop(1, 'rgba(122, 167, 255, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(CX, CY, baseR * 2.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#05070d';
+      ctx.strokeStyle = 'rgba(205, 180, 255, 0.8)';
+      ctx.lineWidth = 2.1;
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.05; a += 0.06) {
+        const r = baseR * (1 + 0.28 * wobble * Math.cos(2 * a));
+        const px = CX + Math.cos(a) * r;
+        const py = CY + Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    if (!paused) {
+      strainHistory.push(strain);
+      if (strainHistory.length > MAX_STRAIN) strainHistory.shift();
+    }
+
+    // Draw Live Gravitational Wave Strain Box in top-right below topbar
+    if (!uiHidden) {
+      const boxW = 250, boxH = 88;
+      const bx = W - boxW - 16, by = 72;
+      ctx.fillStyle = 'rgba(17, 22, 36, 0.86)';
+      ctx.strokeStyle = 'rgba(138, 164, 214, 0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#93a3c2';
+      ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('Gravitational Wave Strain h(t)', bx + 12, by + 18);
+
+      // Center zero line
+      const midY = by + 52;
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath();
+      ctx.moveTo(bx + 12, midY);
+      ctx.lineTo(bx + boxW - 12, midY);
+      ctx.stroke();
+
+      if (strainHistory.length > 1) {
+        ctx.strokeStyle = '#c59bff';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        for (let i = 0; i < strainHistory.length; i++) {
+          const px = bx + 12 + (i / MAX_STRAIN) * (boxW - 24);
+          const py = midY - strainHistory[i] * 26;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    }
+
+    hudStats.innerHTML = `
+      <div class="stat-row"><span>Stage</span><span class="stat-val">${phaseName.split(' ')[1]}</span></div>
+      <div class="stat-row"><span>Wave Strain |h|</span><span class="stat-val">${Math.abs(strain).toFixed(3)}</span></div>
+      <div class="stat-row"><span>Ringdown Damping</span><span class="stat-val">${ringDamp.toFixed(2)}</span></div>
+    `;
+
+    updateAudio(freqHz, Math.abs(strain) * 0.045);
+  }
+
+  function loop() {
+    if (mode === 'lensing') {
+      if (!paused) stepLensing();
+    } else {
+      stepRingdown();
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end Black Hole Spacetime & Ringdown Explorer (Einstein Ring version) -->
+<!-- Black Hole Spacetime Explorer (Disk) v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 28: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-bh3" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-bh3">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Black Hole Spacetime Explorer (Disk) v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+  body { background: #07090f; color: #e2e8f0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  #ui { position: absolute; top: 14px; left: 14px; background: rgba(13, 18, 30, 0.86); backdrop-filter: blur(8px);
+        border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 12px; padding: 14px; width: 320px; z-index: 10;
+        max-height: calc(100vh - 28px); overflow-y: auto; }
+  h1 { font-size: 15px; font-weight: 700; color: #38bdf8; margin-bottom: 10px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { flex: 1; padding: 6px 8px; border: 1px solid #334155; background: #1e293b; color: #cbd5e1;
+         border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; text-align: center; }
+  .tab.active { background: #0284c7; border-color: #38bdf8; color: #fff; }
+  .control { margin-bottom: 10px; }
+  .control label { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+  input[type=range] { width: 100%; accent-color: #38bdf8; }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  button.action { padding: 6px 10px; background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
+                  border-radius: 6px; font-size: 11px; cursor: pointer; }
+  button.action:hover { background: #334155; }
+  #toggleUi { position: absolute; top: 14px; right: 14px; z-index: 20; padding: 6px 12px; background: rgba(15,23,42,0.85);
+              border: 1px solid #475569; color: #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 12px; }
+  .hint { font-size: 11px; color: #64748b; margin-top: 8px; line-height: 1.45; }
+  .legend { font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.6; }
+  .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+  .stats { font-size: 11.5px; color: #cbd5e1; margin-top: 8px; line-height: 1.6; background: rgba(0,0,0,0.25);
+           border: 1px solid #1e293b; border-radius: 6px; padding: 6px 8px; }
+</style>
+</head>
+<body>
+<button id="toggleUi">Hide UI</button>
+<div id="ui">
+  <h1>Black Hole Spacetime Explorer</h1>
+  <div class="tabs">
+    <div class="tab active" id="tabLensing">Lensing & Disk</div>
+    <div class="tab" id="tabRingdown">Binary Ringdown</div>
+  </div>
+  <div id="lensingControls">
+    <div class="control">
+      <label><span>Horizon Radius r<sub>s</sub> (px)</span><span id="massVal">44</span></label>
+      <input type="range" id="mass" min="22" max="75" value="44">
+    </div>
+    <div class="control">
+      <label><span>Disk Spin Look (cartoon)</span><span id="spinVal">0.65</span></label>
+      <input type="range" id="spin" min="0" max="0.99" step="0.01" value="0.65">
+    </div>
+    <div class="control">
+      <label><span>Accretion Disk Particles</span><span id="diskVal">360</span></label>
+      <input type="range" id="diskCount" min="0" max="700" step="20" value="360">
+    </div>
+    <div class="btns">
+      <button class="action" id="btnGrid">Grid: ON</button>
+      <button class="action" id="btnClearRays">Clear Rays</button>
+      <button class="action" id="btnBurst">Launch Burst</button>
+    </div>
+    <div class="legend">
+      <div><i style="border-color:#fb923c"></i>horizon r<sub>s</sub></div>
+      <div><i style="border-color:#fde047"></i>photon sphere 1.5 r<sub>s</sub></div>
+      <div><i style="border-color:#94a3b8;border-top-style:dashed"></i>shadow size seen from far, 2.6 r<sub>s</sub></div>
+      <div><i style="border-color:#f97316;border-top-style:dotted"></i>disk inner edge (ISCO) 3 r<sub>s</sub></div>
+    </div>
+    <div class="stats" id="lensStats"></div>
+    <div class="hint">Click or drag anywhere to launch light rays. Rays follow the exact shape of light paths around a non-spinning black hole: any ray aimed within 2.6 r<sub>s</sub> of the centre falls in.</div>
+  </div>
+  <div id="ringdownControls" style="display:none;">
+    <div class="control">
+      <label><span>Mass Ratio</span><span id="ratioVal">1.0</span></label>
+      <input type="range" id="ratio" min="0.2" max="1.0" step="0.1" value="1.0">
+    </div>
+    <div class="btns">
+      <button class="action" id="btnResetMerger">Restart Merger</button>
+    </div>
+    <div class="stats" id="ringStats"></div>
+    <div class="hint">Two black holes spiral in, merge, and ring down. The remnant's spin and how fast the ringing dies (its quality factor Q) come from published fits to numerical relativity; the time scale is slowed down so you can see it.</div>
+  </div>
+  <div class="control" style="margin-top:10px; border-top:1px solid #1e293b; padding-top:8px;">
+    <label><span>Eye Brightness</span><span id="brightVal">100%</span></label>
+    <input type="range" id="brightness" min="40" max="120" value="100">
+  </div>
+</div>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, cx, cy;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; cx = W/2; cy = H/2; }
+window.addEventListener('resize', resize);
+resize();
+
+let mode = 'lensing';
+let showGrid = true;
+let rays = [];
+let disk = [];
+let stars = Array.from({length: 180}, () => ({ x: Math.random()*2-1, y: Math.random()*2-1, s: Math.random()*1.6+0.4, a: Math.random()*0.7+0.3 }));
+
+const massEl = document.getElementById('mass');
+const spinEl = document.getElementById('spin');
+const diskEl = document.getElementById('diskCount');
+const brightEl = document.getElementById('brightness');
+const ratioEl = document.getElementById('ratio');
+
+// Disk: circular orbits only exist outside the ISCO (3 r_s). Kepler: angular speed ~ r^(-3/2).
+function initDisk(n) {
+  disk = [];
+  const rs = +massEl.value;
+  for (let i = 0; i < n; i++) {
+    const r = rs * (3 + Math.random() * 3.2);
+    disk.push({ x: r / rs, angle: Math.random() * Math.PI * 2, size: Math.random() * 1.8 + 0.8 });
+  }
+}
+initDisk(360);
+
+massEl.oninput = () => { document.getElementById('massVal').textContent = massEl.value; };
+spinEl.oninput = () => document.getElementById('spinVal').textContent = Number(spinEl.value).toFixed(2);
+diskEl.oninput = () => { document.getElementById('diskVal').textContent = diskEl.value; initDisk(+diskEl.value); };
+brightEl.oninput = () => { document.getElementById('brightVal').textContent = brightEl.value + '%'; canvas.style.filter = `brightness(${brightEl.value}%)`; };
+ratioEl.oninput = () => { document.getElementById('ratioVal').textContent = Number(ratioEl.value).toFixed(1); resetMerger(); };
+
+const C = 4.5;   // light speed in px per frame step (far from the hole)
+function launch(x, y, dirx, diry) {
+  const n = Math.hypot(dirx, diry) || 1;
+  rays.push({ x: x - cx, y: y - cy, vx: dirx / n * C, vy: diry / n * C, trail: [], alive: true, fell: false });
+}
+
+document.getElementById('btnGrid').onclick = (e) => { showGrid = !showGrid; e.target.textContent = `Grid: ${showGrid ? 'ON' : 'OFF'}`; };
+document.getElementById('btnClearRays').onclick = () => rays = [];
+document.getElementById('btnBurst').onclick = () => {
+  const rs = +massEl.value;
+  for (let i = -8; i <= 8; i++) launch(cx - 340, cy + i * (rs * 0.42), 1, 0);
+};
+document.getElementById('toggleUi').onclick = () => {
+  const ui = document.getElementById('ui');
+  ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
+};
+document.getElementById('tabLensing').onclick = () => {
+  mode = 'lensing';
+  document.getElementById('tabLensing').classList.add('active');
+  document.getElementById('tabRingdown').classList.remove('active');
+  document.getElementById('lensingControls').style.display = 'block';
+  document.getElementById('ringdownControls').style.display = 'none';
+};
+document.getElementById('tabRingdown').onclick = () => {
+  mode = 'ringdown';
+  document.getElementById('tabRingdown').classList.add('active');
+  document.getElementById('tabLensing').classList.remove('active');
+  document.getElementById('lensingControls').style.display = 'none';
+  document.getElementById('ringdownControls').style.display = 'block';
+  resetMerger();
+};
+
+// Mouse launch rays
+let dragStart = null;
+canvas.addEventListener('mousedown', e => { if (mode === 'lensing') dragStart = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener('mouseup', e => {
+  if (mode === 'lensing' && dragStart) {
+    const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+    if (Math.hypot(dx, dy) > 8) launch(dragStart.x, dragStart.y, dx, dy);
+    else launch(dragStart.x, dragStart.y, 1, 0);
+    dragStart = null;
+  }
+});
+
+function drawSpacetimeGrid(rs) {
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.13)';
+  ctx.lineWidth = 1;
+  const step = 42;
+  for (let gx = -500; gx <= 500; gx += step) {
+    ctx.beginPath();
+    for (let gy = -400; gy <= 400; gy += 20) {
+      const r = Math.hypot(gx, gy) + 1;
+      const pull = Math.min(0.85, (rs * rs * 1.4) / (r * r + rs * 18));
+      const px = cx + gx * (1 - pull * 0.45);
+      const py = cy + gy * (1 - pull * 0.45) + pull * 28;
+      if (gy === -400) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+  for (let gy = -400; gy <= 400; gy += step) {
+    ctx.beginPath();
+    for (let gx = -500; gx <= 500; gx += 20) {
+      const r = Math.hypot(gx, gy) + 1;
+      const pull = Math.min(0.85, (rs * rs * 1.4) / (r * r + rs * 18));
+      const px = cx + gx * (1 - pull * 0.45);
+      const py = cy + gy * (1 - pull * 0.45) + pull * 28;
+      if (gx === -500) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+}
+
+// Light paths: Newtonian motion under a = -(3/2) r_s h^2 r_hat / r^4 (h = |r x v|)
+// traces exactly the Schwarzschild light-ray shape u'' + u = (3/2) r_s u^2.
+// Photon sphere at 1.5 r_s; capture for impact parameter b < (3 sqrt 3 / 2) r_s.
+function accel(x, y, h2, rs) {
+  const r2 = x * x + y * y, r = Math.sqrt(r2);
+  const k = -1.5 * rs * h2 / (r2 * r2 * r);
+  return [k * x, k * y];
+}
+function stepRay(ray, rs) {
+  const sub = 8, dt = 1 / sub;
+  for (let s = 0; s < sub; s++) {
+    const h = ray.x * ray.vy - ray.y * ray.vx, h2 = h * h;
+    const [ax, ay] = accel(ray.x, ray.y, h2, rs);
+    const vxh = ray.vx + 0.5 * dt * ax, vyh = ray.vy + 0.5 * dt * ay;
+    ray.x += dt * vxh; ray.y += dt * vyh;
+    const [bx, by] = accel(ray.x, ray.y, h2, rs);
+    ray.vx = vxh + 0.5 * dt * bx; ray.vy = vyh + 0.5 * dt * by;
+    const r = Math.hypot(ray.x, ray.y);
+    if (r < rs) { ray.alive = false; ray.fell = true; return; }
+    if (r > 1600) { ray.alive = false; return; }
+  }
+  ray.trail.push({ x: ray.x, y: ray.y });
+  if (ray.trail.length > 260) ray.trail.shift();
+}
+
+function renderLensing() {
+  const rs = +massEl.value;
+  const spin = +spinEl.value;
+  if (showGrid) drawSpacetimeGrid(rs);
+
+  // Lensed far side of the disk, seen as arches above and below the shadow (cartoon)
+  if (disk.length > 0) {
+    const gradTop = ctx.createRadialGradient(cx, cy - rs*0.35, rs*1.6, cx, cy - rs*0.35, rs*3.0);
+    gradTop.addColorStop(0, 'rgba(251, 191, 36, 0.40)');
+    gradTop.addColorStop(0.5, 'rgba(249, 115, 22, 0.16)');
+    gradTop.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradTop;
+    ctx.beginPath(); ctx.arc(cx, cy - rs*0.25, rs*3.0, Math.PI, 0); ctx.fill();
+
+    const gradBot = ctx.createRadialGradient(cx, cy + rs*0.35, rs*1.6, cx, cy + rs*0.35, rs*2.8);
+    gradBot.addColorStop(0, 'rgba(249, 115, 22, 0.28)');
+    gradBot.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradBot;
+    ctx.beginPath(); ctx.arc(cx, cy + rs*0.22, rs*2.8, 0, Math.PI); ctx.fill();
+  }
+
+  // Disk motion: angular speed ~ r^(-3/2) (Kepler), with the inner edge at the ISCO
+  const omegaISCO = 0.045;
+  disk.forEach(p => { p.angle += omegaISCO * Math.pow(3 / p.x, 1.5); });
+  const drawDisk = front => {
+    disk.forEach(p => {
+      const r = p.x * rs;
+      const sx = Math.cos(p.angle) * r;
+      const sy = Math.sin(p.angle) * r * 0.28;
+      if ((Math.sin(p.angle) >= 0) !== front) return;
+      // Beaming: the side moving toward you looks brighter; stronger near the hole and with spin
+      const beta = Math.min(0.6, 0.5 / Math.sqrt(p.x)) * (0.6 + 0.4 * spin);
+      const doppler = 0.5 - 0.5 * Math.cos(p.angle) * beta * 2;
+      ctx.fillStyle = `hsla(${25 + doppler * 30}, 100%, ${45 + doppler * 32}%, ${0.4 + doppler * 0.5})`;
+      ctx.beginPath(); ctx.arc(cx + sx, cy + sy, p.size * (front ? 1.15 : 1), 0, Math.PI * 2); ctx.fill();
+    });
+  };
+  drawDisk(false);
+
+  // ISCO, shadow size, photon sphere, horizon
+  ctx.setLineDash([2, 5]);
+  ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.ellipse(cx, cy, rs * 3, rs * 3 * 0.28, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.55)';
+  ctx.beginPath(); ctx.arc(cx, cy, rs * 2.598, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = 'rgba(253, 224, 71, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, rs * 1.5, 0, Math.PI * 2); ctx.stroke();
+
+  ctx.fillStyle = '#020308';
+  ctx.beginPath(); ctx.arc(cx, cy, rs, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(251, 146, 60, 0.8)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  drawDisk(true);
+
+  // Light rays
+  let fell = 0, out = 0;
+  rays.forEach(ray => {
+    if (ray.alive) stepRay(ray, rs);
+    if (ray.fell) fell++; else if (!ray.alive) out++;
+    if (ray.trail.length > 1) {
+      ctx.strokeStyle = ray.fell ? 'rgba(248, 113, 113, 0.75)' : 'rgba(56, 189, 248, 0.85)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ray.trail.forEach((pt, idx) => idx === 0 ? ctx.moveTo(cx + pt.x, cy + pt.y) : ctx.lineTo(cx + pt.x, cy + pt.y));
+      ctx.stroke();
+    }
+  });
+  document.getElementById('lensStats').innerHTML =
+    `Rays: ${rays.length} · fell in: ${fell} · escaped: ${out}<br>Capture limit: aim within ${(2.598 * rs).toFixed(0)} px (2.6 r<sub>s</sub>) of the centre`;
+}
+
+// ---------- Binary merger ----------
+let mergerTime = 0, ripples = [], strainHistory = [], phase = 0;
+function resetMerger() { mergerTime = 0; ripples = []; strainHistory = []; phase = 0; }
+document.getElementById('btnResetMerger').onclick = resetMerger;
+
+function remnant(q) {
+  const nu = q / ((1 + q) * (1 + q));                       // symmetric mass ratio
+  const spin = Math.sqrt(12) * nu - 3.871 * nu * nu + 4.028 * nu * nu * nu;   // final spin fit
+  const Q = 0.7 + 1.4187 * Math.pow(1 - spin, -0.499);     // l = m = 2 quality factor fit
+  const Erad = (1 - Math.sqrt(8 / 9)) * nu + 0.498 * nu * nu; // energy radiated (fraction of total)
+  return { nu, spin, Q, Erad };
+}
+
+function renderRingdown() {
+  const dt = 0.016;
+  mergerTime += dt;
+  const q = +ratioEl.value;
+  const R = remnant(q);
+  const inspiralDur = 5.5;
+  const r1 = 22, r2 = 22 * q;
+  let strain = 0;
+
+  if (mergerTime < inspiralDur) {
+    const progress = mergerTime / inspiralDur;
+    const sep = 155 * Math.pow(1 - progress, 0.55);
+    const omega = 2.2 + Math.pow(progress, 2.2) * 14;
+    phase += omega * dt;                                   // integrate the orbital phase
+    const x1 = cx + Math.cos(phase) * (sep * q / (1 + q));
+    const y1 = cy + Math.sin(phase) * (sep * q / (1 + q));
+    const x2 = cx - Math.cos(phase) * (sep / (1 + q));
+    const y2 = cy - Math.sin(phase) * (sep / (1 + q));
+
+    strain = Math.sin(phase * 2) * (0.15 + progress * 0.85); // waves at twice the orbital frequency
+    if (Math.random() < 0.35) ripples.push({ r: sep * 0.6, alpha: 0.35 + progress * 0.45 });
+
+    [ {x: x1, y: y1, r: r1}, {x: x2, y: y2, r: r2} ].forEach(bh => {
+      ctx.fillStyle = '#020308';
+      ctx.beginPath(); ctx.arc(bh.x, bh.y, bh.r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+    });
+  } else {
+    const t = mergerTime - inspiralDur;
+    const w = 18;                                          // display ringing rate
+    const decay = Math.exp(-t * w / (2 * R.Q));           // amplitude falls as exp(-omega t / 2Q)
+    const wobble = Math.sin(t * w) * decay * 0.32;
+    strain = Math.sin(t * w) * decay;
+    if (decay > 0.05 && Math.random() < 0.4) ripples.push({ r: 34, alpha: decay * 0.7 });
+
+    // Remnant horizon radius follows its mass: (m1 + m2)(1 - E_rad)
+    const rf = (r1 + r2) * (1 - R.Erad);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(t * 4);
+    ctx.scale(1 + wobble, 1 - wobble);
+    ctx.fillStyle = '#020308';
+    ctx.beginPath(); ctx.arc(0, 0, rf, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.restore();
+  }
+
+  ripples.forEach(rp => {
+    rp.r += 3.2;
+    rp.alpha *= 0.985;
+    ctx.strokeStyle = `rgba(168, 85, 247, ${rp.alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, rp.r, 0, Math.PI * 2); ctx.stroke();
+  });
+  ripples = ripples.filter(rp => rp.alpha > 0.02);
+
+  strainHistory.push(strain);
+  if (strainHistory.length > 260) strainHistory.shift();
+  const gx = cx - 130, gy = H - 70;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+  ctx.fillRect(gx - 10, gy - 40, 280, 75);
+  ctx.strokeStyle = '#334155'; ctx.strokeRect(gx - 10, gy - 40, 280, 75);
+  ctx.fillStyle = '#94a3b8'; ctx.font = '11px sans-serif';
+  ctx.fillText('Gravitational Wave Strain h(t)', gx, gy - 26);
+  ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  strainHistory.forEach((v, i) => {
+    const px = gx + i;
+    const py = gy + 6 - v * 26;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  document.getElementById('ringStats').innerHTML =
+    `Remnant spin: ${R.spin.toFixed(2)} · ringing quality Q: ${R.Q.toFixed(2)}<br>Energy radiated: ${(R.Erad * 100).toFixed(1)}% of the total mass`;
+}
+
+function loop() {
+  ctx.fillStyle = '#07090f';
+  ctx.fillRect(0, 0, W, H);
+  stars.forEach(s => {
+    ctx.fillStyle = `rgba(226, 232, 240, ${s.a})`;
+    ctx.fillRect((s.x * 0.5 + 0.5) * W, (s.y * 0.5 + 0.5) * H, s.s, s.s);
+  });
+  if (mode === 'lensing') renderLensing(); else renderRingdown();
+  requestAnimationFrame(loop);
+}
+loop();
+
+// Exposed for checking: capture limit of the ray integrator (in units of r_s)
+window.__captureLimit = (rs = 44) => {
+  let lo = 2.0, hi = 3.2;
+  for (let it = 0; it < 30; it++) {
+    const b = (lo + hi) / 2;
+    const ray = { x: -30 * rs, y: b * rs, vx: C, vy: 0, trail: [], alive: true, fell: false };
+    for (let k = 0; k < 4000 && ray.alive; k++) stepRay(ray, rs);
+    if (ray.fell) lo = b; else hi = b;
+  }
+  return (lo + hi) / 2;
+};
+</script>
+</body>
+</html>
+</template>
+<!-- end Black Hole Spacetime Explorer (Disk) v2 -->
 </div>
 
 <script>
@@ -15146,7 +18945,7 @@ function drawStretch() {
 // globals can't touch the playground. The small shim below runs first inside the frame:
 // while another tab is open it holds the page's animation frames and timers, freezes its
 // clock and suspends its sound, then picks up where it left off.
-const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient'];
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3'];
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
@@ -15592,6 +19391,110 @@ setLinked(linkedOn);
 
 setControls();
 loop();
+// ========== PULL-DOWN MENU for choosing the playground ==========
+(function playMenu() {
+  const GROUPS = [
+    ['Original playground', ['sand','loop','bubbles','plate','waves','silk','crystal','magnets','stretch','ferro']],
+    ['Waves, sums & sound', ['sum','ringsum','zeros','pendulum','trilogy','ocean','fireflies']],
+    ['Black holes', ['blackhole','bh2','bh3']],
+    ['4D & higher dimensions', ['fourd','polychora','horned','nonorient','penteract','leech','pentlite','hopf']],
+  ];
+  const btns = [...document.querySelectorAll('.tabs .tab')];
+  const byKey = {}; btns.forEach(b => { byKey[b.dataset.mode] = b; });
+  const order = btns.map(b => b.dataset.mode);   // number order, for Prev / Next
+  const num = b => b.textContent.split('.')[0].trim();
+  const name = b => b.title || b.textContent.replace(/^\s*\d+\.\s*/, '');
+  const list = document.getElementById('playList'), menuBtn = document.getElementById('playMenuBtn'), cur = document.getElementById('playCur');
+  const opts = [];
+  const listed = new Set();
+  GROUPS.forEach(([g, keys], gi) => {
+    const h = document.createElement('div'); h.className = 'pn-group'; h.id = 'pn-g' + gi; h.textContent = g; h.setAttribute('role', 'presentation'); list.appendChild(h);
+    keys.forEach(k => { if (byKey[k]) { addOpt(k); listed.add(k); } });
+  });
+  const rest = order.filter(k => !listed.has(k));   // any tab not in a group still gets listed
+  if (rest.length) { const h = document.createElement('div'); h.className = 'pn-group'; h.textContent = 'More'; list.appendChild(h); rest.forEach(addOpt); }
+  function addOpt(k) {
+    const b = byKey[k], o = document.createElement('div');
+    o.className = 'pn-opt'; o.setAttribute('role', 'option'); o.id = 'pn-o-' + k; o.dataset.pick = k; o.tabIndex = -1;
+    o.innerHTML = '<span class="pn-num"></span><span class="pn-name"></span>';
+    o.firstChild.textContent = num(b) + '.'; o.lastChild.textContent = name(b);
+    o.addEventListener('click', () => { choose(k); close(true); });
+    list.appendChild(o); opts.push(o);
+  }
+  let focusI = -1;
+  function current() { const a = document.querySelector('.tabs .tab.active'); return a ? a.dataset.mode : order[0]; }
+  function sync() {
+    const k = current(), b = byKey[k];
+    cur.textContent = num(b) + '. ' + name(b);
+    menuBtn.title = 'Choose a playground (now: ' + num(b) + '. ' + name(b) + ')';
+    opts.forEach(o => o.setAttribute('aria-selected', o.dataset.pick === k ? 'true' : 'false'));
+  }
+  function choose(k, fromHash) {
+    if (!byKey[k]) return;
+    if (k !== current()) byKey[k].click(); else sync();
+    if (!fromHash && history.replaceState) history.replaceState(null, '', '#' + k);
+  }
+  function setFocus(i) {
+    opts.forEach(o => o.classList.remove('pn-focus'));
+    focusI = (i + opts.length) % opts.length;
+    const o = opts[focusI]; o.classList.add('pn-focus'); o.focus({ preventScroll: true });
+    o.scrollIntoView({ block: 'nearest' });
+    list.setAttribute('aria-activedescendant', o.id);
+  }
+  function open() {
+    if (!list.hidden) return;
+    document.documentElement.style.setProperty('--pn-top', Math.round(menuBtn.getBoundingClientRect().bottom + 6) + 'px');
+    list.hidden = false; menuBtn.setAttribute('aria-expanded', 'true');
+    const i = opts.findIndex(o => o.dataset.pick === current());
+    setFocus(i < 0 ? 0 : i);
+    opts[focusI].scrollIntoView({ block: 'center' });
+  }
+  function close(refocus) {
+    if (list.hidden) return;
+    list.hidden = true; menuBtn.setAttribute('aria-expanded', 'false');
+    if (refocus) menuBtn.focus({ preventScroll: true });
+  }
+  menuBtn.addEventListener('click', () => list.hidden ? open() : close(true));
+  menuBtn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+  });
+  list.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(focusI + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setFocus(focusI - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); setFocus(0); }
+    else if (e.key === 'End') { e.preventDefault(); setFocus(opts.length - 1); }
+    else if (e.key === 'PageDown') { e.preventDefault(); setFocus(Math.min(opts.length - 1, focusI + 8)); }
+    else if (e.key === 'PageUp') { e.preventDefault(); setFocus(Math.max(0, focusI - 8)); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(opts[focusI].dataset.pick); close(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(true); }
+    else if (e.key === 'Tab') { close(false); }
+    else if (/^[0-9]$/.test(e.key)) {   // type a number to jump to it (e.g. 2 then 3 for 23)
+      const now = Date.now();
+      typed = (now - typedAt < 900 ? typed : '') + e.key; typedAt = now;
+      const i = opts.findIndex(o => num(byKey[o.dataset.pick]) === typed);
+      const j = i >= 0 ? i : opts.findIndex(o => num(byKey[o.dataset.pick]).startsWith(typed));
+      if (j >= 0) setFocus(j);
+    }
+  });
+  let typed = '', typedAt = 0;
+  document.addEventListener('pointerdown', e => { if (!list.hidden && !list.contains(e.target) && !menuBtn.contains(e.target)) close(false); }, true);
+  window.addEventListener('blur', () => close(false));   // a click inside one of her pages
+  window.addEventListener('resize', () => close(false));
+  const step = d => { const i = order.indexOf(current()); choose(order[(i + d + order.length) % order.length]); };
+  document.getElementById('playPrev').addEventListener('click', () => step(-1));
+  document.getElementById('playNext').addEventListener('click', () => step(1));
+  btns.forEach(b => b.addEventListener('click', () => setTimeout(sync, 0)));
+  // links like #23 or #hopf open that playground
+  function fromHash() {
+    const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    if (!h) return;
+    const k = byKey[h] ? h : (order.find(x => num(byKey[x]) === h) || null);
+    if (k) choose(k, true);
+  }
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+  sync();
+})();
 </script>
 </body>
 </html>
