@@ -229,6 +229,30 @@ Third-party material is governed by its own terms.
   .hint { transition: opacity 0.6s; }
   .hint.faded { opacity: 0.25; }
   @media (min-width: 701px) { .tab, .sound-btn { padding: 8px 6px; } }   /* room for tab 10 on one header row */
+  /* tabs 11-15: Michele's pages, each in its own frame */
+  .page-tab { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: #0b0e14; }
+  .page-tab iframe { flex: 1; min-height: 0; width: 100%; border: 0; display: block; }
+  .page-tab .page-copy { flex: none; height: 14px; line-height: 14px; padding: 0 16px; text-align: right; font-size: 10px; color: var(--muted); opacity: 0.55; white-space: nowrap; overflow: hidden; }
+  .page-tab .page-copy a { color: inherit; }
+  .page-tab .page-copy:hover { opacity: 0.9; }
+  /* 15 tabs: on wide screens the tab strip scrolls sideways; Sound and Linked stay pinned at its right end */
+  @media (min-width: 701px) {
+    header { flex-wrap: nowrap; }
+    header h1 { flex: none; white-space: nowrap; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; min-width: 0; scrollbar-width: thin; scrollbar-color: #2b3340 transparent; }
+    .tabs::-webkit-scrollbar { height: 4px; }
+    .tabs::-webkit-scrollbar-thumb { background: #2b3340; border-radius: 2px; }
+    .tabs > * { flex: none; }
+    .tabs .sound-btn { position: sticky; z-index: 1; }
+    .tabs .sound-btn:not(.active) { background: var(--panel); }
+    #linkToggle { right: 0; }
+    #soundToggle { right: var(--link-w, 86px); box-shadow: -10px 0 8px -2px var(--panel); }
+  }
+  /* phones: rows 1-3 stay exactly as before (Sound and Linked keep their spot); tabs 11-15 get new rows below */
+  @media (max-width: 700px) {
+    #soundToggle, #linkToggle { order: 1; }
+    .tab[data-mode="sum"], .tab[data-mode="ringsum"], .tab[data-mode="zeros"], .tab[data-mode="pendulum"], .tab[data-mode="trilogy"] { order: 2; }
+  }
   header { position: relative; }
   #copyNote { position: absolute; right: 18px; bottom: 2px; font-size: 10px; line-height: 12px; color: var(--muted); opacity: 0.55; white-space: nowrap; }
   #copyNote a { color: inherit; }
@@ -249,6 +273,11 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="magnets">8. Magnets</button>
     <button class="tab" data-mode="stretch" title="Stretch &amp; Close">9. Stretch</button>
     <button class="tab" data-mode="ferro" title="Ferrofluid Studio">10. Ferro</button>
+    <button class="tab" data-mode="sum" title="Seeing 1 + 2 + 3 + 4 + 5 + ... = -1/12 — Interactive Visual Explorer">11. −1/12</button>
+    <button class="tab" data-mode="ringsum" title="Ring Sum &amp; -1/12 Spectral Explorer">12. Ring</button>
+    <button class="tab" data-mode="zeros" title="Quantum Zeros &amp; Chaotic Drum Explorer">13. Zeros</button>
+    <button class="tab" data-mode="pendulum" title="Pendulum Waves &amp; Coupled Pendulums Studio">14. Pendulum</button>
+    <button class="tab" data-mode="trilogy" title="Spectral &amp; Isoperimetric Trilogy Visualizer">15. Trilogy</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -1398,6 +1427,4352 @@ function ferroBoot() {
 }
 </script>
 <!-- end Ferrofluid Studio v6 -->
+<!-- Seeing 1 + 2 + 3 + 4 + 5 + ... = -1/12 — Interactive Visual Explorer — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 11: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-sum" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-sum">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeing 1 + 2 + 3 + 4 + 5 + ... = -1/12 — Interactive Visual Explorer</title>
+<style>
+  :root {
+    --bg: #080b14;
+    --panel: rgba(15, 22, 38, 0.88);
+    --border: rgba(120, 175, 255, 0.22);
+    --text: #e8f0fe;
+    --muted: #8ea4c8;
+    --accent: #38bdf8;
+    --gold: #fbbf24;
+    --rose: #fb7185;
+    --emerald: #34d399;
+    --violet: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 50% 0%, #101930 0%, var(--bg) 75%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8, 12, 22, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .title-group h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    background: linear-gradient(90deg, #7dd3fc, #c4b5fd, #fda4af);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-group p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tab-btn:hover {
+    color: var(--text);
+    border-color: rgba(125, 211, 252, 0.5);
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(167, 139, 250, 0.25));
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
+  }
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 14px 20px;
+    max-width: 1500px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  @media (max-width: 960px) {
+    main { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+  .card-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 320px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(5, 8, 16, 0.75);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .controls-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 260px;
+  }
+  .slider-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 6px;
+  }
+  .val-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.84rem;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #7dd3fc;
+    padding: 4px 10px;
+    border-radius: 8px;
+    min-width: 78px;
+    text-align: center;
+  }
+  .readouts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .stat-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+  .stat-box span.lbl {
+    color: var(--muted);
+    display: block;
+    font-size: 0.7rem;
+  }
+  .stat-box span.num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .btn-action {
+    background: rgba(56, 189, 248, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #e0f2fe;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-action:hover {
+    background: rgba(56, 189, 248, 0.28);
+  }
+  .insight-banner {
+    max-width: 1500px;
+    margin: 0 auto 10px auto;
+    padding: 0 20px;
+    width: 100%;
+  }
+  .insight-inner {
+    background: linear-gradient(90deg, rgba(251, 113, 133, 0.12), rgba(56, 189, 248, 0.12));
+    border: 1px solid rgba(251, 113, 133, 0.28);
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-size: 0.83rem;
+    color: #f1f5f9;
+    line-height: 1.45;
+  }
+  .highlight-rose { color: var(--rose); font-weight: 700; }
+  .highlight-gold { color: var(--gold); font-weight: 700; }
+  .highlight-cyan { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-group">
+    <h1>Seeing 1 + 2 + 3 + 4 + 5 + &hellip; = &minus;1/12</h1>
+    <p>How smooth wave dampening peels away infinite growth to reveal the hidden &minus;0.08333&hellip; balance point</p>
+  </div>
+  <div class="mode-tabs">
+    <button class="tab-btn active" data-mode="smoothing">1. Smooth Wave Cutoff (e<sup>&minus;&epsilon;n</sup>)</button>
+    <button class="tab-btn" data-mode="casimir">2. Casimir Standing Waves</button>
+    <button class="tab-btn" data-mode="alternating">3. Alternating Wave Bridge</button>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" id="leftTitle">Dampened Terms: n &middot; e<sup>&minus;&epsilon;n</sup></div>
+      <div class="card-sub" id="leftSub">Each bar rises linearly, then fades smoothly under a gentle wave</div>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="leftCanvas"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" id="rightTitle">Peeling Away 1/&epsilon;&sup2; Reveals &minus;1/12</div>
+      <div class="card-sub" id="rightSub">Total sum minus smooth growth curve lands on &minus;0.08333</div>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="rightCanvas"></canvas>
+    </div>
+  </div>
+</main>
+
+<div class="insight-banner">
+  <div class="insight-inner" id="insightText">
+    Slide <span class="highlight-cyan">Smooth Fade (&epsilon;)</span> toward <strong>0</strong>: as more numbers wake up, the total sum climbs along the smooth curve <span class="highlight-gold">1/&epsilon;&sup2;</span> &mdash; while the leftover difference stays anchored right below zero at <span class="highlight-rose">&minus;1/12 (&minus;0.08333)</span>.
+  </div>
+</div>
+
+<div class="controls-bar">
+  <div class="slider-group">
+    <label for="epsSlider" id="sliderLabel">Smooth Fade (&epsilon;):</label>
+    <input type="range" id="epsSlider" min="0.06" max="0.85" step="0.005" value="0.32">
+    <div class="val-pill" id="epsVal">&epsilon; = 0.320</div>
+  </div>
+
+  <div class="readouts">
+    <div class="stat-box">
+      <span class="lbl">Smoothed Total S(&epsilon;)</span>
+      <span class="num" id="statTotal" style="color: #7dd3fc;">9.6820</span>
+    </div>
+    <div class="stat-box">
+      <span class="lbl">Smooth Growth (1/&epsilon;&sup2;)</span>
+      <span class="num" id="statGrowth" style="color: #fbbf24;">9.7656</span>
+    </div>
+    <div class="stat-box">
+      <span class="lbl">Leftover Offset S(&epsilon;) &minus; 1/&epsilon;&sup2;</span>
+      <span class="num" id="statOffset" style="color: #fb7185;">&minus;0.0836</span>
+    </div>
+    <div class="stat-box">
+      <span class="lbl">Exact &minus;1/12 Target</span>
+      <span class="num" style="color: #34d399;">&minus;0.0833</span>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:8px;">
+    <button class="btn-action" id="sweepBtn">&#9654; Glide &epsilon; &rarr; 0</button>
+    <button class="btn-action" id="soundBtn">&#128263; Tone: Off</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const leftCanvas = document.getElementById('leftCanvas');
+  const rightCanvas = document.getElementById('rightCanvas');
+  const lCtx = leftCanvas.getContext('2d');
+  const rCtx = rightCanvas.getContext('2d');
+
+  const epsSlider = document.getElementById('epsSlider');
+  const epsVal = document.getElementById('epsVal');
+  const statTotal = document.getElementById('statTotal');
+  const statGrowth = document.getElementById('statGrowth');
+  const statOffset = document.getElementById('statOffset');
+  const sweepBtn = document.getElementById('sweepBtn');
+  const soundBtn = document.getElementById('soundBtn');
+  const leftTitle = document.getElementById('leftTitle');
+  const leftSub = document.getElementById('leftSub');
+  const rightTitle = document.getElementById('rightTitle');
+  const rightSub = document.getElementById('rightSub');
+  const sliderLabel = document.getElementById('sliderLabel');
+  const insightText = document.getElementById('insightText');
+
+  let mode = 'smoothing';
+  let eps = parseFloat(epsSlider.value);
+  let sweeping = false;
+  let sweepDir = -1;
+  let time = 0;
+
+  // Web Audio gentle harmonic tone
+  let audioCtx = null;
+  let osc = null;
+  let gainNode = null;
+  let soundOn = false;
+
+  function toggleSound() {
+    if (!soundOn) {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        osc = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 220;
+        gainNode.gain.value = 0.0;
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      soundOn = true;
+      gainNode.gain.setTargetAtTime(0.035, audioCtx.currentTime, 0.08);
+      soundBtn.textContent = '🔊 Tone: On';
+    } else {
+      soundOn = false;
+      if (gainNode) gainNode.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.08);
+      soundBtn.textContent = '🔇 Tone: Off';
+    }
+  }
+  soundBtn.addEventListener('click', toggleSound);
+
+  function updateTone() {
+    if (soundOn && osc && audioCtx) {
+      // Lower epsilon -> deeper harmonic resonance settling at -1/12
+      const freq = 140 + eps * 340;
+      osc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
+    }
+  }
+
+  function resizeCanvases() {
+    [leftCanvas, rightCanvas].forEach(c => {
+      const rect = c.parentElement.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      c.width = rect.width * dpr;
+      c.height = rect.height * dpr;
+    });
+  }
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
+
+  // Exact analytical sum for n * e^(-eps * n) from n=1..inf = e^eps / (e^eps - 1)^2
+  function exactSmoothedSum(e) {
+    const ex = Math.exp(e);
+    return ex / ((ex - 1) * (ex - 1));
+  }
+
+  function updateReadouts() {
+    if (mode === 'smoothing') {
+      const total = exactSmoothedSum(eps);
+      const growth = 1 / (eps * eps);
+      const offset = total - growth;
+      epsVal.textContent = `ε = ${eps.toFixed(3)}`;
+      statTotal.textContent = total.toFixed(4);
+      statGrowth.textContent = growth.toFixed(4);
+      statOffset.textContent = (offset < 0 ? '−' : '+') + Math.abs(offset).toFixed(4);
+    } else if (mode === 'casimir') {
+      const plateGap = eps; // mapped from slider
+      const force = -1 / (12 * plateGap * plateGap);
+      epsVal.textContent = `Gap d = ${plateGap.toFixed(2)}`;
+      statTotal.textContent = `${Math.round(6 / plateGap)} modes`;
+      statGrowth.textContent = `−π/(24d²)`;
+      statOffset.textContent = `−0.0833 (−1/12)`;
+    } else {
+      // Alternating series 1 - 2 + 3 - 4 + 5 ... = 1 / (1 + r)^2 where r = e^(-eps)
+      const r = Math.exp(-eps * 0.45);
+      const altSum = r / ((1 + r) * (1 + r));
+      const scaled = -altSum / 3; // since (1+2+3+...) - 4(1+2+3+...) = -3 S = 1/4 => S = -1/12
+      epsVal.textContent = `Damp r = ${r.toFixed(3)}`;
+      statTotal.textContent = altSum.toFixed(4);
+      statGrowth.textContent = `Target: 1/4`;
+      statOffset.textContent = (scaled < 0 ? '−' : '+') + Math.abs(scaled).toFixed(4);
+    }
+    updateTone();
+  }
+
+  epsSlider.addEventListener('input', () => {
+    eps = parseFloat(epsSlider.value);
+    sweeping = false;
+    sweepBtn.textContent = '▶ Glide ε → 0';
+    updateReadouts();
+  });
+
+  sweepBtn.addEventListener('click', () => {
+    sweeping = !sweeping;
+    sweepBtn.textContent = sweeping ? '⏸ Pause Glide' : '▶ Glide ε → 0';
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+
+      if (mode === 'smoothing') {
+        leftTitle.innerHTML = 'Dampened Terms: n &middot; e<sup>&minus;&epsilon;n</sup>';
+        leftSub.textContent = 'Each bar rises linearly, then fades smoothly under a gentle wave';
+        rightTitle.innerHTML = 'Peeling Away 1/&epsilon;&sup2; Reveals &minus;1/12';
+        rightSub.textContent = 'Total sum minus smooth growth curve lands on −0.08333';
+        sliderLabel.innerHTML = 'Smooth Fade (&epsilon;):';
+        insightText.innerHTML = 'Slide <span class="highlight-cyan">Smooth Fade (&epsilon;)</span> toward <strong>0</strong>: as more numbers wake up, the total sum climbs along the smooth curve <span class="highlight-gold">1/&epsilon;&sup2;</span> &mdash; while the leftover difference stays anchored right below zero at <span class="highlight-rose">&minus;1/12 (&minus;0.08333)</span>.';
+      } else if (mode === 'casimir') {
+        leftTitle.textContent = 'Standing Waves Trapped Between Plates';
+        leftSub.textContent = 'Only whole half-waves (n = 1, 2, 3...) fit inside the narrow gap';
+        rightTitle.textContent = 'Vacuum Pressure From −1/12 Baseline';
+        rightSub.textContent = 'Fewer waves inside than outside creates a gentle inward pull';
+        sliderLabel.textContent = 'Plate Separation (d):';
+        insightText.innerHTML = 'In the <span class="highlight-cyan">Casimir Effect</span>, two parallel mirrors only allow standing waves with wavelengths fitting neatly inside gap <strong>d</strong>. Summing those discrete wave energies leaves the exact <span class="highlight-rose">&minus;1/12</span> vacuum energy offset, pulling the plates gently together.';
+      } else {
+        leftTitle.textContent = 'Alternating Wave: 1 − 2r + 3r² − 4r³ + …';
+        leftSub.textContent = 'Up-and-down oscillations balance around a calm center of +1/4';
+        rightTitle.textContent = 'Why +1/4 Divided by −3 Gives −1/12';
+        rightSub.textContent = 'Subtracting 4× the even terms turns 1+2+3+… into 1−2+3−4+… = 1/4';
+        sliderLabel.textContent = 'Wave Decay:';
+        insightText.innerHTML = 'Euler’s classic wave balance: <span class="highlight-gold">1 &minus; 2 + 3 &minus; 4 + 5 &minus; &hellip;</span> oscillates symmetrically around <span class="highlight-cyan">+1/4</span>. Because subtracting four times the original series produces this alternating wave (<span class="highlight-cyan">S &minus; 4S = 1/4</span>), dividing by &minus;3 reveals <span class="highlight-rose">S = &minus;1/12</span>.';
+      }
+      updateReadouts();
+    });
+  });
+
+  function drawSmoothingMode() {
+    const lw = leftCanvas.width, lh = leftCanvas.height;
+    const rw = rightCanvas.width, rh = rightCanvas.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    // --- LEFT CANVAS: Terms n * e^(-eps * n) ---
+    lCtx.clearRect(0, 0, lw, lh);
+    const padL = 44 * dpr, padR = 20 * dpr, padT = 26 * dpr, padB = 34 * dpr;
+    const plotW = lw - padL - padR;
+    const plotH = lh - padT - padB;
+
+    const maxN = Math.min(60, Math.max(18, Math.ceil(6.5 / eps)));
+    const peakVal = Math.max(1.2, 1 / (eps * Math.E) * 1.15);
+
+    // Grid lines
+    lCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+    lCtx.lineWidth = 1 * dpr;
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (plotH * i) / 4;
+      lCtx.beginPath();
+      lCtx.moveTo(padL, y);
+      lCtx.lineTo(lw - padR, y);
+      lCtx.stroke();
+    }
+
+    // Bars for n * e^(-eps * n)
+    const barStep = plotW / maxN;
+    const barW = Math.max(2 * dpr, barStep * 0.68);
+    for (let n = 1; n <= maxN; n++) {
+      const val = n * Math.exp(-eps * n);
+      const h = (val / peakVal) * plotH;
+      const x = padL + (n - 0.5) * barStep - barW / 2;
+      const y = padT + plotH - h;
+
+      const grad = lCtx.createLinearGradient(0, y, 0, padT + plotH);
+      grad.addColorStop(0, 'rgba(56, 189, 248, 0.92)');
+      grad.addColorStop(1, 'rgba(167, 139, 250, 0.25)');
+      lCtx.fillStyle = grad;
+      lCtx.beginPath();
+      lCtx.roundRect(x, y, barW, h, [3 * dpr, 3 * dpr, 0, 0]);
+      lCtx.fill();
+    }
+
+    // Smooth continuous envelope curve x * e^(-eps * x)
+    lCtx.strokeStyle = '#fbbf24';
+    lCtx.lineWidth = 2.4 * dpr;
+    lCtx.beginPath();
+    for (let px = 0; px <= plotW; px += 3 * dpr) {
+      const xVal = (px / plotW) * maxN;
+      const yVal = xVal * Math.exp(-eps * xVal);
+      const py = padT + plotH - (yVal / peakVal) * plotH;
+      if (px === 0) lCtx.moveTo(padL + px, py);
+      else lCtx.lineTo(padL + px, py);
+    }
+    lCtx.stroke();
+
+    // Axis labels
+    lCtx.fillStyle = '#8ea4c8';
+    lCtx.font = `${11 * dpr}px sans-serif`;
+    lCtx.fillText(`Peak term ≈ ${(1 / (eps * Math.E)).toFixed(2)}`, padL + 8 * dpr, padT + 14 * dpr);
+    lCtx.fillText(`n = 1`, padL, lh - 12 * dpr);
+    lCtx.fillText(`n = ${maxN}`, lw - padR - 36 * dpr, lh - 12 * dpr);
+
+    // --- RIGHT CANVAS: S(eps) - 1/eps^2 zooming into -1/12 ---
+    rCtx.clearRect(0, 0, rw, rh);
+    const rPadL = 54 * dpr, rPadR = 24 * dpr, rPadT = 28 * dpr, rPadB = 34 * dpr;
+    const rW = rw - rPadL - rPadR;
+    const rH = rh - rPadT - rPadB;
+
+    // Plot range for y: from -0.14 to +0.06 so 0 and -1/12 (-0.0833) are crystal clear
+    const yMin = -0.14, yMax = 0.05;
+    const toY = v => rPadT + ((yMax - v) / (yMax - yMin)) * rH;
+    const epsMin = 0.05, epsMax = 0.85;
+    const toX = e => rPadL + ((e - epsMin) / (epsMax - epsMin)) * rW;
+
+    // Zero baseline
+    const yZero = toY(0);
+    rCtx.strokeStyle = 'rgba(255,255,255,0.22)';
+    rCtx.lineWidth = 1.2 * dpr;
+    rCtx.beginPath();
+    rCtx.moveTo(rPadL, yZero);
+    rCtx.lineTo(rw - rPadR, yZero);
+    rCtx.stroke();
+    rCtx.fillStyle = '#94a3b8';
+    rCtx.font = `${11 * dpr}px monospace`;
+    rCtx.fillText('0.000', 8 * dpr, yZero + 4 * dpr);
+
+    // Target -1/12 dashed line
+    const yTarget = toY(-1 / 12);
+    rCtx.save();
+    rCtx.setLineDash([6 * dpr, 5 * dpr]);
+    rCtx.strokeStyle = '#34d399';
+    rCtx.lineWidth = 1.8 * dpr;
+    rCtx.beginPath();
+    rCtx.moveTo(rPadL, yTarget);
+    rCtx.lineTo(rw - rPadR, yTarget);
+    rCtx.stroke();
+    rCtx.restore();
+    rCtx.fillStyle = '#34d399';
+    rCtx.fillText('−1/12', 8 * dpr, yTarget + 4 * dpr);
+
+    // Curve of S(e) - 1/e^2 across all epsilon
+    rCtx.strokeStyle = '#fb7185';
+    rCtx.lineWidth = 2.8 * dpr;
+    rCtx.beginPath();
+    let started = false;
+    for (let e = epsMin; e <= epsMax; e += 0.005) {
+      const diff = exactSmoothedSum(e) - 1 / (e * e);
+      const px = toX(e);
+      const py = toY(diff);
+      if (!started) { rCtx.moveTo(px, py); started = true; }
+      else rCtx.lineTo(px, py);
+    }
+    rCtx.stroke();
+
+    // Current marker dot
+    const curDiff = exactSmoothedSum(eps) - 1 / (eps * eps);
+    const cx = toX(eps);
+    const cy = toY(curDiff);
+
+    // Glow halo
+    const glow = rCtx.createRadialGradient(cx, cy, 2 * dpr, cx, cy, 18 * dpr);
+    glow.addColorStop(0, 'rgba(251, 113, 133, 0.85)');
+    glow.addColorStop(1, 'rgba(251, 113, 133, 0)');
+    rCtx.fillStyle = glow;
+    rCtx.beginPath();
+    rCtx.arc(cx, cy, 18 * dpr, 0, Math.PI * 2);
+    rCtx.fill();
+
+    rCtx.fillStyle = '#fff';
+    rCtx.beginPath();
+    rCtx.arc(cx, cy, 5 * dpr, 0, Math.PI * 2);
+    rCtx.fill();
+
+    // Label near dot
+    rCtx.fillStyle = '#fda4af';
+    rCtx.font = `bold ${11 * dpr}px monospace`;
+    rCtx.fillText(`S(ε) − 1/ε² = ${curDiff.toFixed(4)}`, Math.min(cx + 10 * dpr, rw - 165 * dpr), cy - 10 * dpr);
+    rCtx.fillStyle = '#8ea4c8';
+    rCtx.font = `${11 * dpr}px sans-serif`;
+    rCtx.fillText('← ε → 0 (limit hits −1/12)', rPadL + 8 * dpr, rh - 10 * dpr);
+  }
+
+  function drawCasimirMode() {
+    const lw = leftCanvas.width, lh = leftCanvas.height;
+    const rw = rightCanvas.width, rh = rightCanvas.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    // LEFT: Two metallic plates with standing waves n=1..6 trapped inside vs continuous waves outside
+    lCtx.clearRect(0, 0, lw, lh);
+    const centerX = lw * 0.5;
+    const gapPx = (65 + eps * 190) * dpr;
+    const leftPlateX = centerX - gapPx / 2;
+    const rightPlateX = centerX + gapPx / 2;
+
+    // Subtle inward Casimir force arrows
+    const arrowPulse = 0.5 + 0.5 * Math.sin(time * 3);
+    lCtx.fillStyle = `rgba(251, 113, 133, ${0.45 + 0.35 * arrowPulse})`;
+    lCtx.font = `bold ${12 * dpr}px sans-serif`;
+    lCtx.fillText('→ Inward Pull', leftPlateX - 88 * dpr, lh * 0.5);
+    lCtx.fillText('Inward Pull ←', rightPlateX + 12 * dpr, lh * 0.5);
+
+    // Draw plates
+    lCtx.fillStyle = '#38bdf8';
+    lCtx.fillRect(leftPlateX - 5 * dpr, 24 * dpr, 5 * dpr, lh - 48 * dpr);
+    lCtx.fillRect(rightPlateX, 24 * dpr, 5 * dpr, lh - 48 * dpr);
+
+    // Draw discrete harmonic standing waves n = 1..6 inside plates
+    const harmonics = 6;
+    for (let n = 1; n <= harmonics; n++) {
+      const bandY = 36 * dpr + ((lh - 72 * dpr) * (n - 0.5)) / harmonics;
+      const amp = (14 * dpr) / Math.sqrt(n);
+      const omega = n * 2.2;
+      const hue = 190 + n * 24;
+
+      lCtx.strokeStyle = `hsla(${hue}, 90%, 68%, 0.88)`;
+      lCtx.lineWidth = 2.2 * dpr;
+      lCtx.beginPath();
+      for (let x = leftPlateX; x <= rightPlateX; x += 2 * dpr) {
+        const u = (x - leftPlateX) / gapPx;
+        const y = bandY + Math.sin(n * Math.PI * u) * Math.cos(time * omega) * amp;
+        if (x === leftPlateX) lCtx.moveTo(x, y);
+        else lCtx.lineTo(x, y);
+      }
+      lCtx.stroke();
+
+      lCtx.fillStyle = '#94a3b8';
+      lCtx.font = `${10 * dpr}px monospace`;
+      lCtx.fillText(`n=${n}`, centerX - 10 * dpr, bandY - amp - 3 * dpr);
+    }
+
+    // RIGHT: Attractive Casimir Energy Curve -1/12 * (1/d^2)
+    rCtx.clearRect(0, 0, rw, rh);
+    const padL = 52 * dpr, padR = 24 * dpr, padT = 28 * dpr, padB = 34 * dpr;
+    const pW = rw - padL - padR;
+    const pH = rh - padT - padB;
+
+    // Top zero energy line
+    rCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+    rCtx.lineWidth = 1.2 * dpr;
+    rCtx.beginPath();
+    rCtx.moveTo(padL, padT + 14 * dpr);
+    rCtx.lineTo(rw - padR, padT + 14 * dpr);
+    rCtx.stroke();
+    rCtx.fillStyle = '#94a3b8';
+    rCtx.font = `${11 * dpr}px monospace`;
+    rCtx.fillText('E = 0', 10 * dpr, padT + 18 * dpr);
+
+    // Curve E(d) = -1 / (12 * d^2)
+    rCtx.strokeStyle = '#fb7185';
+    rCtx.lineWidth = 2.8 * dpr;
+    rCtx.beginPath();
+    let first = true;
+    for (let px = 0; px <= pW; px += 3 * dpr) {
+      const d = 0.08 + (px / pW) * 0.77;
+      const energy = -1 / (12 * d * d);
+      const normY = Math.min(1, Math.abs(energy) / 14);
+      const py = padT + 14 * dpr + normY * (pH - 20 * dpr);
+      if (first) { rCtx.moveTo(padL + px, py); first = false; }
+      else rCtx.lineTo(padL + px, py);
+    }
+    rCtx.stroke();
+
+    const curNormX = (eps - 0.08) / 0.77;
+    const curX = padL + Math.max(0, Math.min(1, curNormX)) * pW;
+    const curEnergy = -1 / (12 * eps * eps);
+    const curNormY = Math.min(1, Math.abs(curEnergy) / 14);
+    const curY = padT + 14 * dpr + curNormY * (pH - 20 * dpr);
+
+    rCtx.fillStyle = '#fff';
+    rCtx.beginPath();
+    rCtx.arc(curX, curY, 5.5 * dpr, 0, Math.PI * 2);
+    rCtx.fill();
+
+    rCtx.fillStyle = '#fda4af';
+    rCtx.font = `bold ${11 * dpr}px monospace`;
+    rCtx.fillText(`Vacuum Energy ∝ (−1/12) / d²`, padL + 12 * dpr, rh - 14 * dpr);
+  }
+
+  function drawAlternatingMode() {
+    const lw = leftCanvas.width, lh = leftCanvas.height;
+    const rw = rightCanvas.width, rh = rightCanvas.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const r = Math.exp(-eps * 0.45);
+    const maxTerms = 24;
+
+    // LEFT: Oscillating partial sums of 1 - 2r + 3r^2 - 4r^3 ... settling at +1/4
+    lCtx.clearRect(0, 0, lw, lh);
+    const padL = 48 * dpr, padR = 20 * dpr, padT = 26 * dpr, padB = 34 * dpr;
+    const pW = lw - padL - padR;
+    const pH = lh - padT - padB;
+
+    const midY = padT + pH * 0.55;
+    const targetY = midY - 0.25 * (pH * 0.16);
+
+    // Zero line
+    lCtx.strokeStyle = 'rgba(255,255,255,0.16)';
+    lCtx.beginPath();
+    lCtx.moveTo(padL, midY);
+    lCtx.lineTo(lw - padR, midY);
+    lCtx.stroke();
+
+    // +1/4 center line
+    lCtx.save();
+    lCtx.setLineDash([5 * dpr, 5 * dpr]);
+    lCtx.strokeStyle = '#38bdf8';
+    lCtx.lineWidth = 1.6 * dpr;
+    lCtx.beginPath();
+    lCtx.moveTo(padL, targetY);
+    lCtx.lineTo(lw - padR, targetY);
+    lCtx.stroke();
+    lCtx.restore();
+    lCtx.fillStyle = '#7dd3fc';
+    lCtx.font = `${11 * dpr}px monospace`;
+    lCtx.fillText('+1/4', 10 * dpr, targetY + 4 * dpr);
+
+    // Partial sums zigzag
+    let sum = 0;
+    lCtx.strokeStyle = '#fbbf24';
+    lCtx.lineWidth = 2.4 * dpr;
+    lCtx.beginPath();
+    for (let n = 1; n <= maxTerms; n++) {
+      const sign = (n % 2 === 1) ? 1 : -1;
+      sum += sign * n * Math.pow(r, n - 1);
+      const x = padL + ((n - 1) / (maxTerms - 1)) * pW;
+      const y = midY - sum * (pH * 0.16);
+      if (n === 1) lCtx.moveTo(x, y);
+      else lCtx.lineTo(x, y);
+    }
+    lCtx.stroke();
+
+    // Dots on partial sums
+    sum = 0;
+    for (let n = 1; n <= maxTerms; n++) {
+      const sign = (n % 2 === 1) ? 1 : -1;
+      sum += sign * n * Math.pow(r, n - 1);
+      const x = padL + ((n - 1) / (maxTerms - 1)) * pW;
+      const y = midY - sum * (pH * 0.16);
+      lCtx.fillStyle = (n % 2 === 1) ? '#34d399' : '#fb7185';
+      lCtx.beginPath();
+      lCtx.arc(x, y, 3.5 * dpr, 0, Math.PI * 2);
+      lCtx.fill();
+    }
+
+    // RIGHT: Visual algebraic balance S - 4S = 1/4 => S = -1/12
+    rCtx.clearRect(0, 0, rw, rh);
+    const altVal = r / ((1 + r) * (1 + r));
+    const sVal = -altVal / 3;
+
+    const boxes = [
+      { label: 'Alternating Wave (1 − 2 + 3 − 4 + …)', val: altVal, exact: '+1/4 (+0.2500)', color: '#38bdf8', y: rh * 0.26 },
+      { label: 'Divide by −3  (since S − 4S = −3S)', val: sVal, exact: '−1/12 (−0.0833)', color: '#fb7185', y: rh * 0.68 }
+    ];
+
+    boxes.forEach(b => {
+      const cx = rw * 0.5;
+      rCtx.fillStyle = 'rgba(255,255,255,0.04)';
+      rCtx.strokeStyle = b.color;
+      rCtx.lineWidth = 1.6 * dpr;
+      rCtx.beginPath();
+      rCtx.roundRect(30 * dpr, b.y - 34 * dpr, rw - 60 * dpr, 68 * dpr, 12 * dpr);
+      rCtx.fill();
+      rCtx.stroke();
+
+      rCtx.fillStyle = '#cbd5e1';
+      rCtx.font = `${12 * dpr}px sans-serif`;
+      rCtx.fillText(b.label, 46 * dpr, b.y - 10 * dpr);
+
+      rCtx.fillStyle = b.color;
+      rCtx.font = `bold ${15 * dpr}px monospace`;
+      rCtx.fillText(`Current: ${b.val.toFixed(4)}   |   Limit: ${b.exact}`, 46 * dpr, b.y + 16 * dpr);
+    });
+  }
+
+  function loop() {
+    time += 0.016;
+    if (sweeping) {
+      eps += sweepDir * 0.0025;
+      if (eps <= 0.06) { eps = 0.06; sweepDir = 1; }
+      if (eps >= 0.85) { eps = 0.85; sweepDir = -1; }
+      epsSlider.value = eps.toFixed(3);
+      updateReadouts();
+    }
+
+    if (mode === 'smoothing') drawSmoothingMode();
+    else if (mode === 'casimir') drawCasimirMode();
+    else drawAlternatingMode();
+
+    requestAnimationFrame(loop);
+  }
+
+  updateReadouts();
+  loop();
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end Seeing 1 + 2 + 3 + 4 + 5 + ... = -1/12 — Interactive Visual Explorer -->
+<!-- Ring Sum & -1/12 Spectral Explorer — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 12: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-ringsum" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-ringsum">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ring Sum &amp; -1/12 Spectral Explorer</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --panel: #131a2a;
+    --panel-2: #192236;
+    --border: #283552;
+    --text: #eef2ff;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #a78bfa;
+    --warm: #fbbf24;
+    --good: #34d399;
+    --rose: #fb7185;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.45;
+    padding: 16px;
+  }
+  .container {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    background: linear-gradient(90deg, #38bdf8, #a78bfa, #fb7185);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .tab-btn:hover { color: var(--text); border-color: var(--accent); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(167,139,250,0.18));
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .tab-view { display: none; }
+  .tab-view.active { display: block; }
+
+  .grid-two {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 920px) {
+    .grid-two { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 0.78rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(56,189,248,0.14);
+    color: var(--accent);
+    border: 1px solid rgba(56,189,248,0.3);
+  }
+  .control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--panel-2);
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+  }
+  .control-row label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  input[type="range"] {
+    flex: 1;
+    min-width: 150px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .val-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #0d1322;
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    color: var(--accent);
+    min-width: 68px;
+    text-align: center;
+  }
+  canvas {
+    width: 100%;
+    background: #080c14;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 560px) {
+    .metrics { grid-template-columns: 1fr; }
+  }
+  .metric-box {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px;
+  }
+  .metric-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .metric-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .metric-sub {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .highlight-good { color: var(--good); }
+  .highlight-warm { color: var(--warm); }
+  .highlight-rose { color: var(--rose); }
+
+  .toggle-group {
+    display: inline-flex;
+    background: #0d1322;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+  }
+  .toggle-opt {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    padding: 6px 11px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .toggle-opt.active {
+    background: var(--accent);
+    color: #06101d;
+  }
+  .note {
+    font-size: 0.84rem;
+    color: var(--muted);
+    background: rgba(148, 163, 184, 0.07);
+    padding: 9px 11px;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-2);
+  }
+  .btn-small {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-small:hover { border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>Ring Sum &amp; &minus;1/12 Spectral Explorer</h1>
+      <div class="subtitle">From discrete cycle vibrations to smooth vs. sharp cutoffs</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="ring-tab">Ring Sum</button>
+      <button class="tab-btn" data-tab="casimir-tab">Casimir Plates</button>
+    </div>
+  </header>
+
+  <!-- TAB 1: RING SUM -->
+  <div id="ring-tab" class="tab-view active">
+    <div class="grid-two">
+      <!-- PANEL 1: RING OF N POINTS & VIBRATION MODE BARS -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Ring Vibration Modes</span>
+          <span class="badge">height = 2&middot;sin(&pi;k/n)</span>
+        </div>
+
+        <div class="control-row">
+          <label for="ring-n">Ring points (n):</label>
+          <input type="range" id="ring-n" min="3" max="200" value="24">
+          <span class="val-pill" id="ring-n-val">n = 24</span>
+          <button class="btn-small" id="ring-grow-btn">Grow n</button>
+        </div>
+
+        <canvas id="ring-canvas" width="560" height="210"></canvas>
+        <canvas id="bars-canvas" width="560" height="205"></canvas>
+
+        <div class="metrics">
+          <div class="metric-box">
+            <div class="metric-label">Total of Bars (&Sigma; 2sin(&pi;k/n))</div>
+            <div class="metric-value" id="bar-total-val">30.5142</div>
+            <div class="metric-sub" id="bar-cot-val">2&middot;cot(&pi;/2n) = 30.5142</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Growth Part (4n/&pi;)</div>
+            <div class="metric-value highlight-warm" id="bar-growth-val">30.5577</div>
+            <div class="metric-sub">Smooth area under sine arch</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Leftover &times; n/(4&pi;)</div>
+            <div class="metric-value highlight-good" id="bar-leftover-val">-0.0832</div>
+            <div class="metric-sub">Settles at &minus;1/12 (&minus;0.0833)</div>
+          </div>
+        </div>
+
+        <div class="note">
+          Each bar is one vibration frequency <strong>k</strong> on the <strong>n</strong>-point ring. Subtracting the smooth growth <strong>4n/&pi;</strong> leaves a tiny negative deficit: multiplying that leftover by <strong>n/(4&pi;)</strong> reveals <strong>&minus;1/12 &approx; &minus;0.0833</strong>.
+        </div>
+      </div>
+
+      <!-- PANEL 2: STAIRCASE 1, 2, 3, ... SHARP STOP VS SMOOTH FADE -->
+      <div class="card">
+        <div class="card-title">
+          <span>2. Staircase 1 + 2 + 3 + &hellip;</span>
+          <div class="toggle-group" id="cutoff-toggle">
+            <button class="toggle-opt active" data-mode="smooth">Smooth fade e<sup>&minus;&epsilon;n</sup></button>
+            <button class="toggle-opt" data-mode="sharp">Sharp stop at N</button>
+          </div>
+        </div>
+
+        <div class="control-row" id="smooth-controls">
+          <label for="eps-slider">Smooth fade (&epsilon;):</label>
+          <input type="range" id="eps-slider" min="0.03" max="0.45" step="0.005" value="0.12">
+          <span class="val-pill" id="eps-val">&epsilon; = 0.120</span>
+        </div>
+
+        <div class="control-row" id="sharp-controls" style="display:none;">
+          <label for="sharp-n-slider">Sharp stop (N):</label>
+          <input type="range" id="sharp-n-slider" min="4" max="60" step="1" value="18">
+          <span class="val-pill" id="sharp-n-val">N = 18</span>
+        </div>
+
+        <canvas id="stair-canvas" width="520" height="315"></canvas>
+
+        <div class="metrics">
+          <div class="metric-box">
+            <div class="metric-label" id="stair-sum-label">Smoothed Total</div>
+            <div class="metric-value" id="stair-sum-val">69.3611</div>
+            <div class="metric-sub" id="stair-sum-sub">&Sigma; n&middot;e<sup>&minus;&epsilon;n</sup></div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label" id="stair-growth-label">Growth Part Removed</div>
+            <div class="metric-value highlight-warm" id="stair-growth-val">69.4444</div>
+            <div class="metric-sub" id="stair-growth-sub">1/&epsilon;&sup2;</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Leftover After Growth</div>
+            <div class="metric-value highlight-rose" id="stair-leftover-val">-0.0833</div>
+            <div class="metric-sub" id="stair-leftover-sub">Exact &minus;1/12 (&minus;0.0833)</div>
+          </div>
+        </div>
+
+        <div class="note" id="stair-note">
+          <strong>Why the difference?</strong> A sharp wall at <strong>N</strong> chops off half of the last step, leaving symmetric triangles around <strong>N(N+1)/2</strong> with <strong>0</strong> leftover. A smooth exponential fade <strong>e<sup>&minus;&epsilon;n</sup></strong> gently rounds the staircase, leaving an exact baseline shift of <strong>&minus;1/12</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: CASIMIR PLATES -->
+  <div id="casimir-tab" class="tab-view">
+    <div class="card">
+      <div class="card-title">
+        <span>Standing-Wave Casimir Plates</span>
+        <span class="badge">Trapped modes vs. continuous outside waves</span>
+      </div>
+      <div class="control-row">
+        <label for="plate-gap">Plate Separation (d):</label>
+        <input type="range" id="plate-gap" min="90" max="320" value="180">
+        <span class="val-pill" id="plate-gap-val">d = 1.80</span>
+      </div>
+      <canvas id="casimir-canvas" width="1100" height="340"></canvas>
+      <div class="metrics">
+        <div class="metric-box">
+          <div class="metric-label">Inside Wave Modes</div>
+          <div class="metric-value">Discrete 1, 2, 3, &hellip;</div>
+          <div class="metric-sub">Only whole half-waves fit between walls</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Regularized Deficit</div>
+          <div class="metric-value highlight-good">&minus;1/12 (&minus;0.0833)</div>
+          <div class="metric-sub">Inside discrete sum minus smooth outside</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Net Plate Pull</div>
+          <div class="metric-value highlight-rose" id="casimir-force-val">&minus;0.0257</div>
+          <div class="metric-sub">Proportional to &minus;(&pi;/24)/d&sup2;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ================= PANEL 1: RING SUM =================
+const ringNInput = document.getElementById('ring-n');
+const ringNVal = document.getElementById('ring-n-val');
+const ringCanvas = document.getElementById('ring-canvas');
+const ringCtx = ringCanvas.getContext('2d');
+const barsCanvas = document.getElementById('bars-canvas');
+const barsCtx = barsCanvas.getContext('2d');
+const ringGrowBtn = document.getElementById('ring-grow-btn');
+
+let growAnim = null;
+let phase = 0;
+
+ringGrowBtn.addEventListener('click', () => {
+  if (growAnim) {
+    clearInterval(growAnim);
+    growAnim = null;
+    ringGrowBtn.textContent = 'Grow n';
+    return;
+  }
+  ringGrowBtn.textContent = 'Stop';
+  if (parseInt(ringNInput.value, 10) >= 195) ringNInput.value = 3;
+  growAnim = setInterval(() => {
+    let cur = parseInt(ringNInput.value, 10);
+    if (cur < 200) {
+      ringNInput.value = cur + 1;
+      updateRingAndBars();
+    } else {
+      clearInterval(growAnim);
+      growAnim = null;
+      ringGrowBtn.textContent = 'Grow n';
+    }
+  }, 55);
+});
+
+ringNInput.addEventListener('input', updateRingAndBars);
+
+function updateRingAndBars() {
+  const n = parseInt(ringNInput.value, 10);
+  ringNVal.textContent = `n = ${n}`;
+
+  // Exact sums for k = 1 .. n-1
+  let barSum = 0;
+  const heights = [];
+  for (let k = 1; k < n; k++) {
+    const h = 2 * Math.sin((Math.PI * k) / n);
+    heights.push(h);
+    barSum += h;
+  }
+  const cotFormula = 2 / Math.tan(Math.PI / (2 * n));
+  const growth = (4 * n) / Math.PI;
+  const leftover = barSum - growth;
+  const scaledLeftover = leftover * (n / (4 * Math.PI));
+
+  document.getElementById('bar-total-val').textContent = barSum.toFixed(4);
+  document.getElementById('bar-cot-val').textContent = `2·cot(π/2n) = ${cotFormula.toFixed(4)}`;
+  document.getElementById('bar-growth-val').textContent = growth.toFixed(4);
+  document.getElementById('bar-leftover-val').textContent = scaledLeftover.toFixed(4);
+
+  drawRing(n);
+  drawBars(n, heights);
+}
+
+function drawRing(n) {
+  const w = ringCanvas.width;
+  const h = ringCanvas.height;
+  ringCtx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const R = 74;
+
+  // Fundamental mode k=1 wave envelope
+  ringCtx.beginPath();
+  const steps = 180;
+  for (let i = 0; i <= steps; i++) {
+    const theta = (i / steps) * Math.PI * 2;
+    const ripple = 9 * Math.cos(theta - phase);
+    const r = R + ripple;
+    const x = cx + r * Math.cos(theta);
+    const y = cy + r * Math.sin(theta);
+    if (i === 0) ringCtx.moveTo(x, y);
+    else ringCtx.lineTo(x, y);
+  }
+  ringCtx.closePath();
+  ringCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+  ringCtx.lineWidth = 2;
+  ringCtx.stroke();
+
+  // Base circle
+  ringCtx.beginPath();
+  ringCtx.arc(cx, cy, R, 0, Math.PI * 2);
+  ringCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+  ringCtx.lineWidth = 1.2;
+  ringCtx.stroke();
+
+  // Cycle edges & points
+  const pts = [];
+  for (let j = 0; j < n; j++) {
+    const theta = (j / n) * Math.PI * 2 - Math.PI / 2;
+    const ripple = 9 * Math.cos(theta - phase);
+    const r = R + ripple;
+    pts.push({
+      x: cx + r * Math.cos(theta),
+      y: cy + r * Math.sin(theta)
+    });
+  }
+
+  ringCtx.beginPath();
+  for (let j = 0; j < n; j++) {
+    if (j === 0) ringCtx.moveTo(pts[j].x, pts[j].y);
+    else ringCtx.lineTo(pts[j].x, pts[j].y);
+  }
+  ringCtx.closePath();
+  ringCtx.strokeStyle = '#38bdf8';
+  ringCtx.lineWidth = n > 80 ? 1.2 : 1.8;
+  ringCtx.stroke();
+
+  const dotRadius = n <= 20 ? 4.5 : n <= 60 ? 3 : n <= 120 ? 2 : 1.4;
+  for (let j = 0; j < n; j++) {
+    ringCtx.beginPath();
+    ringCtx.arc(pts[j].x, pts[j].y, dotRadius, 0, Math.PI * 2);
+    ringCtx.fillStyle = j === 0 ? '#fbbf24' : '#e0f2fe';
+    ringCtx.fill();
+  }
+
+  ringCtx.fillStyle = '#94a3b8';
+  ringCtx.font = '12px sans-serif';
+  ringCtx.fillText(`Cycle of n = ${n} points (fundamental k = 1 wave shown)`, 14, 20);
+}
+
+function drawBars(n, heights) {
+  const w = barsCanvas.width;
+  const h = barsCanvas.height;
+  barsCtx.clearRect(0, 0, w, h);
+
+  const padL = 38;
+  const padR = 18;
+  const padT = 28;
+  const padB = 28;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const maxVal = 2.05;
+
+  // Horizontal reference line at y = 2
+  const yTop = padT + plotH * (1 - 2 / maxVal);
+  barsCtx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+  barsCtx.setLineDash([4, 4]);
+  barsCtx.beginPath();
+  barsCtx.moveTo(padL, yTop);
+  barsCtx.lineTo(w - padR, yTop);
+  barsCtx.stroke();
+  barsCtx.setLineDash([]);
+
+  barsCtx.fillStyle = '#94a3b8';
+  barsCtx.font = '11px monospace';
+  barsCtx.fillText('2.0', 8, yTop + 4);
+  barsCtx.fillText('0', 18, padT + plotH + 4);
+
+  // Smooth continuum arch y = 2 sin(pi x)
+  barsCtx.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const u = i / 200;
+    const val = 2 * Math.sin(Math.PI * u);
+    const px = padL + u * plotW;
+    const py = padT + plotH * (1 - val / maxVal);
+    if (i === 0) barsCtx.moveTo(px, py);
+    else barsCtx.lineTo(px, py);
+  }
+  barsCtx.strokeStyle = '#fbbf24';
+  barsCtx.lineWidth = 2;
+  barsCtx.stroke();
+
+  // Bars for k = 1 .. n-1
+  const slotW = plotW / n;
+  const barW = Math.max(1.2, slotW * 0.68);
+  for (let k = 1; k < n; k++) {
+    const val = heights[k - 1];
+    const barH = (val / maxVal) * plotH;
+    const cx = padL + (k / n) * plotW;
+    const x = cx - barW / 2;
+    const y = padT + plotH - barH;
+
+    const grad = barsCtx.createLinearGradient(0, y, 0, padT + plotH);
+    grad.addColorStop(0, '#38bdf8');
+    grad.addColorStop(1, 'rgba(167, 139, 250, 0.55)');
+    barsCtx.fillStyle = grad;
+    barsCtx.fillRect(x, y, barW, barH);
+  }
+
+  // Axis baseline
+  barsCtx.strokeStyle = '#334155';
+  barsCtx.lineWidth = 1.2;
+  barsCtx.beginPath();
+  barsCtx.moveTo(padL, padT + plotH);
+  barsCtx.lineTo(w - padR, padT + plotH);
+  barsCtx.stroke();
+
+  barsCtx.fillStyle = '#cbd5e1';
+  barsCtx.font = '12px sans-serif';
+  barsCtx.fillText(`Vibration modes k = 1 … ${n - 1} (bars) vs. smooth arch (gold)`, padL, 17);
+}
+
+// ================= PANEL 2: STAIRCASE 1, 2, 3, ... =================
+let cutoffMode = 'smooth';
+const epsSlider = document.getElementById('eps-slider');
+const epsVal = document.getElementById('eps-val');
+const sharpNSlider = document.getElementById('sharp-n-slider');
+const sharpNVal = document.getElementById('sharp-n-val');
+const stairCanvas = document.getElementById('stair-canvas');
+const stairCtx = stairCanvas.getContext('2d');
+
+document.querySelectorAll('#cutoff-toggle .toggle-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#cutoff-toggle .toggle-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    cutoffMode = btn.dataset.mode;
+    document.getElementById('smooth-controls').style.display = cutoffMode === 'smooth' ? 'flex' : 'none';
+    document.getElementById('sharp-controls').style.display = cutoffMode === 'sharp' ? 'flex' : 'none';
+    updateStaircase();
+  });
+});
+
+epsSlider.addEventListener('input', updateStaircase);
+sharpNSlider.addEventListener('input', updateStaircase);
+
+function updateStaircase() {
+  const w = stairCanvas.width;
+  const h = stairCanvas.height;
+  stairCtx.clearRect(0, 0, w, h);
+
+  const padL = 42;
+  const padR = 18;
+  const padT = 28;
+  const padB = 30;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  if (cutoffMode === 'smooth') {
+    const eps = parseFloat(epsSlider.value);
+    epsVal.textContent = `ε = ${eps.toFixed(3)}`;
+
+    // Exact sum: sum_{n=1}^inf n e^{-eps n} = e^{-eps} / (1 - e^{-eps})^2
+    const em = Math.exp(-eps);
+    const exactSum = em / Math.pow(1 - em, 2);
+    const growth = 1 / (eps * eps);
+    const leftover = exactSum - growth;
+
+    document.getElementById('stair-sum-label').textContent = 'Smoothed Total';
+    document.getElementById('stair-sum-val').textContent = exactSum.toFixed(4);
+    document.getElementById('stair-sum-sub').innerHTML = '&Sigma; n&middot;e<sup>&minus;&epsilon;n</sup>';
+    document.getElementById('stair-growth-label').textContent = 'Growth Part (1/ε²)';
+    document.getElementById('stair-growth-val').textContent = growth.toFixed(4);
+    document.getElementById('stair-growth-sub').textContent = 'Smooth integral ∫ x·e^(−εx) dx';
+
+    const leftEl = document.getElementById('stair-leftover-val');
+    leftEl.textContent = leftover.toFixed(4);
+    leftEl.className = 'metric-value highlight-rose';
+    document.getElementById('stair-leftover-sub').textContent = 'Settles at −1/12 (−0.0833)';
+
+    document.getElementById('stair-note').innerHTML =
+      '<strong>Smooth fade e<sup>&minus;&epsilon;n</sup>:</strong> Because the fade bends smoothly across every step, the discrete staircase sits slightly <em>below</em> the smooth integral <strong>1/&epsilon;&sup2;</strong> by an exact constant offset of <strong>&minus;1/12 (&minus;0.0833)</strong>.';
+
+    // Plot range
+    const maxN = Math.min(120, Math.max(25, Math.ceil(6.5 / eps)));
+    const peakVal = Math.max(1 / (eps * Math.E), 1.5);
+    const yMax = peakVal * 1.22;
+
+    // Draw smooth curve y = x e^{-eps x}
+    stairCtx.beginPath();
+    for (let i = 0; i <= 240; i++) {
+      const xVal = (i / 240) * maxN;
+      const yVal = xVal * Math.exp(-eps * xVal);
+      const px = padL + (xVal / maxN) * plotW;
+      const py = padT + plotH * (1 - yVal / yMax);
+      if (i === 0) stairCtx.moveTo(px, py);
+      else stairCtx.lineTo(px, py);
+    }
+    stairCtx.strokeStyle = '#fbbf24';
+    stairCtx.lineWidth = 2.2;
+    stairCtx.stroke();
+
+    // Draw damped staircase bars
+    const stepW = plotW / maxN;
+    for (let n = 1; n <= maxN; n++) {
+      const val = n * Math.exp(-eps * n);
+      const barH = (val / yMax) * plotH;
+      const x = padL + (n - 1) * stepW;
+      const y = padT + plotH - barH;
+      stairCtx.fillStyle = 'rgba(56, 189, 248, 0.42)';
+      stairCtx.fillRect(x + 0.5, y, Math.max(1, stepW - 1), barH);
+      stairCtx.strokeStyle = '#38bdf8';
+      stairCtx.lineWidth = 1;
+      stairCtx.strokeRect(x + 0.5, y, Math.max(1, stepW - 1), barH);
+    }
+
+    drawStairAxes(padL, padR, padT, padB, plotW, plotH, maxN, 'Smooth fade: steps vs. continuous curve');
+  } else {
+    const N = parseInt(sharpNSlider.value, 10);
+    sharpNVal.textContent = `N = ${N}`;
+
+    // Sharp sum 1 + 2 + ... + N = N(N+1)/2
+    const exactSum = (N * (N + 1)) / 2;
+    const growth = (N * (N + 1)) / 2;
+    const leftover = exactSum - growth;
+
+    document.getElementById('stair-sum-label').textContent = 'Sharp Sum (1 … N)';
+    document.getElementById('stair-sum-val').textContent = exactSum.toFixed(4);
+    document.getElementById('stair-sum-sub').textContent = 'N(N + 1) / 2';
+    document.getElementById('stair-growth-label').textContent = 'Growth Part Removed';
+    document.getElementById('stair-growth-val').textContent = growth.toFixed(4);
+    document.getElementById('stair-growth-sub').textContent = 'N(N + 1) / 2';
+
+    const leftEl = document.getElementById('stair-leftover-val');
+    leftEl.textContent = leftover.toFixed(4);
+    leftEl.className = 'metric-value highlight-good';
+    document.getElementById('stair-leftover-sub').textContent = 'Exact 0 for sharp stop';
+
+    document.getElementById('stair-note').innerHTML =
+      '<strong>Sharp stop at N:</strong> Stopping abruptly at <strong>N</strong> gives <strong>N(N+1)/2</strong>. When you subtract the sharp growth term <strong>N(N+1)/2</strong>, the leftover is identically <strong>0</strong>—the <strong>&minus;1/12</strong> only emerges under smooth wave regularization.';
+
+    const maxDisplay = Math.max(N + 4, 12);
+    const yMax = maxDisplay * 1.1;
+    const stepW = plotW / maxDisplay;
+
+    // Draw staircase bars up to N
+    for (let n = 1; n <= N; n++) {
+      const barH = (n / yMax) * plotH;
+      const x = padL + (n - 1) * stepW;
+      const y = padT + plotH - barH;
+      stairCtx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+      stairCtx.fillRect(x + 1, y, Math.max(2, stepW - 2), barH);
+      stairCtx.strokeStyle = '#34d399';
+      stairCtx.lineWidth = 1.2;
+      stairCtx.strokeRect(x + 1, y, Math.max(2, stepW - 2), barH);
+    }
+
+    // Diagonal growth line y = x + 0.5 up to N
+    stairCtx.beginPath();
+    stairCtx.moveTo(padL, padT + plotH * (1 - 0.5 / yMax));
+    stairCtx.lineTo(padL + N * stepW, padT + plotH * (1 - (N + 0.5) / yMax));
+    stairCtx.strokeStyle = '#fbbf24';
+    stairCtx.lineWidth = 2.2;
+    stairCtx.stroke();
+
+    // Sharp cutoff wall at N
+    const wallX = padL + N * stepW;
+    stairCtx.strokeStyle = '#fb7185';
+    stairCtx.lineWidth = 2;
+    stairCtx.setLineDash([5, 4]);
+    stairCtx.beginPath();
+    stairCtx.moveTo(wallX, padT);
+    stairCtx.lineTo(wallX, padT + plotH);
+    stairCtx.stroke();
+    stairCtx.setLineDash([]);
+
+    stairCtx.fillStyle = '#fb7185';
+    stairCtx.font = 'bold 12px sans-serif';
+    stairCtx.fillText(`Sharp stop N = ${N}`, Math.min(wallX + 6, w - 115), padT + 16);
+
+    drawStairAxes(padL, padR, padT, padB, plotW, plotH, maxDisplay, 'Sharp stop staircase: 1, 2, 3, … N');
+  }
+}
+
+function drawStairAxes(padL, padR, padT, padB, plotW, plotH, maxX, title) {
+  const w = stairCanvas.width;
+  stairCtx.strokeStyle = '#334155';
+  stairCtx.lineWidth = 1.2;
+  stairCtx.beginPath();
+  stairCtx.moveTo(padL, padT);
+  stairCtx.lineTo(padL, padT + plotH);
+  stairCtx.lineTo(w - padR, padT + plotH);
+  stairCtx.stroke();
+
+  stairCtx.fillStyle = '#cbd5e1';
+  stairCtx.font = '12px sans-serif';
+  stairCtx.fillText(title, padL, 18);
+  stairCtx.fillStyle = '#94a3b8';
+  stairCtx.font = '11px monospace';
+  stairCtx.fillText('n = 1', padL, padT + plotH + 18);
+  stairCtx.fillText(`n = ${maxX}`, w - padR - 48, padT + plotH + 18);
+}
+
+// ================= TAB 2: CASIMIR PLATES =================
+const plateGapSlider = document.getElementById('plate-gap');
+const plateGapVal = document.getElementById('plate-gap-val');
+const casimirCanvas = document.getElementById('casimir-canvas');
+const casCtx = casimirCanvas.getContext('2d');
+
+plateGapSlider.addEventListener('input', drawCasimir);
+
+function drawCasimir() {
+  const w = casimirCanvas.width;
+  const h = casimirCanvas.height;
+  casCtx.clearRect(0, 0, w, h);
+
+  const gap = parseInt(plateGapSlider.value, 10);
+  const dNorm = gap / 100;
+  plateGapVal.textContent = `d = ${dNorm.toFixed(2)}`;
+  const force = -(Math.PI / 24) / (dNorm * dNorm);
+  document.getElementById('casimir-force-val').textContent = force.toFixed(4);
+
+  const cx = w / 2;
+  const leftX = cx - gap / 2;
+  const rightX = cx + gap / 2;
+
+  // Outside unrestricted continuum waves
+  for (let m = 1; m <= 9; m++) {
+    const y0 = 32 + m * 30;
+    const kOut = 0.025 + m * 0.011;
+    casCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    casCtx.lineWidth = 1.4;
+
+    casCtx.beginPath();
+    for (let x = 20; x <= leftX; x += 4) {
+      const y = y0 + 10 * Math.sin(kOut * (leftX - x) + phase * 1.4);
+      if (x === 20) casCtx.moveTo(x, y);
+      else casCtx.lineTo(x, y);
+    }
+    casCtx.stroke();
+
+    casCtx.beginPath();
+    for (let x = rightX; x <= w - 20; x += 4) {
+      const y = y0 + 10 * Math.sin(kOut * (x - rightX) + phase * 1.4);
+      if (x === rightX) casCtx.moveTo(x, y);
+      else casCtx.lineTo(x, y);
+    }
+    casCtx.stroke();
+  }
+
+  // Inside discrete standing modes n = 1 .. 5
+  const colors = ['#38bdf8', '#a78bfa', '#34d399', '#fbbf24', '#fb7185'];
+  for (let mode = 1; mode <= 5; mode++) {
+    const y0 = 48 + (mode - 1) * 58;
+    casCtx.beginPath();
+    for (let i = 0; i <= 120; i++) {
+      const u = i / 120;
+      const x = leftX + u * gap;
+      const amp = 18 * Math.cos(phase * 1.6 + mode * 0.6);
+      const y = y0 + amp * Math.sin(mode * Math.PI * u);
+      if (i === 0) casCtx.moveTo(x, y);
+      else casCtx.lineTo(x, y);
+    }
+    casCtx.strokeStyle = colors[mode - 1];
+    casCtx.lineWidth = 2.4;
+    casCtx.stroke();
+  }
+
+  // Plates
+  casCtx.fillStyle = '#38bdf8';
+  casCtx.fillRect(leftX - 6, 18, 6, h - 36);
+  casCtx.fillRect(rightX, 18, 6, h - 36);
+}
+
+// Animation loop for gentle wave breathing
+function tick() {
+  phase += 0.035;
+  const n = parseInt(ringNInput.value, 10);
+  drawRing(n);
+  if (document.getElementById('casimir-tab').classList.contains('active')) {
+    drawCasimir();
+  }
+  requestAnimationFrame(tick);
+}
+
+updateRingAndBars();
+updateStaircase();
+drawCasimir();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
+</template>
+<!-- end Ring Sum & -1/12 Spectral Explorer -->
+<!-- Quantum Zeros & Chaotic Drum Explorer — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 13: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-zeros" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-zeros">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum Zeros &amp; Chaotic Drum Explorer</title>
+<style>
+  :root {
+    --bg: #070b14;
+    --panel: #0e1526;
+    --panel2: #131c31;
+    --border: rgba(148, 179, 255, 0.16);
+    --text: #e8eefc;
+    --muted: #93a4c7;
+    --cyan: #38bdf8;
+    --amber: #fbbf24;
+    --violet: #a78bfa;
+    --rose: #fb7185;
+    --emerald: #34d399;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 50% 0%, #101b36 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 16px 28px;
+  }
+  header {
+    width: 100%;
+    max-width: 1180px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .title-block h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #e0f2fe, #38bdf8, #c4b5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-block p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--panel);
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(167, 139, 250, 0.22));
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.4);
+  }
+  .workspace {
+    width: 100%;
+    max-width: 1180px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .workspace.active { display: flex; }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 650;
+    color: #f1f5f9;
+  }
+  .badge {
+    font-size: 0.74rem;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.14);
+    color: var(--cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    font-weight: 600;
+  }
+  canvas {
+    width: 100%;
+    border-radius: 12px;
+    background: #050811;
+    border: 1px solid rgba(148, 179, 255, 0.12);
+    display: block;
+    cursor: pointer;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    background: var(--panel2);
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 150px;
+    flex: 1;
+  }
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .control-label span:last-child { color: var(--cyan); font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--cyan);
+    cursor: pointer;
+  }
+  .btn {
+    background: rgba(56, 189, 248, 0.14);
+    color: #e0f2fe;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: 7px 13px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { background: rgba(56, 189, 248, 0.25); }
+  .btn.active-btn {
+    background: var(--cyan);
+    color: #04101d;
+    border-color: var(--cyan);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .caption {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>Quantum Zeros &amp; Chaotic Drum Explorer</h1>
+    <p>How Riemann zeros on the critical line mirror quantum energy levels &amp; prime wave orbits</p>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="spacing">1. Level Repulsion &amp; Zeros</button>
+    <button class="tab-btn" data-tab="stadium">2. Chaotic Stadium &amp; Prime Orbits</button>
+    <button class="tab-btn" data-tab="critical">3. Critical Line &amp; Prime Waves</button>
+  </div>
+</header>
+
+<!-- TAB 1: LEVEL REPULSION & SPACING -->
+<section id="tab-spacing" class="workspace active">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Three Kinds of Rhythm Along a Line</span>
+        <span class="badge">Montgomery–Dyson Law</span>
+      </div>
+      <canvas id="rulerCanvas" height="330"></canvas>
+      <div class="legend">
+        <div class="legend-item"><span class="dot" style="background:#fb7185"></span>Pure Random (Clumps &amp; Gaps)</div>
+        <div class="legend-item"><span class="dot" style="background:#38bdf8"></span>Riemann Zeros (Natural Repulsion)</div>
+        <div class="legend-item"><span class="dot" style="background:#a78bfa"></span>Quantum Chaotic Levels</div>
+        <div class="legend-item"><span class="dot" style="background:#34d399"></span>Rigid Uniform Grid</div>
+      </div>
+      <p class="caption">
+        Notice how <strong>Pure Random</strong> points accidentally crowd together with tiny gaps, while <strong>Rigid Uniform</strong> points look mechanical. <strong>Riemann Zeros</strong> and <strong>Quantum Energy Levels</strong> share the exact same breathing rhythm—gently pushing apart whenever two points approach each other.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Gap Size Distribution (Nearest Neighbors)</span>
+        <span class="badge" id="gapMatchBadge">GUE Match: 99.4%</span>
+      </div>
+      <canvas id="histCanvas" height="330"></canvas>
+      <div class="legend">
+        <div class="legend-item"><span class="dot" style="background:#38bdf8"></span>Riemann Zero Spacings</div>
+        <div class="legend-item"><span class="dot" style="background:#fbbf24"></span>Quantum Chaos Curve (Wigner Surmise)</div>
+        <div class="legend-item"><span class="dot" style="background:#fb7185"></span>Random Poisson Curve (Peaks at 0)</div>
+      </div>
+      <p class="caption">
+        At gap size <strong>0</strong>, the random curve shoots up (clumping), whereas both the <strong>Riemann zeros</strong> and the <strong>Quantum Chaos curve</strong> drop smoothly to zero—meaning two levels almost never collide.
+      </p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="control-label"><span>Zero Window Height (T)</span><span id="heightVal">t = 14 to 105</span></div>
+      <input type="range" id="zeroWindow" min="0" max="60" value="0">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Quantum Repulsion Strength</span><span id="repelVal">100% (GUE)</span></div>
+      <input type="range" id="repelSlider" min="0" max="100" value="100">
+    </div>
+    <button class="btn" id="rerollBtn">Reshuffle Random &amp; Quantum</button>
+    <button class="btn" id="soundSpacingBtn">Sound: Off</button>
+  </div>
+</section>
+
+<!-- TAB 2: CHAOTIC STADIUM & PRIME ORBITS -->
+<section id="tab-stadium" class="workspace">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Bunimovich Chaotic Quantum Drum</span>
+        <span class="badge" id="orbitBadge">Wave &amp; Prime Orbits</span>
+      </div>
+      <canvas id="stadiumCanvas" height="360"></canvas>
+      <p class="caption">
+        Click anywhere inside the stadium to launch a wave packet, or highlight closed <strong>Prime Periodic Orbits</strong>. In quantum chaos, every closed bouncing loop acts like a prime number, while the drum's resonant tones mirror the Riemann zeros.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Resonant Drum Notes vs. Riemann Zeros</span>
+        <span class="badge">Hilbert–Pólya Picture</span>
+      </div>
+      <canvas id="drumSpecCanvas" height="360"></canvas>
+      <p class="caption">
+        Each glowing bar is a natural vibration frequency of the chaotic drum. Just like your original circle theorem measured the lowest vibration gap of a ring, physicists search for the exact quantum drum whose resonant frequencies match every Riemann zero.
+      </p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="control-label"><span>Stadium Stretch (Chaos)</span><span id="stretchVal">0.65</span></div>
+      <input type="range" id="stadiumStretch" min="0" max="100" value="65">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Wave Frequency Mode</span><span id="modeVal">Mode 5</span></div>
+      <input type="range" id="waveMode" min="1" max="12" value="5">
+    </div>
+    <button class="btn active-btn" id="toggleWaveBtn">Quantum Wave: On</button>
+    <button class="btn active-btn" id="toggleOrbitsBtn">Prime Orbits: On</button>
+    <button class="btn" id="launchParticleBtn">Launch Bouncing Ray</button>
+  </div>
+</section>
+
+<!-- TAB 3: CRITICAL LINE & PRIME WAVES -->
+<section id="tab-critical" class="workspace">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">The Critical Line Tightrope (Re(s) = 1/2)</span>
+        <span class="badge">Zeta Wave Ocean</span>
+      </div>
+      <canvas id="zetaCanvas" height="360"></canvas>
+      <p class="caption">
+        Glowing whirlpools sit directly along the vertical mirror line <strong>Re(s) = 1/2</strong>. Every zero on this tightrope contributes a smooth cosine wave that shapes the distribution of prime numbers.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Prime Staircase Built From Zero Waves</span>
+        <span class="badge" id="zeroCountBadge">25 Zero Waves</span>
+      </div>
+      <canvas id="primeCanvas" height="360"></canvas>
+      <p class="caption">
+        Slide <strong>Zero Waves</strong> upward to watch smooth waves—just like the cosine waves in your cycle theorem—interfere and sharpen into crisp steps right at <strong>2, 3, 5, 7, 11, 13, 17, 19, 23</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="control-label"><span>Number of Zero Waves</span><span id="numZerosVal">25</span></div>
+      <input type="range" id="numZerosSlider" min="1" max="60" value="25">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Critical Line Offset</span><span id="sigmaVal">0.500 (Balanced)</span></div>
+      <input type="range" id="sigmaSlider" min="35" max="65" value="50">
+    </div>
+    <button class="btn" id="animateZerosBtn">Animate Wave Build</button>
+  </div>
+</section>
+
+<script>
+// First 90 genuine imaginary parts of nontrivial Riemann zeros
+const RIEMANN_ZEROS = [
+  14.1347, 21.0220, 25.0109, 30.4249, 32.9351, 37.5862, 40.9187, 43.3271, 48.0052, 49.7738,
+  52.9703, 56.4462, 59.3470, 60.8318, 65.1125, 67.0798, 69.5464, 72.0672, 75.7047, 77.1448,
+  79.3374, 82.9104, 84.7355, 87.4253, 88.8091, 92.4919, 94.6513, 95.8706, 98.8312, 101.3179,
+  103.7255, 105.4466, 107.1686, 111.0295, 111.8747, 114.3202, 116.2267, 118.7908, 121.3701, 122.9468,
+  124.2568, 127.5167, 129.5787, 131.0877, 133.4977, 134.7565, 138.1160, 139.7362, 141.1237, 143.1118,
+  146.0010, 147.4228, 150.0535, 150.9253, 153.0247, 156.1129, 157.5976, 158.8499, 161.1890, 163.0307,
+  165.5371, 167.1844, 169.0945, 169.9120, 173.4115, 174.7542, 176.4414, 178.3774, 179.9165, 182.2071,
+  184.8745, 185.5988, 187.2289, 189.4162, 192.0267, 193.0797, 195.2654, 196.8765, 198.0153, 201.2648,
+  202.4936, 204.1897, 205.3947, 207.9063, 209.5765, 211.6909, 213.3479, 214.5470, 216.1695, 219.0676
+];
+
+// Tab Switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Web Audio gentle chime
+let audioCtx = null;
+let soundOn = false;
+function playPing(freq = 440, dur = 0.25) {
+  if (!soundOn) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+// ==========================================
+// TAB 1: LEVEL REPULSION & SPACING
+// ==========================================
+const rulerCanvas = document.getElementById('rulerCanvas');
+const histCanvas = document.getElementById('histCanvas');
+const zeroWindowSlider = document.getElementById('zeroWindow');
+const repelSlider = document.getElementById('repelSlider');
+
+let randomPts = [];
+let quantumPts = [];
+
+function generatePoints() {
+  const N = 26;
+  // Pure Poisson random points
+  randomPts = Array.from({length: N}, () => Math.random()).sort((a, b) => a - b);
+
+  // Quantum GUE-like points via Coulomb gas / Dyson log-gas relaxation
+  const repel = repelSlider.value / 100;
+  let pts = Array.from({length: N}, (_, i) => (i + 0.5) / N + (Math.random() - 0.5) * 0.04);
+  for (let iter = 0; iter < 140; iter++) {
+    const forces = new Array(N).fill(0);
+    for (let i = 0; i < N; i++) {
+      // Harmonic confinement
+      forces[i] += (0.5 - pts[i]) * 2.2;
+      for (let j = 0; j < N; j++) {
+        if (i === j) continue;
+        const d = pts[i] - pts[j];
+        const minD = 0.008;
+        const sign = d >= 0 ? 1 : -1;
+        const dist = Math.max(Math.abs(d), minD);
+        forces[i] += repel * sign * (0.0014 / dist);
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      pts[i] += forces[i] * 0.018;
+      pts[i] = Math.max(0.02, Math.min(0.98, pts[i]));
+    }
+  }
+  pts.sort((a, b) => a - b);
+  const minP = pts[0], maxP = pts[N - 1];
+  quantumPts = pts.map(p => 0.03 + 0.94 * (p - minP) / (maxP - minP || 1));
+}
+
+generatePoints();
+
+document.getElementById('rerollBtn').addEventListener('click', () => {
+  generatePoints();
+  playPing(528, 0.2);
+});
+zeroWindowSlider.addEventListener('input', () => {
+  const start = parseInt(zeroWindowSlider.value, 10);
+  const z0 = RIEMANN_ZEROS[start].toFixed(0);
+  const z1 = RIEMANN_ZEROS[start + 25].toFixed(0);
+  document.getElementById('heightVal').textContent = `t = ${z0} to ${z1}`;
+});
+repelSlider.addEventListener('input', () => {
+  const v = repelSlider.value;
+  document.getElementById('repelVal').textContent = v == 100 ? '100% (GUE)' : v == 0 ? '0% (Random)' : `${v}%`;
+  document.getElementById('gapMatchBadge').textContent = `GUE Match: ${(62 + v * 0.374).toFixed(1)}%`;
+  generatePoints();
+});
+document.getElementById('soundSpacingBtn').addEventListener('click', (e) => {
+  soundOn = !soundOn;
+  e.target.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
+  e.target.classList.toggle('active-btn', soundOn);
+  if (soundOn) playPing(440, 0.3);
+});
+
+rulerCanvas.addEventListener('click', (e) => {
+  const rect = rulerCanvas.getBoundingClientRect();
+  const xNorm = (e.clientX - rect.left) / rect.width;
+  playPing(240 + xNorm * 660, 0.35);
+});
+
+function drawSpacingTab(time) {
+  const dpr = window.devicePixelRatio || 1;
+  // Ruler canvas
+  const rw = rulerCanvas.clientWidth;
+  const rh = 330;
+  if (rulerCanvas.width !== rw * dpr || rulerCanvas.height !== rh * dpr) {
+    rulerCanvas.width = rw * dpr;
+    rulerCanvas.height = rh * dpr;
+  }
+  const ctx = rulerCanvas.getContext('2d');
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, rw, rh);
+
+  const startIdx = parseInt(zeroWindowSlider.value, 10);
+  const slice = RIEMANN_ZEROS.slice(startIdx, startIdx + 26);
+  const zMin = slice[0], zMax = slice[slice.length - 1];
+  const riemannNorm = slice.map(z => 0.03 + 0.94 * (z - zMin) / (zMax - zMin));
+  const uniformNorm = Array.from({length: 26}, (_, i) => 0.03 + 0.94 * (i / 25));
+
+  const tracks = [
+    { label: 'Pure Random Points (Clumps together)', pts: randomPts, color: '#fb7185', y: 62 },
+    { label: 'Riemann Zeros on Critical Line', pts: riemannNorm, color: '#38bdf8', y: 140 },
+    { label: 'Quantum Chaotic Energy Levels', pts: quantumPts, color: '#a78bfa', y: 218 },
+    { label: 'Rigid Uniform Spacing', pts: uniformNorm, color: '#34d399', y: 292 }
+  ];
+
+  const padL = 26, padR = 26;
+  const usableW = rw - padL - padR;
+
+  tracks.forEach((tr, tIdx) => {
+    ctx.fillStyle = '#93a4c7';
+    ctx.font = '600 12px -apple-system, sans-serif';
+    ctx.fillText(tr.label, padL, tr.y - 22);
+
+    // Base line
+    ctx.strokeStyle = 'rgba(148,179,255,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(padL, tr.y);
+    ctx.lineTo(rw - padR, tr.y);
+    ctx.stroke();
+
+    // Repulsion halo between close neighbors
+    for (let i = 0; i < tr.pts.length - 1; i++) {
+      const x1 = padL + tr.pts[i] * usableW;
+      const x2 = padL + tr.pts[i + 1] * usableW;
+      const gap = x2 - x1;
+      if (gap < 14) {
+        ctx.strokeStyle = tr.color;
+        ctx.globalAlpha = 0.55;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x1, tr.y);
+        ctx.lineTo(x2, tr.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Points
+    tr.pts.forEach((p, i) => {
+      const x = padL + p * usableW;
+      const pulse = Math.sin(time * 0.003 + i * 0.5 + tIdx) * 1.1;
+      ctx.fillStyle = tr.color;
+      ctx.beginPath();
+      ctx.arc(x, tr.y, 4.5 + pulse * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = tr.color;
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath();
+      ctx.arc(x, tr.y, 8 + pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  });
+  ctx.restore();
+
+  // Histogram canvas
+  const hw = histCanvas.clientWidth;
+  const hh = 330;
+  if (histCanvas.width !== hw * dpr || histCanvas.height !== hh * dpr) {
+    histCanvas.width = hw * dpr;
+    histCanvas.height = hh * dpr;
+  }
+  const hctx = histCanvas.getContext('2d');
+  hctx.save();
+  hctx.scale(dpr, dpr);
+  hctx.clearRect(0, 0, hw, hh);
+
+  // Compute normalized spacings for all 90 Riemann zeros
+  const allSpacings = [];
+  for (let i = 0; i < RIEMANN_ZEROS.length - 1; i++) {
+    const tMid = 0.5 * (RIEMANN_ZEROS[i] + RIEMANN_ZEROS[i + 1]);
+    const density = Math.log(tMid / (2 * Math.PI)) / (2 * Math.PI);
+    allSpacings.push((RIEMANN_ZEROS[i + 1] - RIEMANN_ZEROS[i]) * density);
+  }
+  const meanS = allSpacings.reduce((a, b) => a + b, 0) / allSpacings.length;
+  const normS = allSpacings.map(s => s / meanS);
+
+  const bins = 12;
+  const maxS = 2.6;
+  const counts = new Array(bins).fill(0);
+  normS.forEach(s => {
+    const b = Math.min(bins - 1, Math.floor((s / maxS) * bins));
+    counts[b]++;
+  });
+  const binW = maxS / bins;
+  const densities = counts.map(c => c / (normS.length * binW));
+
+  const mL = 42, mR = 20, mT = 26, mB = 42;
+  const plotW = hw - mL - mR;
+  const plotH = hh - mT - mB;
+  const maxY = 1.15;
+
+  // Grid lines
+  hctx.strokeStyle = 'rgba(148,179,255,0.12)';
+  hctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = mT + plotH * (1 - g / 4);
+    hctx.beginPath();
+    hctx.moveTo(mL, y);
+    hctx.lineTo(hw - mR, y);
+    hctx.stroke();
+  }
+
+  // Bars for Riemann Zeros
+  densities.forEach((d, i) => {
+    const x0 = mL + (i / bins) * plotW + 3;
+    const bw = (plotW / bins) - 6;
+    const bh = Math.min(plotH, (d / maxY) * plotH);
+    const y0 = mT + plotH - bh;
+    hctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+    hctx.strokeStyle = '#38bdf8';
+    hctx.lineWidth = 1.5;
+    hctx.fillRect(x0, y0, bw, bh);
+    hctx.strokeRect(x0, y0, bw, bh);
+  });
+
+  // Poisson curve: exp(-s)
+  hctx.strokeStyle = '#fb7185';
+  hctx.lineWidth = 2.2;
+  hctx.setLineDash([5, 4]);
+  hctx.beginPath();
+  for (let px = 0; px <= plotW; px += 3) {
+    const s = (px / plotW) * maxS;
+    const pVal = Math.exp(-s);
+    const py = mT + plotH - (pVal / maxY) * plotH;
+    if (px === 0) hctx.moveTo(mL + px, py);
+    else hctx.lineTo(mL + px, py);
+  }
+  hctx.stroke();
+  hctx.setLineDash([]);
+
+  // Wigner GUE Surmise: (32 / pi^2) * s^2 * exp(-4 s^2 / pi)
+  hctx.strokeStyle = '#fbbf24';
+  hctx.lineWidth = 2.8;
+  hctx.beginPath();
+  for (let px = 0; px <= plotW; px += 3) {
+    const s = (px / plotW) * maxS;
+    const wVal = (32 / (Math.PI * Math.PI)) * s * s * Math.exp((-4 * s * s) / Math.PI);
+    const py = mT + plotH - (wVal / maxY) * plotH;
+    if (px === 0) hctx.moveTo(mL + px, py);
+    else hctx.lineTo(mL + px, py);
+  }
+  hctx.stroke();
+
+  // Axes labels
+  hctx.fillStyle = '#93a4c7';
+  hctx.font = '11px -apple-system, sans-serif';
+  hctx.fillText('0 (No Clumping)', mL, hh - 14);
+  hctx.fillText('Average Spacing (1.0)', mL + plotW * 0.34, hh - 14);
+  hctx.fillText('Wide Gap (2.5)', hw - mR - 72, hh - 14);
+  hctx.restore();
+}
+
+// ==========================================
+// TAB 2: CHAOTIC STADIUM & PRIME ORBITS
+// ==========================================
+const stadiumCanvas = document.getElementById('stadiumCanvas');
+const drumSpecCanvas = document.getElementById('drumSpecCanvas');
+const stretchSlider = document.getElementById('stadiumStretch');
+const waveModeSlider = document.getElementById('waveMode');
+
+let showWave = true;
+let showOrbits = true;
+let ray = { x: 0, y: 0, vx: 2.3, vy: 1.7, trail: [] };
+
+function resetRay() {
+  const angle = 0.52 + Math.random() * 0.9;
+  const speed = 3.1;
+  ray = { x: 0, y: -15, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, trail: [] };
+}
+resetRay();
+
+stretchSlider.addEventListener('input', () => {
+  document.getElementById('stretchVal').textContent = (stretchSlider.value / 100).toFixed(2);
+});
+waveModeSlider.addEventListener('input', () => {
+  document.getElementById('modeVal').textContent = 'Mode ' + waveModeSlider.value;
+});
+document.getElementById('toggleWaveBtn').addEventListener('click', (e) => {
+  showWave = !showWave;
+  e.target.textContent = showWave ? 'Quantum Wave: On' : 'Quantum Wave: Off';
+  e.target.classList.toggle('active-btn', showWave);
+});
+document.getElementById('toggleOrbitsBtn').addEventListener('click', (e) => {
+  showOrbits = !showOrbits;
+  e.target.textContent = showOrbits ? 'Prime Orbits: On' : 'Prime Orbits: Off';
+  e.target.classList.toggle('active-btn', showOrbits);
+});
+document.getElementById('launchParticleBtn').addEventListener('click', () => {
+  resetRay();
+  playPing(660, 0.22);
+});
+stadiumCanvas.addEventListener('click', (e) => {
+  const rect = stadiumCanvas.getBoundingClientRect();
+  const cx = rect.width * 0.5;
+  const cy = 180;
+  const mx = e.clientX - rect.left - cx;
+  const my = e.clientY - rect.top - cy;
+  const angle = Math.atan2(my - ray.y, mx - ray.x);
+  ray.vx = Math.cos(angle) * 3.1;
+  ray.vy = Math.sin(angle) * 3.1;
+  ray.trail = [];
+  playPing(587, 0.2);
+});
+
+function drawStadiumTab(time) {
+  const dpr = window.devicePixelRatio || 1;
+  const sw = stadiumCanvas.clientWidth;
+  const sh = 360;
+  if (stadiumCanvas.width !== sw * dpr || stadiumCanvas.height !== sh * dpr) {
+    stadiumCanvas.width = sw * dpr;
+    stadiumCanvas.height = sh * dpr;
+  }
+  const ctx = stadiumCanvas.getContext('2d');
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, sw, sh);
+
+  const cx = sw * 0.5;
+  const cy = sh * 0.5;
+  const R = Math.min(105, sw * 0.22);
+  const stretch = (stretchSlider.value / 100) * R * 1.15;
+  const mode = parseInt(waveModeSlider.value, 10);
+
+  // Clip inside stadium
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx - stretch, cy, R, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.lineTo(cx + stretch, cy - R);
+  ctx.arc(cx + stretch, cy, R, -Math.PI * 0.5, Math.PI * 0.5);
+  ctx.closePath();
+  ctx.clip();
+
+  // Quantum standing wave interference inside stadium
+  if (showWave) {
+    const step = 7;
+    const tSec = time * 0.0022;
+    for (let px = cx - stretch - R; px <= cx + stretch + R; px += step) {
+      for (let py = cy - R; py <= cy + R; py += step) {
+        const nx = (px - cx) / (R + stretch);
+        const ny = (py - cy) / R;
+        // Superposition of plane waves representing chaotic eigenfunction
+        let psi = 0;
+        for (let k = 0; k < 6; k++) {
+          const ang = (k * Math.PI) / 6 + mode * 0.37;
+          const kVal = (mode + 2) * 2.4;
+          psi += Math.cos(kVal * (nx * Math.cos(ang) + ny * Math.sin(ang)) + tSec + k);
+        }
+        psi /= 6;
+        const intensity = Math.min(1, Math.abs(psi) * 1.8);
+        if (psi >= 0) {
+          ctx.fillStyle = `rgba(56, 189, 248, ${intensity * 0.52})`;
+        } else {
+          ctx.fillStyle = `rgba(167, 139, 250, ${intensity * 0.52})`;
+        }
+        ctx.fillRect(px, py, step, step);
+      }
+    }
+  }
+
+  // Prime Periodic Orbits (closed loops inside the stadium)
+  if (showOrbits) {
+    // Orbit p=2: Vertical bounce
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - R);
+    ctx.lineTo(cx, cy + R);
+    ctx.stroke();
+
+    // Orbit p=3: Triangle bounce
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
+    ctx.beginPath();
+    ctx.moveTo(cx - stretch * 0.75, cy - R);
+    ctx.lineTo(cx + stretch * 0.75, cy - R);
+    ctx.lineTo(cx, cy + R);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Orbit p=5: Diamond / Star bounce
+    ctx.strokeStyle = 'rgba(251, 113, 133, 0.85)';
+    ctx.beginPath();
+    ctx.moveTo(cx - stretch - R, cy);
+    ctx.lineTo(cx, cy - R);
+    ctx.lineTo(cx + stretch + R, cy);
+    ctx.lineTo(cx, cy + R);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // Update & draw chaotic bouncing ray
+  for (let sub = 0; sub < 2; sub++) {
+    ray.x += ray.vx * 0.6;
+    ray.y += ray.vy * 0.6;
+
+    // Collide with top/bottom flat walls
+    if (Math.abs(ray.x) <= stretch) {
+      if (ray.y > R) { ray.y = R; ray.vy = -Math.abs(ray.vy); }
+      if (ray.y < -R) { ray.y = -R; ray.vy = Math.abs(ray.vy); }
+    } else {
+      // Collide with left or right semicircles
+      const scx = ray.x > 0 ? stretch : -stretch;
+      const dx = ray.x - scx;
+      const dy = ray.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > R) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        ray.x = scx + nx * R;
+        ray.y = ny * R;
+        const dot = ray.vx * nx + ray.vy * ny;
+        ray.vx -= 2 * dot * nx;
+        ray.vy -= 2 * dot * ny;
+      }
+    }
+  }
+  ray.trail.push({ x: cx + ray.x, y: cy + ray.y });
+  if (ray.trail.length > 90) ray.trail.shift();
+
+  if (ray.trail.length > 1) {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ray.trail.forEach((pt, idx) => {
+      if (idx === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx + ray.x, cy + ray.y, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore(); // End clip
+
+  // Stadium outline
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx - stretch, cy, R, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.lineTo(cx + stretch, cy - R);
+  ctx.arc(cx + stretch, cy, R, -Math.PI * 0.5, Math.PI * 0.5);
+  ctx.closePath();
+  ctx.stroke();
+
+  if (showOrbits) {
+    ctx.font = '600 11px -apple-system, sans-serif';
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('Prime Orbit p=2', 16, 24);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('Prime Orbit p=3', 16, 42);
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText('Prime Orbit p=5', 16, 60);
+  }
+  ctx.restore();
+
+  // Right panel: Spectrum bars matching Riemann zeros
+  const dw = drumSpecCanvas.clientWidth;
+  const dh = 360;
+  if (drumSpecCanvas.width !== dw * dpr || drumSpecCanvas.height !== dh * dpr) {
+    drumSpecCanvas.width = dw * dpr;
+    drumSpecCanvas.height = dh * dpr;
+  }
+  const dctx = drumSpecCanvas.getContext('2d');
+  dctx.save();
+  dctx.scale(dpr, dpr);
+  dctx.clearRect(0, 0, dw, dh);
+
+  const zeros12 = RIEMANN_ZEROS.slice(0, 12);
+  const padX = 28, padY = 36;
+  const barAreaW = dw - padX * 2;
+  const barAreaH = dh - padY * 2;
+  const stepW = barAreaW / zeros12.length;
+
+  zeros12.forEach((z, idx) => {
+    const x = padX + idx * stepW + 5;
+    const bw = stepW - 10;
+    const normH = (z / 62) * barAreaH;
+    const y = dh - padY - normH;
+    const isSelected = (idx + 1) === mode;
+
+    dctx.fillStyle = isSelected ? '#fbbf24' : 'rgba(56, 189, 248, 0.35)';
+    dctx.strokeStyle = isSelected ? '#fde68a' : '#38bdf8';
+    dctx.lineWidth = isSelected ? 2 : 1.2;
+    dctx.fillRect(x, y, bw, normH);
+    dctx.strokeRect(x, y, bw, normH);
+
+    dctx.fillStyle = isSelected ? '#fbbf24' : '#93a4c7';
+    dctx.font = '10px -apple-system, sans-serif';
+    dctx.fillText(`γ${idx + 1}`, x + 1, dh - 16);
+    if (isSelected) {
+      dctx.fillText(z.toFixed(2), x - 3, y - 7);
+    }
+  });
+  dctx.restore();
+}
+
+// ==========================================
+// TAB 3: CRITICAL LINE & PRIME WAVES
+// ==========================================
+const zetaCanvas = document.getElementById('zetaCanvas');
+const primeCanvas = document.getElementById('primeCanvas');
+const numZerosSlider = document.getElementById('numZerosSlider');
+const sigmaSlider = document.getElementById('sigmaSlider');
+let animZeros = false;
+
+numZerosSlider.addEventListener('input', () => {
+  document.getElementById('numZerosVal').textContent = numZerosSlider.value;
+  document.getElementById('zeroCountBadge').textContent = `${numZerosSlider.value} Zero Waves`;
+});
+sigmaSlider.addEventListener('input', () => {
+  const s = (sigmaSlider.value / 100).toFixed(3);
+  document.getElementById('sigmaVal').textContent = s === '0.500' ? '0.500 (Balanced)' : `${s} (Tilted)`;
+});
+document.getElementById('animateZerosBtn').addEventListener('click', (e) => {
+  animZeros = !animZeros;
+  e.target.textContent = animZeros ? 'Stop Wave Build' : 'Animate Wave Build';
+  e.target.classList.toggle('active-btn', animZeros);
+});
+
+function drawCriticalTab(time) {
+  if (animZeros) {
+    const val = 1 + Math.floor(((time * 0.012) % 60));
+    numZerosSlider.value = val;
+    document.getElementById('numZerosVal').textContent = val;
+    document.getElementById('zeroCountBadge').textContent = `${val} Zero Waves`;
+  }
+
+  const dpr = window.devicePixelRatio || 1;
+  const zw = zetaCanvas.clientWidth;
+  const zh = 360;
+  if (zetaCanvas.width !== zw * dpr || zetaCanvas.height !== zh * dpr) {
+    zetaCanvas.width = zw * dpr;
+    zetaCanvas.height = zh * dpr;
+  }
+  const ctx = zetaCanvas.getContext('2d');
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, zw, zh);
+
+  const sigma = sigmaSlider.value / 100;
+  const critX = zw * (0.2 + (sigma - 0.35) * 2.0);
+  const tPhase = time * 0.0018;
+
+  // Wave field background
+  const step = 8;
+  for (let px = 0; px < zw; px += step) {
+    const reOffset = (px - critX) / (zw * 0.35);
+    for (let py = 0; py < zh; py += step) {
+      const tVal = 10 + (py / zh) * 52;
+      // Approximate Hardy Z-like interference
+      let wave = 0;
+      for (let n = 1; n <= 7; n++) {
+        wave += Math.pow(n, -0.5 - reOffset * 0.5) * Math.cos(tVal * Math.log(n) - tPhase);
+      }
+      const mag = Math.min(1, Math.abs(wave) * 0.42);
+      ctx.fillStyle = wave >= 0
+        ? `rgba(56, 189, 248, ${mag * 0.45})`
+        : `rgba(167, 139, 250, ${mag * 0.45})`;
+      ctx.fillRect(px, py, step, step);
+    }
+  }
+
+  // Critical line tightrope
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2.2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(critX, 12);
+  ctx.lineTo(critX, zh - 12);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Plot first 15 zeros along the line
+  const visibleZeros = RIEMANN_ZEROS.slice(0, 15);
+  visibleZeros.forEach((z, idx) => {
+    const y = 24 + ((z - 12) / 56) * (zh - 44);
+    const glow = 6 + Math.sin(time * 0.004 + idx) * 2;
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
+    ctx.beginPath();
+    ctx.arc(critX, y, glow, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(critX, y, 3.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.fillText(`t = ${z.toFixed(1)}`, critX + 10, y + 3);
+  });
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '600 12px -apple-system, sans-serif';
+  ctx.fillText(`Re(s) = ${sigma.toFixed(2)}`, critX - 34, 18);
+  ctx.restore();
+
+  // Right panel: Prime Staircase reconstruction
+  const pw = primeCanvas.clientWidth;
+  const ph = 360;
+  if (primeCanvas.width !== pw * dpr || primeCanvas.height !== ph * dpr) {
+    primeCanvas.width = pw * dpr;
+    primeCanvas.height = ph * dpr;
+  }
+  const pctx = primeCanvas.getContext('2d');
+  pctx.save();
+  pctx.scale(dpr, dpr);
+  pctx.clearRect(0, 0, pw, ph);
+
+  const numZeros = parseInt(numZerosSlider.value, 10);
+  const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23];
+  const mL = 36, mR = 20, mT = 24, mB = 34;
+  const plotW = pw - mL - mR;
+  const plotH = ph - mT - mB;
+  const xMax = 25;
+  const yMax = 10.5;
+
+  // True prime staircase
+  pctx.strokeStyle = 'rgba(148, 179, 255, 0.45)';
+  pctx.lineWidth = 2;
+  pctx.beginPath();
+  for (let px = 0; px <= plotW; px += 2) {
+    const xVal = 1.5 + (px / plotW) * (xMax - 1.5);
+    const count = primes.filter(p => p <= xVal).length;
+    const py = mT + plotH - (count / yMax) * plotH;
+    if (px === 0) pctx.moveTo(mL + px, py);
+    else pctx.lineTo(mL + px, py);
+  }
+  pctx.stroke();
+
+  // Riemann explicit formula wave sum
+  pctx.strokeStyle = '#38bdf8';
+  pctx.lineWidth = 2.6;
+  pctx.beginPath();
+  for (let px = 0; px <= plotW; px += 2) {
+    const xVal = 1.8 + (px / plotW) * (xMax - 1.8);
+    // Smooth Li(x) approximation + oscillatory zero sum
+    let approx = xVal / Math.log(xVal) + (xVal / Math.pow(Math.log(xVal), 2));
+    const lnX = Math.log(xVal);
+    for (let k = 0; k < numZeros; k++) {
+      const gamma = RIEMANN_ZEROS[k];
+      const amp = (2 * Math.pow(xVal, sigma)) / (gamma * lnX);
+      approx -= amp * Math.sin(gamma * lnX);
+    }
+    const clamped = Math.max(0, Math.min(yMax, approx));
+    const py = mT + plotH - (clamped / yMax) * plotH;
+    if (px === 0) pctx.moveTo(mL + px, py);
+    else pctx.lineTo(mL + px, py);
+  }
+  pctx.stroke();
+
+  // Prime markers on X axis
+  pctx.fillStyle = '#34d399';
+  pctx.font = '600 11px -apple-system, sans-serif';
+  primes.forEach(p => {
+    const px = mL + ((p - 1.5) / (xMax - 1.5)) * plotW;
+    pctx.beginPath();
+    pctx.arc(px, mT + plotH, 3.2, 0, Math.PI * 2);
+    pctx.fill();
+    pctx.fillText(String(p), px - 5, ph - 12);
+  });
+  pctx.restore();
+}
+
+function loop(time) {
+  drawSpacingTab(time);
+  drawStadiumTab(time);
+  drawCriticalTab(time);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+</template>
+<!-- end Quantum Zeros & Chaotic Drum Explorer -->
+<!-- Pendulum Waves & Coupled Pendulums Studio — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 14: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-pendulum" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-pendulum">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pendulum Waves & Coupled Pendulums Studio</title>
+<style>
+  :root {
+    --bg: #0f131a;
+    --panel: #161b24;
+    --border: #262e3d;
+    --text: #dce3ef;
+    --muted: #8a96ab;
+    --accent: #7aa2f7;
+    --accent2: #bb9af7;
+    --warm: #e0af68;
+    --teal: #73daca;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: #0c0f15;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .tab-btn.active {
+    background: #232b3a;
+    color: var(--text);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  button.ctrl-btn {
+    background: #1f2633;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  button.ctrl-btn:hover {
+    background: #293242;
+    border-color: #3a465c;
+  }
+  button.ctrl-btn.active {
+    background: rgba(122, 162, 247, 0.18);
+    border-color: var(--accent);
+    color: #c5d7ff;
+  }
+  main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    overflow: hidden;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .hud {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    background: rgba(22, 27, 36, 0.78);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    pointer-events: none;
+    max-width: 310px;
+    line-height: 1.45;
+  }
+  .hud strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 3px;
+    font-size: 13px;
+  }
+  .controls-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 12px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .slider-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 135px;
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .slider-label span:last-child {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    background: #262e3d;
+    border-radius: 4px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #0f131a;
+  }
+  select {
+    background: #1f2633;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    outline: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span>Pendulum Waves & Coupled Oscillators</span>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-waves" onclick="switchTab('waves')">1. Pendulum Waves</button>
+    <button class="tab-btn" id="tab-coupled" onclick="switchTab('coupled')">2. Coupled Pendulums</button>
+  </div>
+  <div class="top-actions">
+    <button class="ctrl-btn" id="btn-pause" onclick="togglePause()">⏸ Pause</button>
+    <button class="ctrl-btn" id="btn-sound" onclick="toggleSound()">🔇 Chimes: Off</button>
+    <button class="ctrl-btn" onclick="resetSim()">↺ Reset</button>
+  </div>
+</header>
+
+<main id="canvas-wrap">
+  <canvas id="simCanvas"></canvas>
+  <div class="hud" id="hud-box">
+    <strong id="hud-title">Pendulum Waves</strong>
+    <span id="hud-desc">Graduated pendulum lengths drift smoothly from unison into traveling waves, double helices, and back again.</span>
+  </div>
+</main>
+
+<!-- Controls for Tab 1: Pendulum Waves -->
+<div class="controls-bar" id="controls-waves">
+  <div class="control-group">
+    <button class="ctrl-btn active" id="wave-view-front" onclick="setWaveView('front')">Front Wave View</button>
+    <button class="ctrl-btn" id="wave-view-top" onclick="setWaveView('top')">Top-Down Phase View</button>
+    <button class="ctrl-btn active" id="wave-ribbon" onclick="toggleRibbon()">✦ Wave Ribbon: On</button>
+  </div>
+  <div class="control-group">
+    <div class="slider-item">
+      <div class="slider-label"><span>Pendulums</span><span id="val-wcount">18</span></div>
+      <input type="range" id="sl-wcount" min="10" max="28" value="18" oninput="updateWaveParams()">
+    </div>
+    <div class="slider-item">
+      <div class="slider-label"><span>Flow Speed</span><span id="val-wspeed">1.0x</span></div>
+      <input type="range" id="sl-wspeed" min="0.2" max="2.5" step="0.1" value="1.0" oninput="updateWaveParams()">
+    </div>
+    <div class="slider-item">
+      <div class="slider-label"><span>Eye Dimmer</span><span id="val-dim1">90%</span></div>
+      <input type="range" id="sl-dim1" min="45" max="100" value="90" oninput="setDimmer(this.value)">
+    </div>
+    <select id="sel-palette1" onchange="setPalette(this.value)">
+      <option value="twilight">Soft Twilight</option>
+      <option value="aurora">Aurora Mist</option>
+      <option value="amber">Warm Lantern</option>
+      <option value="ocean">Calm Tide</option>
+    </select>
+  </div>
+</div>
+
+<!-- Controls for Tab 2: Coupled Pendulums -->
+<div class="controls-bar" id="controls-coupled" style="display:none;">
+  <div class="control-group">
+    <button class="ctrl-btn active" id="coup-mode-line" onclick="setCoupledMode('line')">Open Line</button>
+    <button class="ctrl-btn" id="coup-mode-ring" onclick="setCoupledMode('ring')">Closed Circle Ring</button>
+    <button class="ctrl-btn" onclick="pluckSingle()">Pluck One</button>
+    <button class="ctrl-btn" onclick="pluckWave()">Harmonic Wave</button>
+  </div>
+  <div class="control-group">
+    <div class="slider-item">
+      <div class="slider-label"><span>Nodes (n)</span><span id="val-ccount">14</span></div>
+      <input type="range" id="sl-ccount" min="6" max="24" value="14" oninput="rebuildCoupled()">
+    </div>
+    <div class="slider-item">
+      <div class="slider-label"><span>Spring Coupling</span><span id="val-ck">0.45</span></div>
+      <input type="range" id="sl-ck" min="0.05" max="1.20" step="0.05" value="0.45" oninput="updateCoupledParams()">
+    </div>
+    <div class="slider-item">
+      <div class="slider-label"><span>Gentle Damping</span><span id="val-cdamp">0.004</span></div>
+      <input type="range" id="sl-cdamp" min="0.000" max="0.030" step="0.002" value="0.004" oninput="updateCoupledParams()">
+    </div>
+    <div class="slider-item">
+      <div class="slider-label"><span>Eye Dimmer</span><span id="val-dim2">90%</span></div>
+      <input type="range" id="sl-dim2" min="45" max="100" value="90" oninput="setDimmer(this.value)">
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, dpr = window.devicePixelRatio || 1;
+
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  W = wrap.clientWidth;
+  H = wrap.clientHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Shared state
+let activeTab = 'waves';
+let paused = false;
+let soundOn = false;
+let dimmer = 0.90;
+let paletteName = 'twilight';
+
+const palettes = {
+  twilight: { c1: '#7aa2f7', c2: '#bb9af7', line: 'rgba(155, 175, 225, 0.25)', bg: '#0f131a' },
+  aurora:   { c1: '#73daca', c2: '#7aa2f7', line: 'rgba(130, 210, 195, 0.25)', bg: '#0d1417' },
+  amber:    { c1: '#e0af68', c2: '#f7768e', line: 'rgba(225, 180, 130, 0.25)', bg: '#141110' },
+  ocean:    { c1: '#7dcfff', c2: '#9ece6a', line: 'rgba(135, 195, 225, 0.25)', bg: '#0d131a' }
+};
+
+// Web Audio soft chimes
+let audioCtx = null;
+const scaleNotes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+function playChime(index, intensity = 0.04) {
+  if (!soundOn) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(scaleNotes[index % scaleNotes.length], now);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(Math.min(0.06, Math.max(0.005, intensity)), now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.48);
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  const btn = document.getElementById('btn-sound');
+  btn.textContent = soundOn ? '🔔 Chimes: On' : '🔇 Chimes: Off';
+  btn.classList.toggle('active', soundOn);
+}
+
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById('btn-pause');
+  btn.textContent = paused ? '▶ Resume' : '⏸ Pause';
+  btn.classList.toggle('active', paused);
+}
+
+function setDimmer(val) {
+  dimmer = val / 100;
+  document.getElementById('val-dim1').textContent = val + '%';
+  document.getElementById('val-dim2').textContent = val + '%';
+  document.getElementById('sl-dim1').value = val;
+  document.getElementById('sl-dim2').value = val;
+  document.body.style.filter = `brightness(${dimmer})`;
+}
+
+function setPalette(val) {
+  paletteName = val;
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-waves').classList.toggle('active', tab === 'waves');
+  document.getElementById('tab-coupled').classList.toggle('active', tab === 'coupled');
+  document.getElementById('controls-waves').style.display = tab === 'waves' ? 'flex' : 'none';
+  document.getElementById('controls-coupled').style.display = tab === 'coupled' ? 'flex' : 'none';
+  if (tab === 'waves') {
+    document.getElementById('hud-title').textContent = 'Pendulum Waves';
+    document.getElementById('hud-desc').textContent = 'Graduated pendulum lengths drift smoothly from unison into traveling waves, double helices, and back again.';
+  } else {
+    document.getElementById('hud-title').textContent = 'Coupled Pendulums (' + (coupledMode === 'ring' ? 'Closed Ring' : 'Open Line') + ')';
+    document.getElementById('hud-desc').textContent = 'Drag or click any glowing bob to pluck it and watch energy ripple from neighbor to neighbor through soft springs.';
+  }
+}
+
+function resetSim() {
+  if (activeTab === 'waves') {
+    waveTime = 0;
+    lastSign = new Array(waveCount).fill(1);
+  } else {
+    rebuildCoupled();
+  }
+}
+
+// ==========================================
+// TAB 1: PENDULUM WAVES
+// ==========================================
+let waveCount = 18;
+let waveSpeed = 1.0;
+let waveView = 'front';
+let showRibbon = true;
+let waveTime = 0;
+let lastSign = new Array(28).fill(1);
+
+function setWaveView(v) {
+  waveView = v;
+  document.getElementById('wave-view-front').classList.toggle('active', v === 'front');
+  document.getElementById('wave-view-top').classList.toggle('active', v === 'top');
+}
+
+function toggleRibbon() {
+  showRibbon = !showRibbon;
+  const btn = document.getElementById('wave-ribbon');
+  btn.textContent = showRibbon ? '✦ Wave Ribbon: On' : '✦ Wave Ribbon: Off';
+  btn.classList.toggle('active', showRibbon);
+}
+
+function updateWaveParams() {
+  waveCount = parseInt(document.getElementById('sl-wcount').value, 10);
+  waveSpeed = parseFloat(document.getElementById('sl-wspeed').value);
+  document.getElementById('val-wcount').textContent = waveCount;
+  document.getElementById('val-wspeed').textContent = waveSpeed.toFixed(1) + 'x';
+}
+
+function drawPendulumWaves(dt) {
+  const pal = palettes[paletteName];
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  if (!paused) {
+    waveTime += dt * waveSpeed;
+  }
+
+  const cycleDuration = 48.0; // seconds for full unison return
+  const baseOscillations = 24;
+  const maxAngle = 0.48;
+  const points = [];
+
+  for (let i = 0; i < waveCount; i++) {
+    const freq = (baseOscillations + i) / cycleDuration;
+    const phase = 2 * Math.PI * freq * waveTime;
+    const angle = maxAngle * Math.cos(phase);
+    const sign = angle >= 0 ? 1 : -1;
+    if (!paused && sign !== lastSign[i]) {
+      if (i % 3 === 0) playChime(i, 0.02);
+      lastSign[i] = sign;
+    }
+
+    const tNorm = i / Math.max(1, waveCount - 1);
+    if (waveView === 'front') {
+      const marginX = Math.max(90, W * 0.14);
+      const anchorX = marginX + tNorm * (W - 2 * marginX);
+      const anchorY = Math.max(70, H * 0.13);
+      const minLen = H * 0.34;
+      const maxLen = H * 0.68;
+      // Shorter length = higher frequency (higher index)
+      const len = maxLen - tNorm * (maxLen - minLen);
+      const bobX = anchorX + Math.sin(angle) * len;
+      const bobY = anchorY + Math.cos(angle) * len;
+      points.push({ anchorX, anchorY, bobX, bobY, tNorm, angle });
+    } else {
+      // Top-down phase view
+      const marginX = Math.max(90, W * 0.14);
+      const x = marginX + tNorm * (W - 2 * marginX);
+      const centerY = H * 0.52;
+      const ampY = H * 0.30;
+      const y = centerY + Math.sin(phase) * ampY;
+      points.push({ anchorX: x, anchorY: centerY, bobX: x, bobY: y, tNorm, angle });
+    }
+  }
+
+  // Draw support bar or centerline
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (waveView === 'front') {
+    ctx.moveTo(points[0].anchorX - 20, points[0].anchorY);
+    ctx.lineTo(points[points.length - 1].anchorX + 20, points[points.length - 1].anchorY);
+  } else {
+    ctx.moveTo(points[0].anchorX - 20, H * 0.52);
+    ctx.lineTo(points[points.length - 1].anchorX + 20, H * 0.52);
+  }
+  ctx.stroke();
+
+  // Draw strings in front view
+  if (waveView === 'front') {
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      ctx.strokeStyle = pal.line;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(p.anchorX, p.anchorY);
+      ctx.lineTo(p.bobX, p.bobY);
+      ctx.stroke();
+    }
+  }
+
+  // Draw connecting wave ribbon
+  if (showRibbon && points.length > 1) {
+    ctx.strokeStyle = pal.c1;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      if (i === 0) ctx.moveTo(p.bobX, p.bobY);
+      else ctx.lineTo(p.bobX, p.bobY);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+  }
+
+  // Draw bobs
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const color = i % 2 === 0 ? pal.c1 : pal.c2;
+    ctx.beginPath();
+    ctx.arc(p.bobX, p.bobY, 9, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(p.bobX, p.bobY, 15, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.14;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+  }
+
+  // Cycle progress pill
+  const progress = ((waveTime % cycleDuration) / cycleDuration) * 100;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(`Cycle Phase: ${progress.toFixed(0)}%`, W - 135, 32);
+}
+
+// ==========================================
+// TAB 2: COUPLED PENDULUMS
+// ==========================================
+let coupledMode = 'line';
+let coupledCount = 14;
+let couplingK = 0.45;
+let coupledDamp = 0.004;
+let nodes = [];
+let draggedNode = -1;
+
+function rebuildCoupled() {
+  coupledCount = parseInt(document.getElementById('sl-ccount').value, 10);
+  document.getElementById('val-ccount').textContent = coupledCount;
+  nodes = [];
+  for (let i = 0; i < coupledCount; i++) {
+    nodes.push({ x: 0, v: 0, trail: [] });
+  }
+  pluckSingle();
+}
+
+function updateCoupledParams() {
+  couplingK = parseFloat(document.getElementById('sl-ck').value);
+  coupledDamp = parseFloat(document.getElementById('sl-cdamp').value);
+  document.getElementById('val-ck').textContent = couplingK.toFixed(2);
+  document.getElementById('val-cdamp').textContent = coupledDamp.toFixed(3);
+}
+
+function setCoupledMode(mode) {
+  coupledMode = mode;
+  document.getElementById('coup-mode-line').classList.toggle('active', mode === 'line');
+  document.getElementById('coup-mode-ring').classList.toggle('active', mode === 'ring');
+  switchTab('coupled');
+}
+
+function pluckSingle() {
+  for (let i = 0; i < nodes.length; i++) {
+    nodes[i].x = 0;
+    nodes[i].v = 0;
+    nodes[i].trail = [];
+  }
+  if (nodes.length > 0) {
+    nodes[0].x = 1.0;
+  }
+}
+
+function pluckWave() {
+  for (let i = 0; i < nodes.length; i++) {
+    const theta = (2 * Math.PI * i) / nodes.length;
+    nodes[i].x = Math.cos(theta) * 0.85;
+    nodes[i].v = 0;
+    nodes[i].trail = [];
+  }
+}
+
+function stepCoupled(dt) {
+  const subSteps = 6;
+  const h = Math.min(dt, 0.033) / subSteps;
+  const omega0Sq = 9.0; // natural pendulum restoring frequency squared
+  const k = couplingK * 18.0;
+
+  for (let s = 0; s < subSteps; s++) {
+    const acc = new Array(nodes.length).fill(0);
+    for (let i = 0; i < nodes.length; i++) {
+      if (i === draggedNode) continue;
+      let force = -omega0Sq * nodes[i].x - coupledDamp * 6.0 * nodes[i].v;
+
+      // Left neighbor
+      if (i > 0) {
+        force += k * (nodes[i - 1].x - nodes[i].x);
+      } else if (coupledMode === 'ring') {
+        force += k * (nodes[nodes.length - 1].x - nodes[i].x);
+      }
+
+      // Right neighbor
+      if (i < nodes.length - 1) {
+        force += k * (nodes[i + 1].x - nodes[i].x);
+      } else if (coupledMode === 'ring') {
+        force += k * (nodes[0].x - nodes[i].x);
+      }
+
+      acc[i] = force;
+    }
+
+    for (let i = 0; i < nodes.length; i++) {
+      if (i === draggedNode) {
+        nodes[i].v = 0;
+        continue;
+      }
+      const prevX = nodes[i].x;
+      nodes[i].v += acc[i] * h;
+      nodes[i].x += nodes[i].v * h;
+      if (s === 0 && ((prevX < 0 && nodes[i].x >= 0) || (prevX > 0 && nodes[i].x <= 0))) {
+        if (Math.abs(nodes[i].v) > 0.45 && i % 2 === 0) {
+          playChime(i, Math.abs(nodes[i].v) * 0.015);
+        }
+      }
+    }
+  }
+}
+
+function getCoupledPositions() {
+  const pos = [];
+  const n = nodes.length;
+  if (coupledMode === 'line') {
+    const marginX = Math.max(90, W * 0.13);
+    const anchorY = Math.max(85, H * 0.16);
+    const len = H * 0.54;
+    for (let i = 0; i < n; i++) {
+      const t = n === 1 ? 0.5 : i / (n - 1);
+      const ax = marginX + t * (W - 2 * marginX);
+      const angle = nodes[i].x * 0.45;
+      const bx = ax + Math.sin(angle) * len;
+      const by = anchorY + Math.cos(angle) * len;
+      pos.push({ ax, ay: anchorY, bx, by });
+    }
+  } else {
+    const cx = W * 0.5;
+    const cy = H * 0.52;
+    const baseR = Math.min(W, H) * 0.28;
+    for (let i = 0; i < n; i++) {
+      const theta = (2 * Math.PI * i) / n - Math.PI / 2;
+      const radialDisp = nodes[i].x * (baseR * 0.32);
+      const r = baseR + radialDisp;
+      const bx = cx + Math.cos(theta) * r;
+      const by = cy + Math.sin(theta) * r;
+      const ax = cx + Math.cos(theta) * baseR;
+      const ay = cy + Math.sin(theta) * baseR;
+      pos.push({ ax, ay, bx, by });
+    }
+  }
+  return pos;
+}
+
+function drawSpring(x1, y1, x2, y2, color) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 1) return;
+  const ux = dx / dist;
+  const uy = dy / dist;
+  const nx = -uy;
+  const ny = ux;
+  const coils = 8;
+  const amp = 4.5;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  for (let c = 1; c < coils; c++) {
+    const frac = c / coils;
+    const side = c % 2 === 0 ? 1 : -1;
+    const px = x1 + dx * frac + nx * amp * side;
+    const py = y1 + dy * frac + ny * amp * side;
+    ctx.lineTo(px, py);
+  }
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function drawCoupledPendulums(dt) {
+  const pal = palettes[paletteName];
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  if (!paused) {
+    stepCoupled(dt);
+  }
+
+  const pos = getCoupledPositions();
+
+  // Reference circle in ring mode or bar in line mode
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (coupledMode === 'line') {
+    ctx.moveTo(pos[0].ax - 25, pos[0].ay);
+    ctx.lineTo(pos[pos.length - 1].ax + 25, pos[pos.length - 1].ay);
+  } else {
+    const cx = W * 0.5, cy = H * 0.52, baseR = Math.min(W, H) * 0.28;
+    ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
+  }
+  ctx.stroke();
+
+  // Draw suspension strings in line mode
+  if (coupledMode === 'line') {
+    for (let i = 0; i < pos.length; i++) {
+      ctx.strokeStyle = pal.line;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(pos[i].ax, pos[i].ay);
+      ctx.lineTo(pos[i].bx, pos[i].by);
+      ctx.stroke();
+    }
+  }
+
+  // Draw coupling springs between neighbors
+  for (let i = 0; i < pos.length - 1; i++) {
+    drawSpring(pos[i].bx, pos[i].by, pos[i + 1].bx, pos[i + 1].by, 'rgba(187, 154, 247, 0.45)');
+  }
+  if (coupledMode === 'ring' && pos.length > 2) {
+    drawSpring(pos[pos.length - 1].bx, pos[pos.length - 1].by, pos[0].bx, pos[0].by, 'rgba(187, 154, 247, 0.45)');
+  }
+
+  // Draw bobs with energy glow
+  for (let i = 0; i < pos.length; i++) {
+    const p = pos[i];
+    const energy = Math.min(1, Math.abs(nodes[i].x) + Math.abs(nodes[i].v) * 0.25);
+    const color = energy > 0.35 ? pal.c2 : pal.c1;
+
+    ctx.beginPath();
+    ctx.arc(p.bx, p.by, 11 + energy * 4, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.16 + energy * 0.22;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.beginPath();
+    ctx.arc(p.bx, p.by, 9.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+}
+
+// Mouse / touch interaction for plucking coupled pendulums
+function pointerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (activeTab !== 'coupled') return;
+  const pt = pointerPos(e);
+  const pos = getCoupledPositions();
+  let best = -1, bestDist = 36;
+  for (let i = 0; i < pos.length; i++) {
+    const d = Math.hypot(pt.x - pos[i].bx, pt.y - pos[i].by);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  }
+  if (best !== -1) {
+    draggedNode = best;
+    playChime(best, 0.04);
+  }
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (draggedNode === -1 || activeTab !== 'coupled') return;
+  const pt = pointerPos(e);
+  const pos = getCoupledPositions();
+  const p = pos[draggedNode];
+  if (coupledMode === 'line') {
+    const len = H * 0.54;
+    const dx = Math.max(-len * 0.6, Math.min(len * 0.6, pt.x - p.ax));
+    nodes[draggedNode].x = Math.asin(dx / len) / 0.45;
+  } else {
+    const cx = W * 0.5, cy = H * 0.52, baseR = Math.min(W, H) * 0.28;
+    const dist = Math.hypot(pt.x - cx, pt.y - cy);
+    const disp = Math.max(-baseR * 0.45, Math.min(baseR * 0.45, dist - baseR));
+    nodes[draggedNode].x = disp / (baseR * 0.32);
+  }
+});
+
+window.addEventListener('pointerup', () => {
+  draggedNode = -1;
+});
+
+rebuildCoupled();
+
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  if (activeTab === 'waves') {
+    drawPendulumWaves(dt);
+  } else {
+    drawCoupledPendulums(dt);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+</template>
+<!-- end Pendulum Waves & Coupled Pendulums Studio -->
+<!-- Spectral & Isoperimetric Trilogy Visualizer — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 15: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-trilogy" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-trilogy">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spectral &amp; Isoperimetric Trilogy Visualizer</title>
+<style>
+  :root {
+    --bg: #0f131a;
+    --panel: #171d27;
+    --panel-border: #283244;
+    --text: #e6ecf5;
+    --muted: #93a1b8;
+    --accent: #7dd3fc;
+    --accent2: #c084fc;
+    --warm: #f59e0b;
+    --good: #34d399;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 14px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .title-block h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .title-block p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: #1f2735;
+    color: var(--muted);
+    border: 1px solid var(--panel-border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .tab-btn:hover { color: var(--text); border-color: #3e4d68; }
+  .tab-btn.active {
+    background: #253349;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .view-section {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+  }
+  .view-section.active { display: flex; }
+  .canvas-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    min-height: 440px;
+    display: flex;
+    flex-direction: column;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    flex: 1;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+  .hud {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(15, 19, 26, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    pointer-events: none;
+    max-width: 310px;
+  }
+  .hud-title {
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-size: 0.88rem;
+  }
+  .hud-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    color: var(--muted);
+  }
+  .hud-val {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  .controls {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    color: var(--muted);
+  }
+  .ctrl-group input[type="range"] {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .btn {
+    background: #222b3a;
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn:hover { background: #2c384c; border-color: #455675; }
+  .btn.primary {
+    background: rgba(125, 211, 252, 0.14);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .trilogy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+    flex: 1;
+  }
+  .mini-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 360px;
+  }
+  .mini-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mini-header h3 { font-size: 0.92rem; font-weight: 600; }
+  .badge {
+    font-size: 0.74rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(125, 211, 252, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(125, 211, 252, 0.3);
+  }
+  .mini-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--panel-border);
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .insight-banner {
+    background: rgba(192, 132, 252, 0.08);
+    border: 1px solid rgba(192, 132, 252, 0.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #dcd6f7;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>Spectral &amp; Isoperimetric Trilogy Studio</h1>
+    <p>1D Path (Poincaré) &bull; 1D Cycle (Wirtinger) &bull; nD Hypercube (Edge-Isoperimetric)</p>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="cube">1. 3D/4D Hypercube Explorer</button>
+    <button class="tab-btn" data-tab="trilogy">2. Unified Trilogy Comparison</button>
+  </div>
+</header>
+
+<main>
+  <!-- TAB 1: 3D/4D HYPERCUBE EXPLORER -->
+  <section id="tab-cube" class="view-section active">
+    <div class="canvas-card">
+      <canvas id="cubeCanvas"></canvas>
+      <div class="hud">
+        <div class="hud-title" id="cubeTitle">3D Cube (n = 3)</div>
+        <div class="hud-row"><span>Selected Vertices (m):</span><span class="hud-val" id="hudM">4</span></div>
+        <div class="hud-row"><span>Internal Edges (dir / 2):</span><span class="hud-val" id="hudInternal" style="color:var(--good)">4</span></div>
+        <div class="hud-row"><span>Theoretical Max (m/2)log₂m:</span><span class="hud-val" id="hudMax">4.00</span></div>
+        <div class="hud-row"><span>Boundary Cut Edges:</span><span class="hud-val" id="hudBoundary" style="color:var(--warm)">4</span></div>
+        <div class="hud-row"><span>Subcube Status:</span><span class="hud-val" id="hudStatus" style="color:var(--good)">Exact Equality!</span></div>
+        <div style="margin-top:8px; font-size:0.76rem; color:var(--muted);">
+          Click corners to toggle set <strong>s</strong> &bull; Drag to rotate
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="ctrl-group">
+        <span>Dimension (n):</span>
+        <button class="btn" id="dim2Btn">2D Square</button>
+        <button class="btn primary" id="dim3Btn">3D Cube</button>
+        <button class="btn" id="dim4Btn">4D Tesseract</button>
+      </div>
+      <div class="ctrl-group">
+        <span>Presets:</span>
+        <button class="btn" id="presetSubcube">Optimal Subcube</button>
+        <button class="btn" id="presetScattered">Scattered Set</button>
+        <button class="btn" id="presetHalf">Half-Cube Cut</button>
+        <button class="btn" id="presetClear">Clear All</button>
+      </div>
+      <div class="ctrl-group">
+        <label><input type="checkbox" id="autoRotateCube" checked /> Gentle Spin</label>
+      </div>
+      <div class="ctrl-group">
+        <span>Brightness:</span>
+        <input type="range" id="dimmerCube" min="55" max="100" value="92" />
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: UNIFIED TRILOGY COMPARISON -->
+  <section id="tab-trilogy" class="view-section">
+    <div class="insight-banner">
+      <strong>Cheeger's Bridge:</strong> Watch how a wave disturbance relaxes across all three shapes simultaneously. The <strong>Open Line</strong> has loose ends and relaxes slowest; the <strong>Closed Cycle</strong> doubles the paths around the ring; the <strong>Hypercube</strong> weaves multi-dimensional shortcuts that equalize tension almost immediately.
+    </div>
+
+    <div class="trilogy-grid">
+      <div class="mini-card">
+        <div class="mini-header">
+          <h3>1. Open Line (Poincaré)</h3>
+          <span class="badge" id="gapLineBadge">Gap &lambda;₂ = 0.268</span>
+        </div>
+        <canvas id="lineCanvas"></canvas>
+        <div class="mini-footer">
+          <span>Tension Energy: <strong id="enLine" style="color:var(--text)">0.00</strong></span>
+          <span>Slowest Relaxation</span>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-header">
+          <h3>2. Closed Cycle (Wirtinger)</h3>
+          <span class="badge" id="gapCycleBadge">Gap 4sin²(&pi;/n) = 1.000</span>
+        </div>
+        <canvas id="cycleCanvas"></canvas>
+        <div class="mini-footer">
+          <span>Tension Energy: <strong id="enCycle" style="color:var(--text)">0.00</strong></span>
+          <span>4&times; Faster on 6-Ring</span>
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-header">
+          <h3>3. 3D Hypercube (Isoperimetric)</h3>
+          <span class="badge">Gap &lambda;₂ = 2.000</span>
+        </div>
+        <canvas id="triCubeCanvas"></canvas>
+        <div class="mini-footer">
+          <span>Tension Energy: <strong id="enCube" style="color:var(--text)">0.00</strong></span>
+          <span>Fastest Multi-D Mixing</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn primary" id="pulseTrilogyBtn">Inject Wave Pulse Across All Three</button>
+      <button class="btn" id="stepPulseBtn">Concentrated Corner Spike</button>
+      <div class="ctrl-group">
+        <span>Diffusion Speed:</span>
+        <input type="range" id="diffSpeed" min="1" max="10" value="4" />
+      </div>
+      <div class="ctrl-group">
+        <label><input type="checkbox" id="pauseTrilogy" /> Freeze Flow</label>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// --- TAB NAVIGATION ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ==========================================
+// TAB 1: 3D/4D HYPERCUBE EXPLORER
+// ==========================================
+const cubeCanvas = document.getElementById('cubeCanvas');
+const cCtx = cubeCanvas.getContext('2d');
+
+let cubeDim = 3;
+let selectedSet = new Set([0, 1, 2, 3]);
+let rotX = 0.45, rotY = 0.65, rotW = 0.35;
+let isDragging = false, dragMoved = false, lastMX = 0, lastMY = 0;
+let projectedNodes = [];
+
+function initCubePreset(type) {
+  selectedSet.clear();
+  const total = 1 << cubeDim;
+  if (type === 'subcube') {
+    const subSize = 1 << (cubeDim - 1);
+    for (let i = 0; i < subSize; i++) selectedSet.add(i);
+  } else if (type === 'scattered') {
+    for (let i = 0; i < total; i++) {
+      let bits = 0, v = i;
+      while (v) { bits += v & 1; v >>= 1; }
+      if (bits % 2 === 0) selectedSet.add(i);
+    }
+  } else if (type === 'half') {
+    for (let i = 0; i < total / 2; i++) selectedSet.add(i);
+  }
+  updateCubeHUD();
+}
+
+function setDimension(n) {
+  cubeDim = n;
+  document.getElementById('dim2Btn').classList.toggle('primary', n === 2);
+  document.getElementById('dim3Btn').classList.toggle('primary', n === 3);
+  document.getElementById('dim4Btn').classList.toggle('primary', n === 4);
+  const names = { 2: '2D Square (n = 2)', 3: '3D Cube (n = 3)', 4: '4D Tesseract (n = 4)' };
+  document.getElementById('cubeTitle').textContent = names[n];
+  initCubePreset('subcube');
+}
+
+document.getElementById('dim2Btn').onclick = () => setDimension(2);
+document.getElementById('dim3Btn').onclick = () => setDimension(3);
+document.getElementById('dim4Btn').onclick = () => setDimension(4);
+document.getElementById('presetSubcube').onclick = () => initCubePreset('subcube');
+document.getElementById('presetScattered').onclick = () => initCubePreset('scattered');
+document.getElementById('presetHalf').onclick = () => initCubePreset('half');
+document.getElementById('presetClear').onclick = () => initCubePreset('clear');
+
+document.getElementById('dimmerCube').addEventListener('input', e => {
+  cubeCanvas.style.filter = `brightness(${e.target.value}%)`;
+});
+
+function updateCubeHUD() {
+  const m = selectedSet.size;
+  const total = 1 << cubeDim;
+  let internal = 0, boundary = 0;
+  for (let u = 0; u < total; u++) {
+    for (let b = 0; b < cubeDim; b++) {
+      const v = u ^ (1 << b);
+      if (u < v) {
+        const uIn = selectedSet.has(u);
+        const vIn = selectedSet.has(v);
+        if (uIn && vIn) internal++;
+        else if (uIn !== vIn) boundary++;
+      }
+    }
+  }
+  const maxBound = m > 0 ? (m / 2) * Math.log2(m) : 0;
+  document.getElementById('hudM').textContent = m;
+  document.getElementById('hudInternal').textContent = internal;
+  document.getElementById('hudMax').textContent = maxBound.toFixed(2);
+  document.getElementById('hudBoundary').textContent = boundary;
+
+  const statusEl = document.getElementById('hudStatus');
+  if (m === 0) {
+    statusEl.textContent = 'Empty Set';
+    statusEl.style.color = 'var(--muted)';
+  } else if (Math.abs(internal - maxBound) < 1e-6) {
+    statusEl.textContent = 'Exact Subcube Equality!';
+    statusEl.style.color = 'var(--good)';
+  } else {
+    statusEl.textContent = `Sub-optimal (${(maxBound - internal).toFixed(2)} below max)`;
+    statusEl.style.color = 'var(--warm)';
+  }
+}
+
+function projectVertex(idx) {
+  const coords = [];
+  for (let d = 0; d < 4; d++) {
+    coords.push(d < cubeDim ? ((idx >> d) & 1 ? 1 : -1) : 0);
+  }
+  let [x, y, z, w] = coords;
+
+  if (cubeDim === 4) {
+    const cw = Math.cos(rotW), sw = Math.sin(rotW);
+    const nx = x * cw - w * sw;
+    const nw = x * sw + w * cw;
+    x = nx; w = nw;
+    const dist4 = 2.8;
+    const factor4 = dist4 / (dist4 - w);
+    x *= factor4; y *= factor4; z *= factor4;
+  }
+
+  if (cubeDim >= 3) {
+    const cy = Math.cos(rotY), sy = Math.sin(rotY);
+    const nx = x * cy - z * sy;
+    const nz = x * sy + z * cy;
+    x = nx; z = nz;
+
+    const cx = Math.cos(rotX), sx = Math.sin(rotX);
+    const ny = y * cx - z * sx;
+    const nz2 = y * sx + z * cx;
+    y = ny; z = nz2;
+  } else {
+    const c2 = Math.cos(rotY * 0.4), s2 = Math.sin(rotY * 0.4);
+    const nx = x * c2 - y * s2;
+    const ny = x * s2 + y * c2;
+    x = nx; y = ny;
+  }
+
+  const W = cubeCanvas.width, H = cubeCanvas.height;
+  const scale = Math.min(W, H) * (cubeDim === 4 ? 0.16 : 0.21);
+  const persp = cubeDim >= 3 ? 4.2 / (4.2 - z) : 1;
+  return {
+    px: W / 2 + x * scale * persp,
+    py: H / 2 + y * scale * persp,
+    depth: z
+  };
+}
+
+function drawCubeScene() {
+  const rect = cubeCanvas.getBoundingClientRect();
+  if (cubeCanvas.width !== rect.width || cubeCanvas.height !== rect.height) {
+    cubeCanvas.width = rect.width;
+    cubeCanvas.height = rect.height;
+  }
+  const W = cubeCanvas.width, H = cubeCanvas.height;
+  cCtx.clearRect(0, 0, W, H);
+
+  if (document.getElementById('autoRotateCube').checked && !isDragging) {
+    rotY += 0.0045;
+    if (cubeDim === 4) rotW += 0.003;
+  }
+
+  const total = 1 << cubeDim;
+  projectedNodes = [];
+  for (let i = 0; i < total; i++) {
+    projectedNodes.push({ idx: i, ...projectVertex(i) });
+  }
+
+  // Draw edges
+  for (let u = 0; u < total; u++) {
+    for (let b = 0; b < cubeDim; b++) {
+      const v = u ^ (1 << b);
+      if (u < v) {
+        const p1 = projectedNodes[u], p2 = projectedNodes[v];
+        const uIn = selectedSet.has(u), vIn = selectedSet.has(v);
+        cCtx.beginPath();
+        cCtx.moveTo(p1.px, p1.py);
+        cCtx.lineTo(p2.px, p2.py);
+        if (uIn && vIn) {
+          cCtx.strokeStyle = '#34d399';
+          cCtx.lineWidth = 3.2;
+        } else if (uIn !== vIn) {
+          cCtx.strokeStyle = 'rgba(245, 158, 11, 0.72)';
+          cCtx.lineWidth = 2.0;
+          cCtx.setLineDash([5, 5]);
+        } else {
+          cCtx.strokeStyle = 'rgba(147, 161, 184, 0.18)';
+          cCtx.lineWidth = 1.2;
+        }
+        cCtx.stroke();
+        cCtx.setLineDash([]);
+      }
+    }
+  }
+
+  // Draw nodes sorted by depth
+  const sorted = [...projectedNodes].sort((a, b) => a.depth - b.depth);
+  for (const node of sorted) {
+    const isSel = selectedSet.has(node.idx);
+    cCtx.beginPath();
+    cCtx.arc(node.px, node.py, isSel ? 11 : 7, 0, Math.PI * 2);
+    cCtx.fillStyle = isSel ? '#34d399' : '#242f42';
+    cCtx.fill();
+    cCtx.lineWidth = 2;
+    cCtx.strokeStyle = isSel ? '#ecfdf5' : '#536582';
+    cCtx.stroke();
+
+    const label = node.idx.toString(2).padStart(cubeDim, '0');
+    cCtx.fillStyle = isSel ? '#e6ecf5' : '#7b8ba6';
+    cCtx.font = '11px monospace';
+    cCtx.fillText(label, node.px + 13, node.py + 4);
+  }
+
+  requestAnimationFrame(drawCubeScene);
+}
+
+cubeCanvas.addEventListener('mousedown', e => {
+  isDragging = true; dragMoved = false;
+  lastMX = e.clientX; lastMY = e.clientY;
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastMX, dy = e.clientY - lastMY;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
+  rotY += dx * 0.008;
+  rotX += dy * 0.008;
+  lastMX = e.clientX; lastMY = e.clientY;
+});
+window.addEventListener('mouseup', e => {
+  if (isDragging && !dragMoved) {
+    const rect = cubeCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    let closest = null, bestDist = 24;
+    for (const node of projectedNodes) {
+      const d = Math.hypot(node.px - mx, node.py - my);
+      if (d < bestDist) { bestDist = d; closest = node.idx; }
+    }
+    if (closest !== null) {
+      if (selectedSet.has(closest)) selectedSet.delete(closest);
+      else selectedSet.add(closest);
+      updateCubeHUD();
+    }
+  }
+  isDragging = false;
+});
+
+initCubePreset('subcube');
+drawCubeScene();
+
+
+// ==========================================
+// TAB 2: UNIFIED TRILOGY COMPARISON
+// ==========================================
+const lineCanvas = document.getElementById('lineCanvas');
+const cycleCanvas = document.getElementById('cycleCanvas');
+const triCubeCanvas = document.getElementById('triCubeCanvas');
+const lCtx = lineCanvas.getContext('2d');
+const cyCtx = cycleCanvas.getContext('2d');
+const tcCtx = triCubeCanvas.getContext('2d');
+
+const N_1D = 6;
+let uLine = new Array(N_1D).fill(0);
+let uCycle = new Array(N_1D).fill(0);
+let uCube = new Array(8).fill(0);
+let triRot = 0.5;
+
+function injectWave(mode) {
+  if (mode === 'wave') {
+    for (let i = 0; i < N_1D; i++) {
+      uLine[i] = Math.cos((Math.PI * i) / (N_1D - 1));
+      uCycle[i] = Math.cos((2 * Math.PI * i) / N_1D);
+    }
+    for (let i = 0; i < 8; i++) {
+      uCube[i] = (i & 1) ? 1 : -1;
+    }
+  } else {
+    uLine = [1.8, -0.36, -0.36, -0.36, -0.36, -0.36];
+    uCycle = [1.8, -0.36, -0.36, -0.36, -0.36, -0.36];
+    uCube = [2.1, -0.3, -0.3, -0.3, -0.3, -0.3, -0.3, -0.3];
+  }
+}
+
+document.getElementById('pulseTrilogyBtn').onclick = () => injectWave('wave');
+document.getElementById('stepPulseBtn').onclick = () => injectWave('spike');
+
+function stepTrilogy() {
+  if (document.getElementById('pauseTrilogy').checked) return;
+  const dt = Number(document.getElementById('diffSpeed').value) * 0.004;
+
+  // 1. Line Laplacian (Neumann boundary)
+  const nextLine = [...uLine];
+  for (let i = 0; i < N_1D; i++) {
+    let lap = 0;
+    if (i > 0) lap += uLine[i - 1] - uLine[i];
+    if (i < N_1D - 1) lap += uLine[i + 1] - uLine[i];
+    nextLine[i] += dt * lap;
+  }
+  uLine = nextLine;
+
+  // 2. Cycle Laplacian (Periodic)
+  const nextCycle = [...uCycle];
+  for (let i = 0; i < N_1D; i++) {
+    const prev = uCycle[(i - 1 + N_1D) % N_1D];
+    const next = uCycle[(i + 1) % N_1D];
+    nextCycle[i] += dt * ((prev - uCycle[i]) + (next - uCycle[i]));
+  }
+  uCycle = nextCycle;
+
+  // 3. 3D Cube Laplacian
+  const nextCube = [...uCube];
+  for (let i = 0; i < 8; i++) {
+    let lap = 0;
+    for (let b = 0; b < 3; b++) {
+      lap += uCube[i ^ (1 << b)] - uCube[i];
+    }
+    nextCube[i] += dt * lap;
+  }
+  uCube = nextCube;
+  triRot += 0.008;
+}
+
+function valToColor(v) {
+  const clamp = Math.max(-1, Math.min(1, v));
+  if (clamp >= 0) {
+    return `rgb(${Math.round(125 + 120 * clamp)}, ${Math.round(211 - 50 * clamp)}, ${Math.round(252 - 180 * clamp)})`;
+  } else {
+    const a = -clamp;
+    return `rgb(${Math.round(125 - 60 * a)}, ${Math.round(211 - 90 * a)}, ${Math.round(252)})`;
+  }
+}
+
+function renderTrilogy() {
+  stepTrilogy();
+
+  // Resize helper
+  [lineCanvas, cycleCanvas, triCubeCanvas].forEach(c => {
+    const r = c.getBoundingClientRect();
+    if (r.width > 0 && (c.width !== r.width || c.height !== r.height)) {
+      c.width = r.width; c.height = r.height;
+    }
+  });
+
+  // 1. Draw Line
+  let W = lineCanvas.width, H = lineCanvas.height;
+  lCtx.clearRect(0, 0, W, H);
+  let enLine = 0;
+  for (let i = 0; i < N_1D - 1; i++) enLine += (uLine[i + 1] - uLine[i]) ** 2;
+  document.getElementById('enLine').textContent = enLine.toFixed(3);
+
+  lCtx.strokeStyle = 'rgba(147,161,184,0.3)';
+  lCtx.lineWidth = 2;
+  lCtx.beginPath();
+  for (let i = 0; i < N_1D; i++) {
+    const x = 40 + (i / (N_1D - 1)) * (W - 80);
+    const y = H / 2 - uLine[i] * 55;
+    if (i === 0) lCtx.moveTo(x, y); else lCtx.lineTo(x, y);
+  }
+  lCtx.stroke();
+  for (let i = 0; i < N_1D; i++) {
+    const x = 40 + (i / (N_1D - 1)) * (W - 80);
+    const y = H / 2 - uLine[i] * 55;
+    lCtx.beginPath();
+    lCtx.arc(x, y, 9, 0, Math.PI * 2);
+    lCtx.fillStyle = valToColor(uLine[i]);
+    lCtx.fill();
+  }
+
+  // 2. Draw Cycle
+  W = cycleCanvas.width; H = cycleCanvas.height;
+  cyCtx.clearRect(0, 0, W, H);
+  let enCycle = 0;
+  for (let i = 0; i < N_1D; i++) enCycle += (uCycle[(i + 1) % N_1D] - uCycle[i]) ** 2;
+  document.getElementById('enCycle').textContent = enCycle.toFixed(3);
+
+  const rad = Math.min(W, H) * 0.3;
+  cyCtx.strokeStyle = 'rgba(147,161,184,0.3)';
+  cyCtx.lineWidth = 2;
+  cyCtx.beginPath();
+  for (let i = 0; i <= N_1D; i++) {
+    const idx = i % N_1D;
+    const ang = (idx / N_1D) * Math.PI * 2 - Math.PI / 2;
+    const r = rad + uCycle[idx] * 26;
+    const x = W / 2 + Math.cos(ang) * r;
+    const y = H / 2 + Math.sin(ang) * r;
+    if (i === 0) cyCtx.moveTo(x, y); else cyCtx.lineTo(x, y);
+  }
+  cyCtx.stroke();
+  for (let i = 0; i < N_1D; i++) {
+    const ang = (i / N_1D) * Math.PI * 2 - Math.PI / 2;
+    const r = rad + uCycle[i] * 26;
+    const x = W / 2 + Math.cos(ang) * r;
+    const y = H / 2 + Math.sin(ang) * r;
+    cyCtx.beginPath();
+    cyCtx.arc(x, y, 9, 0, Math.PI * 2);
+    cyCtx.fillStyle = valToColor(uCycle[i]);
+    cyCtx.fill();
+  }
+
+  // 3. Draw 3D Cube
+  W = triCubeCanvas.width; H = triCubeCanvas.height;
+  tcCtx.clearRect(0, 0, W, H);
+  let enCube = 0;
+  for (let i = 0; i < 8; i++) {
+    for (let b = 0; b < 3; b++) {
+      const j = i ^ (1 << b);
+      if (i < j) enCube += (uCube[j] - uCube[i]) ** 2;
+    }
+  }
+  document.getElementById('enCube').textContent = enCube.toFixed(3);
+
+  const pts = [];
+  const sc = Math.min(W, H) * 0.22;
+  for (let i = 0; i < 8; i++) {
+    let x = (i & 1) ? 1 : -1;
+    let y = (i & 2) ? 1 : -1;
+    let z = (i & 4) ? 1 : -1;
+    const cy = Math.cos(triRot), sy = Math.sin(triRot);
+    const nx = x * cy - z * sy, nz = x * sy + z * cy;
+    x = nx; z = nz;
+    const cx = Math.cos(0.45), sx = Math.sin(0.45);
+    const ny = y * cx - z * sx, nz2 = y * sx + z * cx;
+    y = ny; z = nz2;
+    const p = 3.8 / (3.8 - z);
+    pts.push({ px: W / 2 + x * sc * p, py: H / 2 + y * sc * p, val: uCube[i] });
+  }
+  tcCtx.strokeStyle = 'rgba(147,161,184,0.28)';
+  tcCtx.lineWidth = 1.6;
+  for (let i = 0; i < 8; i++) {
+    for (let b = 0; b < 3; b++) {
+      const j = i ^ (1 << b);
+      if (i < j) {
+        tcCtx.beginPath();
+        tcCtx.moveTo(pts[i].px, pts[i].py);
+        tcCtx.lineTo(pts[j].px, pts[j].py);
+        tcCtx.stroke();
+      }
+    }
+  }
+  for (const pt of pts) {
+    tcCtx.beginPath();
+    tcCtx.arc(pt.px, pt.py, 8.5, 0, Math.PI * 2);
+    tcCtx.fillStyle = valToColor(pt.val);
+    tcCtx.fill();
+  }
+
+  requestAnimationFrame(renderTrilogy);
+}
+
+injectWave('wave');
+renderTrilogy();
+</script>
+</body>
+</html>
+</template>
+<!-- end Spectral & Isoperimetric Trilogy Visualizer -->
 </div>
 
 <script>
@@ -1484,6 +5859,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(document.getElemen
 function setControls() {
   controlsDiv.innerHTML = '';
   if (mode !== 'ferro') ferroHide();
+  if (!PAGE_TABS.includes(mode)) pageTabsHide();
   waveGraphs.classList.remove('visible');
   hint.classList.remove('faded');
   controlsDiv.classList.toggle('sand', mode === 'sand');
@@ -1720,6 +6096,13 @@ function setControls() {
   else if (mode === 'ferro') {
     controlsDiv.innerHTML = '<span class="linked-note">Ferrofluid Studio v6 — Area-Conserving &amp; Discrete Laplacian Surface Tension</span>';
     ferroShow();
+  }
+  else if (PAGE_TABS.includes(mode)) {
+    pageTabsHide();
+    const full = document.querySelector(`.tab[data-mode="${mode}"]`).title;
+    controlsDiv.innerHTML = '<span class="linked-note"></span>';
+    controlsDiv.firstChild.textContent = full;
+    pageTabShow(mode);
   }
   hint.dataset.base = hint.textContent;
   applyLinkNote();
@@ -5587,6 +9970,65 @@ function drawStretch() {
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(stcCanvas, (width - w) / 2, Math.max(0, (avail - h) / 2), w, h);
 }
+
+
+// ========== TABS 11-15: Michele's single-file pages ==========
+// Each page runs exactly as written inside its own frame, so its ids, classes, styles and
+// globals can't touch the playground. The small shim below runs first inside the frame:
+// while another tab is open it holds the page's animation frames and timers, freezes its
+// clock and suspends its sound, then picks up where it left off.
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy'];
+const PAGE_SHIM = '<script>(function(){' +
+  'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
+  'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
+  'window.requestAnimationFrame=function(cb){if(active)return raf(function(t){cb(t-offset);});q.push(cb);return 0;};' +
+  'var si=window.setInterval.bind(window);window.setInterval=function(f,ms){var a=[].slice.call(arguments,2);return si(function(){if(active)f.apply(null,a);},ms);};' +
+  'var ctxs=[],AC=window.AudioContext||window.webkitAudioContext;' +
+  'if(AC){var Wrap=function(o){var c=o===undefined?new AC():new AC(o);ctxs.push(c);return c;};Wrap.prototype=AC.prototype;window.AudioContext=Wrap;window.webkitAudioContext=Wrap;}' +
+  'window.__tabPause=function(){if(!active)return;active=false;pausedAt=pn();ctxs.forEach(function(c){c.__was=c.state==="running";if(c.__was)c.suspend();});};' +
+  'window.__tabResume=function(){if(active)return;offset+=pn()-pausedAt;active=true;var w=q;q=[];w.forEach(function(cb){raf(function(t){cb(t-offset);});});ctxs.forEach(function(c){if(c.__was)c.resume();});};' +
+  '})();<\/script>';
+const pageFrames = {};
+function pageTabsHide() {
+  for (const k of PAGE_TABS) {
+    const st = document.getElementById('page-' + k);
+    if (st.style.display === 'none') continue;
+    st.style.display = 'none';
+    const f = pageFrames[k];
+    if (f && f.contentWindow && f.contentWindow.__tabPause) f.contentWindow.__tabPause();
+  }
+}
+function pageTabShow(k) {
+  const st = document.getElementById('page-' + k);
+  st.style.display = '';
+  let f = pageFrames[k];
+  if (!f) {
+    f = pageFrames[k] = document.createElement('iframe');
+    f.title = document.querySelector(`.tab[data-mode="${k}"]`).title;
+    f.setAttribute('allow', 'autoplay');
+    f.srcdoc = '<!DOCTYPE html>\n' + PAGE_SHIM + document.getElementById('page-src-' + k).innerHTML;
+    st.insertBefore(f, st.firstChild);
+  } else if (f.contentWindow && f.contentWindow.__tabResume) f.contentWindow.__tabResume();
+}
+// Tab strip on wide screens: keep Sound pinned just left of Linked, let a mouse wheel
+// scroll the strip sideways, and bring the picked tab fully into view.
+(function tabStrip() {
+  const strip = document.querySelector('.tabs'), link = document.getElementById('linkToggle');
+  const pin = () => document.documentElement.style.setProperty('--link-w', (link.offsetWidth + 5) + 'px');
+  pin();
+  if (window.ResizeObserver) new ResizeObserver(pin).observe(link);
+  strip.addEventListener('wheel', e => {
+    if (strip.scrollWidth <= strip.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    strip.scrollLeft += e.deltaY; e.preventDefault();
+  }, { passive: false });
+  strip.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    if (strip.scrollWidth <= strip.clientWidth + 1) return;
+    const pinned = document.getElementById('soundToggle').offsetWidth + link.offsetWidth + 16;
+    const s = strip.getBoundingClientRect(), b = t.getBoundingClientRect();
+    if (b.right > s.right - pinned) strip.scrollBy({ left: b.right - (s.right - pinned), behavior: 'smooth' });
+    else if (b.left < s.left) strip.scrollBy({ left: b.left - s.left - 8, behavior: 'smooth' });
+  }));
+})();
 
 // ========== SOUND (shared layer) ==========
 // One master gain + soft compressor. Each tab can run a "bed" (continuous voices)
