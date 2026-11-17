@@ -235,6 +235,7 @@ Third-party material is governed by its own terms.
   .page-tab .page-copy { flex: none; height: 14px; line-height: 14px; padding: 0 16px; text-align: right; font-size: 10px; color: var(--muted); opacity: 0.55; white-space: nowrap; overflow: hidden; }
   .page-tab .page-copy a { color: inherit; }
   .page-tab .page-copy:hover { opacity: 0.9; }
+  @media (max-width: 520px) { #page-horned .page-copy { height: auto; white-space: normal; padding-top: 1px; padding-bottom: 1px; } }   /* room for the field guide link on phones */
   /* 15 tabs, all visible: tabs 1-10 on the first row, tabs 11-15 with Sound and Linked on a second row */
   .tab-break { display: none; }
   @media (min-width: 701px) {
@@ -242,10 +243,12 @@ Third-party material is governed by its own terms.
     .tab, .sound-btn { padding-top: 6px; padding-bottom: 6px; }
     header h1 { flex: none; white-space: nowrap; }
     .tabs { flex: 1; justify-content: flex-end; row-gap: 6px; }
-    .tab-break { display: block; flex-basis: 100%; height: 0; }
+    .tab-break { display: none; }   /* 19 tabs: rows fill naturally so everything fits in two rows */
+    .tab, .sound-btn { padding-left: 5px; padding-right: 5px; }   /* 21 tabs: a little tighter so two rows still fit */
+    .tabs { column-gap: 4px; }
   }
   /* medium-wide screens: tabs get their own full-width rows under the title, so 16 tabs still take two rows */
-  @media (min-width: 701px) and (max-width: 1099px) {
+  @media (min-width: 701px) and (max-width: 1379px) {
     .tabs { flex-basis: 100%; justify-content: flex-start; }
     header { row-gap: 8px; }
   }
@@ -281,6 +284,12 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="pendulum" title="Pendulum Waves &amp; Coupled Pendulums Studio">14. Pendulum</button>
     <button class="tab" data-mode="trilogy" title="Spectral &amp; Isoperimetric Trilogy Visualizer">15. Trilogy</button>
     <button class="tab" data-mode="blackhole" title="Black Hole Spacetime &amp; Ringdown Explorer">16. Black Hole</button>
+    <button class="tab" data-mode="ocean" title="3D Spinning Ocean Wave &amp; El Niño Relative Frame Studio">17. Ocean</button>
+    <button class="tab" data-mode="fourd" title="4D Complex Branch-Cut &amp; Higher-Dimensional Geometry Studio v2">18. 4D</button>
+    <button class="tab" data-mode="polychora" title="4D Regular Polychora Studio v2 — all six">19. Polychora</button>
+    <button class="tab" data-mode="fireflies" title="Cymatics &amp; Synchronized Fireflies Studio">20. Fireflies</button>
+    <button class="tab" data-mode="horned" title="4D Topology: Alexander Horned Sphere &amp; Exotic Smoothness Studio v2">21. Horned</button>
+    <button class="tab" data-mode="nonorient" title="4D Non-Orientable Surfaces Studio v2">22. Non-Orientable</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -6487,6 +6496,4452 @@ renderTrilogy();
 </html>
 </template>
 <!-- end Black Hole Spacetime & Ringdown Explorer -->
+<!-- 3D Spinning Ocean Wave & El Niño Relative Frame Studio — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 17: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-ocean" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-ocean">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Spinning Ocean Wave & El Niño Relative Frame Studio</title>
+<style>
+  :root {
+    --bg: #080c14;
+    --panel: rgba(14, 21, 34, 0.88);
+    --border: rgba(148, 178, 224, 0.2);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --warm: #f97316;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+  }
+  #dim-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999;
+    transition: opacity 0.15s ease;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .title-group h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: #f8fafc;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  button {
+    background: rgba(30, 41, 59, 0.8);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button:hover {
+    background: rgba(51, 65, 85, 0.9);
+    border-color: rgba(148, 178, 224, 0.45);
+  }
+  button.active {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  main {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  canvas#globeCanvas {
+    display: block;
+    cursor: grab;
+  }
+  canvas#globeCanvas:active {
+    cursor: grabbing;
+  }
+  .hud-card {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    backdrop-filter: blur(8px);
+    font-size: 12px;
+    z-index: 5;
+  }
+  #hud-top-left {
+    top: 14px;
+    left: 14px;
+    max-width: 270px;
+  }
+  #hud-top-left h2 {
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    color: var(--muted);
+  }
+  .stat-row span.val {
+    color: #f1f5f9;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  #inset-box {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px;
+    text-align: center;
+    z-index: 5;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  #inset-box:hover {
+    transform: scale(1.03);
+    border-color: var(--accent);
+  }
+  #inset-label {
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  #legend-box {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 11px;
+    z-index: 5;
+  }
+  .legend-bar {
+    width: 14px;
+    height: 130px;
+    border-radius: 6px;
+    background: linear-gradient(to bottom, #7f0000, #d7301f, #fc8d59, #fdd49e, #e2e8f0, #9ecae1, #4292c6, #08519c, #081d58);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .legend-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    margin-top: 6px;
+  }
+  .legend-ticks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  footer {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+  }
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 130px;
+  }
+  .control label {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .control label span {
+    color: #f8fafc;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .btn-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  body.hide-ui header,
+  body.hide-ui footer,
+  body.hide-ui .hud-card,
+  body.hide-ui #legend-box,
+  body.hide-ui #inset-box {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #unhide-btn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 20;
+    display: none;
+  }
+  body.hide-ui #unhide-btn {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div id="dim-overlay"></div>
+<button id="unhide-btn" onclick="toggleUI()">👁 Show UI</button>
+
+<header>
+  <div class="title-group">
+    <h1>3D Spinning Ocean Wave & El Niño Relative Frame Studio</h1>
+    <span class="badge" id="frameBadge">Frame: Absolute SST</span>
+  </div>
+  <div class="presets">
+    <button onclick="applyPreset('1982')" id="btn-1982">1982 Classic</button>
+    <button onclick="applyPreset('1997')" id="btn-1997">1997 Super</button>
+    <button onclick="applyPreset('2015')" id="btn-2015">2015 Basin</button>
+    <button onclick="applyPreset('2023')" id="btn-2023">2023 Warm Bg</button>
+    <button onclick="applyPreset('2026')" id="btn-2026" class="active">2026 Hot Bg</button>
+    <button onclick="applyPreset('lanina')" id="btn-lanina">La Niña Cool</button>
+  </div>
+</header>
+
+<main id="stage">
+  <canvas id="globeCanvas"></canvas>
+
+  <div class="hud-card" id="hud-top-left">
+    <h2>
+      <span id="eventTitle">2026 Event (Nov 1–15)</span>
+      <span style="font-size:11px;color:var(--accent);" id="modeShort">ABS</span>
+    </h2>
+    <div style="color:var(--muted);line-height:1.4;margin-bottom:6px;" id="eventDesc">
+      Strong equatorial Kelvin wave riding atop a warm global ocean background.
+    </div>
+    <div class="stat-row"><span>Niño 3.4 Raw Anomaly:</span><span class="val" id="statRaw">+2.45 °C</span></div>
+    <div class="stat-row"><span>Tropical Mean Baseline:</span><span class="val" id="statBg">+0.85 °C</span></div>
+    <div class="stat-row"><span>Relative Wave Signal:</span><span class="val" id="statRel">+1.60 °C</span></div>
+    <div class="stat-row"><span>Kelvin Wave Phase:</span><span class="val" id="statPhase">Eastward Peak</span></div>
+  </div>
+
+  <div id="inset-box" onclick="toggleFrame()" title="Click to swap main globe and inset reference frame">
+    <canvas id="insetCanvas" width="126" height="126"></canvas>
+    <div id="inset-label">Inset: Relative Frame ⇄</div>
+  </div>
+
+  <div id="legend-box">
+    <div style="font-weight:600;color:#f8fafc;">SST Anomaly (°C)</div>
+    <div class="legend-wrap">
+      <div class="legend-bar"></div>
+      <div class="legend-ticks">
+        <span>+4.0°</span>
+        <span>+2.0°</span>
+        <span>0.0°</span>
+        <span>-2.0°</span>
+        <span>-3.0°</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="btn-row">
+    <button onclick="toggleFrame()" id="frameBtn" class="active">🌐 Frame: Absolute</button>
+    <button onclick="toggleCurrents()" id="currBtn" class="active">〰 Wave Currents: On</button>
+    <button onclick="toggleNinoBox()" id="boxBtn" class="active">▭ Niño 3.4: On</button>
+    <button onclick="toggleSpin()" id="spinBtn">⟳ Auto-Spin: Off</button>
+    <button onclick="togglePause()" id="pauseBtn">⏸ Pause</button>
+    <button onclick="toggleSound()" id="soundBtn">🔇 Sound: Off</button>
+    <button onclick="toggleUI()">👁 Hide UI</button>
+  </div>
+
+  <div class="control">
+    <label>Kelvin Wave Amp <span id="valAmp">2.3 °C</span></label>
+    <input type="range" id="sliderAmp" min="-2.5" max="3.5" step="0.05" value="2.3">
+  </div>
+  <div class="control">
+    <label>Background Warming <span id="valBg">+0.85 °C</span></label>
+    <input type="range" id="sliderBg" min="-0.6" max="1.6" step="0.05" value="0.85">
+  </div>
+  <div class="control">
+    <label>Wave Phase Speed <span id="valSpeed">1.0x</span></label>
+    <input type="range" id="sliderSpeed" min="0" max="3" step="0.1" value="1.0">
+  </div>
+  <div class="control">
+    <label>Eye Dimmer <span id="valDim">0%</span></label>
+    <input type="range" id="sliderDim" min="0" max="0.55" step="0.01" value="0">
+  </div>
+</footer>
+
+<script>
+const canvas = document.getElementById('globeCanvas');
+const ctx = canvas.getContext('2d');
+const insetCanvas = document.getElementById('insetCanvas');
+const ictx = insetCanvas.getContext('2d');
+
+let state = {
+  preset: '2026',
+  relativeFrame: false,
+  showCurrents: true,
+  showNinoBox: true,
+  autoSpin: false,
+  paused: false,
+  soundOn: false,
+  kelvinAmp: 2.3,
+  bgWarming: 0.85,
+  waveSpeed: 1.0,
+  rotLon: -135 * Math.PI / 180,
+  rotLat: 6 * Math.PI / 180,
+  phase: 0.6,
+  time: 0
+};
+
+const presets = {
+  '1982': {
+    title: '1982 Event (Nov 1–15)',
+    desc: 'Classic eastern Pacific El Niño against a near-neutral 20th-century ocean baseline.',
+    amp: 2.45, bg: -0.05, phase: 0.5
+  },
+  '1997': {
+    title: '1997 Super El Niño',
+    desc: 'Massive equatorial Kelvin wave tongue reaching +4°C off South America with cool off-equatorial flanks.',
+    amp: 3.15, bg: 0.15, phase: 0.75
+  },
+  '2015': {
+    title: '2015 Basin-Wide Event',
+    desc: 'Broad central-to-eastern Pacific warming paired with warm subtropical blobs.',
+    amp: 2.65, bg: 0.45, phase: 0.45
+  },
+  '2023': {
+    title: '2023 Warm Background',
+    desc: 'Strong El Niño amplified by widespread global tropical ocean warmth.',
+    amp: 2.15, bg: 0.75, phase: 0.55
+  },
+  '2026': {
+    title: '2026 Hot Background',
+    desc: 'Strong equatorial Kelvin wave riding atop a warm global ocean background.',
+    amp: 2.30, bg: 0.85, phase: 0.60
+  },
+  'lanina': {
+    title: 'La Niña Cool Tongue',
+    desc: 'Upwelling cold Kelvin wave cools the central and eastern equatorial Pacific.',
+    amp: -1.85, bg: 0.25, phase: 0.50
+  }
+};
+
+// Simplified continental polygons (lon in deg, lat in deg) for visual grounding
+const continents = [
+  // North America
+  [[-168,66],[-140,70],[-125,70],[-110,60],[-95,55],[-80,52],[-75,45],[-81,31],[-82,25],[-90,21],[-97,26],[-105,20],[-92,15],[-84,10],[-79,9],[-88,16],[-95,18],[-106,23],[-114,31],[-118,34],[-123,39],[-124,48],[-135,58],[-152,60],[-165,61]],
+  // South America
+  [[-79,9],[-75,11],[-62,10],[-50,0],[-35,-6],[-38,-14],[-41,-22],[-48,-28],[-54,-34],[-62,-40],[-66,-48],[-68,-54],[-74,-52],[-75,-42],[-71,-30],[-70,-18],[-76,-14],[-81,-5],[-79,2]],
+  // Australia
+  [[114,-22],[122,-17],[131,-12],[136,-13],[142,-11],[146,-19],[153,-28],[150,-37],[141,-38],[136,-35],[130,-32],[115,-34],[113,-26]],
+  // Maritime SE Asia / New Guinea
+  [[96,5],[104,1],[109,2],[117,6],[118,-2],[106,-6],[99,-2]],
+  [[131,-1],[141,-3],[148,-7],[147,-10],[137,-8],[132,-4]],
+  // East Asia edge
+  [[105,21],[114,22],[121,25],[122,31],[120,36],[125,40],[132,43],[140,52],[155,58],[165,60],[140,65],[115,62],[100,45],[102,28]]
+];
+
+function isLand(lonDeg, latDeg) {
+  for (let c = 0; c < continents.length; c++) {
+    const poly = continents[c];
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1];
+      const xj = poly[j][0], yj = poly[j][1];
+      const intersect = ((yi > latDeg) !== (yj > latDeg)) &&
+        (lonDeg < (xj - xi) * (latDeg - yi) / ((yj - yi) || 1e-6) + xi);
+      if (intersect) inside = !inside;
+    }
+    if (inside) return true;
+  }
+  return false;
+}
+
+// Compute SST anomaly at (lonDeg in [-180, 180], latDeg in [-90, 90])
+function computeSST(lonDeg, latDeg, useRelative) {
+  // Normalize lon to [0, 360) for Pacific math (Pacific is ~120E to 280E / -80W)
+  let lon360 = ((lonDeg % 360) + 360) % 360;
+  const latRad = latDeg * Math.PI / 180;
+
+  // Equatorial Kelvin wave packet centered around 190E to 275E (170W to 85W)
+  const waveCenter = 225 + 14 * Math.sin(state.phase);
+  const dLon = (lon360 - waveCenter) / 48;
+  const eqGauss = Math.exp(-(latDeg * latDeg) / 52);
+  const lonEnv = Math.exp(-0.5 * dLon * dLon) * (lon360 > 135 && lon360 < 286 ? 1 : 0.12);
+  const kelvinWave = state.kelvinAmp * eqGauss * lonEnv * (0.88 + 0.16 * Math.cos((lon360 - 210) * Math.PI / 45 - state.phase));
+
+  // Off-equatorial Rossby / horse-shoe cooling (or warming in La Nina) around +/- 12 deg lat
+  const rossbyLat = (Math.abs(latDeg) - 11.5) / 5.5;
+  const rossbyLon = (lon360 - 175) / 42;
+  const rossbySignal = -0.38 * state.kelvinAmp * Math.exp(-rossbyLat * rossbyLat) * Math.exp(-rossbyLon * rossbyLon);
+
+  // Subtropical Pacific & Atlantic warm blobs + natural wave texture
+  const blob1 = 0.55 * Math.exp(-Math.pow((lon360 - 205) / 30, 2) - Math.pow((latDeg - 36) / 14, 2));
+  const blob2 = 0.45 * Math.exp(-Math.pow((lon360 - 220) / 35, 2) - Math.pow((latDeg + 34) / 15, 2));
+  const fineWave = 0.18 * Math.sin(lon360 * 0.14 + state.phase * 1.4) * Math.cos(latDeg * 0.18);
+
+  // Tropical background warming concentrated in 35S - 45N
+  const tropMask = Math.exp(-Math.pow(latDeg / 48, 2));
+  const bg = state.bgWarming * (0.45 + 0.65 * tropMask) + (blob1 + blob2) * Math.max(0, state.bgWarming + 0.2);
+
+  let val = kelvinWave + rossbySignal + bg + fineWave * Math.cos(latRad);
+
+  if (useRelative) {
+    // Subtract tropical mean baseline (~20S to 20N average)
+    const tropicalMean = state.bgWarming * 0.96 + 0.18 * state.kelvinAmp;
+    val -= tropicalMean;
+  }
+  return val;
+}
+
+function sstToRGB(v) {
+  // Clamp to [-3.5, 4.0]
+  const stops = [
+    [-3.2, [8, 29, 88]],
+    [-2.0, [8, 81, 156]],
+    [-1.0, [66, 146, 198]],
+    [-0.35, [158, 202, 225]],
+    [0.0, [226, 232, 240]],
+    [0.45, [253, 212, 158]],
+    [1.2, [252, 141, 89]],
+    [2.3, [215, 48, 31]],
+    [3.6, [127, 0, 0]]
+  ];
+  if (v <= stops[0][0]) return stops[0][1];
+  if (v >= stops[stops.length - 1][0]) return stops[stops.length - 1][1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [v0, c0] = stops[i];
+    const [v1, c1] = stops[i + 1];
+    if (v >= v0 && v <= v1) {
+      const t = (v - v0) / (v1 - v0);
+      return [
+        Math.round(c0[0] + (c1[0] - c0[0]) * t),
+        Math.round(c0[1] + (c1[1] - c0[1]) * t),
+        Math.round(c0[2] + (c1[2] - c0[2]) * t)
+      ];
+    }
+  }
+  return [226, 232, 240];
+}
+
+// Offscreen pixel buffer for crisp fast globe rendering
+const texCanvas = document.createElement('canvas');
+const texCtx = texCanvas.getContext('2d');
+
+function renderSphere(targetCtx, cx, cy, R, useRelative, stepPx, detailed) {
+  const size = Math.ceil(R * 2);
+  if (texCanvas.width !== size || texCanvas.height !== size) {
+    texCanvas.width = size;
+    texCanvas.height = size;
+  }
+  const imgData = texCtx.createImageData(size, size);
+  const data = imgData.data;
+
+  const cosRotLat = Math.cos(state.rotLat);
+  const sinRotLat = Math.sin(state.rotLat);
+
+  for (let py = 0; py < size; py += stepPx) {
+    const ny = (py - R) / R;
+    const ny2 = ny * ny;
+    if (ny2 > 1) continue;
+    for (let px = 0; px < size; px += stepPx) {
+      const nx = (px - R) / R;
+      const r2 = nx * nx + ny2;
+      if (r2 > 1) continue;
+
+      const nz = Math.sqrt(1 - r2);
+      // Rotate around X (tilt latitude), then Y (longitude)
+      const y1 = -ny * cosRotLat + nz * sinRotLat;
+      const z1 = ny * sinRotLat + nz * cosRotLat;
+      const lat = Math.asin(Math.max(-1, Math.min(1, y1)));
+      const lon = Math.atan2(nx, z1) + state.rotLon;
+
+      const latDeg = lat * 180 / Math.PI;
+      let lonDeg = (lon * 180 / Math.PI) % 360;
+      if (lonDeg > 180) lonDeg -= 360;
+      if (lonDeg < -180) lonDeg += 360;
+
+      // Subtle limb shading for 3D spherical depth
+      const shade = 0.72 + 0.28 * nz;
+
+      let r, g, b;
+      if (isLand(lonDeg, latDeg)) {
+        r = Math.round(28 * shade);
+        g = Math.round(35 * shade);
+        b = Math.round(46 * shade);
+      } else {
+        const val = computeSST(lonDeg, latDeg, useRelative);
+        const rgb = sstToRGB(val);
+        r = Math.round(rgb[0] * shade);
+        g = Math.round(rgb[1] * shade);
+        b = Math.round(rgb[2] * shade);
+      }
+
+      for (let dy = 0; dy < stepPx && py + dy < size; dy++) {
+        for (let dx = 0; dx < stepPx && px + dx < size; dx++) {
+          const idx = ((py + dy) * size + (px + dx)) * 4;
+          data[idx] = r;
+          data[idx + 1] = g;
+          data[idx + 2] = b;
+          data[idx + 3] = 255;
+        }
+      }
+    }
+  }
+
+  texCtx.putImageData(imgData, 0, 0);
+
+  targetCtx.save();
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, R, 0, Math.PI * 2);
+  targetCtx.clip();
+  targetCtx.drawImage(texCanvas, cx - R, cy - R);
+
+  // Project lat/lon helper
+  function project(lonDeg, latDeg) {
+    const la = latDeg * Math.PI / 180;
+    const lo = lonDeg * Math.PI / 180 - state.rotLon;
+    const x0 = Math.cos(la) * Math.sin(lo);
+    const y0 = Math.sin(la);
+    const z0 = Math.cos(la) * Math.cos(lo);
+    const y1 = y0 * cosRotLat - z0 * sinRotLat;
+    const z1 = y0 * sinRotLat + z0 * cosRotLat;
+    return { x: cx + x0 * R, y: cy - y1 * R, z: z1 };
+  }
+
+  // Equator line
+  targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+  targetCtx.lineWidth = detailed ? 1.2 : 0.8;
+  targetCtx.beginPath();
+  let started = false;
+  for (let lo = -180; lo <= 180; lo += 3) {
+    const p = project(lo, 0);
+    if (p.z > 0) {
+      if (!started) { targetCtx.moveTo(p.x, p.y); started = true; }
+      else targetCtx.lineTo(p.x, p.y);
+    } else {
+      started = false;
+    }
+  }
+  targetCtx.stroke();
+
+  // Nino 3.4 Region Box (170W to 120W, 5S to 5N)
+  if (detailed && state.showNinoBox) {
+    targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
+    targetCtx.lineWidth = 1.6;
+    targetCtx.setLineDash([5, 4]);
+    targetCtx.beginPath();
+    const boxPts = [];
+    for (let lo = -170; lo <= -120; lo += 2) boxPts.push([lo, 5]);
+    for (let la = 5; la >= -5; la -= 2) boxPts.push([-120, la]);
+    for (let lo = -120; lo >= -170; lo -= 2) boxPts.push([lo, -5]);
+    for (let la = -5; la <= 5; la += 2) boxPts.push([-170, la]);
+    let boxStarted = false;
+    for (const [lo, la] of boxPts) {
+      const p = project(lo, la);
+      if (p.z > 0.05) {
+        if (!boxStarted) { targetCtx.moveTo(p.x, p.y); boxStarted = true; }
+        else targetCtx.lineTo(p.x, p.y);
+      } else {
+        boxStarted = false;
+      }
+    }
+    targetCtx.stroke();
+    targetCtx.setLineDash([]);
+  }
+
+  // Equatorial Kelvin & Rossby wave flow arrows
+  if (detailed && state.showCurrents && Math.abs(state.kelvinAmp) > 0.15) {
+    const dir = state.kelvinAmp >= 0 ? 1 : -1;
+    targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
+    targetCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    targetCtx.lineWidth = 1.5;
+
+    for (let i = 0; i < 9; i++) {
+      const baseLon = -175 + ((i * 13 + state.phase * 18 * dir) % 95 + 95) % 95;
+      const p1 = project(baseLon, 0);
+      const p2 = project(baseLon + 7 * dir, 0);
+      if (p1.z > 0.15 && p2.z > 0.15) {
+        targetCtx.beginPath();
+        targetCtx.moveTo(p1.x, p1.y);
+        targetCtx.lineTo(p2.x, p2.y);
+        targetCtx.stroke();
+        const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        targetCtx.beginPath();
+        targetCtx.moveTo(p2.x, p2.y);
+        targetCtx.lineTo(p2.x - 6 * Math.cos(ang - 0.5), p2.y - 6 * Math.sin(ang - 0.5));
+        targetCtx.lineTo(p2.x - 6 * Math.cos(ang + 0.5), p2.y - 6 * Math.sin(ang + 0.5));
+        targetCtx.closePath();
+        targetCtx.fill();
+      }
+    }
+
+    // Off-equatorial Rossby westward return arrows at +/- 11 deg
+    targetCtx.strokeStyle = 'rgba(147, 197, 253, 0.65)';
+    targetCtx.fillStyle = 'rgba(147, 197, 253, 0.8)';
+    for (const latSign of [-11, 11]) {
+      for (let i = 0; i < 5; i++) {
+        const baseLon = -175 + ((i * 19 - state.phase * 10 * dir) % 85 + 85) % 85;
+        const p1 = project(baseLon, latSign);
+        const p2 = project(baseLon - 6 * dir, latSign);
+        if (p1.z > 0.15 && p2.z > 0.15) {
+          targetCtx.beginPath();
+          targetCtx.moveTo(p1.x, p1.y);
+          targetCtx.lineTo(p2.x, p2.y);
+          targetCtx.stroke();
+        }
+      }
+    }
+  }
+
+  targetCtx.restore();
+
+  // Outer atmosphere rim glow
+  const rimGrad = targetCtx.createRadialGradient(cx, cy, R * 0.95, cx, cy, R * 1.04);
+  rimGrad.addColorStop(0, 'rgba(56, 189, 248, 0.0)');
+  rimGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.22)');
+  rimGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+  targetCtx.fillStyle = rimGrad;
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, R * 1.04, 0, Math.PI * 2);
+  targetCtx.fill();
+}
+
+function updateStats() {
+  const rawNino = computeSST(-145, 0, false);
+  const relNino = computeSST(-145, 0, true);
+  const bgVal = rawNino - relNino;
+
+  const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(2) + ' °C';
+  document.getElementById('statRaw').textContent = fmt(rawNino);
+  document.getElementById('statBg').textContent = fmt(bgVal);
+  document.getElementById('statRel').textContent = fmt(relNino);
+
+  const ph = Math.sin(state.phase);
+  document.getElementById('statPhase').textContent =
+    state.kelvinAmp < -0.3 ? 'Cool Upwelling' :
+    ph > 0.4 ? 'Eastward Surge' : ph < -0.4 ? 'Basin Recharge' : 'Equatorial Crest';
+}
+
+function resize() {
+  const stage = document.getElementById('stage');
+  canvas.width = stage.clientWidth;
+  canvas.height = stage.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Drag rotation
+let dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('pointerdown', e => {
+  dragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+window.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  state.rotLon -= dx * 0.0065;
+  state.rotLat = Math.max(-1.15, Math.min(1.15, state.rotLat + dy * 0.0065));
+});
+window.addEventListener('pointerup', () => dragging = false);
+
+// Controls & Presets
+function applyPreset(key) {
+  const p = presets[key];
+  if (!p) return;
+  state.preset = key;
+  state.kelvinAmp = p.amp;
+  state.bgWarming = p.bg;
+  state.phase = p.phase;
+  document.getElementById('sliderAmp').value = p.amp;
+  document.getElementById('sliderBg').value = p.bg;
+  document.getElementById('valAmp').textContent = (p.amp >= 0 ? '+' : '') + p.amp.toFixed(2) + ' °C';
+  document.getElementById('valBg').textContent = (p.bg >= 0 ? '+' : '') + p.bg.toFixed(2) + ' °C';
+  document.getElementById('eventTitle').textContent = p.title;
+  document.getElementById('eventDesc').textContent = p.desc;
+
+  document.querySelectorAll('.presets button').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('btn-' + key);
+  if (activeBtn) activeBtn.classList.add('active');
+}
+
+function toggleFrame() {
+  state.relativeFrame = !state.relativeFrame;
+  document.getElementById('frameBadge').textContent = state.relativeFrame ? 'Frame: Relative Anomaly' : 'Frame: Absolute SST';
+  document.getElementById('frameBtn').textContent = state.relativeFrame ? '🌐 Frame: Relative' : '🌐 Frame: Absolute';
+  document.getElementById('modeShort').textContent = state.relativeFrame ? 'REL' : 'ABS';
+  document.getElementById('inset-label').textContent = state.relativeFrame ? 'Inset: Absolute Frame ⇄' : 'Inset: Relative Frame ⇄';
+}
+
+function toggleCurrents() {
+  state.showCurrents = !state.showCurrents;
+  const btn = document.getElementById('currBtn');
+  btn.textContent = state.showCurrents ? '〰 Wave Currents: On' : '〰 Wave Currents: Off';
+  btn.classList.toggle('active', state.showCurrents);
+}
+
+function toggleNinoBox() {
+  state.showNinoBox = !state.showNinoBox;
+  const btn = document.getElementById('boxBtn');
+  btn.textContent = state.showNinoBox ? '▭ Niño 3.4: On' : '▭ Niño 3.4: Off';
+  btn.classList.toggle('active', state.showNinoBox);
+}
+
+function toggleSpin() {
+  state.autoSpin = !state.autoSpin;
+  const btn = document.getElementById('spinBtn');
+  btn.textContent = state.autoSpin ? '⟳ Auto-Spin: On' : '⟳ Auto-Spin: Off';
+  btn.classList.toggle('active', state.autoSpin);
+}
+
+function togglePause() {
+  state.paused = !state.paused;
+  const btn = document.getElementById('pauseBtn');
+  btn.textContent = state.paused ? '▶ Resume' : '⏸ Pause';
+  btn.classList.toggle('active', state.paused);
+}
+
+function toggleUI() {
+  document.body.classList.toggle('hide-ui');
+}
+
+document.getElementById('sliderAmp').addEventListener('input', e => {
+  state.kelvinAmp = parseFloat(e.target.value);
+  document.getElementById('valAmp').textContent = (state.kelvinAmp >= 0 ? '+' : '') + state.kelvinAmp.toFixed(2) + ' °C';
+});
+document.getElementById('sliderBg').addEventListener('input', e => {
+  state.bgWarming = parseFloat(e.target.value);
+  document.getElementById('valBg').textContent = (state.bgWarming >= 0 ? '+' : '') + state.bgWarming.toFixed(2) + ' °C';
+});
+document.getElementById('sliderSpeed').addEventListener('input', e => {
+  state.waveSpeed = parseFloat(e.target.value);
+  document.getElementById('valSpeed').textContent = state.waveSpeed.toFixed(1) + 'x';
+});
+document.getElementById('sliderDim').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  document.getElementById('dim-overlay').style.opacity = v;
+  document.getElementById('valDim').textContent = Math.round(v * 100) + '%';
+});
+
+// Gentle synthesized ocean wave audio
+let audioCtx = null, waveGain = null;
+function toggleSound() {
+  state.soundOn = !state.soundOn;
+  const btn = document.getElementById('soundBtn');
+  btn.textContent = state.soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+  btn.classList.toggle('active', state.soundOn);
+
+  if (state.soundOn && !audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const bufSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0;
+    for (let i = 0; i < bufSize; i++) {
+      const white = Math.random() * 2 - 1;
+      data[i] = (lastOut + 0.02 * white) / 1.02;
+      lastOut = data[i];
+      data[i] *= 2.5;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 260;
+
+    waveGain = audioCtx.createGain();
+    waveGain.gain.value = 0.06;
+
+    noise.connect(filter);
+    filter.connect(waveGain);
+    waveGain.connect(audioCtx.destination);
+    noise.start();
+  }
+  if (audioCtx) {
+    if (state.soundOn) audioCtx.resume();
+    waveGain.gain.setTargetAtTime(state.soundOn ? 0.07 : 0, audioCtx.currentTime, 0.2);
+  }
+}
+
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (!state.paused) {
+    state.time += dt;
+    state.phase += dt * 0.9 * state.waveSpeed;
+    if (state.autoSpin && !dragging) {
+      state.rotLon += dt * 0.22;
+    }
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const R = Math.min(canvas.width, canvas.height) * 0.39;
+  const stepMain = dragging ? 3 : 2;
+  renderSphere(ctx, canvas.width * 0.5, canvas.height * 0.5, R, state.relativeFrame, stepMain, true);
+
+  ictx.clearRect(0, 0, insetCanvas.width, insetCanvas.height);
+  renderSphere(ictx, 63, 63, 56, !state.relativeFrame, 3, false);
+
+  updateStats();
+  requestAnimationFrame(loop);
+}
+
+applyPreset('2026');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+</template>
+<!-- end 3D Spinning Ocean Wave & El Niño Relative Frame Studio -->
+<!-- 4D Complex Branch-Cut & Higher-Dimensional Geometry Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 18: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-fourd" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-fourd">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4D Complex Branch-Cut & Higher-Dimensional Geometry Studio v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080b12;
+    color: #d8e1f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+
+  #ui-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+    transition: opacity 0.35s ease;
+  }
+  #ui-layer.hidden { opacity: 0; pointer-events: none !important; }
+
+  .top-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel {
+    background: rgba(14, 19, 30, 0.78);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(130, 160, 220, 0.16);
+    border-radius: 14px;
+    padding: 10px 14px;
+    pointer-events: auto;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  button {
+    background: rgba(255, 255, 255, 0.05);
+    color: #c8d4ea;
+    border: 1px solid rgba(140, 170, 230, 0.18);
+    border-radius: 9px;
+    padding: 6px 11px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  button:hover {
+    background: rgba(130, 170, 255, 0.16);
+    border-color: rgba(150, 190, 255, 0.35);
+    color: #fff;
+  }
+  button.active {
+    background: rgba(110, 155, 255, 0.24);
+    border-color: rgba(145, 190, 255, 0.55);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(110, 160, 255, 0.22);
+  }
+
+  .hud-info {
+    max-width: 340px;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .hud-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #edf3ff;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    background: rgba(120, 170, 255, 0.16);
+    border: 1px solid rgba(120, 170, 255, 0.3);
+    color: #a8c8ff;
+  }
+  .hud-sub {
+    color: #9aa9c4;
+    font-size: 12px;
+  }
+
+  .bottom-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .slider-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 118px;
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #9fb0cc;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: #82aef8;
+    cursor: pointer;
+    height: 4px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+  }
+
+  #show-ui-fab {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    display: none;
+    background: rgba(16, 22, 36, 0.82);
+    backdrop-filter: blur(8px);
+  }
+  #dimmer-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 15;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="dimmer-overlay"></div>
+<button id="show-ui-fab">👁 Show UI</button>
+
+<div id="ui-layer">
+  <div class="top-bar">
+    <div class="panel tabs">
+      <button class="mode-btn active" data-mode="sqrt">1. 4D Square Root (w = √z)</button>
+      <button class="mode-btn" data-mode="cbrt">2. 4D Cube Root (w = ∛z)</button>
+      <button class="mode-btn" data-mode="clifford">3. 4D Clifford Torus</button>
+      <button class="mode-btn" data-mode="simplex">4. 4D 24-Cell</button>
+    </div>
+
+    <div class="panel" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <button id="btn-drift" class="active">✦ 4D Drift: On</button>
+      <button id="btn-fiber" class="active">◎ Sheet Links: On</button>
+      <button id="btn-palette">🎨 Twilight Aurora</button>
+      <button id="btn-sound">🔇 Chimes: Off</button>
+      <button id="btn-hide">👁 Hide UI</button>
+    </div>
+  </div>
+
+  <div class="top-bar" style="margin-top:8px;">
+    <div class="panel hud-info">
+      <div class="hud-title">
+        <span id="info-title">4D Complex Square Root Surface (w = √z)</span>
+        <span class="badge" id="info-badge">2-Sheet Branch Surface</span>
+      </div>
+      <div class="hud-sub" id="info-desc">
+        Walking 360° around z = 0 glides smoothly from +√z onto −√z; a full 720° (4π) lap returns home. In 4D (x, y, u, v), the two sheets pass without touching.
+      </div>
+    </div>
+
+    <div class="panel" id="jump-panel" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <span style="font-size:11.5px; color:#96a8c8; margin-right:2px;">Lap Angle θ:</span>
+      <span id="jump-buttons" style="display:flex; gap:6px; flex-wrap:wrap;"></span>
+    </div>
+  </div>
+
+  <div class="bottom-controls">
+    <div class="panel control-group">
+      <div class="slider-box" id="box-theta">
+        <div class="slider-label"><span>Winding Angle θ</span><span id="val-theta">0.00π</span></div>
+        <input type="range" id="slider-theta" min="0" max="12.566" step="0.01" value="0.6">
+      </div>
+      <div class="slider-box" id="box-radius">
+        <div class="slider-label"><span>Orbit Radius r</span><span id="val-radius">0.85</span></div>
+        <input type="range" id="slider-radius" min="0.2" max="1.25" step="0.01" value="0.85">
+      </div>
+      <div class="slider-box">
+        <div class="slider-label"><span>4D Tilt (XW)</span><span id="val-xw">0.55</span></div>
+        <input type="range" id="slider-xw" min="-3.14" max="3.14" step="0.01" value="0.55">
+      </div>
+      <div class="slider-box">
+        <div class="slider-label"><span>4D Tilt (YW)</span><span id="val-yw">0.35</span></div>
+        <input type="range" id="slider-yw" min="-3.14" max="3.14" step="0.01" value="0.35">
+      </div>
+      <div class="slider-box">
+        <div class="slider-label"><span>4D Tilt (ZW)</span><span id="val-zw">0.20</span></div>
+        <input type="range" id="slider-zw" min="-3.14" max="3.14" step="0.01" value="0.20">
+      </div>
+      <div class="slider-box">
+        <div class="slider-label"><span>Eye Dimmer</span><span id="val-dim">88%</span></div>
+        <input type="range" id="slider-dim" min="45" max="100" step="1" value="88">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+});
+
+const palettes = [
+  { name: 'Twilight Aurora', bg: '#080b12', c1: [110, 210, 255], c2: [200, 145, 255], c3: [120, 240, 195], accent: '#9ae6ff' },
+  { name: 'Celestial Violet', bg: '#0a0814', c1: [185, 140, 255], c2: [255, 150, 205], c3: [130, 180, 255], accent: '#e0b8ff' },
+  { name: 'Deep Ocean Jade', bg: '#060e10', c1: [95, 230, 200], c2: [110, 185, 255], c3: [195, 245, 175], accent: '#8ef5dc' },
+  { name: 'Warm Amber Dusk', bg: '#0e0a08', c1: [255, 190, 125], c2: [245, 135, 155], c3: [185, 165, 255], accent: '#ffd29e' }
+];
+let palIdx = 0;
+
+let mode = 'sqrt';
+let drift4D = true;
+let showFibers = true;
+let soundOn = false;
+
+let rot3X = 0.42, rot3Y = -0.55;
+let isDragging = false, lastMX = 0, lastMY = 0;
+
+let theta = 0.6;
+let orbitR = 0.85;
+let angXW = 0.55, angYW = 0.35, angZW = 0.20;
+let lastLap = 0;
+
+// Audio synth
+let audioCtx = null;
+function playChime(freq = 440) {
+  if (!soundOn) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.045, audioCtx.currentTime + 0.04);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.1);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 1.15);
+}
+
+// Mouse / touch orbit
+canvas.addEventListener('pointerdown', e => {
+  isDragging = true;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+});
+window.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  rot3Y += (e.clientX - lastMX) * 0.006;
+  rot3X += (e.clientY - lastMY) * 0.006;
+  rot3X = Math.max(-1.48, Math.min(1.48, rot3X));
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+});
+window.addEventListener('pointerup', () => isDragging = false);
+
+// UI bindings
+const modeMeta = {
+  sqrt: {
+    title: '4D Complex Square Root Surface (w = √z)',
+    badge: '2-Sheet Branch Surface',
+    desc: 'Walking 360° around z = 0 glides smoothly from +√z onto −√z; a full 720° (4π) lap returns home. In 4D (x, y, u, v), the two sheets pass without touching.'
+  },
+  cbrt: {
+    title: '4D Complex Cube Root Surface (w = ∛z)',
+    badge: '3-Sheet Branch Surface',
+    desc: 'Three braided sheets spiral around the branch point at the origin. Each 2π turn moves you onto the next cube root; after three turns (6π) you are back home.'
+  },
+  clifford: {
+    title: '4D Clifford Torus (Flat Donut on the 3-Sphere)',
+    badge: 'S¹ × S¹ ⊂ S³ ⊂ ℝ⁴',
+    desc: 'Two perpendicular circles spinning in 4D space with zero intrinsic curvature. Rotating the 4D planes turns the torus inside-out through the fourth dimension. The bright diagonal loops are Hopf circles: each is a great circle of the 3-sphere.'
+  },
+  simplex: {
+    title: '4D Regular 24-Cell (Self-Dual Polychoron)',
+    badge: '24 Vertices • 96 Edges',
+    desc: 'A pure 4-dimensional crystal with no 3D cousin—24 octahedra meeting in perfect symmetry. Rotate XW, YW, and ZW to watch inner and outer cells trade places. (All six regular 4D shapes are in the Polychora Studio.)'
+  }
+};
+
+// Jump buttons depend on how many sheets the surface has
+const jumpSets = {
+  sqrt: [[0, '0'], [Math.PI, 'π'], [2 * Math.PI, '2π (Other Sheet)'], [4 * Math.PI, '4π (Full Return)']],
+  cbrt: [[0, '0'], [2 * Math.PI, '2π (Sheet 2)'], [4 * Math.PI, '4π (Sheet 3)'], [6 * Math.PI, '6π (Full Return)']]
+};
+
+function buildJumps() {
+  const box = document.getElementById('jump-buttons');
+  box.innerHTML = '';
+  const set = jumpSets[mode];
+  if (!set) return;
+  for (const [th, label] of set) {
+    const b = document.createElement('button');
+    b.className = 'jump-btn';
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      theta = th;
+      sTheta.value = theta;
+      updateLabels();
+      playChime(396 + (theta / (4 * Math.PI)) * 264);
+    });
+    box.appendChild(b);
+  }
+  // Slider covers exactly one full return for this surface
+  sTheta.max = (mode === 'cbrt' ? 6 : 4) * Math.PI;
+  if (theta > +sTheta.max) theta = theta % +sTheta.max;
+  sTheta.value = theta;
+}
+
+const sTheta = document.getElementById('slider-theta');
+const sRadius = document.getElementById('slider-radius');
+const sXW = document.getElementById('slider-xw');
+const sYW = document.getElementById('slider-yw');
+const sZW = document.getElementById('slider-zw');
+const sDim = document.getElementById('slider-dim');
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    const m = modeMeta[mode];
+    document.getElementById('info-title').textContent = m.title;
+    document.getElementById('info-badge').textContent = m.badge;
+    document.getElementById('info-desc').textContent = m.desc;
+
+    const isRiemann = (mode === 'sqrt' || mode === 'cbrt');
+    document.getElementById('jump-panel').style.display = isRiemann ? 'flex' : 'none';
+    document.getElementById('box-theta').style.display = isRiemann ? 'flex' : 'none';
+    document.getElementById('box-radius').style.display = isRiemann ? 'flex' : 'none';
+    if (isRiemann) buildJumps();
+    playChime(528);
+  });
+});
+
+function updateLabels() {
+  document.getElementById('val-theta').textContent = (theta / Math.PI).toFixed(2) + 'π';
+  document.getElementById('val-radius').textContent = orbitR.toFixed(2);
+  document.getElementById('val-xw').textContent = angXW.toFixed(2);
+  document.getElementById('val-yw').textContent = angYW.toFixed(2);
+  document.getElementById('val-zw').textContent = angZW.toFixed(2);
+  document.getElementById('val-dim').textContent = sDim.value + '%';
+  document.getElementById('dimmer-overlay').style.opacity = ((100 - sDim.value) / 100).toFixed(2);
+}
+
+sTheta.addEventListener('input', () => { theta = parseFloat(sTheta.value); updateLabels(); });
+sRadius.addEventListener('input', () => { orbitR = parseFloat(sRadius.value); updateLabels(); });
+sXW.addEventListener('input', () => { angXW = parseFloat(sXW.value); updateLabels(); });
+sYW.addEventListener('input', () => { angYW = parseFloat(sYW.value); updateLabels(); });
+sZW.addEventListener('input', () => { angZW = parseFloat(sZW.value); updateLabels(); });
+sDim.addEventListener('input', updateLabels);
+
+document.getElementById('btn-drift').addEventListener('click', e => {
+  drift4D = !drift4D;
+  e.target.textContent = drift4D ? '✦ 4D Drift: On' : '✦ 4D Drift: Off';
+  e.target.classList.toggle('active', drift4D);
+});
+
+document.getElementById('btn-fiber').addEventListener('click', e => {
+  showFibers = !showFibers;
+  e.target.textContent = showFibers ? '◎ Sheet Links: On' : '◎ Sheet Links: Off';
+  e.target.classList.toggle('active', showFibers);
+});
+
+document.getElementById('btn-palette').addEventListener('click', e => {
+  palIdx = (palIdx + 1) % palettes.length;
+  e.target.textContent = '🎨 ' + palettes[palIdx].name;
+  playChime(432);
+});
+
+document.getElementById('btn-sound').addEventListener('click', e => {
+  soundOn = !soundOn;
+  e.target.textContent = soundOn ? '🔊 Chimes: On' : '🔇 Chimes: Off';
+  e.target.classList.toggle('active', soundOn);
+  if (soundOn) playChime(528);
+});
+
+const uiLayer = document.getElementById('ui-layer');
+const showFab = document.getElementById('show-ui-fab');
+document.getElementById('btn-hide').addEventListener('click', () => {
+  uiLayer.classList.add('hidden');
+  showFab.style.display = 'block';
+});
+showFab.addEventListener('click', () => {
+  uiLayer.classList.remove('hidden');
+  showFab.style.display = 'none';
+});
+
+// 4D -> 3D -> 2D projection
+function project4D(x, y, z, w) {
+  // XW rotation
+  let c = Math.cos(angXW), s = Math.sin(angXW);
+  let x1 = x * c - w * s;
+  let w1 = x * s + w * c;
+
+  // YW rotation
+  c = Math.cos(angYW); s = Math.sin(angYW);
+  let y1 = y * c - w1 * s;
+  let w2 = y * s + w1 * c;
+
+  // ZW rotation
+  c = Math.cos(angZW); s = Math.sin(angZW);
+  let z1 = z * c - w2 * s;
+  let w3 = z * s + w2 * c;
+
+  // Perspective 4D -> 3D
+  const dist4 = 3.2;
+  const scale4 = dist4 / Math.max(0.6, dist4 - w3);
+  let px = x1 * scale4;
+  let py = y1 * scale4;
+  let pz = z1 * scale4;
+
+  // 3D camera orbit
+  let cy = Math.cos(rot3Y), sy = Math.sin(rot3Y);
+  let rx = px * cy - pz * sy;
+  let rz = px * sy + pz * cy;
+
+  let cx = Math.cos(rot3X), sx = Math.sin(rot3X);
+  let ry = py * cx - rz * sx;
+  let rz2 = py * sx + rz * cx;
+
+  // 3D -> 2D perspective
+  const fov = Math.min(W, H) * 0.44;
+  const dist3 = 4.2;
+  const scale3 = fov / Math.max(0.8, dist3 - rz2);
+
+  return {
+    sx: W * 0.5 + rx * scale3,
+    sy: H * 0.5 + ry * scale3,
+    depth: rz2,
+    wCoord: w3
+  };
+}
+
+// Precompute 24-cell vertices and edges
+const vertices24 = [];
+for (let i = 0; i < 4; i++) {
+  for (let j = i + 1; j < 4; j++) {
+    for (let s1 of [-1, 1]) {
+      for (let s2 of [-1, 1]) {
+        const v = [0, 0, 0, 0];
+        v[i] = s1 * 0.85;
+        v[j] = s2 * 0.85;
+        vertices24.push(v);
+      }
+    }
+  }
+}
+const edges24 = [];
+for (let i = 0; i < vertices24.length; i++) {
+  for (let j = i + 1; j < vertices24.length; j++) {
+    let d2 = 0;
+    for (let k = 0; k < 4; k++) {
+      const diff = vertices24[i][k] - vertices24[j][k];
+      d2 += diff * diff;
+    }
+    if (Math.abs(d2 - 2 * 0.85 * 0.85) < 0.05) {
+      edges24.push([i, j]);
+    }
+  }
+}
+window.__counts24 = { vertices: vertices24.length, edges: edges24.length };
+
+function rgba(rgb, a) {
+  return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+}
+
+function renderRootSurface(rootN) {
+  const pal = palettes[palIdx];
+  const radialSteps = 14;
+  const angleSteps = rootN * 48;
+  const maxTheta = rootN * 2 * Math.PI;
+  const quads = [];
+
+  for (let ir = 0; ir < radialSteps; ir++) {
+    const r0 = 0.08 + (ir / radialSteps) * 1.18;
+    const r1 = 0.08 + ((ir + 1) / radialSteps) * 1.18;
+    for (let it = 0; it < angleSteps; it++) {
+      const t0 = (it / angleSteps) * maxTheta;
+      const t1 = ((it + 1) / angleSteps) * maxTheta;
+
+      const pts = [
+        [r0, t0], [r1, t0], [r1, t1], [r0, t1]
+      ].map(([r, t]) => {
+        const x = r * Math.cos(t);
+        const y = r * Math.sin(t);
+        const rw = Math.pow(r, 1 / rootN);
+        const tw = t / rootN;
+        const u = rw * Math.cos(tw);
+        const v = rw * Math.sin(tw);
+        return project4D(x, y, u, v);
+      });
+
+      const avgDepth = (pts[0].depth + pts[1].depth + pts[2].depth + pts[3].depth) * 0.25;
+      const sheetIdx = Math.floor(t0 / (2 * Math.PI));
+      const baseCol = sheetIdx === 0 ? pal.c1 : (sheetIdx === 1 ? pal.c2 : pal.c3);
+      quads.push({ pts, depth: avgDepth, col: baseCol, sheetIdx, isLine: (it % 4 === 0) });
+    }
+  }
+
+  quads.sort((a, b) => a.depth - b.depth);
+
+  for (const q of quads) {
+    ctx.beginPath();
+    ctx.moveTo(q.pts[0].sx, q.pts[0].sy);
+    ctx.lineTo(q.pts[1].sx, q.pts[1].sy);
+    ctx.lineTo(q.pts[2].sx, q.pts[2].sy);
+    ctx.lineTo(q.pts[3].sx, q.pts[3].sy);
+    ctx.closePath();
+    ctx.fillStyle = rgba(q.col, 0.085);
+    ctx.fill();
+    if (q.isLine) {
+      ctx.strokeStyle = rgba(q.col, 0.22);
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+  }
+
+  // Draw glowing orbital path & branch points at current radius
+  for (let k = 0; k < rootN; k++) {
+    const tk = theta + k * 2 * Math.PI;
+    const x = orbitR * Math.cos(tk);
+    const y = orbitR * Math.sin(tk);
+    const rw = Math.pow(orbitR, 1 / rootN);
+    const tw = tk / rootN;
+    const u = rw * Math.cos(tw);
+    const v = rw * Math.sin(tw);
+    const p = project4D(x, y, u, v);
+
+    const isPrimary = (k === 0);
+    if (!showFibers && !isPrimary) continue;
+
+    // Draw trail around current orbit
+    ctx.beginPath();
+    for (let s = 0; s <= 40; s++) {
+      const ts = tk - (s / 40) * 1.4;
+      const xs = orbitR * Math.cos(ts);
+      const ys = orbitR * Math.sin(ts);
+      const us = rw * Math.cos(ts / rootN);
+      const vs = rw * Math.sin(ts / rootN);
+      const ps = project4D(xs, ys, us, vs);
+      if (s === 0) ctx.moveTo(ps.sx, ps.sy);
+      else ctx.lineTo(ps.sx, ps.sy);
+    }
+    ctx.strokeStyle = isPrimary ? pal.accent : rgba(pal.c2, 0.45);
+    ctx.lineWidth = isPrimary ? 2.5 : 1.3;
+    ctx.stroke();
+
+    // Glowing bead
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy, isPrimary ? 6.5 : 4.2, 0, Math.PI * 2);
+    ctx.fillStyle = isPrimary ? '#ffffff' : rgba(pal.c2, 0.9);
+    ctx.shadowColor = isPrimary ? pal.accent : rgba(pal.c2, 0.8);
+    ctx.shadowBlur = isPrimary ? 14 : 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Connect sibling roots sharing same z = x + iy
+  if (showFibers) {
+    const fiberPts = [];
+    for (let k = 0; k < rootN; k++) {
+      const tk = theta + k * 2 * Math.PI;
+      const x = orbitR * Math.cos(tk);
+      const y = orbitR * Math.sin(tk);
+      const rw = Math.pow(orbitR, 1 / rootN);
+      const u = rw * Math.cos(tk / rootN);
+      const v = rw * Math.sin(tk / rootN);
+      fiberPts.push(project4D(x, y, u, v));
+    }
+    ctx.beginPath();
+    fiberPts.forEach((fp, idx) => {
+      if (idx === 0) ctx.moveTo(fp.sx, fp.sy);
+      else ctx.lineTo(fp.sx, fp.sy);
+    });
+    if (rootN > 2) ctx.closePath();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function renderCliffordTorus() {
+  const pal = palettes[palIdx];
+  const stepsU = 44;
+  const stepsV = 44;
+  const r = 0.85;
+
+  // Longitudinal & meridional loops
+  for (let i = 0; i < stepsU; i += 2) {
+    const u = (i / stepsU) * Math.PI * 2;
+    ctx.beginPath();
+    for (let j = 0; j <= stepsV; j++) {
+      const v = (j / stepsV) * Math.PI * 2;
+      const p = project4D(r * Math.cos(u), r * Math.sin(u), r * Math.cos(v), r * Math.sin(v));
+      if (j === 0) ctx.moveTo(p.sx, p.sy);
+      else ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.strokeStyle = rgba(pal.c1, 0.28);
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+  }
+
+  for (let j = 0; j < stepsV; j += 2) {
+    const v = (j / stepsV) * Math.PI * 2;
+    ctx.beginPath();
+    for (let i = 0; i <= stepsU; i++) {
+      const u = (i / stepsU) * Math.PI * 2;
+      const p = project4D(r * Math.cos(u), r * Math.sin(u), r * Math.cos(v), r * Math.sin(v));
+      if (i === 0) ctx.moveTo(p.sx, p.sy);
+      else ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.strokeStyle = rgba(pal.c2, 0.28);
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+  }
+
+  // Diagonal loops (t, t + offset): Hopf circles, i.e. great circles of the
+  // 3-sphere; under stereographic projection they become Villarceau circles.
+  if (showFibers) {
+    for (let k = 0; k < 4; k++) {
+      const offset = (k / 4) * Math.PI * 2;
+      ctx.beginPath();
+      for (let s = 0; s <= 90; s++) {
+        const t = (s / 90) * Math.PI * 2;
+        const p = project4D(
+          r * Math.cos(t),
+          r * Math.sin(t),
+          r * Math.cos(t + offset),
+          r * Math.sin(t + offset)
+        );
+        if (s === 0) ctx.moveTo(p.sx, p.sy);
+        else ctx.lineTo(p.sx, p.sy);
+      }
+      ctx.strokeStyle = pal.accent;
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+    }
+  }
+}
+
+function render24Cell() {
+  const pal = palettes[palIdx];
+  const proj = vertices24.map(v => project4D(v[0], v[1], v[2], v[3]));
+
+  for (const [i, j] of edges24) {
+    const p1 = proj[i], p2 = proj[j];
+    const avgW = (p1.wCoord + p2.wCoord) * 0.5;
+    const tCol = Math.max(0, Math.min(1, (avgW + 1) * 0.5));
+    const col = tCol > 0.5 ? pal.c1 : pal.c2;
+    ctx.beginPath();
+    ctx.moveTo(p1.sx, p1.sy);
+    ctx.lineTo(p2.sx, p2.sy);
+    ctx.strokeStyle = rgba(col, 0.22 + tCol * 0.35);
+    ctx.lineWidth = 1.1 + tCol * 0.9;
+    ctx.stroke();
+  }
+
+  for (const p of proj) {
+    const tW = Math.max(0, Math.min(1, (p.wCoord + 1) * 0.5));
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy, 2.8 + tW * 3.2, 0, Math.PI * 2);
+    ctx.fillStyle = tW > 0.55 ? '#ffffff' : rgba(pal.c3, 0.85);
+    ctx.fill();
+  }
+}
+
+function wrapAngle(a) {
+  return ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+}
+
+let lastTime = performance.now();
+function animate(now) {
+  const dt = Math.min(0.05, (now - lastTime) * 0.001);
+  lastTime = now;
+
+  if (drift4D) {
+    angXW = wrapAngle(angXW + dt * 0.24);
+    angYW = wrapAngle(angYW + dt * 0.17);
+    sXW.value = angXW;
+    sYW.value = angYW;
+
+    if (mode === 'sqrt' || mode === 'cbrt') {
+      const maxT = mode === 'sqrt' ? 4 * Math.PI : 6 * Math.PI;
+      theta = (theta + dt * 0.65) % maxT;
+      sTheta.value = theta;
+      const lap = Math.floor(theta / (2 * Math.PI));
+      if (lap !== lastLap) {
+        lastLap = lap;
+        playChime(396 + lap * 132);
+      }
+    }
+    updateLabels();
+  }
+
+  const pal = palettes[palIdx];
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  if (mode === 'sqrt') renderRootSurface(2);
+  else if (mode === 'cbrt') renderRootSurface(3);
+  else if (mode === 'clifford') renderCliffordTorus();
+  else if (mode === 'simplex') render24Cell();
+
+  requestAnimationFrame(animate);
+}
+
+buildJumps();
+updateLabels();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
+</template>
+<!-- end 4D Complex Branch-Cut & Higher-Dimensional Geometry Studio v2 -->
+<!-- 4D Regular Polychora Studio v2 — all six — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 19: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-polychora" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-polychora">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4D Regular Polychora Studio v2 — all six</title>
+<style>
+  :root {
+    --bg: #070912;
+    --panel: rgba(13, 17, 32, 0.82);
+    --border: rgba(148, 174, 240, 0.18);
+    --text: #e2e8f8;
+    --muted: #8b98bc;
+    --accent: #7aa2f7;
+    --accent2: #bb9af7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+
+  #topBar {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    pointer-events: auto;
+  }
+  button {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid transparent;
+    padding: 7px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  button:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  button.active {
+    background: rgba(122, 162, 247, 0.2);
+    color: #fff;
+    border-color: rgba(122, 162, 247, 0.45);
+  }
+
+  #infoCard {
+    position: fixed;
+    top: 72px;
+    left: 14px;
+    width: 300px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    z-index: 9;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #infoCard h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  #infoCard .schlafli {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: 0.4px;
+  }
+  #infoCard p {
+    font-size: 12.5px;
+    line-height: 1.48;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  #ringInfo {
+    font-size: 12px;
+    color: #f5c2e7;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    border-top: 1px solid var(--border);
+    padding-top: 9px;
+  }
+  .stat { text-align: center; }
+  .stat .num { font-size: 14px; font-weight: 700; color: #fff; }
+  .stat .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  #controlsPanel {
+    position: fixed;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 12px 18px;
+    z-index: 10;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .ctrl {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .ctrl-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .ctrl-head span:last-child { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+  .ui-hidden #infoCard,
+  .ui-hidden #controlsPanel {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div id="topBar">
+  <div class="pill-group" id="shapeTabs">
+    <button data-shape="600" class="active">600-Cell {3,3,5}</button>
+    <button data-shape="120">120-Cell {5,3,3}</button>
+    <button data-shape="24">24-Cell {3,4,3}</button>
+    <button data-shape="16">16-Cell {3,3,4}</button>
+    <button data-shape="8">Tesseract {4,3,3}</button>
+    <button data-shape="5">5-Cell {3,3,3}</button>
+  </div>
+
+  <div class="pill-group">
+    <button id="btnDrift" class="active">✦ 4D Drift: On</button>
+    <button id="btnHopf" class="active">◎ Hopf Rings: On</button>
+    <button id="btnPalette">🎨 Palette: Aurora</button>
+    <button id="btnSound">🔇 Chimes: Off</button>
+    <button id="btnHide">👁 Hide UI</button>
+  </div>
+</div>
+
+<div id="infoCard">
+  <h2 id="shapeTitle">Regular 600-Cell (Hexacosichoron)</h2>
+  <div class="schlafli" id="shapeSchlafli">Schläfli Symbol: {3, 3, 5} • 4D cousin of the icosahedron</div>
+  <p id="shapeDesc">Built from 600 tetrahedra meeting 5 around every edge. Its 120 vertices are the unit icosians—forming 12 interlocking decagonal Hopf rings in 4D space.</p>
+  <div id="ringInfo"></div>
+  <div class="stats-grid">
+    <div class="stat"><div class="num" id="statV">120</div><div class="lbl">Vertices</div></div>
+    <div class="stat"><div class="num" id="statE">720</div><div class="lbl">Edges</div></div>
+    <div class="stat"><div class="num" id="statF">1200</div><div class="lbl">Faces</div></div>
+    <div class="stat"><div class="num" id="statC">600</div><div class="lbl">Cells</div></div>
+  </div>
+</div>
+
+<div id="controlsPanel">
+  <div class="ctrl">
+    <div class="ctrl-head"><span>XW Plane Tilt</span><span id="valXW">0.35 rad</span></div>
+    <input type="range" id="slXW" min="-3.14" max="3.14" step="0.01" value="0.35">
+  </div>
+  <div class="ctrl">
+    <div class="ctrl-head"><span>YW Plane Tilt</span><span id="valYW">0.20 rad</span></div>
+    <input type="range" id="slYW" min="-3.14" max="3.14" step="0.01" value="0.20">
+  </div>
+  <div class="ctrl">
+    <div class="ctrl-head"><span>ZW Plane Tilt</span><span id="valZW">0.00 rad</span></div>
+    <input type="range" id="slZW" min="-3.14" max="3.14" step="0.01" value="0.00">
+  </div>
+  <div class="ctrl">
+    <div class="ctrl-head"><span>4D Perspective Depth</span><span id="valProj">2.35</span></div>
+    <input type="range" id="slProj" min="1.45" max="4.0" step="0.05" value="2.35">
+  </div>
+  <div class="ctrl">
+    <div class="ctrl-head"><span>Eye Comfort Dimmer</span><span id="valDim">88%</span></div>
+    <input type="range" id="slDim" min="40" max="100" step="1" value="88">
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+  // Keep the info card just below the top bar, however many rows the bar wraps to
+  function placeInfoCard() {
+    const bottom = document.getElementById('topBar').getBoundingClientRect().bottom;
+    document.getElementById('infoCard').style.top = (bottom + 10) + 'px';
+  }
+  placeInfoCard();
+  window.addEventListener('resize', () => {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    placeInfoCard();
+  });
+
+  const PHI = (1 + Math.sqrt(5)) / 2;
+  const INV_PHI = 1 / PHI;
+
+  // --- Geometry Generators ---
+  function norm4(v) {
+    const len = Math.hypot(v[0], v[1], v[2], v[3]) || 1;
+    return [v[0]/len, v[1]/len, v[2]/len, v[3]/len];
+  }
+
+  function addUnique(list, v, eps = 1e-4) {
+    for (let u of list) {
+      if (Math.abs(u[0]-v[0]) < eps && Math.abs(u[1]-v[1]) < eps &&
+          Math.abs(u[2]-v[2]) < eps && Math.abs(u[3]-v[3]) < eps) return;
+    }
+    list.push(v);
+  }
+
+  function buildEdgesByMinDist(verts) {
+    let minD2 = Infinity;
+    for (let i = 0; i < verts.length; i++) {
+      for (let j = i + 1; j < verts.length; j++) {
+        const dx = verts[i][0]-verts[j][0];
+        const dy = verts[i][1]-verts[j][1];
+        const dz = verts[i][2]-verts[j][2];
+        const dw = verts[i][3]-verts[j][3];
+        const d2 = dx*dx + dy*dy + dz*dz + dw*dw;
+        if (d2 > 1e-6 && d2 < minD2) minD2 = d2;
+      }
+    }
+    const edges = [];
+    const tol = minD2 * 1.04;
+    for (let i = 0; i < verts.length; i++) {
+      for (let j = i + 1; j < verts.length; j++) {
+        const dx = verts[i][0]-verts[j][0];
+        const dy = verts[i][1]-verts[j][1];
+        const dz = verts[i][2]-verts[j][2];
+        const dw = verts[i][3]-verts[j][3];
+        const d2 = dx*dx + dy*dy + dz*dz + dw*dw;
+        if (d2 <= tol) edges.push([i, j]);
+      }
+    }
+    return edges;
+  }
+
+  // --- Real Hopf rings ---
+  // Treat each vertex as a unit quaternion q = a + b i + c j + d k.
+  // Pick the direction u of one edge (q0 -> q1, read in q0's own frame).
+  // The Hopf circle through q is { q * exp(theta u) }; all points on it share
+  // the same image q u q* (a point of the 2-sphere). An edge is a ring edge
+  // when both ends share that image. Computed once on the unrotated shape,
+  // so the rings stay attached to the shape as it turns.
+  function qmul(p, q) {
+    return [
+      p[0]*q[0] - p[1]*q[1] - p[2]*q[2] - p[3]*q[3],
+      p[0]*q[1] + p[1]*q[0] + p[2]*q[3] - p[3]*q[2],
+      p[0]*q[2] - p[1]*q[3] + p[2]*q[0] + p[3]*q[1],
+      p[0]*q[3] + p[1]*q[2] - p[2]*q[1] + p[3]*q[0]
+    ];
+  }
+  function qconj(q) { return [q[0], -q[1], -q[2], -q[3]]; }
+
+  function hopfRings(verts, edges) {
+    const none = { ringOf: new Array(verts.length).fill(-1), ringEdge: new Array(edges.length).fill(-1), count: 0, size: 0 };
+    if (!edges.length) return none;
+    const [i0, i1] = edges[0];
+    const r = qmul(qconj(verts[i0]), verts[i1]);
+    const im = Math.hypot(r[1], r[2], r[3]);
+    if (im < 1e-9) return none;
+    const u = [0, r[1]/im, r[2]/im, r[3]/im];
+    const image = verts.map(q => {
+      const t = qmul(qmul(q, u), qconj(q));
+      return [t[1], t[2], t[3]];
+    });
+    const same = (a, b) => Math.hypot(a[0]-b[0], a[1]-b[1], a[2]-b[2]) < 1e-6;
+    const ringEdge = new Array(edges.length).fill(-1);
+    const ringOf = new Array(verts.length).fill(-1);
+    const reps = [];
+    edges.forEach(([a, b], k) => {
+      if (!same(image[a], image[b])) return;
+      let id = reps.findIndex(p => same(p, image[a]));
+      if (id < 0) { id = reps.length; reps.push(image[a]); }
+      ringEdge[k] = id; ringOf[a] = id; ringOf[b] = id;
+    });
+    // Keep only rings that close up (every ring vertex has exactly 2 ring edges)
+    const deg = new Array(verts.length).fill(0);
+    edges.forEach(([a, b], k) => { if (ringEdge[k] >= 0) { deg[a]++; deg[b]++; } });
+    const closed = reps.map((_, id) => verts.every((_, v) => ringOf[v] !== id || deg[v] === 2));
+    const remap = []; let n = 0;
+    closed.forEach((ok, id) => { remap[id] = ok ? n++ : -1; });
+    for (let k = 0; k < edges.length; k++) if (ringEdge[k] >= 0) ringEdge[k] = remap[ringEdge[k]];
+    for (let v = 0; v < verts.length; v++) if (ringOf[v] >= 0) ringOf[v] = remap[ringOf[v]];
+    let size = 0;
+    if (n) size = ringOf.filter(x => x === 0).length;
+    return { ringOf, ringEdge, count: n, size };
+  }
+
+  const polygonName = { 3: 'triangles', 4: 'squares', 5: 'pentagons', 6: 'hexagons', 8: 'octagons', 10: 'decagons' };
+
+  function finish(shape) {
+    shape.edges = buildEdgesByMinDist(shape.verts);
+    shape.rings = hopfRings(shape.verts, shape.edges);
+    const R = shape.rings;
+    shape.ringText = R.count
+      ? `Hopf rings along its edges: ${R.count} ${polygonName[R.size] || (R.size + '-gons')} (${R.count * R.size} of ${shape.verts.length} vertices), each a great circle of the 3-sphere.`
+      : 'Hopf rings: none follow its edges — its edges don\'t close into great circles.';
+    return shape;
+  }
+
+  function gen5Cell() {
+    const s5 = Math.sqrt(5);
+    const verts = [
+      norm4([1, 1, 1, -1/s5]),
+      norm4([1, -1, -1, -1/s5]),
+      norm4([-1, 1, -1, -1/s5]),
+      norm4([-1, -1, 1, -1/s5]),
+      norm4([0, 0, 0, 4/s5])
+    ];
+    return finish({
+      title: 'Regular 5-Cell (Pentachoron)',
+      schlafli: 'Schläfli Symbol: {3, 3, 3} • 4D Simplex',
+      desc: 'The simplest regular 4D polytope: 5 tetrahedral cells where every vertex connects directly to every other vertex.',
+      stats: ['5', '10', '10', '5'],
+      verts
+    });
+  }
+
+  function gen8Cell() {
+    const verts = [];
+    for (let mask = 0; mask < 16; mask++) {
+      verts.push([
+        (mask & 1) ? 0.5 : -0.5,
+        (mask & 2) ? 0.5 : -0.5,
+        (mask & 4) ? 0.5 : -0.5,
+        (mask & 8) ? 0.5 : -0.5
+      ]);
+    }
+    return finish({
+      title: 'Tesseract (8-Cell, Hypercube)',
+      schlafli: 'Schläfli Symbol: {4, 3, 3} • 4D cousin of the cube',
+      desc: 'The 4D cube: 8 cubic cells, 3 meeting around every edge, 4 edges at every corner. Its 3D shadow is the familiar cube-inside-a-cube.',
+      stats: ['16', '32', '24', '8'],
+      verts
+    });
+  }
+
+  function gen16Cell() {
+    const verts = [];
+    for (let i = 0; i < 4; i++) {
+      for (let s of [-1, 1]) {
+        const v = [0,0,0,0];
+        v[i] = s;
+        verts.push(v);
+      }
+    }
+    return finish({
+      title: 'Regular 16-Cell (Hexadecachoron)',
+      schlafli: 'Schläfli Symbol: {3, 3, 4} • 4D Cross-Polytope',
+      desc: 'The 4-dimensional cousin of the octahedron, composed of 16 regular tetrahedra meeting 4 around every edge.',
+      stats: ['8', '24', '32', '16'],
+      verts
+    });
+  }
+
+  function gen24Cell() {
+    // Hurwitz unit quaternions: 8 axis units and 16 of (±1/2, ±1/2, ±1/2, ±1/2)
+    const verts = [];
+    for (let i = 0; i < 4; i++) {
+      for (let s of [-1, 1]) {
+        const v = [0,0,0,0];
+        v[i] = s;
+        verts.push(v);
+      }
+    }
+    for (let mask = 0; mask < 16; mask++) {
+      verts.push([
+        (mask & 1) ? 0.5 : -0.5,
+        (mask & 2) ? 0.5 : -0.5,
+        (mask & 4) ? 0.5 : -0.5,
+        (mask & 8) ? 0.5 : -0.5
+      ]);
+    }
+    return finish({
+      title: 'Regular 24-Cell (Icositetrachoron)',
+      schlafli: 'Schläfli Symbol: {3, 4, 3} • only in 4D',
+      desc: 'The one regular polytope with no cousin in any other dimension: 24 octahedral cells, self-dual. Its vertices are the 24 Hurwitz unit quaternions.',
+      stats: ['24', '96', '96', '24'],
+      verts
+    });
+  }
+
+  function gen600Cell() {
+    const verts = [];
+    // 8 axis vertices (±1, 0, 0, 0)
+    for (let i = 0; i < 4; i++) {
+      for (let s of [-1, 1]) {
+        const v = [0,0,0,0];
+        v[i] = s;
+        addUnique(verts, norm4(v));
+      }
+    }
+    // 16 half-integer vertices (±1/2, ±1/2, ±1/2, ±1/2)
+    for (let mask = 0; mask < 16; mask++) {
+      addUnique(verts, norm4([
+        (mask & 1) ? 0.5 : -0.5,
+        (mask & 2) ? 0.5 : -0.5,
+        (mask & 4) ? 0.5 : -0.5,
+        (mask & 8) ? 0.5 : -0.5
+      ]));
+    }
+    // 96 even permutations of (±phi/2, ±1/2, ±1/(2*phi), 0)
+    const evenPerms = [
+      [0,1,2,3],[0,2,3,1],[0,3,1,2],
+      [1,0,3,2],[1,2,0,3],[1,3,2,0],
+      [2,0,1,3],[2,1,3,0],[2,3,0,1],
+      [3,0,2,1],[3,1,0,2],[3,2,1,0]
+    ];
+    const baseVals = [PHI * 0.5, 0.5, INV_PHI * 0.5];
+    for (let p of evenPerms) {
+      for (let sm = 0; sm < 8; sm++) {
+        const v = [0, 0, 0, 0];
+        v[p[0]] = ((sm & 1) ? 1 : -1) * baseVals[0];
+        v[p[1]] = ((sm & 2) ? 1 : -1) * baseVals[1];
+        v[p[2]] = ((sm & 4) ? 1 : -1) * baseVals[2];
+        v[p[3]] = 0;
+        addUnique(verts, norm4(v));
+      }
+    }
+    return finish({
+      title: 'Regular 600-Cell (Hexacosichoron)',
+      schlafli: 'Schläfli Symbol: {3, 3, 5} • 4D cousin of the icosahedron',
+      desc: 'Built from 600 tetrahedra meeting 5 around every edge. Its 120 vertices are the unit icosians—forming 12 interlocking decagonal Hopf rings in 4D space.',
+      stats: ['120', '720', '1200', '600'],
+      verts
+    });
+  }
+
+  function gen120Cell() {
+    const verts = [];
+    const phi2 = PHI * PHI;
+    const inv2 = INV_PHI * INV_PHI;
+    const rt5 = Math.sqrt(5);
+
+    // 1) All permutations of (0, 0, ±2, ±2) -> 24
+    const pairs = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+    for (let [a, b] of pairs) {
+      for (let sa of [-2, 2]) {
+        for (let sb of [-2, 2]) {
+          const v = [0,0,0,0];
+          v[a] = sa; v[b] = sb;
+          addUnique(verts, norm4(v));
+        }
+      }
+    }
+
+    // 2) All permutations of (±1, ±1, ±1, ±sqrt(5)) -> 64
+    for (let pos = 0; pos < 4; pos++) {
+      for (let s5 of [-rt5, rt5]) {
+        for (let sm = 0; sm < 8; sm++) {
+          const v = [0,0,0,0];
+          let bit = 0;
+          for (let k = 0; k < 4; k++) {
+            if (k === pos) v[k] = s5;
+            else {
+              v[k] = ((sm >> bit) & 1) ? 1 : -1;
+              bit++;
+            }
+          }
+          addUnique(verts, norm4(v));
+        }
+      }
+    }
+
+    // 3) All permutations of (±phi^-2, ±phi, ±phi, ±phi) -> 64
+    for (let pos = 0; pos < 4; pos++) {
+      for (let s0 of [-inv2, inv2]) {
+        for (let sm = 0; sm < 8; sm++) {
+          const v = [0,0,0,0];
+          let bit = 0;
+          for (let k = 0; k < 4; k++) {
+            if (k === pos) v[k] = s0;
+            else {
+              v[k] = (((sm >> bit) & 1) ? 1 : -1) * PHI;
+              bit++;
+            }
+          }
+          addUnique(verts, norm4(v));
+        }
+      }
+    }
+
+    // 4) All permutations of (±phi^-1, ±phi^-1, ±phi^-1, ±phi^2) -> 64
+    for (let pos = 0; pos < 4; pos++) {
+      for (let s0 of [-phi2, phi2]) {
+        for (let sm = 0; sm < 8; sm++) {
+          const v = [0,0,0,0];
+          let bit = 0;
+          for (let k = 0; k < 4; k++) {
+            if (k === pos) v[k] = s0;
+            else {
+              v[k] = (((sm >> bit) & 1) ? 1 : -1) * INV_PHI;
+              bit++;
+            }
+          }
+          addUnique(verts, norm4(v));
+        }
+      }
+    }
+
+    // Even permutations helper for remaining 384 vertices
+    const evenPerms = [
+      [0,1,2,3],[0,2,3,1],[0,3,1,2],
+      [1,0,3,2],[1,2,0,3],[1,3,2,0],
+      [2,0,1,3],[2,1,3,0],[2,3,0,1],
+      [3,0,2,1],[3,1,0,2],[3,2,1,0]
+    ];
+
+    // 5) Even permutations of (0, ±phi^-2, ±1, ±phi^2) -> 96
+    for (let p of evenPerms) {
+      for (let sm = 0; sm < 8; sm++) {
+        const v = [0,0,0,0];
+        v[p[0]] = 0;
+        v[p[1]] = ((sm & 1) ? 1 : -1) * inv2;
+        v[p[2]] = ((sm & 2) ? 1 : -1) * 1;
+        v[p[3]] = ((sm & 4) ? 1 : -1) * phi2;
+        addUnique(verts, norm4(v));
+      }
+    }
+
+    // 6) Even permutations of (0, ±phi^-1, ±phi, ±sqrt(5)) -> 96
+    for (let p of evenPerms) {
+      for (let sm = 0; sm < 8; sm++) {
+        const v = [0,0,0,0];
+        v[p[0]] = 0;
+        v[p[1]] = ((sm & 1) ? 1 : -1) * INV_PHI;
+        v[p[2]] = ((sm & 2) ? 1 : -1) * PHI;
+        v[p[3]] = ((sm & 4) ? 1 : -1) * rt5;
+        addUnique(verts, norm4(v));
+      }
+    }
+
+    // 7) Even permutations of (±phi^-1, ±1, ±phi, ±2) -> 192
+    for (let p of evenPerms) {
+      for (let sm = 0; sm < 16; sm++) {
+        const v = [0,0,0,0];
+        v[p[0]] = ((sm & 1) ? 1 : -1) * INV_PHI;
+        v[p[1]] = ((sm & 2) ? 1 : -1) * 1;
+        v[p[2]] = ((sm & 4) ? 1 : -1) * PHI;
+        v[p[3]] = ((sm & 8) ? 1 : -1) * 2;
+        addUnique(verts, norm4(v));
+      }
+    }
+
+    return finish({
+      title: 'Regular 120-Cell (Hecatonicosachoron)',
+      schlafli: 'Schläfli Symbol: {5, 3, 3} • 4D cousin of the dodecahedron',
+      desc: 'The dual of the 600-cell: 120 regular dodecahedra woven into 600 vertices and 1,200 edges.',
+      stats: ['600', '1200', '720', '120'],
+      verts
+    });
+  }
+
+  const shapes = {
+    '600': gen600Cell(),
+    '120': gen120Cell(),
+    '24': gen24Cell(),
+    '16': gen16Cell(),
+    '8': gen8Cell(),
+    '5': gen5Cell()
+  };
+  window.__shapes = shapes;   // exposed for checking
+
+  let currentKey = '600';
+  let activeShape = shapes[currentKey];
+
+  function showInfo() {
+    document.getElementById('shapeTitle').textContent = activeShape.title;
+    document.getElementById('shapeSchlafli').textContent = activeShape.schlafli;
+    document.getElementById('shapeDesc').textContent = activeShape.desc;
+    document.getElementById('ringInfo').textContent = activeShape.ringText;
+    document.getElementById('statV').textContent = activeShape.stats[0];
+    document.getElementById('statE').textContent = activeShape.stats[1];
+    document.getElementById('statF').textContent = activeShape.stats[2];
+    document.getElementById('statC').textContent = activeShape.stats[3];
+  }
+  showInfo();
+
+  // --- Interaction & State ---
+  let rotX = 0.35, rotY = 0.55;
+  let angXW = 0.35, angYW = 0.20, angZW = 0.0;
+  let projDist = 2.35;
+  let dimmer = 0.88;
+  let autoDrift = true;
+  let hopfHighlight = true;
+
+  const palettes = [
+    { name: 'Aurora', c1: [110, 231, 183], c2: [129, 140, 248], c3: [244, 114, 182] },
+    { name: 'Celestial Gold', c1: [251, 191, 36], c2: [167, 139, 250], c3: [56, 189, 248] },
+    { name: 'Twilight Rose', c1: [244, 114, 182], c2: [192, 132, 252], c3: [96, 165, 250] },
+    { name: 'Deep Jade', c1: [45, 212, 191], c2: [52, 211, 153], c3: [125, 211, 252] }
+  ];
+  let palIdx = 0;
+
+  // One colour per Hopf ring (evenly spaced hues)
+  function ringColor(id, count) {
+    const h = (id / Math.max(1, count)) * 360;
+    const s = 0.85, l = 0.68;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4))];
+  }
+
+  // Audio Chimes
+  let audioCtx = null;
+  let soundOn = false;
+  let lastChimeTime = 0;
+  function playChime(freq) {
+    if (!soundOn) return;
+    const now = performance.now();
+    if (now - lastChimeTime < 350) return;
+    lastChimeTime = now;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.035 * dimmer, audioCtx.currentTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.1);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.15);
+    } catch (e) {}
+  }
+
+  // UI Wiring
+  const slXW = document.getElementById('slXW');
+  const slYW = document.getElementById('slYW');
+  const slZW = document.getElementById('slZW');
+  const slProj = document.getElementById('slProj');
+  const slDim = document.getElementById('slDim');
+
+  slXW.addEventListener('input', e => { angXW = +e.target.value; document.getElementById('valXW').textContent = angXW.toFixed(2) + ' rad'; });
+  slYW.addEventListener('input', e => { angYW = +e.target.value; document.getElementById('valYW').textContent = angYW.toFixed(2) + ' rad'; });
+  slZW.addEventListener('input', e => { angZW = +e.target.value; document.getElementById('valZW').textContent = angZW.toFixed(2) + ' rad'; });
+  slProj.addEventListener('input', e => { projDist = +e.target.value; document.getElementById('valProj').textContent = projDist.toFixed(2); });
+  slDim.addEventListener('input', e => { dimmer = (+e.target.value)/100; document.getElementById('valDim').textContent = e.target.value + '%'; });
+
+  document.querySelectorAll('#shapeTabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#shapeTabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentKey = btn.dataset.shape;
+      activeShape = shapes[currentKey];
+      showInfo();
+      playChime(currentKey === '120' ? 528 : currentKey === '600' ? 432 : 396);
+    });
+  });
+
+  document.getElementById('btnDrift').addEventListener('click', function() {
+    autoDrift = !autoDrift;
+    this.classList.toggle('active', autoDrift);
+    this.textContent = autoDrift ? '✦ 4D Drift: On' : '✦ 4D Drift: Off';
+  });
+
+  document.getElementById('btnHopf').addEventListener('click', function() {
+    hopfHighlight = !hopfHighlight;
+    this.classList.toggle('active', hopfHighlight);
+    this.textContent = hopfHighlight ? '◎ Hopf Rings: On' : '◎ Hopf Rings: Off';
+    playChime(480);
+  });
+
+  document.getElementById('btnPalette').addEventListener('click', function() {
+    palIdx = (palIdx + 1) % palettes.length;
+    this.textContent = '🎨 Palette: ' + palettes[palIdx].name;
+    playChime(540);
+  });
+
+  document.getElementById('btnSound').addEventListener('click', function() {
+    soundOn = !soundOn;
+    this.classList.toggle('active', soundOn);
+    this.textContent = soundOn ? '🔊 Chimes: On' : '🔇 Chimes: Off';
+    if (soundOn) playChime(432);
+  });
+
+  document.getElementById('btnHide').addEventListener('click', function() {
+    document.body.classList.toggle('ui-hidden');
+    this.textContent = document.body.classList.contains('ui-hidden') ? '👁 Show UI' : '👁 Hide UI';
+  });
+
+  // Mouse / Touch Orbit
+  let dragging = false, lastX = 0, lastY = 0;
+  canvas.addEventListener('pointerdown', e => {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    rotY += (e.clientX - lastX) * 0.007;
+    rotX += (e.clientY - lastY) * 0.007;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointerup', () => dragging = false);
+
+  function lerpColor(a, b, t) {
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * t),
+      Math.round(a[1] + (b[1] - a[1]) * t),
+      Math.round(a[2] + (b[2] - a[2]) * t)
+    ];
+  }
+
+  // Render Loop
+  let prevCycle = 0;
+  let lastNow = performance.now();
+  function render(now) {
+    requestAnimationFrame(render);
+    const dt = Math.min(0.05, ((now || performance.now()) - lastNow) / 1000);
+    lastNow = now || performance.now();
+
+    if (autoDrift) {
+      // Same speed as before at 60 fps, but steady on any screen refresh rate
+      angXW += 0.27 * dt;
+      angYW += 0.186 * dt;
+      angZW += 0.114 * dt;
+      if (angXW > Math.PI) angXW -= Math.PI * 2;
+      if (angYW > Math.PI) angYW -= Math.PI * 2;
+      if (angZW > Math.PI) angZW -= Math.PI * 2;
+      slXW.value = angXW.toFixed(2);
+      slYW.value = angYW.toFixed(2);
+      slZW.value = angZW.toFixed(2);
+      document.getElementById('valXW').textContent = angXW.toFixed(2) + ' rad';
+      document.getElementById('valYW').textContent = angYW.toFixed(2) + ' rad';
+      document.getElementById('valZW').textContent = angZW.toFixed(2) + ' rad';
+
+      const cyc = Math.floor((angXW + Math.PI) / (Math.PI));
+      if (cyc !== prevCycle) {
+        prevCycle = cyc;
+        playChime(432);
+      }
+    }
+
+    ctx.fillStyle = `rgb(${Math.round(7*dimmer)}, ${Math.round(9*dimmer)}, ${Math.round(18*dimmer)})`;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle radial backdrop glow
+    const pal = palettes[palIdx];
+    const grad = ctx.createRadialGradient(W/2, H/2, 20, W/2, H/2, Math.min(W, H)*0.52);
+    grad.addColorStop(0, `rgba(${pal.c2[0]}, ${pal.c2[1]}, ${pal.c2[2]}, ${0.09 * dimmer})`);
+    grad.addColorStop(1, 'rgba(7, 9, 18, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    const cxw = Math.cos(angXW), sxw = Math.sin(angXW);
+    const cyw = Math.cos(angYW), syw = Math.sin(angYW);
+    const czw = Math.cos(angZW), szw = Math.sin(angZW);
+
+    const cx3 = Math.cos(rotX), sx3 = Math.sin(rotX);
+    const cy3 = Math.cos(rotY), sy3 = Math.sin(rotY);
+
+    const scale = Math.min(W, H) * 0.34;
+    const verts = activeShape.verts;
+    const edges = activeShape.edges;
+    const rings = activeShape.rings;
+    const projected = new Array(verts.length);
+
+    for (let i = 0; i < verts.length; i++) {
+      let [x, y, z, w] = verts[i];
+
+      // 4D Rotations: XW, YW, ZW
+      let nx = x * cxw - w * sxw;
+      let nw = x * sxw + w * cxw;
+      x = nx; w = nw;
+
+      let ny = y * cyw - w * syw;
+      nw = y * syw + w * cyw;
+      y = ny; w = nw;
+
+      let nz = z * czw - w * szw;
+      nw = z * szw + w * czw;
+      z = nz; w = nw;
+
+      // Perspective 4D -> 3D
+      const factor4 = 1 / (projDist - w);
+      let x3 = x * factor4;
+      let y3 = y * factor4;
+      let z3 = z * factor4;
+
+      // 3D Orbit Rotation
+      let tx = x3 * cy3 - z3 * sy3;
+      let tz = x3 * sy3 + z3 * cy3;
+      x3 = tx; z3 = tz;
+
+      let ty = y3 * cx3 - z3 * sx3;
+      tz = y3 * sx3 + z3 * cx3;
+      y3 = ty; z3 = tz;
+
+      const factor3 = 2.6 / (3.4 - z3);
+      projected[i] = {
+        sx: W * 0.5 + x3 * scale * factor3,
+        sy: H * 0.48 + y3 * scale * factor3,
+        z3,
+        w
+      };
+    }
+
+    const isHeavy = edges.length > 800;
+    ctx.lineCap = 'round';
+
+    // Pass 1: ordinary edges. Pass 2: Hopf ring edges on top.
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < edges.length; i++) {
+        const ring = rings.ringEdge[i];
+        const isRing = hopfHighlight && ring >= 0;
+        if ((pass === 0) === isRing) continue;
+
+        const [ia, ib] = edges[i];
+        const a = projected[ia];
+        const b = projected[ib];
+
+        const avgW = (a.w + b.w) * 0.5;
+        const tW = Math.max(0, Math.min(1, (avgW + 0.9) / 1.8));
+        const avgZ = (a.z3 + b.z3) * 0.5;
+        const depthAlpha = Math.max(0.06, Math.min(0.85, (avgZ + 1.1) * 0.42));
+
+        let col, alpha, lw;
+        if (isRing) {
+          col = ringColor(ring, rings.count);
+          alpha = Math.min(0.95, 0.35 + depthAlpha) * dimmer;
+          lw = isHeavy ? 1.6 : 2.3;
+        } else {
+          col = lerpColor(pal.c1, pal.c2, tW);
+          alpha = depthAlpha * (isHeavy ? 0.55 : 0.85) * dimmer * (hopfHighlight && rings.count ? 0.6 : 1);
+          lw = isHeavy ? 0.85 : 1.35;
+        }
+
+        ctx.strokeStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${alpha.toFixed(3)})`;
+        ctx.lineWidth = lw;
+        ctx.beginPath();
+        ctx.moveTo(a.sx, a.sy);
+        ctx.lineTo(b.sx, b.sy);
+        ctx.stroke();
+      }
+    }
+
+    // Draw Vertices
+    for (let i = 0; i < projected.length; i++) {
+      const p = projected[i];
+      const tW = Math.max(0, Math.min(1, (p.w + 0.9) / 1.8));
+      const col = lerpColor(pal.c1, pal.c3, tW);
+      const radius = (isHeavy ? 1.5 : 2.6) * Math.max(0.55, (p.z3 + 1.4) * 0.65);
+      const alpha = Math.max(0.15, Math.min(0.95, (p.z3 + 1.2) * 0.55)) * dimmer;
+
+      ctx.fillStyle = `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(p.sx, p.sy, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end 4D Regular Polychora Studio v2 — all six -->
+<!-- Cymatics & Synchronized Fireflies Studio — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 20: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-fireflies" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-fireflies">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cymatics & Synchronized Fireflies Studio</title>
+<style>
+  :root {
+    --bg: #070b14;
+    --panel: rgba(13, 20, 36, 0.86);
+    --border: rgba(148, 185, 255, 0.16);
+    --text: #eaf2ff;
+    --muted: #8ea4c8;
+    --accent: #5eead4;
+    --accent2: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(5, 8, 15, 0.65);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(94, 234, 212, 0.2), rgba(56, 189, 248, 0.2));
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(94, 234, 212, 0.18);
+    border: 1px solid rgba(94, 234, 212, 0.35);
+  }
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 13px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(148, 185, 255, 0.35);
+  }
+  .btn.active-toggle {
+    background: rgba(94, 234, 212, 0.18);
+    border-color: rgba(94, 234, 212, 0.5);
+    color: var(--accent);
+  }
+  main {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .hud-badge {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    padding: 10px 14px;
+    border-radius: 12px;
+    pointer-events: none;
+    z-index: 5;
+    max-width: 310px;
+  }
+  .hud-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+  .hud-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .controls-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    z-index: 10;
+  }
+  .ctrl-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 145px;
+  }
+  .ctrl-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .ctrl-label span:last-child {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.14);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(94, 234, 212, 0.6);
+  }
+  select {
+    background: rgba(10, 16, 30, 0.9);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .sync-meter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .sync-bar-wrap {
+    width: 84px;
+    height: 7px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .sync-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #38bdf8, #fbbf24);
+    transition: width 0.15s ease;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-cymatics" onclick="switchTab('cymatics')">
+      <span>💧</span> 1. Liquid Cymatics (Faraday Waves)
+    </button>
+    <button class="tab-btn" id="tab-fireflies" onclick="switchTab('fireflies')">
+      <span>✨</span> 2. Synchronized Fireflies
+    </button>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="btn-sound" onclick="toggleSound()">🔇 Sound: Off</button>
+    <button class="btn" id="btn-pause" onclick="togglePause()">⏸ Pause</button>
+    <button class="btn" onclick="resetCurrent()">↺ Reset</button>
+  </div>
+</header>
+
+<main>
+  <canvas id="simCanvas"></canvas>
+  <div class="hud-badge" id="hud-cymatics">
+    <div class="hud-title">Faraday Standing Waves</div>
+    <div class="hud-sub">Click or drag across the water dish to send fresh ripples through the standing light geometry.</div>
+  </div>
+  <div class="hud-badge hidden" id="hud-fireflies">
+    <div class="hud-title">Kuramoto Swarm Synchronization</div>
+    <div class="hud-sub">Click anywhere in the meadow to emit a light pulse that pulls nearby fireflies into harmonic rhythm.</div>
+  </div>
+</main>
+
+<!-- CYMATICS CONTROLS -->
+<div class="controls-bar" id="controls-cymatics">
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Geometry Mode</span></div>
+    <select id="cym-mode">
+      <option value="rose">Mandala Rose</option>
+      <option value="hex">Hexagonal Honeycomb</option>
+      <option value="star">Star Polygon</option>
+      <option value="rings">Concentric Rings</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Frequency (Harmonic)</span><span id="val-freq">6</span></div>
+    <input type="range" id="cym-freq" min="2" max="14" step="1" value="6" />
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Vibration Amplitude</span><span id="val-amp">75%</span></div>
+    <input type="range" id="cym-amp" min="15" max="100" step="1" value="75" />
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Surface Tension</span><span id="val-tens">55%</span></div>
+    <input type="range" id="cym-tens" min="10" max="100" step="1" value="55" />
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Light Palette</span></div>
+    <select id="cym-palette">
+      <option value="aqua">Bioluminescent Aqua</option>
+      <option value="gold">Amber & Liquid Gold</option>
+      <option value="violet">Ultraviolet Silk</option>
+      <option value="pearl">Moonlit Pearl</option>
+    </select>
+  </div>
+</div>
+
+<!-- FIREFLIES CONTROLS -->
+<div class="controls-bar hidden" id="controls-fireflies">
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Coupling Pull</span><span id="val-coup">1.60</span></div>
+    <input type="range" id="ff-coup" min="0" max="4.0" step="0.05" value="1.60" />
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Sight Radius</span><span id="val-rad">170 px</span></div>
+    <input type="range" id="ff-rad" min="50" max="420" step="5" value="170" />
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Rhythm Diversity</span><span id="val-div">0.45</span></div>
+    <input type="range" id="ff-div" min="0.05" max="1.5" step="0.05" value="0.45" />
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-label"><span>Firefly Palette</span></div>
+    <select id="ff-palette">
+      <option value="meadow">Warm Meadow Gold</option>
+      <option value="lantern">Twilight Cyan & Gold</option>
+      <option value="aurora">Emerald & Rose Sparks</option>
+    </select>
+  </div>
+  <div class="sync-meter">
+    <span style="font-size:12px;color:var(--muted);font-weight:600;">Sync</span>
+    <div class="sync-bar-wrap"><div class="sync-bar-fill" id="sync-fill"></div></div>
+    <span id="sync-pct" style="font-size:12px;font-weight:700;color:var(--accent2);min-width:34px;">0%</span>
+  </div>
+  <button class="btn" onclick="scatterFireflies()">Scatter Rhythms</button>
+</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+let width = 0, height = 0, dpr = 1;
+let activeTab = 'cymatics';
+let paused = false;
+let time = 0;
+
+// Audio synthesis
+let audioCtx = null;
+let soundEnabled = false;
+let cymOsc = null, cymGain = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    cymOsc = audioCtx.createOscillator();
+    cymGain = audioCtx.createGain();
+    cymOsc.type = 'sine';
+    cymOsc.frequency.value = 180;
+    cymGain.gain.value = 0.0;
+    cymOsc.connect(cymGain);
+    cymGain.connect(audioCtx.destination);
+    cymOsc.start();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('btn-sound');
+  if (soundEnabled) {
+    initAudio();
+    btn.textContent = '🔊 Sound: On';
+    btn.classList.add('active-toggle');
+  } else {
+    btn.textContent = '🔇 Sound: Off';
+    btn.classList.remove('active-toggle');
+    if (cymGain && audioCtx) cymGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
+  }
+}
+
+function playChime(freq = 520, dur = 0.35, vol = 0.05) {
+  if (!soundEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  osc.frequency.exponentialRampToValueAtTime(freq * 1.01, now + dur);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.linearRampToValueAtTime(vol, now + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + dur + 0.02);
+}
+
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  width = canvas.clientWidth;
+  height = canvas.clientHeight;
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-cymatics').classList.toggle('active', tab === 'cymatics');
+  document.getElementById('tab-fireflies').classList.toggle('active', tab === 'fireflies');
+  document.getElementById('controls-cymatics').classList.toggle('hidden', tab !== 'cymatics');
+  document.getElementById('controls-fireflies').classList.toggle('hidden', tab !== 'fireflies');
+  document.getElementById('hud-cymatics').classList.toggle('hidden', tab !== 'cymatics');
+  document.getElementById('hud-fireflies').classList.toggle('hidden', tab !== 'fireflies');
+  if (tab !== 'cymatics' && cymGain && audioCtx) {
+    cymGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
+  }
+}
+
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById('btn-pause');
+  btn.textContent = paused ? '▶ Resume' : '⏸ Pause';
+  btn.classList.toggle('active-toggle', paused);
+  if (paused && cymGain && audioCtx) {
+    cymGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
+  }
+}
+
+// ==========================================
+// 1. LIQUID CYMATICS (FARADAY WAVES)
+// ==========================================
+let ripples = [];
+const offscreen = document.createElement('canvas');
+const offCtx = offscreen.getContext('2d');
+const GRID_RES = 240;
+offscreen.width = GRID_RES;
+offscreen.height = GRID_RES;
+const imgData = offCtx.createImageData(GRID_RES, GRID_RES);
+
+const cymPalettes = {
+  aqua:   { bg: [6, 16, 30],   mid: [14, 116, 144], hi: [165, 243, 252], rim: '#38bdf8' },
+  gold:   { bg: [18, 12, 6],   mid: [180, 105, 14], hi: [254, 240, 138], rim: '#fbbf24' },
+  violet: { bg: [14, 8, 28],   mid: [109, 40, 217], hi: [233, 213, 255], rim: '#c084fc' },
+  pearl:  { bg: [10, 14, 22],  mid: [100, 116, 139],hi: [248, 250, 252], rim: '#cbd5e1' }
+};
+
+function addCymaticRipple(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  const cx = width * 0.5, cy = height * 0.5;
+  const dishR = Math.min(width, height) * 0.41;
+  const nx = (x - cx) / dishR;
+  const ny = (y - cy) / dishR;
+  if (nx * nx + ny * ny <= 1.02) {
+    ripples.push({ x: nx, y: ny, t: 0, amp: 1.0 });
+    if (ripples.length > 14) ripples.shift();
+    playChime(320 + Math.random() * 180, 0.4, 0.03);
+  }
+}
+
+function renderCymatics(dt) {
+  const mode = document.getElementById('cym-mode').value;
+  const freq = parseFloat(document.getElementById('cym-freq').value);
+  const amp = parseFloat(document.getElementById('cym-amp').value) / 100;
+  const tens = parseFloat(document.getElementById('cym-tens').value) / 100;
+  const palKey = document.getElementById('cym-palette').value;
+  const pal = cymPalettes[palKey];
+
+  document.getElementById('val-freq').textContent = freq;
+  document.getElementById('val-amp').textContent = Math.round(amp * 100) + '%';
+  document.getElementById('val-tens').textContent = Math.round(tens * 100) + '%';
+
+  if (soundEnabled && audioCtx && !paused) {
+    const targetFreq = 110 + freq * 24;
+    cymOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.06);
+    cymGain.gain.setTargetAtTime(0.018 * amp, audioCtx.currentTime, 0.08);
+  }
+
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    ripples[i].t += dt * (1.2 + tens * 0.9);
+    ripples[i].amp *= Math.pow(0.28, dt);
+    if (ripples[i].amp < 0.015) ripples.splice(i, 1);
+  }
+
+  const data = imgData.data;
+  const phase = time * (2.6 + freq * 0.35);
+  const cosOsc = Math.cos(phase);
+  const sinOsc = Math.sin(phase * 0.5);
+  const k = freq * Math.PI * (1.15 - tens * 0.35);
+
+  for (let py = 0; py < GRID_RES; py++) {
+    const ny = (py / (GRID_RES - 1)) * 2 - 1;
+    for (let px = 0; px < GRID_RES; px++) {
+      const nx = (px / (GRID_RES - 1)) * 2 - 1;
+      const r2 = nx * nx + ny * ny;
+      const idx = (py * GRID_RES + px) * 4;
+
+      if (r2 > 1.0) {
+        data[idx] = 7; data[idx + 1] = 11; data[idx + 2] = 20; data[idx + 3] = 0;
+        continue;
+      }
+
+      const r = Math.sqrt(r2);
+      const theta = Math.atan2(ny, nx);
+      const edgeDamp = Math.cos(r * Math.PI * 0.5);
+
+      let h = 0;
+      if (mode === 'rose') {
+        const w1 = Math.cos(k * r) * Math.cos(freq * theta);
+        const w2 = Math.sin(k * r * 0.75) * Math.cos((freq * 0.5) * theta + sinOsc * 0.4);
+        h = (w1 * 0.72 + w2 * 0.38) * cosOsc;
+      } else if (mode === 'hex') {
+        const a1 = nx * k;
+        const a2 = (-0.5 * nx + 0.866025 * ny) * k;
+        const a3 = (-0.5 * nx - 0.866025 * ny) * k;
+        h = ((Math.cos(a1) + Math.cos(a2) + Math.cos(a3)) / 3) * cosOsc;
+      } else if (mode === 'star') {
+        const m = Math.max(3, Math.round(freq));
+        const w1 = Math.cos(m * theta) * Math.sin(k * r);
+        const w2 = Math.cos(k * r * 1.1) * 0.45;
+        h = (w1 + w2) * cosOsc;
+      } else {
+        h = Math.cos(k * r * 1.35 - phase * 0.4) * 0.6 + Math.cos(k * r * 1.35 + phase * 0.4) * 0.6;
+      }
+
+      // Interactive finger ripples
+      for (let i = 0; i < ripples.length; i++) {
+        const rp = ripples[i];
+        const dx = nx - rp.x;
+        const dy = ny - rp.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const waveFront = dist - rp.t * 0.85;
+        if (Math.abs(waveFront) < 0.35) {
+          h += Math.cos(waveFront * 26) * Math.exp(-waveFront * waveFront * 28) * rp.amp * 1.3;
+        }
+      }
+
+      h *= amp * (0.35 + 0.65 * edgeDamp);
+
+      // Caustic light focusing: steep slopes & bright crests concentrate light
+      const caustic = Math.pow(Math.max(0, 1 - Math.abs(h) * 2.2), 3.2) * (0.4 + amp * 0.85);
+      const crest = Math.max(0, h);
+      const intensity = Math.min(1, caustic * 0.82 + crest * 0.65);
+
+      let cr, cg, cb;
+      if (intensity < 0.5) {
+        const t = intensity * 2;
+        cr = pal.bg[0] + (pal.mid[0] - pal.bg[0]) * t;
+        cg = pal.bg[1] + (pal.mid[1] - pal.bg[1]) * t;
+        cb = pal.bg[2] + (pal.mid[2] - pal.bg[2]) * t;
+      } else {
+        const t = (intensity - 0.5) * 2;
+        cr = pal.mid[0] + (pal.hi[0] - pal.mid[0]) * t;
+        cg = pal.mid[1] + (pal.hi[1] - pal.mid[1]) * t;
+        cb = pal.mid[2] + (pal.hi[2] - pal.mid[2]) * t;
+      }
+
+      // Subtle rim vignette
+      const rimShade = 1 - Math.pow(r, 8) * 0.45;
+      data[idx] = cr * rimShade;
+      data[idx + 1] = cg * rimShade;
+      data[idx + 2] = cb * rimShade;
+      data[idx + 3] = 255;
+    }
+  }
+
+  offCtx.putImageData(imgData, 0, 0);
+
+  ctx.fillStyle = '#070b14';
+  ctx.fillRect(0, 0, width, height);
+
+  const cx = width * 0.5;
+  const cy = height * 0.5;
+  const dishR = Math.min(width, height) * 0.41;
+
+  // Outer ambient glow
+  const glow = ctx.createRadialGradient(cx, cy, dishR * 0.8, cx, cy, dishR * 1.18);
+  glow.addColorStop(0, 'rgba(56, 189, 248, 0.12)');
+  glow.addColorStop(1, 'rgba(7, 11, 20, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, dishR * 1.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Clip circular dish and draw water surface
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, dishR, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(offscreen, cx - dishR, cy - dishR, dishR * 2, dishR * 2);
+  ctx.restore();
+
+  // Metallic dish rim
+  ctx.strokeStyle = pal.rim;
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.arc(cx, cy, dishR, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+// ==========================================
+// 2. SYNCHRONIZED FIREFLIES (KURAMOTO)
+// ==========================================
+const NUM_FIREFLIES = 135;
+let fireflies = [];
+let lightPulses = [];
+
+const ffPalettes = {
+  meadow:  { c1: [253, 224, 71],  c2: [163, 230, 53] },
+  lantern: { c1: [251, 191, 36],  c2: [56, 189, 248] },
+  aurora:  { c1: [52, 211, 153],  c2: [244, 114, 182] }
+};
+
+function initFireflies() {
+  fireflies = [];
+  const div = parseFloat(document.getElementById('ff-div').value);
+  for (let i = 0; i < NUM_FIREFLIES; i++) {
+    fireflies.push({
+      x: Math.random() * (width || 900),
+      y: Math.random() * (height || 600),
+      vx: (Math.random() - 0.5) * 26,
+      vy: (Math.random() - 0.5) * 26,
+      phase: Math.random() * Math.PI * 2,
+      baseFreq: 2.3 + (Math.random() - 0.5) * div * 2.2,
+      seed: Math.random()
+    });
+  }
+}
+
+function scatterFireflies() {
+  for (let i = 0; i < fireflies.length; i++) {
+    fireflies[i].phase = Math.random() * Math.PI * 2;
+  }
+  playChime(390, 0.3, 0.04);
+}
+
+function addFireflyPulse(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  lightPulses.push({ x, y, r: 10, alpha: 0.9 });
+  const radius = parseFloat(document.getElementById('ff-rad').value) * 1.35;
+  for (let i = 0; i < fireflies.length; i++) {
+    const f = fireflies[i];
+    const dx = f.x - x;
+    const dy = f.y - y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < radius) {
+      const pull = 1 - d / radius;
+      // Nudge phase smoothly toward flash peak (pi/2)
+      const targetPhase = Math.PI * 0.5;
+      f.phase += Math.sin(targetPhase - f.phase) * pull * 1.45;
+    }
+  }
+  playChime(660, 0.45, 0.045);
+}
+
+function renderFireflies(dt) {
+  const coupling = parseFloat(document.getElementById('ff-coup').value);
+  const sightR = parseFloat(document.getElementById('ff-rad').value);
+  const div = parseFloat(document.getElementById('ff-div').value);
+  const palKey = document.getElementById('ff-palette').value;
+  const pal = ffPalettes[palKey];
+
+  document.getElementById('val-coup').textContent = coupling.toFixed(2);
+  document.getElementById('val-rad').textContent = Math.round(sightR) + ' px';
+  document.getElementById('val-div').textContent = div.toFixed(2);
+
+  // Dark twilight meadow backdrop
+  const bgGrad = ctx.createRadialGradient(width * 0.5, height * 0.5, 40, width * 0.5, height * 0.5, Math.max(width, height) * 0.7);
+  bgGrad.addColorStop(0, '#0b1324');
+  bgGrad.addColorStop(1, '#04070e');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Kuramoto neighbor coupling update
+  const phases = fireflies.map(f => f.phase);
+  let sumSin = 0, sumCos = 0;
+
+  for (let i = 0; i < fireflies.length; i++) {
+    const f = fireflies[i];
+    if (!paused) {
+      let influence = 0;
+      let neighbors = 0;
+      for (let j = 0; j < fireflies.length; j++) {
+        if (i === j) continue;
+        const o = fireflies[j];
+        const dx = o.x - f.x;
+        const dy = o.y - f.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < sightR * sightR) {
+          influence += Math.sin(phases[j] - phases[i]);
+          neighbors++;
+        }
+      }
+      const naturalFreq = 2.3 + (f.seed - 0.5) * div * 2.4;
+      const dPhase = naturalFreq + (neighbors > 0 ? (coupling / neighbors) * influence : 0);
+      f.phase = (f.phase + dPhase * dt) % (Math.PI * 2);
+
+      // Gentle wandering drift
+      f.vx += (Math.random() - 0.5) * 32 * dt;
+      f.vy += (Math.random() - 0.5) * 32 * dt;
+      f.vx *= 0.985;
+      f.vy *= 0.985;
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+
+      if (f.x < 24) { f.x = 24; f.vx = Math.abs(f.vx); }
+      if (f.x > width - 24) { f.x = width - 24; f.vx = -Math.abs(f.vx); }
+      if (f.y < 24) { f.y = 24; f.vy = Math.abs(f.vy); }
+      if (f.y > height - 24) { f.y = height - 24; f.vy = -Math.abs(f.vy); }
+    }
+    sumSin += Math.sin(f.phase);
+    sumCos += Math.cos(f.phase);
+  }
+
+  // Global Kuramoto Order Parameter R in [0, 1]
+  const orderR = Math.sqrt(sumSin * sumSin + sumCos * sumCos) / fireflies.length;
+  const pct = Math.round(orderR * 100);
+  document.getElementById('sync-fill').style.width = pct + '%';
+  document.getElementById('sync-pct').textContent = pct + '%';
+
+  // Soft chime when swarm crosses high sync crest
+  if (!paused && soundEnabled && orderR > 0.85 && Math.sin(time * 2.3) > 0.98 && Math.random() < 0.15) {
+    playChime(587.33, 0.5, 0.025);
+  }
+
+  // Draw subtle connection threads between flashing neighbors
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < fireflies.length; i++) {
+    const f = fireflies[i];
+    const glowA = Math.pow(Math.max(0, Math.sin(f.phase)), 4);
+    if (glowA < 0.25) continue;
+    for (let j = i + 1; j < fireflies.length; j++) {
+      const o = fireflies[j];
+      const dx = o.x - f.x;
+      const dy = o.y - f.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < sightR * sightR * 0.55) {
+        const glowB = Math.pow(Math.max(0, Math.sin(o.phase)), 4);
+        const linkAlpha = glowA * glowB * (1 - Math.sqrt(d2) / (sightR * 0.75)) * 0.24;
+        if (linkAlpha > 0.01) {
+          ctx.strokeStyle = `rgba(${pal.c1[0]}, ${pal.c1[1]}, ${pal.c1[2]}, ${linkAlpha})`;
+          ctx.beginPath();
+          ctx.moveTo(f.x, f.y);
+          ctx.lineTo(o.x, o.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Draw user light pulses
+  for (let i = lightPulses.length - 1; i >= 0; i--) {
+    const p = lightPulses[i];
+    p.r += 240 * dt;
+    p.alpha -= 1.2 * dt;
+    if (p.alpha <= 0) {
+      lightPulses.splice(i, 1);
+      continue;
+    }
+    ctx.strokeStyle = `rgba(${pal.c1[0]}, ${pal.c1[1]}, ${pal.c1[2]}, ${p.alpha * 0.6})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Draw fireflies
+  for (let i = 0; i < fireflies.length; i++) {
+    const f = fireflies[i];
+    const flash = Math.pow(Math.max(0, Math.sin(f.phase)), 5);
+    const col = f.seed > 0.35 ? pal.c1 : pal.c2;
+
+    if (flash > 0.03) {
+      const haloR = 10 + flash * 26;
+      const grad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, haloR);
+      grad.addColorStop(0, `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${0.85 * flash})`);
+      grad.addColorStop(0.4, `rgba(${col[0]}, ${col[1]}, ${col[2]}, ${0.28 * flash})`);
+      grad.addColorStop(1, `rgba(${col[0]}, ${col[1]}, ${col[2]}, 0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, haloR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Core dot
+    ctx.fillStyle = flash > 0.15
+      ? `rgba(255, 255, 245, ${0.35 + flash * 0.65})`
+      : 'rgba(148, 163, 184, 0.28)';
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, 1.8 + flash * 2.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Pointer interactions
+let dragging = false;
+canvas.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  if (activeTab === 'cymatics') addCymaticRipple(e.clientX, e.clientY);
+  else addFireflyPulse(e.clientX, e.clientY);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  if (activeTab === 'cymatics' && Math.random() < 0.35) {
+    addCymaticRipple(e.clientX, e.clientY);
+  }
+});
+window.addEventListener('pointerup', () => { dragging = false; });
+
+function resetCurrent() {
+  if (activeTab === 'cymatics') {
+    ripples = [];
+    time = 0;
+  } else {
+    initFireflies();
+    lightPulses = [];
+  }
+}
+
+initFireflies();
+
+let lastTs = performance.now();
+function loop(now) {
+  const dt = Math.min((now - lastTs) / 1000, 0.05);
+  lastTs = now;
+  if (!paused) time += dt;
+
+  if (activeTab === 'cymatics') renderCymatics(dt);
+  else renderFireflies(dt);
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
+</template>
+<!-- end Cymatics & Synchronized Fireflies Studio -->
+<!-- 4D Topology: Alexander Horned Sphere & Exotic Smoothness Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 21: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-horned" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a> · <a href="guides/4d-topology-field-guide.pdf" target="_blank" rel="noopener">Field guide (PDF)</a></div></div>
+<template id="page-src-horned">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4D Topology: Alexander Horned Sphere & Exotic Smoothness Studio v2</title>
+<style>
+  :root {
+    --bg: #0b0e17;
+    --panel: rgba(16, 22, 36, 0.88);
+    --border: rgba(140, 175, 255, 0.18);
+    --text: #e6ecf8;
+    --muted: #93a3c4;
+    --accent: #6ea8fe;
+    --accent2: #f472b6;
+    --accent3: #34d399;
+    --brightness: 1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    filter: brightness(var(--brightness));
+    user-select: none;
+  }
+  canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+
+  .hud-top {
+    position: fixed; top: 14px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    pointer-events: none; z-index: 10; flex-wrap: wrap;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  }
+  .title-block h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.2px; }
+  .title-block p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  button {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  button:hover { background: rgba(110,168,254,0.18); border-color: var(--accent); }
+  button.active {
+    background: linear-gradient(135deg, rgba(110,168,254,0.32), rgba(244,114,182,0.24));
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .panel-left {
+    position: fixed; top: 76px; left: 14px; width: 310px; max-height: calc(100vh - 94px);
+    overflow-y: auto; z-index: 10; display: flex; flex-direction: column; gap: 12px;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .control-row label { color: var(--muted); font-weight: 500; }
+  .control-row span { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+  input[type="range"] {
+    width: 100%; accent-color: var(--accent); cursor: pointer; height: 5px;
+    background: rgba(255,255,255,0.12); border-radius: 4px;
+  }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-row button { flex: 1; text-align: center; padding: 6px 8px; font-size: 12px; }
+
+  .panel-right {
+    position: fixed; bottom: 14px; right: 14px; width: 340px; z-index: 10;
+  }
+  .info-badge {
+    display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; padding: 3px 8px; border-radius: 6px; margin-bottom: 6px;
+    background: rgba(110,168,254,0.18); color: var(--accent);
+  }
+  .info-text { font-size: 12.5px; line-height: 1.48; color: #cbd6ee; }
+  .info-text .note { display: block; margin-top: 6px; color: var(--muted); font-size: 11.5px; }
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;
+  }
+  .stat-box {
+    background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 8px;
+  }
+  .stat-box .k { font-size: 10.5px; color: var(--muted); }
+  .stat-box .v { font-size: 12.5px; font-weight: 700; color: #fff; margin-top: 1px; }
+
+  .hidden-ui .panel-left, .hidden-ui .panel-right, .hidden-ui .title-block { display: none !important; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="hud-top">
+  <div class="card title-block">
+    <h1>Wild Spheres &amp; Exotic Smoothness Studio</h1>
+    <p>Alexander horned sphere, Akbulut cork twists &amp; Kirby handle calculus — cartoon pictures of real ideas</p>
+  </div>
+  <div class="card tabs">
+    <button id="tab-horn" class="active" onclick="setMode('horn')">1. Alexander Horned Sphere</button>
+    <button id="tab-exotic" onclick="setMode('exotic')">2. Akbulut Cork Twist</button>
+    <button id="tab-kirby" onclick="setMode('kirby')">3. Kirby Handle Calculus</button>
+    <button id="btn-ui" onclick="toggleUI()">Hide UI</button>
+  </div>
+</div>
+
+<div class="card panel-left" id="controls"></div>
+
+<div class="card panel-right" id="inspector"></div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth * devicePixelRatio;
+  H = canvas.height = window.innerHeight * devicePixelRatio;
+  // keep the left panel below the top bar, however it wraps
+  const bar = document.querySelector('.hud-top').getBoundingClientRect().bottom;
+  const panel = document.getElementById('controls');
+  if (panel) {
+    panel.style.top = (bar + 10) + 'px';
+    panel.style.maxHeight = `calc(100vh - ${bar + 28}px)`;
+  }
+}
+window.addEventListener('resize', resize);
+
+const state = {
+  mode: 'horn',
+  rotX: 0.35,
+  rotY: -0.55,
+  zoom: 1.0,
+  autoSpin: true,
+  dimmer: 1.0,
+  palette: 0,
+  time: 0,
+  // Mode 1: Alexander Horned Sphere
+  hornDepth: 3,
+  lift4D: 0.0,
+  showTrapLoop: true,
+  // Mode 2: Akbulut Cork Twist
+  corkTwist: 0.0,
+  xwRot: 0.45,
+  ywRot: 0.25,
+  smoothWrinkle: 0.85,
+  // Mode 3: Kirby Handle Calculus
+  kirbySlide: 0.0,
+  kirbyInvolution: false,
+  framing: 0
+};
+
+const palettes = [
+  { name: 'Aurora', bg: '#0b0e17', c1: '#6ea8fe', c2: '#f472b6', c3: '#34d399', c4: '#fbbf24' },
+  { name: 'Deep Ocean', bg: '#071318', c1: '#38bdf8', c2: '#2dd4bf', c3: '#818cf8', c4: '#f87171' },
+  { name: 'Warm Dusk', bg: '#140d12', c1: '#fb923c', c2: '#e879f9', c3: '#facc15', c4: '#60a5fa' }
+];
+
+let dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('pointerup', () => dragging = false);
+window.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  state.rotY += (e.clientX - lastX) * 0.007;
+  state.rotX += (e.clientY - lastY) * 0.007;
+  state.rotX = Math.max(-1.45, Math.min(1.45, state.rotX));
+  lastX = e.clientX; lastY = e.clientY;
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  state.zoom = Math.max(0.45, Math.min(2.4, state.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+}, { passive: false });
+
+function toggleUI() {
+  document.body.classList.toggle('hidden-ui');
+}
+
+function setMode(m) {
+  state.mode = m;
+  ['horn', 'exotic', 'kirby'].forEach(k => {
+    document.getElementById('tab-' + k).classList.toggle('active', k === m);
+  });
+  renderControls();
+  updateInspector();
+}
+
+function renderControls() {
+  const el = document.getElementById('controls');
+  let html = '';
+  if (state.mode === 'horn') {
+    html += `
+      <div class="control-group">
+        <div class="control-row"><label>Horn Depth (levels shown)</label><span id="v-depth">${state.hornDepth}</span></div>
+        <input type="range" min="0" max="5" step="1" value="${state.hornDepth}" oninput="state.hornDepth=+this.value;document.getElementById('v-depth').textContent=this.value;updateInspector()">
+      </div>
+      <div class="control-group">
+        <div class="control-row"><label>Lift Horns Along W (picture)</label><span id="v-lift">${Math.round(state.lift4D*100)}%</span></div>
+        <input type="range" min="0" max="1" step="0.01" value="${state.lift4D}" oninput="state.lift4D=+this.value;document.getElementById('v-lift').textContent=Math.round(this.value*100)+'%';updateInspector()">
+      </div>
+      <div class="btn-row">
+        <button onclick="state.lift4D=0;renderControls();updateInspector()">In 3D (0%)</button>
+        <button onclick="state.lift4D=1;renderControls();updateInspector()">Lifted in 4D (100%)</button>
+      </div>
+      <div class="btn-row">
+        <button class="${state.showTrapLoop?'active':''}" onclick="state.showTrapLoop=!state.showTrapLoop;renderControls()">Stuck Outside Loop: ${state.showTrapLoop?'ON':'OFF'}</button>
+      </div>
+    `;
+  } else if (state.mode === 'exotic') {
+    html += `
+      <div class="control-group">
+        <div class="control-row"><label>Cork Twist (τ)</label><span id="v-twist">${Math.round(state.corkTwist*100)}%</span></div>
+        <input type="range" min="0" max="1" step="0.01" value="${state.corkTwist}" oninput="state.corkTwist=+this.value;document.getElementById('v-twist').textContent=Math.round(this.value*100)+'%';updateInspector()">
+      </div>
+      <div class="control-group">
+        <div class="control-row"><label>Ripple Strength (cartoon)</label><span id="v-wrink">${state.smoothWrinkle.toFixed(2)}</span></div>
+        <input type="range" min="0.1" max="1.5" step="0.05" value="${state.smoothWrinkle}" oninput="state.smoothWrinkle=+this.value;document.getElementById('v-wrink').textContent=(+this.value).toFixed(2)">
+      </div>
+      <div class="control-group">
+        <div class="control-row"><label>4D XW Plane Rotation</label><span id="v-xw">${state.xwRot.toFixed(2)}</span></div>
+        <input type="range" min="-3.14" max="3.14" step="0.02" value="${state.xwRot}" oninput="state.xwRot=+this.value;document.getElementById('v-xw').textContent=(+this.value).toFixed(2)">
+      </div>
+      <div class="control-group">
+        <div class="control-row"><label>4D YW Plane Rotation</label><span id="v-yw">${state.ywRot.toFixed(2)}</span></div>
+        <input type="range" min="-3.14" max="3.14" step="0.02" value="${state.ywRot}" oninput="state.ywRot=+this.value;document.getElementById('v-yw').textContent=(+this.value).toFixed(2)">
+      </div>
+      <div class="btn-row">
+        <button onclick="state.corkTwist=0;renderControls();updateInspector()">Before Twist</button>
+        <button onclick="state.corkTwist=1;renderControls();updateInspector()">Cork Twisted</button>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="control-group">
+        <div class="control-row"><label>Wiggle the 2-Handle (isotopy)</label><span id="v-slide">${Math.round(state.kirbySlide*100)}%</span></div>
+        <input type="range" min="0" max="1" step="0.01" value="${state.kirbySlide}" oninput="state.kirbySlide=+this.value;document.getElementById('v-slide').textContent=Math.round(this.value*100)+'%';updateInspector()">
+      </div>
+      <div class="control-group">
+        <div class="control-row"><label>2-Handle Framing</label><span id="v-fram">${state.framing}</span></div>
+        <input type="range" min="-3" max="3" step="1" value="${state.framing}" oninput="state.framing=+this.value;document.getElementById('v-fram').textContent=this.value;updateInspector()">
+      </div>
+      <div class="btn-row">
+        <button class="${state.kirbyInvolution?'active':''}" onclick="state.kirbyInvolution=!state.kirbyInvolution;renderControls();updateInspector()">
+          Cork Twist (swap dot ↔ 0): ${state.kirbyInvolution?'ON':'OFF'}
+        </button>
+      </div>
+    `;
+  }
+
+  html += `
+    <hr style="border:none;border-top:1px solid var(--border);margin:2px 0;">
+    <div class="control-group">
+      <div class="control-row"><label>Eye Comfort Dimmer</label><span id="v-dim">${Math.round(state.dimmer*100)}%</span></div>
+      <input type="range" min="0.45" max="1.0" step="0.01" value="${state.dimmer}" oninput="state.dimmer=+this.value;document.documentElement.style.setProperty('--brightness',this.value);document.getElementById('v-dim').textContent=Math.round(this.value*100)+'%'">
+    </div>
+    <div class="btn-row">
+      <button class="${state.autoSpin?'active':''}" onclick="state.autoSpin=!state.autoSpin;renderControls()">Orbit: ${state.autoSpin?'ON':'OFF'}</button>
+      <button onclick="state.palette=(state.palette+1)%palettes.length;document.body.style.background=palettes[state.palette].bg;renderControls()">Palette: ${palettes[state.palette].name}</button>
+    </div>
+  `;
+  el.innerHTML = html;
+}
+
+function updateInspector() {
+  const el = document.getElementById('inspector');
+  if (state.mode === 'horn') {
+    const horns = Math.pow(2, state.hornDepth + 1) - 2;
+    const status = state.hornDepth === 0 ? 'Round sphere, nothing stuck'
+      : (state.hornDepth >= 2 ? 'Loops can get stuck' : 'One clasp so far');
+    el.innerHTML = `
+      <div class="info-badge">Wild Topology • ℝ³</div>
+      <div class="info-text">
+        An <b>Alexander horned sphere</b> is topologically a plain sphere (S²), and its inside is an ordinary ball. But its horns clasp at every scale, so the <b>outside</b> is not simply connected: the dashed loop around the horns can never be shrunk to a point without crossing the sphere.
+        <span class="note">The W slider lifts the horns into the 4th dimension as a picture only. In 4D a loop can't stay linked with another loop, but it can still link a 2-sphere, so lifting alone doesn't show the horns come free.</span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="k">Horns Drawn</div><div class="v">${state.hornDepth === 0 ? '0 (Round S²)' : horns}</div></div>
+        <div class="stat-box"><div class="k">Outside</div><div class="v">${status}</div></div>
+      </div>
+    `;
+  } else if (state.mode === 'exotic') {
+    const twisted = state.corkTwist > 0.5;
+    el.innerHTML = `
+      <div class="info-badge">Smooth 4-Manifolds • Akbulut Cork</div>
+      <div class="info-text">
+        An <b>Akbulut cork</b> is a contractible piece of a 4-manifold. Cut it out and glue it back with a special twist of its boundary (an involution): the result is always <b>homeomorphic</b> to the original, and for many 4-manifolds it is <b>not diffeomorphic</b> — an exotic smooth structure. Every exotic pair of closed simply connected 4-manifolds is related by a cork twist.
+        <span class="note">Can a cork twist make an exotic S⁴? Nobody knows. No exotic 4-sphere has ever been found; whether one exists is the smooth 4D Poincaré conjecture, still open. The ripples here are a cartoon: a smooth structure can't be seen as a shape.</span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="k">Topology (C⁰)</div><div class="v">Unchanged (homeomorphic)</div></div>
+        <div class="stat-box"><div class="k">Smooth Structure (C∞)</div><div class="v">${twisted ? 'Twisted — can differ' : 'As before'}</div></div>
+      </div>
+    `;
+  } else {
+    const swap = state.kirbyInvolution
+      ? (state.framing === 0 ? 'Dot ↔ 0 swapped (cork twist)' : 'Swap needs framing 0')
+      : 'Canonical';
+    el.innerHTML = `
+      <div class="info-badge">Kirby Calculus • Framed Links</div>
+      <div class="info-text">
+        A <b>Kirby diagram</b> builds a 4-manifold from <b>dotted circles</b> (1-handles) and <b>framed knots</b> (2-handles). Moving a knot around without crossing anything (isotopy), or sliding one handle over another, leaves the 4-manifold unchanged.
+        <span class="note">Akbulut's cork is drawn as two linked circles: one dotted, one with framing 0. Swapping the dot and the 0 is the cork twist. The swap only makes sense at framing 0.</span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="k">2-Handle Framing</div><div class="v">${state.framing > 0 ? '+'+state.framing : state.framing}</div></div>
+        <div class="stat-box"><div class="k">Handle Symmetry</div><div class="v">${swap}</div></div>
+      </div>
+    `;
+  }
+}
+
+function project4Dto2D(x, y, z, w) {
+  // 4D rotations (XW and YW)
+  const cx = Math.cos(state.xwRot), sx = Math.sin(state.xwRot);
+  let x1 = x * cx - w * sx;
+  let w1 = x * sx + w * cx;
+
+  const cy = Math.cos(state.ywRot), sy = Math.sin(state.ywRot);
+  let y1 = y * cy - w1 * sy;
+  let w2 = y * sy + w1 * cy;
+
+  // Perspective 4D -> 3D
+  const d4 = 3.2;
+  const f4 = d4 / Math.max(0.6, d4 - w2);
+  let x3 = x1 * f4, y3 = y1 * f4, z3 = z * f4;
+
+  // 3D Camera orbit
+  const ry = state.rotY, rx = state.rotX;
+  const cry = Math.cos(ry), sry = Math.sin(ry);
+  let rx1 = x3 * cry - z3 * sry;
+  let rz1 = x3 * sry + z3 * cry;
+
+  const crx = Math.cos(rx), srx = Math.sin(rx);
+  let ry2 = y3 * crx - rz1 * srx;
+  let rz2 = y3 * srx + rz1 * crx;
+
+  const fov = Math.min(W, H) * 0.42 * state.zoom;
+  const d3 = 4.5;
+  const f3 = fov / Math.max(0.8, d3 - rz2);
+  return { sx: W * 0.5 + rx1 * f3, sy: H * 0.5 + ry2 * f3, depth: rz2, wDepth: w2 };
+}
+
+function drawHornedSphere(pal) {
+  // Base sphere latitude/longitude wireframe
+  const R = 0.85;
+  ctx.lineWidth = 1.1 * devicePixelRatio;
+  for (let i = 1; i < 8; i++) {
+    const phi = (i / 8) * Math.PI;
+    ctx.beginPath();
+    for (let j = 0; j <= 48; j++) {
+      const th = (j / 48) * Math.PI * 2;
+      const x = R * Math.sin(phi) * Math.cos(th);
+      const y = R * Math.cos(phi) - 0.35;
+      const z = R * Math.sin(phi) * Math.sin(th);
+      const p = project4Dto2D(x, y, z, 0);
+      j === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.strokeStyle = 'rgba(110, 168, 254, 0.20)';
+    ctx.stroke();
+  }
+
+  // Recursive hooked horns (drawn as centre lines of the horn tubes)
+  function branch(x, y, z, dx, dy, dz, len, depth, side, parity) {
+    if (depth > state.hornDepth) return;
+    const steps = 20;
+    const pts = [];
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps;
+      const arch = Math.sin(t * Math.PI) * len * 0.55;
+      const hook = Math.sin(t * Math.PI * 1.15) * len * 0.48 * side;
+      const px = x + dx * len * t + hook;
+      const py = y + dy * len * t + arch * 0.35;
+      const pz = z + dz * len * t + Math.cos(t * Math.PI) * len * 0.25 * parity;
+      const pw = state.lift4D * parity * Math.sin(t * Math.PI) * (0.95 / (depth * 0.5 + 1));
+      pts.push(project4Dto2D(px, py, pz, pw));
+    }
+    ctx.beginPath();
+    pts.forEach((p, idx) => idx === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy));
+    ctx.strokeStyle = parity > 0 ? pal.c1 : pal.c2;
+    ctx.lineWidth = Math.max(1.5, (5.5 - depth * 0.8)) * devicePixelRatio;
+    ctx.stroke();
+
+    const endX = x + dx * len + Math.sin(Math.PI * 1.15) * len * 0.48 * side;
+    const endY = y + dy * len;
+    const endZ = z + dz * len - len * 0.25 * parity;
+
+    if (depth < state.hornDepth) {
+      const nextLen = len * 0.62;
+      branch(endX, endY, endZ, dx * 0.7 - 0.38, dy * 0.85 + 0.35, dz + 0.32, nextLen, depth + 1, 1, 1);
+      branch(endX, endY, endZ, dx * 0.7 + 0.38, dy * 0.85 + 0.35, dz - 0.32, nextLen, depth + 1, -1, -1);
+    } else {
+      const tip = project4Dto2D(endX, endY, endZ, 0);
+      ctx.beginPath();
+      ctx.arc(tip.sx, tip.sy, 3.2 * devicePixelRatio, 0, Math.PI * 2);
+      ctx.fillStyle = pal.c4;
+      ctx.fill();
+    }
+  }
+
+  if (state.hornDepth >= 1) {
+    branch(-0.32, 0.35, 0, -0.35, 0.85, 0.15, 0.88, 1, 1, 1);
+    branch(0.32, 0.35, 0, 0.35, 0.85, -0.15, 0.88, 1, -1, -1);
+  }
+
+  // Stuck outside loop threading between the horns
+  if (state.showTrapLoop) {
+    ctx.beginPath();
+    for (let i = 0; i <= 64; i++) {
+      const a = (i / 64) * Math.PI * 2;
+      const lx = Math.cos(a) * 0.48;
+      const ly = 0.82 + Math.sin(a) * 0.22;
+      const lz = Math.sin(a) * 0.46;
+      const p = project4Dto2D(lx, ly, lz, 0);
+      i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.strokeStyle = pal.c3;
+    ctx.lineWidth = 2.6 * devicePixelRatio;
+    ctx.setLineDash([6 * devicePixelRatio, 4 * devicePixelRatio]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawExoticCork(pal) {
+  const rings = 28, segs = 56;
+  const twistAngle = state.corkTwist * Math.PI;
+  for (let i = 0; i < rings; i++) {
+    const u = (i / rings) * Math.PI;
+    ctx.beginPath();
+    for (let j = 0; j <= segs; j++) {
+      const v = (j / segs) * Math.PI * 2;
+      // Region u > 1.85 stands for the cork
+      const inCork = u > 1.85;
+      const effV = inCork ? v + twistAngle * Math.sin((u - 1.85) * 1.2) : v;
+      const ripple = inCork
+        ? state.corkTwist * state.smoothWrinkle * 0.24 * Math.sin(5 * effV + 4 * u + state.time * 1.4)
+        : 0;
+      const r = 1.15 + ripple;
+      const x = r * Math.sin(u) * Math.cos(effV);
+      const y = r * Math.cos(u);
+      const z = r * Math.sin(u) * Math.sin(effV) * Math.cos(0.45);
+      const w = r * Math.sin(u) * Math.sin(effV) * Math.sin(0.45) + (inCork ? state.corkTwist * 0.35 * Math.cos(3 * effV) : 0);
+      const p = project4Dto2D(x, y, z, w);
+      j === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+    }
+    const isSeam = Math.abs(u - 1.85) < 0.08;
+    const inCork = u > 1.85;
+    ctx.strokeStyle = isSeam ? pal.c4 : (inCork ? pal.c2 : pal.c1);
+    ctx.lineWidth = (isSeam ? 2.8 : 1.25) * devicePixelRatio;
+    ctx.globalAlpha = isSeam ? 0.95 : 0.45;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1.0;
+}
+
+function drawKirbyCalculus(pal) {
+  const N = 140;
+  // Loop 1: dotted 1-handle (becomes the 0-framed 2-handle after the cork twist)
+  const c1 = state.kirbyInvolution ? pal.c2 : pal.c1;
+  const c2 = state.kirbyInvolution ? pal.c1 : pal.c2;
+
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * Math.PI * 2;
+    const x = -0.55 + Math.cos(t) * 0.78;
+    const y = Math.sin(t) * 0.78;
+    const z = Math.sin(t * 2) * 0.25;
+    const p = project4Dto2D(x, y, z, 0);
+    i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy);
+  }
+  ctx.strokeStyle = c1;
+  ctx.lineWidth = 3.5 * devicePixelRatio;
+  if (!state.kirbyInvolution) ctx.setLineDash([7 * devicePixelRatio, 5 * devicePixelRatio]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dot on the 1-handle
+  const dotPos = project4Dto2D(-1.33, 0, 0, 0);
+  ctx.beginPath();
+  ctx.arc(dotPos.sx, dotPos.sy, 6 * devicePixelRatio, 0, Math.PI * 2);
+  ctx.fillStyle = state.kirbyInvolution ? pal.c4 : c1;
+  ctx.fill();
+
+  // Loop 2: the 2-handle, wiggled by isotopy, with its framing ribbon
+  const slide = state.kirbySlide;
+  const loop2Pts = [];
+  const ribbonPts = [];
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * Math.PI * 2;
+    let x = 0.55 + Math.cos(t) * 0.78 - 0.35 * Math.cos(t);
+    let y = Math.sin(t) * 0.78 + slide * 0.42 * Math.sin(2 * t);
+    let z = Math.cos(t) * 0.45 + slide * 0.35 * Math.cos(3 * t);
+    loop2Pts.push(project4Dto2D(x, y, z, 0));
+
+    // Framing ribbon: wraps 'framing' times around the knot
+    const twist = state.framing * t + state.time * 0.8;
+    const rx = x + 0.09 * Math.cos(twist);
+    const ry = y + 0.09 * Math.sin(twist);
+    const rz = z + 0.09 * Math.sin(twist);
+    ribbonPts.push(project4Dto2D(rx, ry, rz, 0));
+  }
+
+  ctx.beginPath();
+  loop2Pts.forEach((p, idx) => idx === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy));
+  ctx.strokeStyle = c2;
+  ctx.lineWidth = 3.6 * devicePixelRatio;
+  if (state.kirbyInvolution) ctx.setLineDash([7 * devicePixelRatio, 5 * devicePixelRatio]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ribbonPts.forEach((p, idx) => idx === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy));
+  ctx.strokeStyle = pal.c3;
+  ctx.lineWidth = 1.6 * devicePixelRatio;
+  ctx.stroke();
+}
+
+function animate(ts) {
+  state.time = ts * 0.001;
+  if (state.autoSpin && !dragging) {
+    state.rotY += 0.004;
+  }
+  const pal = palettes[state.palette];
+  ctx.fillStyle = pal.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle background grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  const step = 48 * devicePixelRatio;
+  for (let x = 0; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  if (state.mode === 'horn') drawHornedSphere(pal);
+  else if (state.mode === 'exotic') drawExoticCork(pal);
+  else drawKirbyCalculus(pal);
+
+  requestAnimationFrame(animate);
+}
+
+renderControls();
+updateInspector();
+resize();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
+</template>
+<!-- end 4D Topology: Alexander Horned Sphere & Exotic Smoothness Studio v2 -->
+<!-- 4D Non-Orientable Surfaces Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 22: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-nonorient" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-nonorient">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4D Non-Orientable Surfaces Studio v2</title>
+<style>
+  :root {
+    --bg: #0c0f17;
+    --panel: rgba(18, 23, 36, 0.88);
+    --border: rgba(148, 163, 184, 0.2);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #a78bfa;
+    --accent2: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+  .hud {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    width: 330px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    transition: opacity 0.25s;
+  }
+  .hud.hidden { opacity: 0; pointer-events: none; }
+  .title { font-size: 15px; font-weight: 700; letter-spacing: 0.2px; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: var(--muted); line-height: 1.4; margin-bottom: 12px; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+  .tab {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 6px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
+  .tab.active {
+    background: rgba(167, 139, 250, 0.2);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .group { margin-bottom: 10px; }
+  .row { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
+  .row span:last-child { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 5px;
+  }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    cursor: pointer;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+  .btn:hover { background: rgba(255,255,255,0.12); }
+  .btn.on { border-color: var(--accent2); background: rgba(56, 189, 248, 0.18); color: #fff; }
+  .badge {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #cbd5e1;
+  }
+  .lap {
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .lap b { color: #fef08a; font-weight: 600; }
+  .toggle-ui {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button class="toggle-ui" id="hideBtn">Hide UI</button>
+
+<div class="hud" id="hud">
+  <div class="title">4D Non-Orientable Surfaces</div>
+  <div class="subtitle">Drag to orbit in 3D, scroll to zoom. Colour shows the 4th coordinate W: where the 3D shadow crosses itself, the two sheets have different colours, so in ℝ⁴ they never touch.</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="mobius">4D Möbius</button>
+    <button class="tab" data-mode="klein">4D Klein</button>
+    <button class="tab" data-mode="rp2">4D ℝP²</button>
+  </div>
+
+  <div class="group">
+    <div class="row"><span>XW Plane Tilt</span><span id="xwVal">0.45 rad</span></div>
+    <input type="range" id="xw" min="-3.14" max="3.14" step="0.01" value="0.45">
+  </div>
+  <div class="group">
+    <div class="row"><span>YW Plane Tilt</span><span id="ywVal">0.30 rad</span></div>
+    <input type="range" id="yw" min="-3.14" max="3.14" step="0.01" value="0.30">
+  </div>
+  <div class="group">
+    <div class="row"><span>ZW Plane Tilt</span><span id="zwVal">0.00 rad</span></div>
+    <input type="range" id="zw" min="-3.14" max="3.14" step="0.01" value="0.00">
+  </div>
+  <div class="group">
+    <div class="row"><span>Eye Comfort Dimmer</span><span id="dimVal">85%</span></div>
+    <input type="range" id="dim" min="0.45" max="1.0" step="0.01" value="0.85">
+  </div>
+
+  <div class="btns">
+    <button class="btn on" id="driftBtn">4D Drift: On</button>
+    <button class="btn on" id="surfBtn">Surface: Shaded</button>
+    <button class="btn on" id="travBtn">Traveler: On</button>
+    <button class="btn" id="palBtn">Palette: Violet</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="badge" id="infoBox"></div>
+  <div class="lap" id="lapBox"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+const state = {
+  mode: 'mobius',
+  rotX: 0.55,
+  rotY: -0.65,
+  zoom: 1.0,
+  xw: 0.45,
+  yw: 0.30,
+  zw: 0.00,
+  dim: 0.85,
+  drift: true,
+  shaded: true,
+  traveler: true,
+  paletteIdx: 0,
+  t: 0
+};
+
+const palettes = [
+  { name: 'Violet', c1: [167, 139, 250], c2: [56, 189, 248], edge: 'rgba(226,232,240,0.22)', hi: '#f472b6' },
+  { name: 'Jade',   c1: [52, 211, 153],  c2: [45, 212, 191], edge: 'rgba(204,251,241,0.22)', hi: '#fbbf24' },
+  { name: 'Amber',  c1: [251, 191, 36],  c2: [248, 113, 113],edge: 'rgba(254,243,199,0.22)', hi: '#38bdf8' }
+];
+
+const descriptions = {
+  mobius: '<strong>4D Möbius Strip:</strong> One-sided twisted ribbon lifted into W. The traveler carries a yellow cross-arrow along the centre line: after 1 lap (2π) it points the opposite way, after 2 laps (4π) it is back.',
+  klein:  '<strong>True 4D Klein Bottle:</strong> Closed one-sided surface sitting in ℝ⁴ with zero self-intersections. Its 3D shadow must cross itself (no Klein bottle fits in 3D), but the crossing sheets have different W (different colour), so in 4D they never meet. The cross-arrow reverses after 1 lap.',
+  rp2:    '<strong>4D Projective Plane (ℝP²):</strong> The Veronese surface, a true embedding of ℝP² in ℝ⁴: each point is a line through the centre of a sphere, (x, y, z) and its opposite give the same point. Its 3D shadow is Steiner\'s Roman surface, which must cross itself; colour (W) shows the sheets apart in 4D. The cross-arrow reverses after half a turn of the equator.<br><br><em>Why not Boy\'s surface?</em> No lift of a 3D ℝP² into 4D can remove its crossings: any ℝP² in ℝ⁴ has a normal twist of ±2 (Massey, 1969), and a lift of a 3D surface always has twist 0.'
+};
+
+const infoBox = document.getElementById('infoBox');
+infoBox.innerHTML = descriptions.mobius;
+
+// Parameter ranges for each surface
+function uRange(mode) { return 2 * Math.PI; }
+function vMin(mode) { return mode === 'mobius' ? -0.48 : 0; }
+function vMax(mode) { return mode === 'mobius' ? 0.48 : (mode === 'klein' ? 2 * Math.PI : Math.PI / 2); }
+
+function evalSurface(mode, u, v) {
+  if (mode === 'mobius') {
+    // u in [0, 2pi], v in [-0.48, 0.48]
+    const R = 1.25;
+    const half = u * 0.5;
+    const r = R + v * Math.cos(half);
+    const x = r * Math.cos(u);
+    const y = r * Math.sin(u);
+    const z = v * Math.sin(half);
+    const w = 0.55 * v * Math.cos(half) + 0.25 * Math.sin(u);
+    return [x, y, z, w];
+  } else if (mode === 'klein') {
+    // True 4D Klein bottle embedding (no self-intersections in R^4)
+    const R = 1.25, r = 0.52;
+    const cu = Math.cos(u), su = Math.sin(u);
+    const cv = Math.cos(v), sv = Math.sin(v);
+    const hu = Math.cos(u * 0.5), shu = Math.sin(u * 0.5);
+    const x = (R + r * cv) * cu;
+    const y = (R + r * cv) * su;
+    const z = r * sv * hu;
+    const w = r * sv * shu;
+    return [x, y, z, w];
+  } else {
+    // Veronese surface: RP^2 embedded in R^4.
+    // Sphere point p = (a, b, c); p and -p give the same point.
+    // 3D part (bc, ac, ab) = Steiner Roman surface, 4th part (a^2 - b^2)/2.
+    // u = azimuth in [0, 2pi], v = polar angle in [0, pi/2] (upper hemisphere covers RP^2).
+    const a = Math.sin(v) * Math.cos(u);
+    const b = Math.sin(v) * Math.sin(u);
+    const c = Math.cos(v);
+    const k = 2.3;
+    return [k * b * c, k * a * c, k * a * b, k * 0.5 * (a * a - b * b)];
+  }
+}
+
+function rotateAndProject(p4) {
+  let [x, y, z, w] = p4;
+  // 4D rotations
+  let c, s, t;
+  if (state.xw !== 0) { c = Math.cos(state.xw); s = Math.sin(state.xw); t = x*c - w*s; w = x*s + w*c; x = t; }
+  if (state.yw !== 0) { c = Math.cos(state.yw); s = Math.sin(state.yw); t = y*c - w*s; w = y*s + w*c; y = t; }
+  if (state.zw !== 0) { c = Math.cos(state.zw); s = Math.sin(state.zw); t = z*c - w*s; w = z*s + w*c; z = t; }
+
+  // 4D -> 3D perspective
+  const d4 = 3.4;
+  const f4 = d4 / (d4 - w);
+  let x3 = x * f4, y3 = y * f4, z3 = z * f4;
+
+  // 3D orbit rotation
+  const cy = Math.cos(state.rotY), sy = Math.sin(state.rotY);
+  const x3a = x3 * cy - z3 * sy;
+  const z3a = x3 * sy + z3 * cy;
+  const cx = Math.cos(state.rotX), sx = Math.sin(state.rotX);
+  const y3b = y3 * cx - z3a * sx;
+  const z3b = y3 * sx + z3a * cx;
+
+  // 3D -> 2D perspective
+  const scale = Math.min(W, H) * 0.26 * state.zoom;
+  const d3 = 4.6;
+  const f3 = d3 / (d3 - z3b);
+  return {
+    sx: W * 0.5 + x3a * scale * f3,
+    sy: H * 0.5 + y3b * scale * f3,
+    z: z3b,
+    w: w
+  };
+}
+
+// Traveler path: returns [u, v, lapsDone] for the loop that reverses orientation.
+// Mobius & Klein: centre loop v = 0, one reversing lap = 2pi in u.
+// RP^2: the equator v = pi/2; half a turn (u: 0 -> pi) already closes the loop in RP^2.
+function travelerPoint(mode, t) {
+  if (mode === 'rp2') {
+    const s = (t * 0.45) % (2 * Math.PI);
+    return { u: s, v: Math.PI / 2, laps: s / Math.PI };
+  }
+  const s = (t * 0.9) % (4 * Math.PI);
+  return { u: s, v: 0, laps: s / (2 * Math.PI) };
+}
+
+function draw() {
+  ctx.fillStyle = '#0c0f17';
+  ctx.fillRect(0, 0, W, H);
+
+  if (state.drift) {
+    state.xw = Math.sin(state.t * 0.45) * 0.75;
+    state.yw = Math.cos(state.t * 0.33) * 0.55;
+    document.getElementById('xw').value = state.xw.toFixed(2);
+    document.getElementById('yw').value = state.yw.toFixed(2);
+    document.getElementById('xwVal').textContent = state.xw.toFixed(2) + ' rad';
+    document.getElementById('ywVal').textContent = state.yw.toFixed(2) + ' rad';
+  }
+
+  const pal = palettes[state.paletteIdx];
+  const nu = state.mode === 'mobius' ? 64 : 48;
+  const nv = state.mode === 'mobius' ? 14 : (state.mode === 'klein' ? 32 : 20);
+  const v0 = vMin(state.mode), v1 = vMax(state.mode), ur = uRange(state.mode);
+  const grid = [];
+
+  for (let i = 0; i <= nu; i++) {
+    const row = [];
+    const u = (i / nu) * ur;
+    for (let j = 0; j <= nv; j++) {
+      const v = v0 + (j / nv) * (v1 - v0);
+      row.push(rotateAndProject(evalSurface(state.mode, u, v)));
+    }
+    grid.push(row);
+  }
+
+  const quads = [];
+  for (let i = 0; i < nu; i++) {
+    for (let j = 0; j < nv; j++) {
+      const p00 = grid[i][j], p10 = grid[i+1][j], p11 = grid[i+1][j+1], p01 = grid[i][j+1];
+      const avgZ = (p00.z + p10.z + p11.z + p01.z) * 0.25;
+      const avgW = (p00.w + p10.w + p11.w + p01.w) * 0.25;
+      quads.push({ p00, p10, p11, p01, avgZ, avgW, uFrac: i / nu, isBoundary: (state.mode === 'mobius' && (j === 0 || j === nv - 1)) });
+    }
+  }
+  quads.sort((a, b) => a.avgZ - b.avgZ);
+
+  const dim = state.dim;
+  for (const q of quads) {
+    ctx.beginPath();
+    ctx.moveTo(q.p00.sx, q.p00.sy);
+    ctx.lineTo(q.p10.sx, q.p10.sy);
+    ctx.lineTo(q.p11.sx, q.p11.sy);
+    ctx.lineTo(q.p01.sx, q.p01.sy);
+    ctx.closePath();
+
+    if (state.shaded) {
+      const mix = Math.max(0, Math.min(1, (q.avgW + 1.1) * 0.45));
+      const shade = Math.max(0.35, Math.min(1.15, (q.avgZ + 2.2) * 0.34)) * dim;
+      const r = Math.round((pal.c1[0] * (1 - mix) + pal.c2[0] * mix) * shade);
+      const g = Math.round((pal.c1[1] * (1 - mix) + pal.c2[1] * mix) * shade);
+      const b = Math.round((pal.c1[2] * (1 - mix) + pal.c2[2] * mix) * shade);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.62)`;
+      ctx.fill();
+    }
+    ctx.strokeStyle = q.isBoundary ? pal.hi : pal.edge;
+    ctx.lineWidth = q.isBoundary ? 1.5 : 0.65;
+    ctx.stroke();
+  }
+
+  // Orientation traveler: carries the cross-direction tangent (d/dv) around a
+  // one-sided loop. This works in 4D (no 3D normal needed) and never vanishes.
+  const lapBox = document.getElementById('lapBox');
+  if (state.traveler) {
+    const tp = travelerPoint(state.mode, state.t);
+    const base4 = evalSurface(state.mode, tp.u, tp.v);
+    const eps = 0.02;
+    const a4 = evalSurface(state.mode, tp.u, tp.v + eps);
+    const b4 = evalSurface(state.mode, tp.u, tp.v - eps);
+    let d = [a4[0]-b4[0], a4[1]-b4[1], a4[2]-b4[2], a4[3]-b4[3]];
+    const len = Math.hypot(d[0], d[1], d[2], d[3]) || 1;
+    const L = 0.42;
+    d = d.map(x => x / len * L);
+    const tip4 = [base4[0] + d[0], base4[1] + d[1], base4[2] + d[2], base4[3] + d[3]];
+
+    // Faint trail of the loop
+    ctx.strokeStyle = 'rgba(254, 240, 138, 0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    const span = state.mode === 'rp2' ? Math.PI : 2 * Math.PI;
+    for (let s = 0; s <= 80; s++) {
+      const uu = (s / 80) * span;
+      const p = rotateAndProject(evalSurface(state.mode, uu, tp.v));
+      if (s === 0) ctx.moveTo(p.sx, p.sy); else ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.stroke();
+
+    const pBase = rotateAndProject(base4);
+    const pTip = rotateAndProject(tip4);
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    ctx.moveTo(pBase.sx, pBase.sy);
+    ctx.lineTo(pTip.sx, pTip.sy);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.hi;
+    ctx.beginPath();
+    ctx.arc(pBase.sx, pBase.sy, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(pTip.sx, pTip.sy, 3.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    const flipped = Math.floor(tp.laps) % 2 === 1;
+    lapBox.innerHTML = 'Laps of the one-sided loop: <b>' + tp.laps.toFixed(2) + '</b> · arrow ' +
+      (flipped ? '<b>reversed</b>' : 'as it started');
+  } else {
+    lapBox.textContent = '';
+  }
+
+  state.t += 0.016;
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+// Pointer orbit & wheel zoom
+let dragging = false, lx = 0, ly = 0;
+canvas.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; });
+window.addEventListener('pointerup', () => dragging = false);
+window.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  state.rotY += (e.clientX - lx) * 0.008;
+  state.rotX += (e.clientY - ly) * 0.008;
+  lx = e.clientX; ly = e.clientY;
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  state.zoom = Math.max(0.45, Math.min(2.4, state.zoom * (e.deltaY > 0 ? 0.93 : 1.07)));
+}, { passive: false });
+
+// UI wiring
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    infoBox.innerHTML = descriptions[state.mode];
+  });
+});
+
+['xw', 'yw', 'zw'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    state.drift = false;
+    document.getElementById('driftBtn').classList.remove('on');
+    document.getElementById('driftBtn').textContent = '4D Drift: Off';
+    state[id] = parseFloat(el.value);
+    document.getElementById(id + 'Val').textContent = state[id].toFixed(2) + ' rad';
+  });
+});
+
+document.getElementById('dim').addEventListener('input', e => {
+  state.dim = parseFloat(e.target.value);
+  document.getElementById('dimVal').textContent = Math.round(state.dim * 100) + '%';
+});
+
+document.getElementById('driftBtn').addEventListener('click', e => {
+  state.drift = !state.drift;
+  e.target.classList.toggle('on', state.drift);
+  e.target.textContent = '4D Drift: ' + (state.drift ? 'On' : 'Off');
+});
+
+document.getElementById('surfBtn').addEventListener('click', e => {
+  state.shaded = !state.shaded;
+  e.target.classList.toggle('on', state.shaded);
+  e.target.textContent = 'Surface: ' + (state.shaded ? 'Shaded' : 'Wire');
+});
+
+document.getElementById('travBtn').addEventListener('click', e => {
+  state.traveler = !state.traveler;
+  e.target.classList.toggle('on', state.traveler);
+  e.target.textContent = 'Traveler: ' + (state.traveler ? 'On' : 'Off');
+});
+
+document.getElementById('palBtn').addEventListener('click', e => {
+  state.paletteIdx = (state.paletteIdx + 1) % palettes.length;
+  e.target.textContent = 'Palette: ' + palettes[state.paletteIdx].name;
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state.rotX = 0.55; state.rotY = -0.65; state.zoom = 1.0;
+  state.xw = 0.45; state.yw = 0.30; state.zw = 0.00;
+  ['xw', 'yw', 'zw'].forEach(id => {
+    document.getElementById(id).value = state[id].toFixed(2);
+    document.getElementById(id + 'Val').textContent = state[id].toFixed(2) + ' rad';
+  });
+});
+
+document.getElementById('hideBtn').addEventListener('click', e => {
+  const hud = document.getElementById('hud');
+  const hidden = hud.classList.toggle('hidden');
+  e.target.textContent = hidden ? 'Show UI' : 'Hide UI';
+});
+
+// Exposed for checking
+window.__evalSurface = evalSurface;
+window.__travelerPoint = travelerPoint;
+</script>
+</body>
+</html>
+</template>
+<!-- end 4D Non-Orientable Surfaces Studio v2 -->
 </div>
 
 <script>
@@ -10691,7 +15146,7 @@ function drawStretch() {
 // globals can't touch the playground. The small shim below runs first inside the frame:
 // while another tab is open it holds the page's animation frames and timers, freezes its
 // clock and suspends its sound, then picks up where it left off.
-const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole'];
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient'];
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
