@@ -342,6 +342,8 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="hopf" title="4D Hopf Fibration Studio v2 (S³ → S²)">26. Hopf</button>
     <button class="tab" data-mode="bh2" title="Black Hole Spacetime &amp; Ringdown Explorer (Einstein Ring version)">27. Black Hole B</button>
     <button class="tab" data-mode="bh3" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
+    <button class="tab" data-mode="e8studio" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio">29. E₈ → Milnor</button>
+    <button class="tab" data-mode="e8insp" title="Exact E8 &amp; Extended Hamming [8,4,4] Structural Inspector">30. E₈ Inspector</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -14741,6 +14743,1425 @@ window.__captureLimit = (rs = 44) => {
 </html>
 </template>
 <!-- end Black Hole Spacetime Explorer (Disk) v2 -->
+<!-- 8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 29: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-e8studio" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-e8studio">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #07090f;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+  #ui {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    background: rgba(12, 16, 28, 0.86);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+    transition: opacity 0.25s ease;
+  }
+  #ui.hidden { opacity: 0; pointer-events: none; }
+  h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #f8fafc;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .stage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  button {
+    background: rgba(30, 41, 59, 0.85);
+    color: #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 8px;
+    padding: 7px 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button:hover {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: #38bdf8;
+  }
+  button.active {
+    background: rgba(14, 165, 233, 0.25);
+    border-color: #38bdf8;
+    color: #7dd3fc;
+  }
+  .control-group {
+    margin-bottom: 11px;
+  }
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: #38bdf8;
+    cursor: pointer;
+  }
+  .info-box {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+  .info-box strong { color: #38bdf8; }
+  .toolbar {
+    display: flex;
+    gap: 6px;
+  }
+  .toolbar button { flex: 1; }
+  #show-ui-btn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    display: none;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="show-ui-btn">Show Controls</button>
+
+<div id="ui">
+  <h1>8-Cube → E₈ → Milnor Σ⁷</h1>
+  <div class="subtitle">Unified Higher-Dimensional Geometry &amp; Plumbing Bridge</div>
+
+  <div class="stage-grid">
+    <button class="stage-btn active" data-morph="0">1. 8-Cube (256)</button>
+    <button class="stage-btn" data-morph="0.333">2. E₈ Mandala (240)</button>
+    <button class="stage-btn" data-morph="0.667">3. E₈ Plumbing (det=1)</button>
+    <button class="stage-btn" data-morph="1">4. Milnor Σ⁷ (1/28)</button>
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">
+      <span>Pipeline Morph</span>
+      <span id="morph-val">0%</span>
+    </div>
+    <input type="range" id="morph" min="0" max="1" step="0.002" value="0">
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">
+      <span>8D / 3D Tilt Twist</span>
+      <span id="twist-val">0.45</span>
+    </div>
+    <input type="range" id="twist" min="0" max="1.5" step="0.01" value="0.45">
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">
+      <span>Eye-Comfort Brightness</span>
+      <span id="bright-val">85%</span>
+    </div>
+    <input type="range" id="bright" min="0.35" max="1.15" step="0.02" value="0.85">
+  </div>
+
+  <div class="info-box" id="stage-desc">
+    <strong>Stage 1 — 8-Cube &amp; [8,4,4] Hamming Code:</strong> 256 vertices in ℝ⁸. Gold nodes mark the 16 codewords of the [8,4,4] extended Hamming code (weights 0, 4×14, 8). The Hamming code gives another way to build E₈, in different coordinates from the roots shown in stage 2.
+  </div>
+  <div class="info-box" id="morph-note">
+    The morph pairs points by index only, for display.
+  </div>
+
+  <div class="toolbar">
+    <button id="orbit-btn">Auto-Orbit: On</button>
+    <button id="hide-btn">Hide UI</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+});
+
+// UI Elements
+const ui = document.getElementById('ui');
+const showUiBtn = document.getElementById('show-ui-btn');
+const morphSlider = document.getElementById('morph');
+const twistSlider = document.getElementById('twist');
+const brightSlider = document.getElementById('bright');
+const morphVal = document.getElementById('morph-val');
+const twistVal = document.getElementById('twist-val');
+const brightVal = document.getElementById('bright-val');
+const stageDesc = document.getElementById('stage-desc');
+const orbitBtn = document.getElementById('orbit-btn');
+const hideBtn = document.getElementById('hide-btn');
+const stageBtns = document.querySelectorAll('.stage-btn');
+
+let autoOrbit = true;
+let rotY = 0.4;
+let rotX = 0.25;
+let dragging = false;
+let lastX = 0, lastY = 0;
+
+canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('mouseup', () => dragging = false);
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastX) * 0.007;
+  rotX += (e.clientY - lastY) * 0.007;
+  lastX = e.clientX; lastY = e.clientY;
+});
+
+orbitBtn.addEventListener('click', () => {
+  autoOrbit = !autoOrbit;
+  orbitBtn.textContent = autoOrbit ? 'Auto-Orbit: On' : 'Auto-Orbit: Off';
+});
+
+hideBtn.addEventListener('click', () => {
+  ui.classList.add('hidden');
+  showUiBtn.style.display = 'block';
+});
+
+showUiBtn.addEventListener('click', () => {
+  ui.classList.remove('hidden');
+  showUiBtn.style.display = 'none';
+});
+
+// [8,4,4] Extended Hamming generator rows (as bitmasks)
+const hammingRows = [
+  0b10001110,
+  0b01001101,
+  0b00101011,
+  0b00010111
+];
+const hammingSet = new Set();
+for (let m = 0; m < 16; m++) {
+  let code = 0;
+  for (let r = 0; r < 4; r++) {
+    if ((m >> r) & 1) code ^= hammingRows[r];
+  }
+  hammingSet.add(code);
+}
+
+// Precompute 256 nodes across all 4 stages
+const N = 256;
+const nodes = [];
+
+// E8 Dynkin graph coordinates (8 nodes)
+const dynkinPos = [
+  [-2.1,  0.0, 0.0],
+  [-1.4,  0.0, 0.0],
+  [-0.7,  0.0, 0.0],
+  [ 0.0,  0.0, 0.0],
+  [ 0.7,  0.0, 0.0],
+  [ 1.4,  0.0, 0.0],
+  [ 2.1,  0.0, 0.0],
+  [ 0.7, -0.85, 0.0] // branch at node 4 (the 5th vertex), with arms of 4, 2 and 1
+];
+const dynkinEdges = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[4,7]];
+
+// Basis vectors in 8D for an illustrative 30-fold mandala, not the exact Coxeter-plane projection
+const coxA = [], coxB = [], coxC = [];
+for (let k = 0; k < 8; k++) {
+  const ang = (2 * Math.PI * k) / 8 + 0.19;
+  coxA.push(Math.cos(ang));
+  coxB.push(Math.sin(ang));
+  coxC.push(Math.cos(3 * ang));
+}
+
+// Generate true 240 E8 roots (112 integer + 128 spinor)
+const e8Roots = [];
+for (let i = 0; i < 8; i++) {
+  for (let j = i + 1; j < 8; j++) {
+    for (let s1 of [-1, 1]) {
+      for (let s2 of [-1, 1]) {
+        const v = new Array(8).fill(0);
+        v[i] = s1; v[j] = s2;
+        e8Roots.push({ v, type: 'int' });
+      }
+    }
+  }
+}
+for (let mask = 0; mask < 256; mask++) {
+  let neg = 0;
+  const v = new Array(8);
+  for (let k = 0; k < 8; k++) {
+    if ((mask >> k) & 1) { v[k] = -0.5; neg++; }
+    else { v[k] = 0.5; }
+  }
+  if (neg % 2 === 0) {
+    e8Roots.push({ v, type: 'spin' });
+  }
+}
+
+for (let i = 0; i < N; i++) {
+  // Stage 1: 8-Cube vertex projected to 3D
+  const bits = [];
+  for (let b = 0; b < 8; b++) bits.push(((i >> b) & 1) ? 1 : -1);
+  let c1x = 0, c1y = 0, c1z = 0;
+  for (let b = 0; b < 8; b++) {
+    const a = (b * Math.PI) / 4;
+    c1x += bits[b] * Math.cos(a) * 0.52;
+    c1y += bits[b] * Math.sin(a) * 0.52;
+    c1z += bits[b] * ((b % 2 === 0 ? 1 : -1) * 0.34);
+  }
+  const isHamming = hammingSet.has(i);
+
+  // Stage 2: E8 240 Root Coxeter Mandala (indices 0..239 active, 240..255 tucked at origin)
+  let c2x = 0, c2y = 0, c2z = 0, rootType = 'extra';
+  if (i < 240) {
+    const r = e8Roots[i];
+    rootType = r.type;
+    let px = 0, py = 0, pz = 0;
+    for (let k = 0; k < 8; k++) {
+      px += r.v[k] * coxA[k];
+      py += r.v[k] * coxB[k];
+      pz += r.v[k] * coxC[k];
+    }
+    const ring = (i % 30) * (2 * Math.PI / 30);
+    const shell = 0.85 + Math.floor(i / 30) * 0.21;
+    c2x = px * 0.55 + Math.cos(ring) * shell * 0.55;
+    c2y = py * 0.55 + Math.sin(ring) * shell * 0.55;
+    c2z = pz * 0.55;
+  }
+
+  // Stage 3: E8 Plumbing Graph (clusters of 32 nodes around the 8 Dynkin vertices)
+  const dIdx = i % 8;
+  const sub = Math.floor(i / 8);
+  const subAng = (sub / 32) * Math.PI * 2;
+  const c3x = dynkinPos[dIdx][0] + Math.cos(subAng) * 0.14;
+  const c3y = dynkinPos[dIdx][1] + Math.sin(subAng) * 0.14;
+  const c3z = dynkinPos[dIdx][2] + Math.sin(subAng * 2) * 0.12;
+
+  // Stage 4: Milnor Exotic 7-Sphere (twisted Hopf-plumbing torus-sphere boundary)
+  const u = (i / N) * Math.PI * 2;
+  const v = ((i * 7) % N) / N * Math.PI * 2;
+  const R = 1.35 + 0.32 * Math.cos(3 * u + v);
+  const rTube = 0.52 + 0.14 * Math.sin(5 * u - 2 * v);
+  const c4x = (R + rTube * Math.cos(v)) * Math.cos(u);
+  const c4y = (R + rTube * Math.cos(v)) * Math.sin(u);
+  const c4z = rTube * Math.sin(v) + 0.28 * Math.sin(3 * u);
+
+  nodes.push({
+    isHamming,
+    rootType,
+    dIdx,
+    s: [
+      [c1x, c1y, c1z],
+      [c2x, c2y, c2z],
+      [c3x, c3y, c3z],
+      [c4x, c4y, c4z]
+    ]
+  });
+}
+
+function updateUI(m) {
+  morphVal.textContent = Math.round(m * 100) + '%';
+  stageBtns.forEach(btn => {
+    const target = parseFloat(btn.dataset.morph);
+    btn.classList.toggle('active', Math.abs(m - target) < 0.12);
+  });
+  if (m < 0.18) {
+    stageDesc.innerHTML = '<strong>Stage 1 — 8-Cube &amp; [8,4,4] Hamming Code:</strong> 256 vertices in ℝ⁸. Gold nodes mark the 16 codewords of the [8,4,4] extended Hamming code (weights 0, 4×14, 8). The Hamming code gives another way to build E₈, in different coordinates from the roots shown in stage 2.';
+  } else if (m < 0.52) {
+    stageDesc.innerHTML = '<strong>Stage 2 — E₈ Root System (240 Roots):</strong> 112 integer roots + 128 half-integer roots: the 240 roots of E₈, the root system of the densest lattice packing in 8D. A choice of 8 simple roots forms the E₈ Dynkin diagram. The 30-fold ring layout is illustrative, not the exact Coxeter-plane projection.';
+  } else if (m < 0.84) {
+    stageDesc.innerHTML = '<strong>Stage 3 — E₈ Plumbing Manifold (det = 1):</strong> The 8D plumbing uses disk bundles over S⁴. Plumbing 8 of them along the E₈ graph creates an 8-manifold with unimodular intersection form (det = 1).';
+  } else {
+    stageDesc.innerHTML = '<strong>Stage 4 — Milnor Exotic 7-Sphere (Σ⁷):</strong> det(E₈) = 1 makes the boundary a homology sphere; in 8D it is also simply connected, so by Smale\'s theorem it is a topological 7-sphere. Milnor\'s invariant, from the signature 8, shows it is not the standard smooth sphere: it generates the group of 28 smooth structures on S⁷. The shape drawn is illustrative.';
+  }
+}
+
+morphSlider.addEventListener('input', () => updateUI(parseFloat(morphSlider.value)));
+twistSlider.addEventListener('input', () => twistVal.textContent = parseFloat(twistSlider.value).toFixed(2));
+brightSlider.addEventListener('input', () => brightVal.textContent = Math.round(parseFloat(brightSlider.value) * 100) + '%');
+
+stageBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = parseFloat(btn.dataset.morph);
+    morphSlider.value = target;
+    updateUI(target);
+  });
+});
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smoothstep(t) { return t * t * (3 - 2 * t); }
+
+function project(x, y, z) {
+  const cy = Math.cos(rotY), sy = Math.sin(rotY);
+  const cx = Math.cos(rotX), sx = Math.sin(rotX);
+  const x1 = x * cy - z * sy;
+  const z1 = x * sy + z * cy;
+  const y2 = y * cx - z1 * sx;
+  const z2 = y * sx + z1 * cx;
+  const fov = 4.2;
+  const scale = Math.min(W, H) * 0.26 * (fov / (fov + z2 + 2.2));
+  return { x: W * 0.5 + x1 * scale, y: H * 0.5 + y2 * scale, z: z2, scale };
+}
+
+function draw() {
+  const bright = parseFloat(brightSlider.value);
+  const m = parseFloat(morphSlider.value);
+  const twist = parseFloat(twistSlider.value);
+
+  if (autoOrbit && !dragging) rotY += 0.004;
+
+  ctx.fillStyle = '#07090f';
+  ctx.fillRect(0, 0, W, H);
+
+  // Determine stage interpolation
+  const scaled = m * 3;
+  const idx = Math.min(2, Math.floor(scaled));
+  const t = smoothstep(scaled - idx);
+
+  const projected = new Array(N);
+  for (let i = 0; i < N; i++) {
+    const pA = nodes[i].s[idx];
+    const pB = nodes[i].s[idx + 1];
+    let x = lerp(pA[0], pB[0], t);
+    let y = lerp(pA[1], pB[1], t);
+    let z = lerp(pA[2], pB[2], t);
+
+    // Subtle 8D/3D twist
+    const ang = twist * (x * 0.45 + z * 0.45);
+    const nx = x * Math.cos(ang) - y * Math.sin(ang);
+    const ny = x * Math.sin(ang) + y * Math.cos(ang);
+    projected[i] = { ...project(nx, ny, z), i };
+  }
+
+  // Draw plumbing Dynkin edges when near Stage 3
+  const plumbAlpha = Math.max(0, 1 - Math.abs(m - 0.667) * 4.5) * bright;
+  if (plumbAlpha > 0.02) {
+    ctx.strokeStyle = `rgba(56, 189, 248, ${plumbAlpha * 0.85})`;
+    ctx.lineWidth = 3;
+    for (const [a, b] of dynkinEdges) {
+      const pa = project(dynkinPos[a][0], dynkinPos[a][1], dynkinPos[a][2]);
+      const pb = project(dynkinPos[b][0], dynkinPos[b][1], dynkinPos[b][2]);
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+  }
+
+  // Draw light structural chords in Stage 1 & Stage 4
+  if (m < 0.25) {
+    const a1 = (1 - m * 4) * 0.08 * bright;
+    ctx.strokeStyle = `rgba(148, 163, 184, ${a1})`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < N; i++) {
+      for (let b = 0; b < 8; b++) {
+        const j = i ^ (1 << b);
+        if (i < j) {
+          ctx.beginPath();
+          ctx.moveTo(projected[i].x, projected[i].y);
+          ctx.lineTo(projected[j].x, projected[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  } else if (m > 0.78) {
+    const a4 = ((m - 0.78) / 0.22) * 0.25 * bright;
+    ctx.strokeStyle = `rgba(192, 132, 252, ${a4})`;
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < N; i++) {
+      const j = (i + 1) % N;
+      ctx.beginPath();
+      ctx.moveTo(projected[i].x, projected[i].y);
+      ctx.lineTo(projected[j].x, projected[j].y);
+      ctx.stroke();
+    }
+  }
+
+  // Sort back-to-front
+  projected.sort((a, b) => b.z - a.z);
+
+  for (const pt of projected) {
+    const node = nodes[pt.i];
+    if (m > 0.2 && m < 0.48 && node.rootType === 'extra') continue;
+
+    let r = 2.6;
+    let color = `rgba(56, 189, 248, ${0.78 * bright})`;
+
+    if (m < 0.25 && node.isHamming) {
+      r = 4.5;
+      color = `rgba(250, 204, 21, ${0.95 * bright})`;
+    } else if (m >= 0.2 && m < 0.5) {
+      if (node.rootType === 'spin') {
+        r = 3.2;
+        color = `rgba(250, 204, 21, ${0.88 * bright})`;
+      } else {
+        r = 2.9;
+        color = `rgba(56, 189, 248, ${0.85 * bright})`;
+      }
+    } else if (m >= 0.5 && m < 0.82) {
+      r = 3.4;
+      color = node.dIdx === 7
+        ? `rgba(244, 114, 182, ${0.9 * bright})`
+        : `rgba(52, 211, 153, ${0.88 * bright})`;
+    } else if (m >= 0.82) {
+      r = 3.3;
+      color = (pt.i % 8 === 0)
+        ? `rgba(250, 204, 21, ${0.95 * bright})`
+        : `rgba(192, 132, 252, ${0.86 * bright})`;
+    }
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+updateUI(0);
+draw();
+</script>
+</body>
+</html>
+</template>
+<!-- end 8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio -->
+<!-- Exact E8 & Extended Hamming [8,4,4] Structural Inspector — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 30: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-e8insp" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-e8insp">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exact E8 & Extended Hamming [8,4,4] Structural Inspector</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #121722;
+    --panel-alt: #181f2e;
+    --border: #263147;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --gold: #fbbf24;
+    --green: #34d399;
+    --red: #f87171;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 14px;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.3px;
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .controls-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 360px 380px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  @media (max-width: 1180px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .card h2 {
+    font-size: 13px;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .badge.ok { border-color: var(--green); color: var(--green); }
+  .badge.warn { border-color: var(--red); color: var(--red); }
+
+  /* Matrix styling */
+  table.mat {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 6px 0;
+    font-size: 11px;
+    text-align: center;
+  }
+  table.mat th, table.mat td {
+    border: 1px solid var(--border);
+    padding: 4px 3px;
+  }
+  table.mat th {
+    background: var(--panel-alt);
+    color: var(--muted);
+    font-weight: 600;
+  }
+  table.mat td.sep {
+    border-right: 2px solid var(--accent);
+  }
+  table.mat tr.active-row td {
+    background: rgba(56, 189, 248, 0.14);
+    color: #fff;
+  }
+  .bit-btn {
+    cursor: pointer;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: 700;
+    transition: 0.1s;
+  }
+  .bit-btn.on {
+    background: var(--accent);
+    color: #06101c;
+    border-color: var(--accent);
+  }
+  .codeword-strip {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin: 8px 0;
+  }
+  .cw-cell {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+    padding: 5px 0;
+    font-weight: 700;
+  }
+  .cw-cell.one {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(251, 191, 36, 0.12);
+  }
+  .spinor-list {
+    max-height: 215px;
+    overflow-y: auto;
+    background: #090c12;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px;
+    font-size: 11px;
+  }
+  .spinor-item {
+    padding: 3px 5px;
+    border-bottom: 1px solid #161d2b;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+  }
+  .spinor-item:hover, .spinor-item.selected {
+    background: rgba(56, 189, 248, 0.18);
+    color: var(--accent);
+  }
+
+  /* Cartan / Gram Matrix */
+  .root-toggles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .rt-btn {
+    cursor: pointer;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+  }
+  .rt-btn.active {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(52, 211, 153, 0.12);
+    font-weight: 700;
+  }
+  td.diag { background: rgba(251, 191, 36, 0.15); color: var(--gold); font-weight: 700; }
+  td.edge { background: rgba(56, 189, 248, 0.15); color: var(--accent); font-weight: 700; }
+  td.inactive-cell { opacity: 0.25; }
+  .preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  .btn-sm {
+    cursor: pointer;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 11px;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Canvas area */
+  .canvas-wrap {
+    position: relative;
+    background: #070a0f;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 440px;
+    cursor: crosshair;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .inspector-box {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 11px;
+  }
+  .kv { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .kv span:first-child { color: var(--muted); }
+  .kv span:last-child { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>EXACT E₈ & EXTENDED HAMMING [8, 4, 4] STRUCTURAL INSPECTOR</h1>
+    <div class="sub">Zero-Decoration Algebraic Engine • Exact GF(2) Generator • Gaussian Determinant • True ⟨u,v⟩=1 Neighbor Graph</div>
+  </div>
+  <div class="controls-bar">
+    <label>Brightness <input type="range" id="dimmer" min="45" max="100" value="95" style="vertical-align:middle;width:80px;"></label>
+    <span class="badge ok">240 Roots • 6,720 Edges • Norm² = 2</span>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- PANEL 1: [8,4,4] HAMMING GENERATOR -->
+  <div class="card">
+    <h2>
+      <span>1. [8, 4, 4] Hamming → Spinor Lift</span>
+      <span class="badge" id="cw-weight-badge">Weight: 0</span>
+    </h2>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">
+      Toggle 4 message bits <b>m ∈ GF(2)⁴</b> to compute <b>c = m · [I₄ | P]</b> on Cube 8:
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <span style="color:var(--muted);">Message m:</span>
+      <button class="bit-btn" data-bit="0">m₁=0</button>
+      <button class="bit-btn" data-bit="1">m₂=0</button>
+      <button class="bit-btn" data-bit="2">m₃=0</button>
+      <button class="bit-btn" data-bit="3">m₄=0</button>
+      <button class="btn-sm" id="next-cw-btn" title="Step through all 16 codewords">Next (1/16)</button>
+    </div>
+
+    <table class="mat" id="hamming-mat">
+      <thead>
+        <tr>
+          <th>Row</th>
+          <th>c₁</th><th>c₂</th><th>c₃</th><th class="sep">c₄</th>
+          <th>c₅</th><th>c₆</th><th>c₇</th><th>c₈</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;">Resulting 8-Bit Codeword <b>c ∈ Cube 8</b> (Doubly-Even):</div>
+    <div class="codeword-strip" id="cw-strip"></div>
+
+    <div style="font-size:11px;color:var(--muted);margin:6px 0 4px;">
+      8 Even-Parity E₈ Half-Integer Roots <b>(±½)⁸</b> for this codeword (one chosen way to split the 128 into 16 groups of 8; click any vector to inspect in R⁸):
+    </div>
+    <div class="spinor-list" id="spinor-list"></div>
+  </div>
+
+  <!-- PANEL 2: 8x8 GRAM / CARTAN MATRIX -->
+  <div class="card">
+    <h2>
+      <span>2. Exact 8×8 Simple Root Gram Matrix</span>
+      <span class="badge ok" id="det-badge">det = 1</span>
+    </h2>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">
+      Inner product matrix <b>Gᵢⱼ = ⟨αᵢ, αⱼ⟩</b> (norm² = 2, edges = -1). Toggle roots to test unimodularity:
+    </div>
+    <div class="root-toggles" id="root-toggles"></div>
+    <table class="mat" id="gram-mat"></table>
+
+    <div class="preset-row">
+      <button class="btn-sm" id="preset-e8">Full E₈ (det=1)</button>
+      <button class="btn-sm" id="preset-a7">Drop α₈ → D₇ (det=4)</button>
+      <button class="btn-sm" id="preset-e7">Drop α₁ → E₇ (det=2)</button>
+      <button class="btn-sm" id="preset-d7">Drop α₆ → A₇ (det=8)</button>
+    </div>
+
+    <div class="inspector-box" style="margin-top:10px;">
+      <div class="kv"><span>Active Sub-Lattice:</span><span id="sub-name">E₈ (8 Simple Roots)</span></div>
+      <div class="kv"><span>Exact Gaussian Det(G):</span><span id="sub-det" style="color:var(--green);">1 (Unimodular)</span></div>
+      <div class="kv"><span>Plumbed Boundary ∂P(G):</span><span id="sub-topo">Homology Sphere (H₃ = 0)</span></div>
+      <div style="margin-top:6px;font-size:10.5px;color:var(--muted);" id="sub-note">
+        Because det(G) = 1, the 7D boundary ∂P(E₈) of the 8D plumbing has the homology of a sphere (H₃ = 0). It is also simply connected, so by Smale's theorem it is homeomorphic to S⁷; Milnor's invariant shows it is not the standard smooth sphere, and it generates the 28 smooth structures on S⁷.
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: EXACT 240-ROOT GRAPH PROJECTION -->
+  <div class="card">
+    <h2>
+      <span>3. Exact R⁸ Root Graph (⟨u, v⟩ = 1)</span>
+      <span class="badge" id="proj-badge">Coxeter 30-Fold Plane</span>
+    </h2>
+    <div class="toolbar">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-sm" id="mode-coxeter">Coxeter Plane</button>
+        <button class="btn-sm" id="mode-coords">Coord Slice (x₁+x₂, x₃+x₄)</button>
+        <label style="display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" id="chk-int" checked> 112 Integer
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" id="chk-spin" checked> 128 Spinor
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" id="chk-simple" checked> 8 Simple
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;">
+          <input type="checkbox" id="chk-all-edges"> All 6,720 Edges
+        </label>
+      </div>
+      <div>
+        <label>Plane Angle: <input type="range" id="angle-slider" min="0" max="628" value="0" style="width:90px;vertical-align:middle;"></label>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="root-canvas" width="760" height="440"></canvas>
+    </div>
+
+    <div class="inspector-box">
+      <div class="kv">
+        <span>Selected Root (#<span id="sel-idx">0</span> • <span id="sel-type">Simple Root α₁</span>):</span>
+        <span>Exact Norm² = <span id="sel-norm">2.00</span> • Neighbors (⟨u,v⟩=1): <span id="sel-deg" style="color:var(--accent);">56</span></span>
+      </div>
+      <div style="font-size:11.5px;color:var(--gold);margin-top:4px;word-break:break-all;" id="sel-vec">
+        v = [ 1, -1, 0, 0, 0, 0, 0, 0 ]
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // 1. EXACT [8,4,4] EXTENDED HAMMING GENERATOR MATRIX [I_4 | P]
+  const G_HAMMING = [
+    [1,0,0,0, 0,1,1,1],
+    [0,1,0,0, 1,0,1,1],
+    [0,0,1,0, 1,1,0,1],
+    [0,0,0,1, 1,1,1,0]
+  ];
+  let msgBits = [0, 0, 0, 0];
+
+  // 2. EXACT 8 SIMPLE ROOTS OF E8 IN R^8 (Standard Bourbaki / Even Coordinate System)
+  // alpha_1..alpha_6: e_i - e_{i+1} for i=0..5
+  // alpha_7: e_6 + e_7
+  // alpha_8: -1/2 * sum_{i=0}^7 e_i
+  const SIMPLE_ROOTS = [
+    [ 1, -1,  0,  0,  0,  0,  0,  0], // a1
+    [ 0,  1, -1,  0,  0,  0,  0,  0], // a2
+    [ 0,  0,  1, -1,  0,  0,  0,  0], // a3
+    [ 0,  0,  0,  1, -1,  0,  0,  0], // a4
+    [ 0,  0,  0,  0,  1, -1,  0,  0], // a5
+    [ 0,  0,  0,  0,  0,  1, -1,  0], // a6
+    [ 0,  0,  0,  0,  0,  1,  1,  0], // a7 (fork)
+    [-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5] // a8 (spinor tail attached to a7)
+  ];
+  let activeSimple = [true, true, true, true, true, true, true, true];
+
+  function dot8(a, b) {
+    let s = 0;
+    for (let i = 0; i < 8; i++) s += a[i] * b[i];
+    return s;
+  }
+
+  function vecEq(a, b) {
+    for (let i = 0; i < 8; i++) if (Math.abs(a[i] - b[i]) > 1e-6) return false;
+    return true;
+  }
+
+  // 3. GENERATE ALL 240 EXACT E8 ROOTS IN R^8
+  const roots = [];
+  // 112 Integer roots: (+-1, +-1, 0^6)
+  for (let i = 0; i < 8; i++) {
+    for (let j = i + 1; j < 8; j++) {
+      for (const s1 of [-1, 1]) {
+        for (const s2 of [-1, 1]) {
+          const v = new Array(8).fill(0);
+          v[i] = s1;
+          v[j] = s2;
+          roots.push({ v, type: 'int', simpleIdx: -1 });
+        }
+      }
+    }
+  }
+  // 128 Half-integer spinor roots: (+-1/2)^8 with even number of minus signs
+  for (let mask = 0; mask < 256; mask++) {
+    let minusCount = 0;
+    const v = new Array(8);
+    for (let i = 0; i < 8; i++) {
+      if ((mask >> i) & 1) {
+        v[i] = -0.5;
+        minusCount++;
+      } else {
+        v[i] = 0.5;
+      }
+    }
+    if (minusCount % 2 === 0) {
+      roots.push({ v, type: 'spin', simpleIdx: -1 });
+    }
+  }
+  // Tag the 8 simple roots
+  SIMPLE_ROOTS.forEach((sr, idx) => {
+    const found = roots.find(r => vecEq(r.v, sr));
+    if (found) found.simpleIdx = idx;
+  });
+
+  // Precompute exact nearest-neighbor adjacency list: <u, v> == 1 (6,720 undirected edges)
+  const neighbors = Array.from({ length: roots.length }, () => []);
+  const allEdges = [];
+  for (let i = 0; i < roots.length; i++) {
+    for (let j = i + 1; j < roots.length; j++) {
+      if (Math.abs(dot8(roots[i].v, roots[j].v) - 1.0) < 1e-6) {
+        neighbors[i].push(j);
+        neighbors[j].push(i);
+        allEdges.push([i, j]);
+      }
+    }
+  }
+
+  let selectedRootIdx = roots.findIndex(r => r.simpleIdx === 0);
+
+  // Exact Coxeter plane basis vectors (orthonormalized eigenvectors of Coxeter element w = s1..s8)
+  // Compute real Coxeter element matrix W in R^8 by multiplying the 8 reflections
+  function reflect(v, alpha) {
+    const k = 2 * dot8(v, alpha) / dot8(alpha, alpha);
+    return v.map((x, idx) => x - k * alpha[idx]);
+  }
+  function coxeterStep(v) {
+    let cur = v.slice();
+    for (let i = 0; i < 8; i++) cur = reflect(cur, SIMPLE_ROOTS[i]);
+    return cur;
+  }
+  // Power iteration for eigenvalue exp(2*pi*i / 30) on complexified R^8
+  let reVec = [1, 0.3, -0.4, 0.7, -0.2, 0.5, -0.6, 0.2];
+  let imVec = [0.2, -0.8, 0.5, 0.1, 0.6, -0.3, 0.4, -0.7];
+  const theta = (2 * Math.PI) / 30;
+  const cosT = Math.cos(theta), sinT = Math.sin(theta);
+  for (let iter = 0; iter < 120; iter++) {
+    const Wre = coxeterStep(reVec);
+    const Wim = coxeterStep(imVec);
+    // Project onto exp(i*theta) eigenspace: z_{n+1} = z_n + exp(-i*theta)*W(z_n)
+    const nextRe = reVec.map((x, i) => 0.5 * x + 0.5 * (cosT * Wre[i] + sinT * Wim[i]));
+    const nextIm = imVec.map((x, i) => 0.5 * x + 0.5 * (-sinT * Wre[i] + cosT * Wim[i]));
+    // Orthonormalize
+    const normR = Math.hypot(...nextRe);
+    reVec = nextRe.map(x => x / normR);
+    const proj = dot8(nextIm, reVec);
+    const orthIm = nextIm.map((x, i) => x - proj * reVec[i]);
+    const normI = Math.hypot(...orthIm);
+    imVec = orthIm.map(x => x / normI);
+  }
+
+  // PANEL 1 RENDER & LOGIC
+  function renderHamming() {
+    const tbody = document.querySelector('#hamming-mat tbody');
+    tbody.innerHTML = '';
+    for (let r = 0; r < 4; r++) {
+      const tr = document.createElement('tr');
+      if (msgBits[r]) tr.className = 'active-row';
+      let html = `<th>r${r+1} (${msgBits[r]})</th>`;
+      for (let c = 0; c < 8; c++) {
+        html += `<td class="${c === 3 ? 'sep' : ''}">${G_HAMMING[r][c]}</td>`;
+      }
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    }
+
+    // Compute codeword c = m * G mod 2
+    const cw = new Array(8).fill(0);
+    for (let r = 0; r < 4; r++) {
+      if (msgBits[r]) {
+        for (let c = 0; c < 8; c++) cw[c] ^= G_HAMMING[r][c];
+      }
+    }
+    const weight = cw.reduce((a, b) => a + b, 0);
+    document.getElementById('cw-weight-badge').textContent = `Weight: ${weight} (d_min=4)`;
+
+    const strip = document.getElementById('cw-strip');
+    strip.innerHTML = '';
+    cw.forEach((bit, idx) => {
+      const div = document.createElement('div');
+      div.className = 'cw-cell' + (bit ? ' one' : '');
+      div.textContent = bit;
+      div.title = `Bit ${idx + 1}`;
+      strip.appendChild(div);
+    });
+
+    // Generate the 8 even-parity half-integer E8 spinor lifts associated with codeword cw
+    // Each bit 1 -> -1/2, bit 0 -> +1/2 gives a base spinor vector v0 (even minus count since weight is 0, 4, or 8).
+    // Flipping all 8 signs gives -v0 (also even minus count), and flipping pairs of coordinates or using sign-parity variations:
+    // Specifically, there are 128 / 16 = 8 spinor vectors per Hamming codeword via flipping signs on even-weight subsets or canonical coset partition:
+    const spinList = document.getElementById('spinor-list');
+    spinList.innerHTML = '';
+    const vBase = cw.map(b => (b === 1 ? -0.5 : 0.5));
+    // Partition the 128 spinor roots cleanly into 16 cosets of size 8 (flipping pairs (0,k) for k=0..7)
+    const cosetVectors = [];
+    for (let k = 0; k < 8; k++) {
+      const vec = vBase.slice();
+      if (k > 0) {
+        vec[0] = -vec[0];
+        vec[k] = -vec[k];
+      }
+      cosetVectors.push(vec);
+    }
+
+    cosetVectors.forEach((sv, idx) => {
+      const rIdx = roots.findIndex(r => vecEq(r.v, sv));
+      const div = document.createElement('div');
+      div.className = 'spinor-item' + (rIdx === selectedRootIdx ? ' selected' : '');
+      const fmt = sv.map(x => (x > 0 ? '+½' : '-½')).join(' ');
+      div.innerHTML = `<span>#${idx+1}: (${fmt})</span><span style="color:var(--muted);">Root #${rIdx}</span>`;
+      div.onclick = () => {
+        if (rIdx >= 0) {
+          selectedRootIdx = rIdx;
+          updateSelectedInfo();
+          renderHamming();
+          drawCanvas();
+        }
+      };
+      spinList.appendChild(div);
+    });
+  }
+
+  document.querySelectorAll('.bit-btn').forEach(btn => {
+    btn.onclick = () => {
+      const b = parseInt(btn.dataset.bit, 10);
+      msgBits[b] ^= 1;
+      btn.classList.toggle('on', msgBits[b] === 1);
+      btn.textContent = `m${b+1}=${msgBits[b]}`;
+      renderHamming();
+    };
+  });
+
+  document.getElementById('next-cw-btn').onclick = () => {
+    let val = msgBits[0] + 2*msgBits[1] + 4*msgBits[2] + 8*msgBits[3];
+    val = (val + 1) % 16;
+    for (let i = 0; i < 4; i++) {
+      msgBits[i] = (val >> i) & 1;
+      const btn = document.querySelector(`.bit-btn[data-bit="${i}"]`);
+      btn.classList.toggle('on', msgBits[i] === 1);
+      btn.textContent = `m${i+1}=${msgBits[i]}`;
+    }
+    document.getElementById('next-cw-btn').textContent = `Next (${val+1}/16)`;
+    renderHamming();
+  };
+
+  // PANEL 2: EXACT 8x8 CARTAN / GRAM MATRIX & GAUSSIAN DETERMINANT
+  function exactDet(mat) {
+    const n = mat.length;
+    if (n === 0) return 1;
+    const M = mat.map(row => row.map(x => x));
+    let det = 1;
+    for (let i = 0; i < n; i++) {
+      let pivot = i;
+      while (pivot < n && Math.abs(M[pivot][i]) < 1e-9) pivot++;
+      if (pivot === n) return 0;
+      if (pivot !== i) {
+        [M[i], M[pivot]] = [M[pivot], M[i]];
+        det = -det;
+      }
+      det *= M[i][i];
+      for (let r = i + 1; r < n; r++) {
+        const factor = M[r][i] / M[i][i];
+        for (let c = i; c < n; c++) M[r][c] -= factor * M[i][c];
+      }
+    }
+    return Math.round(det);
+  }
+
+  function renderGram() {
+    const toggles = document.getElementById('root-toggles');
+    toggles.innerHTML = '';
+    for (let i = 0; i < 8; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'rt-btn' + (activeSimple[i] ? ' active' : '');
+      btn.textContent = `α${i+1}: ${activeSimple[i] ? 'ON' : 'OFF'}`;
+      btn.onclick = () => {
+        activeSimple[i] = !activeSimple[i];
+        renderGram();
+        drawCanvas();
+      };
+      toggles.appendChild(btn);
+    }
+
+    const table = document.getElementById('gram-mat');
+    let html = '<thead><tr><th>⟨αᵢ,αⱼ⟩</th>';
+    for (let j = 0; j < 8; j++) html += `<th>α${j+1}</th>`;
+    html += '</tr></thead><tbody>';
+
+    const subIndices = [];
+    for (let i = 0; i < 8; i++) {
+      if (activeSimple[i]) subIndices.push(i);
+      html += `<tr><th>α${i+1}</th>`;
+      for (let j = 0; j < 8; j++) {
+        const g = Math.round(dot8(SIMPLE_ROOTS[i], SIMPLE_ROOTS[j]));
+        const isAct = activeSimple[i] && activeSimple[j];
+        let cls = !isAct ? 'inactive-cell' : (i === j ? 'diag' : (g !== 0 ? 'edge' : ''));
+        html += `<td class="${cls}">${g}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+
+    const subMat = subIndices.map(i => subIndices.map(j => dot8(SIMPLE_ROOTS[i], SIMPLE_ROOTS[j])));
+    const d = exactDet(subMat);
+    const detBadge = document.getElementById('det-badge');
+    const subDet = document.getElementById('sub-det');
+    const subName = document.getElementById('sub-name');
+    const subTopo = document.getElementById('sub-topo');
+    const subNote = document.getElementById('sub-note');
+
+    detBadge.textContent = `det = ${d}`;
+    detBadge.className = 'badge ' + (d === 1 ? 'ok' : 'warn');
+    subDet.textContent = d === 1 ? '1 (Unimodular)' : `${d} (Non-Unimodular)`;
+    subDet.style.color = d === 1 ? 'var(--green)' : 'var(--red)';
+
+    const key = activeSimple.map(b => (b ? '1' : '0')).join('');
+    if (key === '11111111') {
+      subName.textContent = 'E₈ (8 Simple Roots)';
+      subTopo.textContent = 'Homology Sphere (H₃ = 0)';
+      subNote.textContent = 'det(G) = 1: the plumbed 7D boundary ∂P(E₈) is a homology sphere; being simply connected, it is homeomorphic to S⁷ (Smale), and it is Milnor\'s exotic 7-sphere.';
+    } else if (key === '11111110') {
+      subName.textContent = 'D₇ Fork (α₈ removed)';
+      subTopo.textContent = 'Homology Torsion H₃ = ℤ/4ℤ';
+      subNote.textContent = 'det(D₇) = 4: the boundary has order-4 torsion in H₃, so it is not a sphere.';
+    } else if (key === '01111111') {
+      subName.textContent = 'E₇ Sub-Lattice (α₁ removed)';
+      subTopo.textContent = 'Homology Torsion H₃ = ℤ/2ℤ';
+      subNote.textContent = 'det(E₇) = 2: the plumbed boundary has ℤ/2ℤ torsion in H₃, so it is not a sphere.';
+    } else if (key === '11111011') {
+      subName.textContent = 'A₇ Chain (α₆ removed)';
+      subTopo.textContent = 'Homology Torsion H₃ = ℤ/8ℤ';
+      subNote.textContent = 'det(A₇) = 8: removing α₆ leaves the straight chain α₁–α₅–α₇–α₈; the boundary has ℤ/8ℤ torsion in H₃, so it is not a sphere.';
+    } else {
+      subName.textContent = `Custom Sub-Graph (${subIndices.length} roots)`;
+      subTopo.textContent = d === 1 ? 'Unimodular Boundary (H₃ = 0)' : `Torsion Order |H₃| = ${Math.abs(d)}`;
+      subNote.textContent = d === 1
+        ? 'Unimodular sub-graph (det = 1): boundary has trivial H₃ (a homology sphere).'
+        : `Non-unimodular sub-graph (det = ${d}): boundary carries non-trivial homology loops.`;
+    }
+  }
+
+  document.getElementById('preset-e8').onclick = () => { activeSimple = [true,true,true,true,true,true,true,true]; renderGram(); drawCanvas(); };
+  document.getElementById('preset-a7').onclick = () => { activeSimple = [true,true,true,true,true,true,true,false]; renderGram(); drawCanvas(); };
+  document.getElementById('preset-e7').onclick = () => { activeSimple = [false,true,true,true,true,true,true,true]; renderGram(); drawCanvas(); };
+  document.getElementById('preset-d7').onclick = () => { activeSimple = [true,true,true,true,true,false,true,true]; renderGram(); drawCanvas(); };
+
+  // PANEL 3: EXACT 240-ROOT PROJECTION
+  const canvas = document.getElementById('root-canvas');
+  const ctx = canvas.getContext('2d');
+  let projMode = 'coxeter';
+  let projected2D = [];
+
+  function projectRoot(v, angleRad) {
+    let x, y;
+    if (projMode === 'coxeter') {
+      x = dot8(v, reVec);
+      y = dot8(v, imVec);
+    } else {
+      x = 0.55 * (v[0] + v[1]) + 0.35 * (v[4] - v[5]);
+      y = 0.55 * (v[2] + v[3]) + 0.35 * (v[6] - v[7]);
+    }
+    const ca = Math.cos(angleRad), sa = Math.sin(angleRad);
+    return [x * ca - y * sa, x * sa + y * ca];
+  }
+
+  function updateSelectedInfo() {
+    const r = roots[selectedRootIdx];
+    document.getElementById('sel-idx').textContent = selectedRootIdx;
+    let typeStr = r.type === 'int' ? 'Type-I Integer Root' : 'Type-II Half-Integer Root';
+    if (r.simpleIdx >= 0) typeStr += ` • Simple α${r.simpleIdx + 1}`;
+    document.getElementById('sel-type').textContent = typeStr;
+    document.getElementById('sel-norm').textContent = dot8(r.v, r.v).toFixed(2);
+    document.getElementById('sel-deg').textContent = neighbors[selectedRootIdx].length;
+    const fmt = r.v.map(x => (Number.isInteger(x) ? x.toString() : (x > 0 ? '+1/2' : '-1/2'))).join(', ');
+    document.getElementById('sel-vec').textContent = `v = [ ${fmt} ]`;
+  }
+
+  function drawCanvas() {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const showInt = document.getElementById('chk-int').checked;
+    const showSpin = document.getElementById('chk-spin').checked;
+    const showSimple = document.getElementById('chk-simple').checked;
+    const showAllEdges = document.getElementById('chk-all-edges').checked;
+    const angle = parseInt(document.getElementById('angle-slider').value, 10) / 100;
+
+    const scale = projMode === 'coxeter' ? 142 : 128;
+    const cx = w / 2, cy = h / 2;
+
+    projected2D = roots.map(r => {
+      const [px, py] = projectRoot(r.v, angle);
+      return { sx: cx + px * scale, sy: cy - py * scale };
+    });
+
+    // Subtle coordinate crosshair
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+    ctx.stroke();
+
+    const isVisible = (r) => {
+      if (r.simpleIdx >= 0 && showSimple) return true;
+      if (r.type === 'int' && showInt) return true;
+      if (r.type === 'spin' && showSpin) return true;
+      return false;
+    };
+
+    // Optional all 6,720 nearest-neighbor edges (<u, v> = 1)
+    if (showAllEdges) {
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      for (let k = 0; k < allEdges.length; k++) {
+        const [i, j] = allEdges[k];
+        if (isVisible(roots[i]) && isVisible(roots[j])) {
+          ctx.moveTo(projected2D[i].sx, projected2D[i].sy);
+          ctx.lineTo(projected2D[j].sx, projected2D[j].sy);
+        }
+      }
+      ctx.stroke();
+    }
+
+    // Draw edges between active simple roots (the E8 Dynkin plumbing tree!)
+    if (showSimple) {
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        if (!activeSimple[i]) continue;
+        const idxI = roots.findIndex(r => r.simpleIdx === i);
+        for (let j = i + 1; j < 8; j++) {
+          if (!activeSimple[j]) continue;
+          if (Math.round(dot8(SIMPLE_ROOTS[i], SIMPLE_ROOTS[j])) === -1) {
+            const idxJ = roots.findIndex(r => r.simpleIdx === j);
+            ctx.moveTo(projected2D[idxI].sx, projected2D[idxI].sy);
+            ctx.lineTo(projected2D[idxJ].sx, projected2D[idxJ].sy);
+          }
+        }
+      }
+      ctx.stroke();
+    }
+
+    // Draw the 56 exact nearest-neighbor edges (<u, v> = 1) from selected root
+    const selNbrs = new Set(neighbors[selectedRootIdx]);
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.42)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    neighbors[selectedRootIdx].forEach(nIdx => {
+      if (isVisible(roots[nIdx])) {
+        ctx.moveTo(projected2D[selectedRootIdx].sx, projected2D[selectedRootIdx].sy);
+        ctx.lineTo(projected2D[nIdx].sx, projected2D[nIdx].sy);
+      }
+    });
+    ctx.stroke();
+
+    // Draw root vertices
+    roots.forEach((r, idx) => {
+      if (!isVisible(r)) return;
+      const { sx, sy } = projected2D[idx];
+      const isSel = idx === selectedRootIdx;
+      const isNbr = selNbrs.has(idx);
+      const isSimp = r.simpleIdx >= 0 && activeSimple[r.simpleIdx];
+
+      ctx.beginPath();
+      const rad = isSel ? 7 : (isSimp ? 5.5 : (isNbr ? 3.8 : 2.8));
+      ctx.arc(sx, sy, rad, 0, Math.PI * 2);
+
+      if (isSel) {
+        ctx.fillStyle = '#ffffff';
+      } else if (isSimp) {
+        ctx.fillStyle = '#34d399';
+      } else if (isNbr) {
+        ctx.fillStyle = '#fbbf24';
+      } else if (r.type === 'int') {
+        ctx.fillStyle = '#38bdf8';
+      } else {
+        ctx.fillStyle = '#a78bfa';
+      }
+      ctx.fill();
+
+      if (isSimp && showSimple) {
+        ctx.fillStyle = '#34d399';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText(`α${r.simpleIdx + 1}`, sx + 7, sy - 5);
+      }
+    });
+  }
+
+  canvas.onclick = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    let bestIdx = -1, bestDist = 18;
+    projected2D.forEach((pt, idx) => {
+      const d = Math.hypot(pt.sx - mx, pt.sy - my);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = idx;
+      }
+    });
+    if (bestIdx >= 0) {
+      selectedRootIdx = bestIdx;
+      updateSelectedInfo();
+      renderHamming();
+      drawCanvas();
+    }
+  };
+
+  document.getElementById('mode-coxeter').onclick = () => {
+    projMode = 'coxeter';
+    document.getElementById('proj-badge').textContent = 'Coxeter 30-Fold Plane';
+    drawCanvas();
+  };
+  document.getElementById('mode-coords').onclick = () => {
+    projMode = 'coords';
+    document.getElementById('proj-badge').textContent = 'Coordinate Orthogonal Slice';
+    drawCanvas();
+  };
+  ['chk-int', 'chk-spin', 'chk-simple', 'chk-all-edges'].forEach(id => {
+    document.getElementById(id).onchange = drawCanvas;
+  });
+  document.getElementById('angle-slider').oninput = drawCanvas;
+  document.getElementById('dimmer').oninput = (e) => {
+    document.body.style.filter = `brightness(${e.target.value}%)`;
+  };
+
+  // Initial render
+  renderHamming();
+  renderGram();
+  updateSelectedInfo();
+  drawCanvas();
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end Exact E8 & Extended Hamming [8,4,4] Structural Inspector -->
 </div>
 
 <script>
@@ -18945,7 +20366,7 @@ function drawStretch() {
 // globals can't touch the playground. The small shim below runs first inside the frame:
 // while another tab is open it holds the page's animation frames and timers, freezes its
 // clock and suspends its sound, then picks up where it left off.
-const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3'];
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3', 'e8studio', 'e8insp'];
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
@@ -19398,6 +20819,7 @@ loop();
     ['Waves, sums & sound', ['sum','ringsum','zeros','pendulum','trilogy','ocean','fireflies']],
     ['Black holes', ['blackhole','bh2','bh3']],
     ['4D & higher dimensions', ['fourd','polychora','horned','nonorient','penteract','leech','pentlite','hopf']],
+    ['E₈ pair', ['e8studio','e8insp']],
   ];
   const btns = [...document.querySelectorAll('.tabs .tab')];
   const byKey = {}; btns.forEach(b => { byKey[b.dataset.mode] = b; });
