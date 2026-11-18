@@ -20017,12 +20017,15 @@ const stcControls = (() => {
       <button class="btn primary" id="stretchPause">⏸ Pause</button>
       <button class="btn" id="stretchHalf">½ Half Step: Off</button>
       <span id="stretchPeak" style="color:#7ee787; font-weight:600;">Peak ratio: –</span>
+      <!-- Hot/Cold (2D Boussinesq) — Copyright © 2026 NousVolition. All rights reserved. -->
+      <button class="btn" id="stretchHot" title="Put a warm blob between the two swirls; warm fluid rises and makes new swirl">🔥 Hot/Cold: Off</button>
+      <span id="stretchSwirl" style="color:#ffb86b; font-weight:600;" title="Largest |ω| on the grid divided by its value at the start">Peak swirl ÷ start: –</span>
       </div>`;
   d.style.display = 'none';
   document.body.appendChild(d);
   return d;
 })();
-const STC_HINT = 'Two opposite vortex patches side by side on a periodic square. Production is −Σ ∂<sub>i</sub>ω ∂<sub>i</sub>u<sub>j</sub> ∂<sub>j</sub>ω, dissipation is ν Σ|Δω|², and dP/dt = 2(production − dissipation). Spectral derivatives, 2/3-rule dealiasing, RK4 with a CFL time step; <b>Half Step</b> reruns from the same start at dt/2.';
+const STC_HINT = 'Two opposite vortex patches side by side on a periodic square. Production is −Σ ∂<sub>i</sub>ω ∂<sub>i</sub>u<sub>j</sub> ∂<sub>j</sub>ω, dissipation is ν Σ|Δω|², and dP/dt = 2(production − dissipation). Spectral derivatives, 2/3-rule dealiasing, RK4 with a CFL time step; <b>Half Step</b> reruns from the same start at dt/2. <b>Hot/Cold</b> adds a warm blob (θ, 4× the start scale) between the swirls: ∂ω/∂t + u·∇ω = νΔω + ∂θ/∂x and ∂θ/∂t + u·∇θ = νΔθ, with warm (θ &gt; 0) rising; production then also counts Σ ∇ω·∇(∂θ/∂x).';
 (() => {
   // ---- solver core (SC-BEGIN) ----
   const SC = (() => {
@@ -20180,7 +20183,85 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
       return { t: this.t, E: E * dA, Z: Z * dA, P: P * dA, prod: prod * dA, diss, ratio: diss > 0 ? prod * dA / diss : 0,
                width: Math.sqrt(Z / P), wmax };
     };
-    return { N, Run };
+    // ---- Hot/Cold: 2D Boussinesq (BRun) — Copyright © 2026 NousVolition. All rights reserved. ----
+    //   dω/dt + u·∇ω = νΔω + ∂θ/∂x      dθ/dt + u·∇θ = νΔθ
+    // Orientation: y points up on screen (the picture draws row j upward) and ω = ∂v/∂x − ∂u/∂y.
+    // With the +∂θ/∂x sign this is the curl of dv/dt = … + θ, so θ is buoyancy and warm fluid (θ > 0) rises.
+    // Budget: ½ dP/dt gains Σ ∇ω·∇(∂θ/∂x) = −Σ Δω ∂θ/∂x (P = Σ|∇ω|²), which is added to production,
+    // so dP/dt = 2(production − dissipation) still holds.
+    const gtx = new Float64Array(NN), gty = new Float64Array(NN), gtxx = new Float64Array(NN), gtxy = new Float64Array(NN), gth = new Float64Array(NN);
+    const bjr = new Float64Array(NN), bji = new Float64Array(NN);
+    function rhsB(s, nu, oRe, oIm, oTr, oTi) {
+      rhs(s, nu, oRe, oIm);                       // her vorticity terms; leaves u, v in gu, gv
+      for (let n = 0; n < NN; n++) {              // + ∂θ/∂x  (i kx θ^), inside the dealiasing mask
+        const q = kx[n % N] * mask[n];
+        oRe[n] += -q * s.tim[n];
+        oIm[n] += q * s.tre[n];
+      }
+      toGrid(s.tre, s.tim, 1, 0, null, 1, gtx);
+      toGrid(s.tre, s.tim, 0, 1, null, 1, gty);
+      for (let n = 0; n < NN; n++) { bjr[n] = gu[n] * gtx[n] + gv[n] * gty[n]; bji[n] = 0; }
+      fft2(bjr, bji, false);
+      for (let n = 0; n < NN; n++) {
+        oTr[n] = (-bjr[n] * mask[n]) - nu * k2[n] * s.tre[n];
+        oTi[n] = (-bji[n] * mask[n]) - nu * k2[n] * s.tim[n];
+      }
+    }
+    function BRun(amp, nu, heat) {
+      Run.call(this, amp, nu);
+      this.heat = heat;
+      this.tre = new Float64Array(NN); this.tim = new Float64Array(NN);
+      const sig = 0.5, c = Math.PI;                // centered between the two swirls, same width as each swirl
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+        const x = i * L / N, y = j * L / N;
+        this.tre[j * N + i] = heat * Math.exp(-((x - c) ** 2 + (y - c) ** 2) / (sig * sig));
+      }
+      fft2(this.tre, this.tim, false);
+      for (let n = 0; n < NN; n++) { this.tre[n] *= mask[n]; this.tim[n] *= mask[n]; }
+      this.kt = [0, 1, 2, 3].map(() => ({ re: new Float64Array(NN), im: new Float64Array(NN) }));
+      this.tmp.tre = new Float64Array(NN); this.tmp.tim = new Float64Array(NN);
+      this.theta = new Float64Array(NN);
+    }
+    BRun.prototype = Object.create(Run.prototype);
+    BRun.prototype.constructor = BRun;
+    BRun.prototype.step = function (dt) {
+      const s = this, k = this.k, kt = this.kt, tmp = this.tmp, nu = this.nu;
+      const stage = (a, h) => {
+        for (let n = 0; n < NN; n++) {
+          tmp.re[n] = s.re[n] + h * k[a].re[n]; tmp.im[n] = s.im[n] + h * k[a].im[n];
+          tmp.tre[n] = s.tre[n] + h * kt[a].re[n]; tmp.tim[n] = s.tim[n] + h * kt[a].im[n];
+        }
+      };
+      rhsB(s, nu, k[0].re, k[0].im, kt[0].re, kt[0].im);
+      stage(0, 0.5 * dt); rhsB(tmp, nu, k[1].re, k[1].im, kt[1].re, kt[1].im);
+      stage(1, 0.5 * dt); rhsB(tmp, nu, k[2].re, k[2].im, kt[2].re, kt[2].im);
+      stage(2, dt);       rhsB(tmp, nu, k[3].re, k[3].im, kt[3].re, kt[3].im);
+      const c = dt / 6;
+      for (let n = 0; n < NN; n++) {
+        s.re[n] += c * (k[0].re[n] + 2 * k[1].re[n] + 2 * k[2].re[n] + k[3].re[n]);
+        s.im[n] += c * (k[0].im[n] + 2 * k[1].im[n] + 2 * k[2].im[n] + k[3].im[n]);
+        s.tre[n] += c * (kt[0].re[n] + 2 * kt[1].re[n] + 2 * kt[2].re[n] + kt[3].re[n]);
+        s.tim[n] += c * (kt[0].im[n] + 2 * kt[1].im[n] + 2 * kt[2].im[n] + kt[3].im[n]);
+      }
+      this.t += dt; this.steps++;
+    };
+    BRun.prototype.measure = function (out) {
+      const m = Run.prototype.measure.call(this, out);   // her diagnostics; leaves ∂ω/∂x, ∂ω/∂y in gwx, gwy
+      toGrid(this.tre, this.tim, 2, 0, null, 1, gtxx);
+      toGrid(this.tre, this.tim, 1, 1, null, 1, gtxy);
+      let pb = 0;
+      for (let n = 0; n < NN; n++) pb += gwx[n] * gtxx[n] + gwy[n] * gtxy[n];
+      m.prodStretch = m.prod;
+      m.prodHeat = pb * dA;
+      m.prod = m.prodStretch + m.prodHeat;
+      m.ratio = m.diss > 0 ? m.prod / m.diss : 0;
+      if (out) {
+        toGrid(this.tre, this.tim, 0, 0, null, 1, gth);
+        this.theta.set(gth);
+      }
+      return m;
+    };
+    return { N, Run, BRun };
   })();
   // ---- solver core (SC-END) ----
 (() => {
@@ -20196,6 +20277,10 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
   let scale = 64, nu = 0.05, tEnd = 1.5, running = true, halfOn = false;
   let main = null, half = null, hist = [], histHalf = [], colorMax = 1, done = false;
   let stats = null, statsHalf = null, lastBudget = null;
+  // Hot/Cold state
+  let hotOn = false, swirl0 = 1, swirlHi = 0, swirlNow = 0, budgetHi = 0, budgetNoHeatHi = 0;
+  const HEAT_X = 4;   // warm blob strength = 4 × the start scale
+  const makeRun = () => hotOn ? new SC.BRun(scale, nuFromSlider(), HEAT_X * scale) : new SC.Run(scale, nuFromSlider());
 
   const nuValues = [0.001, 0.002, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.2];
   function nuFromSlider() { return nuValues[parseInt(document.getElementById('stretchNu').value, 10)]; }
@@ -20212,12 +20297,13 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
 
   function reset() {
     nu = nuFromSlider();
-    main = new SC.Run(scale, nu);
-    half = halfOn ? new SC.Run(scale, nu) : null;
+    main = makeRun();
+    half = halfOn ? makeRun() : null;
     hist = []; histHalf = []; done = false; lastBudget = null;
     stats = newStats(); statsHalf = halfOn ? newStats() : null;
     const m = main.measure(field);
     colorMax = m.wmax || 1;
+    swirl0 = m.wmax || 1; swirlNow = 1; swirlHi = 1; budgetHi = 0; budgetNoHeatHi = 0;
     hist.push(m); track(stats, m, 0);
     if (half) { const h = half.measure(); histHalf.push(h); track(statsHalf, h, 0); }
   }
@@ -20229,6 +20315,17 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
     const m = main.measure();
     hist.push(m); track(stats, m, dt);
     lastBudget = { measured: (m.P - before.P) / dt, predicted: (m.prod - m.diss) + (before.prod - before.diss) };
+    {
+      const e = Math.abs(lastBudget.measured - lastBudget.predicted) / Math.max(Math.abs(lastBudget.predicted), 1e-12);
+      if (e > budgetHi) budgetHi = e;
+      if (m.prodHeat !== undefined) {   // the same check without the hot/cold term, to show it is needed
+        const p0 = (m.prodStretch - m.diss) + (before.prodStretch - before.diss);
+        const e0 = Math.abs(lastBudget.measured - p0) / Math.max(Math.abs(lastBudget.predicted), 1e-12);
+        if (e0 > budgetNoHeatHi) budgetNoHeatHi = e0;
+      }
+      swirlNow = m.wmax / swirl0;
+      if (swirlNow > swirlHi) swirlHi = swirlNow;
+    }
     if (half) {
       half.step(dt / 2); half.step(dt / 2);
       const h = half.measure();
@@ -20255,6 +20352,17 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
     e.target.classList.toggle('active-toggle', halfOn);
     reset();
   });
+  document.getElementById('stretchHot').addEventListener('click', e => {
+    hotOn = !hotOn;
+    e.target.textContent = hotOn ? '🔥 Hot/Cold: On' : '🔥 Hot/Cold: Off';
+    e.target.classList.toggle('active-toggle', hotOn);
+    reset();
+  });
+  // read-only status, for checking the numbers from outside
+  window.stretchStatus = () => {
+    const cur = hist[hist.length - 1] || {};
+    return { hot: hotOn, t: cur.t, swirlNow, swirlHi, budgetHi, budgetNoHeatHi, lastBudget, prod: cur.prod, prodHeat: cur.prodHeat, diss: cur.diss, done, steps: main ? main.steps : 0 };
+  };
   const nuSlider = document.getElementById('stretchNu');
   nuSlider.addEventListener('input', () => { document.getElementById('stretchNuVal').textContent = nuFromSlider().toFixed(3); });
   nuSlider.addEventListener('change', reset);
@@ -20288,6 +20396,30 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
     ctx.fillStyle = '#8b949e';
     ctx.font = '13px sans-serif';
     ctx.fillText('Vorticity ω (pink +, blue −), periodic 128×128', x0, y0 - 8);
+  }
+
+  // warm glow where the hot fluid is (θ > 0), drawn over the vorticity picture
+  const heatImg = document.createElement('canvas');
+  heatImg.width = N; heatImg.height = N;
+  const hctx = heatImg.getContext('2d'), heatData = hctx.createImageData(N, N);
+  function drawHeat(x0, y0, size) {
+    const d = heatData.data, th = main.theta;
+    let top = 1e-9; for (let n = 0; n < N * N; n++) if (th[n] > top) top = th[n];   // scaled to the hottest spot now
+    for (let n = 0; n < N * N; n++) {
+      const v = Math.max(0, Math.min(1, th[n] / top));
+      const i = n % N, j = (n / N) | 0, p = ((N - 1 - j) * N + i) * 4;
+      d[p] = 255; d[p + 1] = 150 + 70 * v; d[p + 2] = 40;
+      d[p + 3] = Math.round(200 * Math.sqrt(v));
+    }
+    hctx.putImageData(heatData, 0, 0);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.7;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(heatImg, x0, y0, size, size);
+    ctx.restore();
+    ctx.fillStyle = '#ffb86b'; ctx.font = '12px sans-serif';
+    ctx.fillText('warm glow = hot fluid (θ > 0), rising', x0 + size - 215, y0 + size + 16);
   }
 
   function plot(x0, y0, w, h, title, series, opts) {
@@ -20336,6 +20468,7 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
       ctx.fillStyle = '#07090e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawField(20, 40, 420);
+      if (hotOn && main.theta) drawHeat(20, 40, 420);
 
       const px = 470, pw = 470, ph = 132;
       const series = [{ data: hist.map(m => [m.t, m.ratio]), color: '#7ee787' }];
@@ -20356,6 +20489,8 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
       document.getElementById('stretchPeak').textContent =
         `Peak ratio: ${stats.peak.toFixed(3)} at t = ${stats.peakT.toFixed(3)}  ·  Time above 1: ${stats.above.toFixed(3)}` +
         (statsHalf ? `  |  dt/2: ${statsHalf.peak.toFixed(3)}, above 1: ${statsHalf.above.toFixed(3)}` : '');
+      document.getElementById('stretchSwirl').textContent =
+        `Peak swirl ÷ start: ${swirlNow.toFixed(3)} (highest ${swirlHi.toFixed(3)})`;
     }
     requestAnimationFrame(render);
   }
