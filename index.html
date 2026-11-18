@@ -16740,7 +16740,9 @@ draw();
   .bar i { display: block; height: 100%; background: var(--accent); width: 0; }
   .note { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
   .note b { color: var(--text); }
-  .stage { position: relative; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  .stage { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 6px; }
+  #grid { flex: 1; min-height: 0; }
+  .gridnote { flex: none; font-size: 0.75rem; color: var(--muted); text-align: center; line-height: 1.4; }
   #grid { width: 100%; height: 100%; display: block; touch-action: manipulation; }
   #ring { width: 100%; aspect-ratio: 1; display: block; background: #0b0e14; border: 1px solid var(--border); border-radius: 10px; }
   .formula { font-size: 0.85rem; line-height: 1.6; background: #0b0e14; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
@@ -16791,15 +16793,20 @@ draw();
     </div>
   </div>
 
-  <div class="card stage"><canvas id="grid" aria-label="Grid of dots with matching pairs joined"></canvas></div>
+  <div class="card stage"><canvas id="grid" aria-label="Grid of dots with matching pairs joined"></canvas>
+    <div class="gridnote">This shows the classic square-grid construction. Newer record-setting constructions are far too large to draw here.</div></div>
 
   <div class="side">
     <div class="card">
       <h2>Wirtinger ring</h2>
-      <div class="sub">All the directions (dx, dy) with dx² + dy² = k, sorted by angle, as a ring of <b id="rn">–</b> points around the highlighted dot.</div>
+      <div class="sub">All the directions (dx, dy) with dx² + dy² = k, sorted by angle, as a ring of <b id="rn">–</b> points around the highlighted dot. Gray ticks mark perfectly even spacing.</div>
       <canvas id="ring" style="margin-top:8px" aria-label="Ring of directions"></canvas>
       <div class="row" style="margin-top:8px">
         <button id="axis" title="Switch between left-right and up-down positions">Using f = dx (left-right)</button>
+      </div>
+      <div class="stats" style="margin-top:8px">
+        <div class="stat"><span>Number of lines</span><strong id="wLines">–</strong></div>
+        <div class="stat"><span>How far from equal</span><strong id="wGap">–</strong></div>
       </div>
     </div>
     <div class="card">
@@ -16810,15 +16817,18 @@ draw();
         <div class="sub">n = points on the ring, f with its average taken away, j+1 wraps around to the start.</div>
       </div>
       <div class="stats" style="margin-top:8px">
-        <div class="stat"><span>Left side</span><strong id="wL" style="color:var(--warm)">–</strong></div>
-        <div class="stat"><span>Right side</span><strong id="wR" style="color:var(--good)">–</strong></div>
+        <div class="stat"><span>Spread side (2 − 2cos(2π/n))·Σf²</span><strong id="wL" style="color:var(--warm)">–</strong></div>
+        <div class="stat"><span>Steps side Σ(f<sub>j+1</sub>−f<sub>j</sub>)²</span><strong id="wR" style="color:var(--good)">–</strong></div>
       </div>
-      <div style="margin-top:8px">Right ÷ left: <span class="ratio" id="wRatio">–</span></div>
-      <div class="sub">Always at least 1; exactly 1 is the equal case.</div>
+      <div style="margin-top:8px">Steps ÷ spread: <span class="ratio" id="wRatio">–</span></div>
+      <div class="sub">Always at least 1; exactly 1 is the equal case. "How far from equal" is (steps − spread) ÷ spread.</div>
+      <div class="sub" style="margin-top:6px">In her Lean file, <b>wirtinger</b> puts the steps side on the right and <b>wirtinger_sharp</b> writes it on the left. Either way, the steps side is the one that can pull ahead; the spread side never can.</div>
     </div>
     <div class="card note">
-      Evenly spread points behave like the cosine wave in <b>wirtinger_sharp</b> and come close to equal.
-      Points bunched in a few directions push the right side ahead.
+      These two pull against each other. Your cosine wave needs the dots evenly spaced around the circle,
+      and grid dots are only evenly spaced when there are 4 of them. So the only rings that make the two sides
+      equal are the 4-dot ones, and those make the fewest lines. Lengths with more dots make more lines but
+      sit further from equal. The gap between the sides scores how uneven the spacing is.
       <div style="margin-top:8px">Checked step by step by a computer in Lean:
         <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Wirtinger.lean" target="_blank" rel="noopener">CycleWirtinger.wirtinger</a></div>
       <div class="copy" style="margin-top:8px">Copyright © 2026 NousVolition. All rights reserved.</div>
@@ -16888,6 +16898,8 @@ draw();
     $('wL').textContent = w.left.toFixed(4);
     $('wR').textContent = w.right.toFixed(4);
     $('wRatio').textContent = w.ratio.toFixed(5);
+    $('wLines').textContent = fmt(pairs);
+    $('wGap').textContent = Math.max(0, 100 * (w.right - w.left) / w.left).toFixed(1) + '%';   // never below 0; the clamp only hides rounding
     drawGrid(dirs); drawRing(dirs);
   }
 
@@ -16932,6 +16944,16 @@ draw();
     const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.4, s = R / Math.sqrt(k);
     g.strokeStyle = '#263042'; g.lineWidth = 1 * dpr; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
     g.beginPath(); g.moveTo(cx - R * 1.15, cy); g.lineTo(cx + R * 1.15, cy); g.moveTo(cx, cy - R * 1.15); g.lineTo(cx, cy + R * 1.15); g.stroke();
+    // faint gray ticks at perfectly even spacing, starting from the first dot, so uneven gaps show
+    if (dirs.length) {
+      const a0 = Math.atan2(dirs[0][1], dirs[0][0]), m = dirs.length;
+      g.strokeStyle = 'rgba(160, 170, 185, 0.45)'; g.lineWidth = 1.2 * dpr; g.beginPath();
+      for (let j = 0; j < m; j++) {
+        const t = a0 + 2 * Math.PI * j / m, c = Math.cos(t), sn = Math.sin(t);
+        g.moveTo(cx + c * R * 0.9, cy - sn * R * 0.9); g.lineTo(cx + c * R * 1.1, cy - sn * R * 1.1);
+      }
+      g.stroke();
+    }
     g.strokeStyle = 'rgba(255, 184, 107, 0.35)'; g.beginPath();
     dirs.forEach(([dx, dy]) => { g.moveTo(cx, cy); g.lineTo(cx + dx * s, cy - dy * s); }); g.stroke();
     g.strokeStyle = '#7ee787'; g.lineWidth = 1.6 * dpr; g.beginPath();
