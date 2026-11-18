@@ -345,6 +345,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="e8studio" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio">29. E₈ → Milnor</button>
     <button class="tab" data-mode="e8insp" title="Exact E8 &amp; Extended Hamming [8,4,4] Structural Inspector">30. E₈ Inspector</button>
     <button class="tab" data-mode="e8studio2" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2">31. E₈ → Milnor v2</button>
+    <button class="tab" data-mode="unit-distances" title="Unit Distances on a Square Grid">32. Unit Distances</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -16701,6 +16702,265 @@ draw();
 </html>
 </template>
 <!-- end 8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2 -->
+<!-- Unit Distances on a Square Grid — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 32: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-unit-distances" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-unit-distances">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit Distances on a Square Grid</title>
+<!-- Unit Distances on a Square Grid — Copyright © 2026 NousVolition. All rights reserved. -->
+<style>
+  :root { --bg:#0b0e14; --panel:#121722; --border:#263042; --text:#e6e6f0; --muted:#8b949e; --accent:#00d4ff; --warm:#ffb86b; --good:#7ee787; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  body { min-height: 100vh; }
+  .wrap { display: grid; grid-template-columns: 300px 1fr 300px; gap: 14px; padding: 14px; height: 100vh; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .side { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  h1 { font-size: 1.05rem; font-weight: 600; }
+  h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+  .sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  label { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; }
+  label b { color: var(--text); font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+  select, button { font: inherit; font-size: 0.85rem; color: var(--text); background: #0b0e14; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 40px; }
+  select { width: 100%; }
+  button { cursor: pointer; }
+  button:hover, button.on { border-color: var(--accent); color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: #0b0e14; border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+  .stat span { display: block; font-size: 0.72rem; color: var(--muted); }
+  .stat strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; border-radius: 4px; background: #0b0e14; border: 1px solid var(--border); overflow: hidden; margin-top: 6px; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0; }
+  .note { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .note b { color: var(--text); }
+  .stage { position: relative; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #grid { width: 100%; height: 100%; display: block; touch-action: manipulation; }
+  #ring { width: 100%; aspect-ratio: 1; display: block; background: #0b0e14; border: 1px solid var(--border); border-radius: 10px; }
+  .formula { font-size: 0.85rem; line-height: 1.6; background: #0b0e14; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .formula .lhs { color: var(--warm); } .formula .rhs { color: var(--good); }
+  .ratio { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); }
+  .copy { font-size: 0.7rem; color: var(--muted); opacity: 0.7; }
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: 1fr; height: auto; }
+    .stage { height: min(92vw, 560px); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="side">
+    <div class="card">
+      <h1>Unit Distances on a Square Grid</h1>
+      <div class="sub">Pick one length and join every pair of dots that is exactly that far apart.</div>
+    </div>
+    <div class="card">
+      <label>Grid size <b><span id="nVal">10</span> × <span id="nVal2">10</span></b></label>
+      <input type="range" id="n" min="3" max="20" step="1" value="10" aria-label="Grid size">
+      <label style="margin-top:10px">Unit length d = √k</label>
+      <select id="kSel" aria-label="Unit length"></select>
+      <div class="row" style="margin-top:8px">
+        <button id="auto" title="Pick the k with the most pairs">★ Auto best</button>
+        <span class="sub" id="dText"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><span>Dots</span><strong id="sDots">–</strong></div>
+        <div class="stat"><span>Matching pairs</span><strong id="sPairs">–</strong></div>
+        <div class="stat"><span>Pairs per dot</span><strong id="sPer">–</strong></div>
+        <div class="stat"><span>Directions (dx, dy)</span><strong id="sDirs">–</strong></div>
+      </div>
+      <div class="sub" style="margin-top:10px" id="cmpText">–</div>
+      <div class="bar"><i id="cmpBar"></i></div>
+      <div class="sub" id="cmpScale">bar: pairs compared with n² (the number of dots); full bar = 2 × n²</div>
+    </div>
+    <div class="card note">
+      <h2>Why some lengths do well</h2>
+      A length √k can only point in the directions (dx, dy) with dx² + dy² = k. A k that can be written as
+      a <b>sum of two squares in many ways</b> (like 25 = 0² + 5² = 3² + 4², or 65 = 1² + 8² = 4² + 7²) gives
+      <b>more directions</b>, so each dot has more partners. Short lengths still win on small grids,
+      because a short step fits in almost everywhere.
+    </div>
+  </div>
+
+  <div class="card stage"><canvas id="grid" aria-label="Grid of dots with matching pairs joined"></canvas></div>
+
+  <div class="side">
+    <div class="card">
+      <h2>Wirtinger ring</h2>
+      <div class="sub">All the directions (dx, dy) with dx² + dy² = k, sorted by angle, as a ring of <b id="rn">–</b> points around the highlighted dot.</div>
+      <canvas id="ring" style="margin-top:8px" aria-label="Ring of directions"></canvas>
+      <div class="row" style="margin-top:8px">
+        <button id="axis" title="Switch between left-right and up-down positions">Using f = dx (left-right)</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="formula">
+        <span class="lhs">(2 − 2 cos(2π/n)) · Σ f<sub>j</sub>²</span>
+        &nbsp;≤&nbsp;
+        <span class="rhs">Σ (f<sub>j+1</sub> − f<sub>j</sub>)²</span>
+        <div class="sub">n = points on the ring, f with its average taken away, j+1 wraps around to the start.</div>
+      </div>
+      <div class="stats" style="margin-top:8px">
+        <div class="stat"><span>Left side</span><strong id="wL" style="color:var(--warm)">–</strong></div>
+        <div class="stat"><span>Right side</span><strong id="wR" style="color:var(--good)">–</strong></div>
+      </div>
+      <div style="margin-top:8px">Right ÷ left: <span class="ratio" id="wRatio">–</span></div>
+      <div class="sub">Always at least 1; exactly 1 is the equal case.</div>
+    </div>
+    <div class="card note">
+      Evenly spread points behave like the cosine wave in <b>wirtinger_sharp</b> and come close to equal.
+      Points bunched in a few directions push the right side ahead.
+      <div style="margin-top:8px">Checked step by step by a computer in Lean:
+        <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Wirtinger.lean" target="_blank" rel="noopener">CycleWirtinger.wirtinger</a></div>
+      <div class="copy" style="margin-top:8px">Copyright © 2026 NousVolition. All rights reserved.</div>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let n = 10, k = 1, useDy = false;
+  let counts = new Map(), order = [];
+
+  // every k reachable on an n×n grid, with its number of unordered pairs (exact integers only)
+  function countAll() {
+    counts = new Map();
+    for (let dx = 0; dx < n; dx++) for (let dy = -(n - 1); dy < n; dy++) {
+      if (dx === 0 && dy <= 0) continue;                 // one of each ± pair
+      const q = dx * dx + dy * dy;
+      counts.set(q, (counts.get(q) || 0) + (n - dx) * (n - Math.abs(dy)));
+    }
+    order = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || a - b);
+  }
+  // all integer vectors with dx² + dy² = k, sorted by angle
+  function ringOf(k) {
+    const r = Math.floor(Math.sqrt(k)) + 1, v = [];
+    for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) if (dx * dx + dy * dy === k) v.push([dx, dy]);
+    return v.sort((a, b) => Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0]));
+  }
+  function wirtinger(f) {
+    const m = f.length, mean = f.reduce((s, x) => s + x, 0) / m, g = f.map(x => x - mean);
+    const left = (2 - 2 * Math.cos(2 * Math.PI / m)) * g.reduce((s, x) => s + x * x, 0);
+    let right = 0; for (let j = 0; j < m; j++) { const d = g[(j + 1) % m] - g[j]; right += d * d; }
+    return { left, right, ratio: right / left };
+  }
+  window.unitDistances = { ringOf, wirtinger, counts: () => counts, order: () => order, setN: v => { setN(v); }, setK: v => { setK(v); }, state: () => ({ n, k, pairs: counts.get(k) || 0 }) };
+
+  const fmt = x => x.toLocaleString('en-US');
+  function fillSelect() {
+    const sel = $('kSel'); sel.innerHTML = '';
+    order.forEach((q, i) => {
+      const o = document.createElement('option'); o.value = q;
+      const r = Math.sqrt(q), d = Number.isInteger(r) ? String(r) : '√' + q;
+      o.textContent = `${i + 1}. k = ${q}  (d = ${d})  — ${fmt(counts.get(q))} pairs`;
+      sel.appendChild(o);
+    });
+  }
+  function setN(v) {
+    n = v; $('nVal').textContent = n; $('nVal2').textContent = n; $('n').value = n;
+    countAll(); fillSelect();
+    if (!counts.has(k)) k = order[0];
+    setK(k);
+  }
+  function setK(v) { k = +v; $('kSel').value = k; update(); }
+
+  function update() {
+    const pairs = counts.get(k) || 0, dots = n * n, dirs = ringOf(k);
+    const r = Math.sqrt(k);
+    $('dText').textContent = `d = ${Number.isInteger(r) ? r : '√' + k + ' ≈ ' + r.toFixed(3)}`;
+    $('sDots').textContent = fmt(dots);
+    $('sPairs').textContent = fmt(pairs);
+    $('sPer').textContent = (pairs / dots).toFixed(3);
+    $('sDirs').textContent = dirs.length;
+    $('cmpText').textContent = `pairs ÷ n² = ${fmt(pairs)} ÷ ${fmt(dots)} = ${(pairs / dots).toFixed(3)}  ·  each dot has ${(2 * pairs / dots).toFixed(2)} partners on average`;
+    $('cmpBar').style.width = Math.min(100, 50 * pairs / dots) + '%';
+    const f = dirs.map(p => useDy ? p[1] : p[0]), w = wirtinger(f);
+    $('rn').textContent = dirs.length;
+    $('wL').textContent = w.left.toFixed(4);
+    $('wR').textContent = w.right.toFixed(4);
+    $('wRatio').textContent = w.ratio.toFixed(5);
+    drawGrid(dirs); drawRing(dirs);
+  }
+
+  function sizeCanvas(c) {
+    const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const w = Math.max(50, Math.round(r.width * dpr)), h = Math.max(50, Math.round(r.height * dpr));
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    return { w, h, dpr };
+  }
+  function drawGrid(dirs) {
+    const c = $('grid'), { w, h, dpr } = sizeCanvas(c), g = c.getContext('2d');
+    g.clearRect(0, 0, w, h);
+    const pad = 18 * dpr, side = Math.min(w, h) - 2 * pad, step = n > 1 ? side / (n - 1) : 0;
+    const x0 = (w - side) / 2, y0 = (h - side) / 2;
+    const X = i => x0 + i * step, Y = j => y0 + side - j * step;   // j up
+    // all matching pairs in one path (one of each ± direction)
+    const half = dirs.filter(([dx, dy]) => dx > 0 || (dx === 0 && dy > 0));
+    g.beginPath();
+    for (const [dx, dy] of half) {
+      for (let i = Math.max(0, -dx); i < Math.min(n, n - dx); i++)
+        for (let j = Math.max(0, -dy); j < Math.min(n, n - dy); j++) { g.moveTo(X(i), Y(j)); g.lineTo(X(i + dx), Y(j + dy)); }
+    }
+    const pairs = counts.get(k) || 0;
+    g.strokeStyle = 'rgba(0, 212, 255, ' + Math.max(0.12, Math.min(0.7, 900 / Math.max(1, pairs))) + ')';
+    g.lineWidth = Math.max(0.6, 1.1 * dpr * Math.min(1, 12 / n));
+    g.stroke();
+    // highlighted dot and its partners
+    const ci = Math.floor((n - 1) / 2), cj = Math.floor((n - 1) / 2);
+    g.beginPath();
+    for (const [dx, dy] of dirs) { const i = ci + dx, j = cj + dy; if (i >= 0 && i < n && j >= 0 && j < n) { g.moveTo(X(ci), Y(cj)); g.lineTo(X(i), Y(j)); } }
+    g.strokeStyle = '#ffb86b'; g.lineWidth = 2 * dpr; g.stroke();
+    // dots
+    const rad = Math.max(1.5 * dpr, Math.min(5 * dpr, step * 0.14));
+    g.fillStyle = '#e6e6f0'; g.beginPath();
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { g.moveTo(X(i) + rad, Y(j)); g.arc(X(i), Y(j), rad, 0, Math.PI * 2); }
+    g.fill();
+    g.fillStyle = '#ffb86b'; g.beginPath(); g.arc(X(ci), Y(cj), rad * 1.8, 0, Math.PI * 2); g.fill();
+  }
+  function drawRing(dirs) {
+    const c = $('ring'), { w, h, dpr } = sizeCanvas(c), g = c.getContext('2d');
+    g.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.4, s = R / Math.sqrt(k);
+    g.strokeStyle = '#263042'; g.lineWidth = 1 * dpr; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.moveTo(cx - R * 1.15, cy); g.lineTo(cx + R * 1.15, cy); g.moveTo(cx, cy - R * 1.15); g.lineTo(cx, cy + R * 1.15); g.stroke();
+    g.strokeStyle = 'rgba(255, 184, 107, 0.35)'; g.beginPath();
+    dirs.forEach(([dx, dy]) => { g.moveTo(cx, cy); g.lineTo(cx + dx * s, cy - dy * s); }); g.stroke();
+    g.strokeStyle = '#7ee787'; g.lineWidth = 1.6 * dpr; g.beginPath();
+    dirs.forEach(([dx, dy], j) => { const x = cx + dx * s, y = cy - dy * s; j ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.closePath(); g.stroke();
+    g.fillStyle = '#e6e6f0';
+    dirs.forEach(([dx, dy]) => { g.beginPath(); g.arc(cx + dx * s, cy - dy * s, 3 * dpr, 0, Math.PI * 2); g.fill(); });
+    g.fillStyle = '#ffb86b'; g.beginPath(); g.arc(cx, cy, 5 * dpr, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#8b949e'; g.font = `${11 * dpr}px sans-serif`;
+    g.fillText(useDy ? 'f = dy (up-down)' : 'f = dx (left-right)', 8 * dpr, 16 * dpr);
+  }
+
+  $('n').addEventListener('input', e => setN(+e.target.value));
+  $('kSel').addEventListener('change', e => setK(e.target.value));
+  $('auto').addEventListener('click', () => setK(order[0]));
+  $('axis').addEventListener('click', e => {
+    useDy = !useDy;
+    e.target.textContent = useDy ? 'Using f = dy (up-down)' : 'Using f = dx (left-right)';
+    e.target.classList.toggle('on', useDy); update();
+  });
+  let rz = 0;
+  window.addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(update); });
+  setN(10); setK(order[0]);
+})();
+</script>
+</body>
+</html>
+</template>
+<!-- end Unit Distances on a Square Grid -->
 </div>
 
 <script>
@@ -21054,7 +21314,7 @@ function drawStretch() {
 // globals can't touch the playground. The small shim below runs first inside the frame:
 // while another tab is open it holds the page's animation frames and timers, freezes its
 // clock and suspends its sound, then picks up where it left off.
-const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3', 'e8studio', 'e8insp', 'e8studio2'];
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3', 'e8studio', 'e8insp', 'e8studio2', 'unit-distances'];
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
@@ -21517,6 +21777,7 @@ loop();
     ['Black holes', ['blackhole','bh2','bh3']],
     ['4D & higher dimensions', ['fourd','polychora','horned','nonorient','penteract','leech','pentlite','hopf']],
     ['E₈ pair', ['e8studio','e8insp','e8studio2']],
+    ['Points & distances', ['unit-distances']],
   ];
   const btns = [...document.querySelectorAll('.tabs .tab')];
   const byKey = {}; btns.forEach(b => { byKey[b.dataset.mode] = b; });
