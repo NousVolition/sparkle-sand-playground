@@ -344,6 +344,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="bh3" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
     <button class="tab" data-mode="e8studio" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio">29. E₈ → Milnor</button>
     <button class="tab" data-mode="e8insp" title="Exact E8 &amp; Extended Hamming [8,4,4] Structural Inspector">30. E₈ Inspector</button>
+    <button class="tab" data-mode="e8studio2" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2">31. E₈ → Milnor v2</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -16162,6 +16163,544 @@ draw();
 </html>
 </template>
 <!-- end Exact E8 & Extended Hamming [8,4,4] Structural Inspector -->
+<!-- 8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Tab 31: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<div class="page-tab" id="page-e8studio2" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
+<template id="page-src-e8studio2">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #07090f;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+  #ui {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: rgba(12, 16, 28, 0.86);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+    transition: opacity 0.25s ease;
+  }
+  #ui.hidden { opacity: 0; pointer-events: none; }
+  h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #f8fafc;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .stage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  button {
+    background: rgba(30, 41, 59, 0.85);
+    color: #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 8px;
+    padding: 7px 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button:hover {
+    background: rgba(51, 65, 85, 0.95);
+    border-color: #38bdf8;
+  }
+  button.active {
+    background: rgba(14, 165, 233, 0.25);
+    border-color: #38bdf8;
+    color: #7dd3fc;
+  }
+  .control-group {
+    margin-bottom: 11px;
+  }
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: #38bdf8;
+    cursor: pointer;
+  }
+  .info-box {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+  .info-box strong { color: #38bdf8; }
+  .toolbar {
+    display: flex;
+    gap: 6px;
+  }
+  .toolbar button { flex: 1; }
+  #show-ui-btn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    display: none;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="show-ui-btn">Show Controls</button>
+
+<div id="ui">
+  <h1>8-Cube → E₈ → Milnor Σ⁷</h1>
+  <div class="subtitle">Unified Higher-Dimensional Geometry &amp; Plumbing Bridge</div>
+
+  <div class="stage-grid">
+    <button class="stage-btn active" data-morph="0">1. 8-Cube (256)</button>
+    <button class="stage-btn" data-morph="0.333">2. E₈ Mandala (240)</button>
+    <button class="stage-btn" data-morph="0.667">3. E₈ Plumbing (det=1)</button>
+    <button class="stage-btn" data-morph="1">4. Milnor Σ⁷ (1 of 28)</button>
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">
+      <span>Pipeline Morph</span>
+      <span id="morph-val">0%</span>
+    </div>
+    <input type="range" id="morph" min="0" max="1" step="0.002" value="0">
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">
+      <span>8D / 3D Tilt Twist</span>
+      <span id="twist-val">0.45</span>
+    </div>
+    <input type="range" id="twist" min="0" max="1.5" step="0.01" value="0.45">
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">
+      <span>Eye-Comfort Brightness</span>
+      <span id="bright-val">85%</span>
+    </div>
+    <input type="range" id="bright" min="0.35" max="1.15" step="0.02" value="0.85">
+  </div>
+
+  <div class="info-box" id="stage-desc"></div>
+
+  <div class="toolbar">
+    <button id="orbit-btn">Auto-Orbit: On</button>
+    <button id="hide-btn">Hide UI</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+});
+
+// UI Elements
+const ui = document.getElementById('ui');
+const showUiBtn = document.getElementById('show-ui-btn');
+const morphSlider = document.getElementById('morph');
+const twistSlider = document.getElementById('twist');
+const brightSlider = document.getElementById('bright');
+const morphVal = document.getElementById('morph-val');
+const twistVal = document.getElementById('twist-val');
+const brightVal = document.getElementById('bright-val');
+const stageDesc = document.getElementById('stage-desc');
+const orbitBtn = document.getElementById('orbit-btn');
+const hideBtn = document.getElementById('hide-btn');
+const stageBtns = document.querySelectorAll('.stage-btn');
+
+let autoOrbit = true;
+let rotY = 0.4;
+let rotX = 0.25;
+let dragging = false;
+let lastX = 0, lastY = 0;
+
+canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('mouseup', () => dragging = false);
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastX) * 0.007;
+  rotX += (e.clientY - lastY) * 0.007;
+  lastX = e.clientX; lastY = e.clientY;
+});
+
+orbitBtn.addEventListener('click', () => {
+  autoOrbit = !autoOrbit;
+  orbitBtn.textContent = autoOrbit ? 'Auto-Orbit: On' : 'Auto-Orbit: Off';
+});
+
+hideBtn.addEventListener('click', () => {
+  ui.classList.add('hidden');
+  showUiBtn.style.display = 'block';
+});
+
+showUiBtn.addEventListener('click', () => {
+  ui.classList.remove('hidden');
+  showUiBtn.style.display = 'none';
+});
+
+// [8,4,4] Extended Hamming generator rows (as bitmasks): 14 codewords of weight 4, plus 0 and all-ones
+const hammingRows = [
+  0b10001110,
+  0b01001101,
+  0b00101011,
+  0b00010111
+];
+const hammingSet = new Set();
+for (let m = 0; m < 16; m++) {
+  let code = 0;
+  for (let r = 0; r < 4; r++) {
+    if ((m >> r) & 1) code ^= hammingRows[r];
+  }
+  hammingSet.add(code);
+}
+
+const N = 256;
+const nodes = [];
+
+// E8 Dynkin diagram, labeled to match the simple-root array below:
+// a chain of 7 with the branch at node 4, so the three arms have lengths
+// 4, 2, 1 (nodes 0-1-2-3 | 6-7 | 5). Branching at the middle node
+// (arms 3, 3, 1) would give the affine E7 diagram instead, whose determinant is 0.
+const dynkinPos = [
+  [-2.1,  0.0, 0.0],
+  [-1.4,  0.0, 0.0],
+  [-0.7,  0.0, 0.0],
+  [ 0.0,  0.0, 0.0],
+  [ 0.7,  0.0, 0.0],
+  [ 0.7, -0.85, 0.0], // branch at node 4 (simple root α5)
+  [ 1.4,  0.0, 0.0],
+  [ 2.1,  0.0, 0.0]
+];
+const dynkinEdges = [[0,1],[1,2],[2,3],[3,4],[4,5],[4,6],[6,7]];
+
+// Generate the 240 E8 roots (112 integer + 128 half-integer)
+const e8Roots = [];
+for (let i = 0; i < 8; i++) {
+  for (let j = i + 1; j < 8; j++) {
+    for (let s1 of [-1, 1]) {
+      for (let s2 of [-1, 1]) {
+        const v = new Array(8).fill(0);
+        v[i] = s1; v[j] = s2;
+        e8Roots.push({ v, type: 'int' });
+      }
+    }
+  }
+}
+for (let mask = 0; mask < 256; mask++) {
+  let neg = 0;
+  const v = new Array(8);
+  for (let k = 0; k < 8; k++) {
+    if ((mask >> k) & 1) { v[k] = -0.5; neg++; }
+    else { v[k] = 0.5; }
+  }
+  if (neg % 2 === 0) {
+    e8Roots.push({ v, type: 'spin' });
+  }
+}
+
+// Real Coxeter plane of E8: the plane the Coxeter element (product of the 8 simple
+// reflections) turns by 2*pi/30. Projected there, the 240 roots fall on 8 rings of 30.
+const simple = [
+  [1, -1, 0, 0, 0, 0, 0, 0], [0, 1, -1, 0, 0, 0, 0, 0], [0, 0, 1, -1, 0, 0, 0, 0],
+  [0, 0, 0, 1, -1, 0, 0, 0], [0, 0, 0, 0, 1, -1, 0, 0], [0, 0, 0, 0, 0, 1, -1, 0],
+  [0, 0, 0, 0, 0, 1, 1, 0], [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5]
+];
+const dot8 = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+function coxeterPlane(freq) {
+  const w = x => { let c = x.slice(); for (const a of simple) { const d = dot8(c, a); c = c.map((v, i) => v - d * a[i]); } return c; };
+  let x = [1.2, -0.7, 0.4, 1.5, -1.1, 0.3, 0.8, -0.5];
+  let b1 = new Array(8).fill(0), b2 = new Array(8).fill(0);
+  for (let k = 0; k < 30; k++) {
+    const c = Math.cos(2 * Math.PI * freq * k / 30), s = Math.sin(2 * Math.PI * freq * k / 30);
+    for (let i = 0; i < 8; i++) { b1[i] += c * x[i]; b2[i] += s * x[i]; }
+    x = w(x);
+  }
+  const n1 = Math.hypot(...b1); b1 = b1.map(v => v / n1);
+  const d = dot8(b1, b2); b2 = b2.map((v, i) => v - d * b1[i]);
+  const n2 = Math.hypot(...b2); b2 = b2.map(v => v / n2);
+  return [b1, b2];
+}
+const [coxA, coxB] = coxeterPlane(1);
+const [coxC] = coxeterPlane(7);    // a second invariant plane, used only for a little depth
+
+for (let i = 0; i < N; i++) {
+  // Stage 1: 8-Cube vertex projected to 3D
+  const bits = [];
+  for (let b = 0; b < 8; b++) bits.push(((i >> b) & 1) ? 1 : -1);
+  let c1x = 0, c1y = 0, c1z = 0;
+  for (let b = 0; b < 8; b++) {
+    const a = (b * Math.PI) / 4;
+    c1x += bits[b] * Math.cos(a) * 0.52;
+    c1y += bits[b] * Math.sin(a) * 0.52;
+    c1z += bits[b] * ((b % 2 === 0 ? 1 : -1) * 0.34);
+  }
+  const isHamming = hammingSet.has(i);
+
+  // Stage 2: E8 roots in the real Coxeter plane (indices 0..239; 240..255 tucked at the center)
+  let c2x = 0, c2y = 0, c2z = 0, rootType = 'extra';
+  if (i < 240) {
+    const r = e8Roots[i];
+    rootType = r.type;
+    c2x = dot8(r.v, coxA) * 1.6;
+    c2y = dot8(r.v, coxB) * 1.6;
+    c2z = dot8(r.v, coxC) * 0.25;
+  }
+
+  // Stage 3: E8 Plumbing Graph (clusters of 32 nodes around the 8 Dynkin vertices)
+  const dIdx = i % 8;
+  const sub = Math.floor(i / 8);
+  const subAng = (sub / 32) * Math.PI * 2;
+  const c3x = dynkinPos[dIdx][0] + Math.cos(subAng) * 0.14;
+  const c3y = dynkinPos[dIdx][1] + Math.sin(subAng) * 0.14;
+  const c3z = dynkinPos[dIdx][2] + Math.sin(subAng * 2) * 0.12;
+
+  // Stage 4: artistic stand-in for the 7-dimensional boundary (a twisted torus in 3D)
+  const u = (i / N) * Math.PI * 2;
+  const v = ((i * 7) % N) / N * Math.PI * 2;
+  const R = 1.35 + 0.32 * Math.cos(3 * u + v);
+  const rTube = 0.52 + 0.14 * Math.sin(5 * u - 2 * v);
+  const c4x = (R + rTube * Math.cos(v)) * Math.cos(u);
+  const c4y = (R + rTube * Math.cos(v)) * Math.sin(u);
+  const c4z = rTube * Math.sin(v) + 0.28 * Math.sin(3 * u);
+
+  nodes.push({
+    isHamming,
+    rootType,
+    dIdx,
+    s: [
+      [c1x, c1y, c1z],
+      [c2x, c2y, c2z],
+      [c3x, c3y, c3z],
+      [c4x, c4y, c4z]
+    ]
+  });
+}
+
+function updateUI(m) {
+  morphVal.textContent = Math.round(m * 100) + '%';
+  stageBtns.forEach(btn => {
+    const target = parseFloat(btn.dataset.morph);
+    btn.classList.toggle('active', Math.abs(m - target) < 0.12);
+  });
+  if (m < 0.18) {
+    stageDesc.innerHTML = '<strong>Stage 1 — 8-Cube &amp; [8,4,4] Hamming Code:</strong> 256 vertices in ℝ⁸. Gold nodes are the 16 codewords of the extended Hamming code (14 of weight 4, plus all-zeros and all-ones). E₈ can be built from them (“Construction A”): put ±1 on the 4 positions of each weight-4 codeword (14 × 16 = 224 vectors) and add ±2 on single coordinates (16 vectors): 224 + 16 = 240, the E₈ roots in another coordinate system.';
+  } else if (m < 0.52) {
+    stageDesc.innerHTML = '<strong>Stage 2 — E₈ Root System (240 Roots):</strong> 112 cyan integer roots + 128 gold half-integer roots, shown in the real Coxeter plane: they fall on 8 rings of 30. E₈ gives the densest sphere packing in 8 dimensions (Viazovska, 2016). Its 8 simple roots form the E₈ diagram.';
+  } else if (m < 0.84) {
+    stageDesc.innerHTML = '<strong>Stage 3 — E₈ Plumbing Manifold (det = 1):</strong> Plumb 8 disk bundles along the E₈ diagram (arms of length 4, 2, 1). In the 8D version (tangent disk bundles of S⁴) the intersection form is E₈: unimodular (det = 1) with signature 8.';
+  } else {
+    stageDesc.innerHTML = '<strong>Stage 4 — Milnor Exotic 7-Sphere (Σ⁷):</strong> det(E₈) = 1 makes the boundary a homology 7-sphere; it is also simply connected, so by Smale\'s theorem it is a topological 7-sphere. Signature 8 proves it is not the standard smooth 7-sphere: capping it with a ball would give an almost-parallelizable closed 8-manifold whose signature is not divisible by 224. It generates the 28 smooth 7-spheres. (The shape drawn here is an artistic stand-in; a 7-sphere can\'t be drawn in 3D.)';
+  }
+}
+
+morphSlider.addEventListener('input', () => updateUI(parseFloat(morphSlider.value)));
+twistSlider.addEventListener('input', () => twistVal.textContent = parseFloat(twistSlider.value).toFixed(2));
+brightSlider.addEventListener('input', () => brightVal.textContent = Math.round(parseFloat(brightSlider.value) * 100) + '%');
+
+stageBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = parseFloat(btn.dataset.morph);
+    morphSlider.value = target;
+    updateUI(target);
+  });
+});
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function smoothstep(t) { return t * t * (3 - 2 * t); }
+
+function project(x, y, z) {
+  const cy = Math.cos(rotY), sy = Math.sin(rotY);
+  const cx = Math.cos(rotX), sx = Math.sin(rotX);
+  const x1 = x * cy - z * sy;
+  const z1 = x * sy + z * cy;
+  const y2 = y * cx - z1 * sx;
+  const z2 = y * sx + z1 * cx;
+  const fov = 4.2;
+  const scale = Math.min(W, H) * 0.26 * (fov / (fov + z2 + 2.2));
+  return { x: W * 0.5 + x1 * scale, y: H * 0.5 + y2 * scale, z: z2, scale };
+}
+
+function draw() {
+  const bright = parseFloat(brightSlider.value);
+  const m = parseFloat(morphSlider.value);
+  const twist = parseFloat(twistSlider.value);
+
+  // Near the mandala stage, ease the camera face-on so the 8 rings of 30 read clearly
+  const faceOn = Math.max(0, 1 - Math.abs(m - 0.333) * 6);
+  if (autoOrbit && !dragging) rotY += 0.004 * (1 - faceOn);
+  const viewY = rotY * (1 - faceOn), viewX = rotX * (1 - faceOn);
+  const savedY = rotY, savedX = rotX;
+  rotY = viewY; rotX = viewX;
+
+  ctx.fillStyle = '#07090f';
+  ctx.fillRect(0, 0, W, H);
+
+  const scaled = m * 3;
+  const idx = Math.min(2, Math.floor(scaled));
+  const t = smoothstep(scaled - idx);
+
+  // The same twist is applied to the nodes and to the diagram lines, so they stay together
+  const twistXY = (x, y, z) => {
+    const ang = twist * (1 - faceOn) * (x * 0.45 + z * 0.45);
+    return [x * Math.cos(ang) - y * Math.sin(ang), x * Math.sin(ang) + y * Math.cos(ang)];
+  };
+  const projected = new Array(N);
+  for (let i = 0; i < N; i++) {
+    const pA = nodes[i].s[idx];
+    const pB = nodes[i].s[idx + 1];
+    let x = lerp(pA[0], pB[0], t);
+    let y = lerp(pA[1], pB[1], t);
+    let z = lerp(pA[2], pB[2], t);
+
+    // Subtle twist (off at the mandala stage so the rings stay exact)
+    const [nx, ny] = twistXY(x, y, z);
+    projected[i] = { ...project(nx, ny, z), i };
+  }
+
+  // Draw plumbing Dynkin edges when near Stage 3
+  const plumbAlpha = Math.max(0, 1 - Math.abs(m - 0.667) * 4.5) * bright;
+  if (plumbAlpha > 0.02) {
+    ctx.strokeStyle = `rgba(56, 189, 248, ${plumbAlpha * 0.85})`;
+    ctx.lineWidth = 3;
+    for (const [a, b] of dynkinEdges) {
+      const [ax, ay] = twistXY(dynkinPos[a][0], dynkinPos[a][1], dynkinPos[a][2]);
+      const [bx, by] = twistXY(dynkinPos[b][0], dynkinPos[b][1], dynkinPos[b][2]);
+      const pa = project(ax, ay, dynkinPos[a][2]);
+      const pb = project(bx, by, dynkinPos[b][2]);
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+  }
+
+  // Light structural chords in Stage 1 & Stage 4
+  if (m < 0.25) {
+    const a1 = (1 - m * 4) * 0.10 * bright;
+    ctx.strokeStyle = `rgba(148, 163, 184, ${a1})`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < N; i++) {
+      for (let b = 0; b < 8; b++) {
+        const j = i ^ (1 << b);
+        if (i < j) {
+          ctx.beginPath();
+          ctx.moveTo(projected[i].x, projected[i].y);
+          ctx.lineTo(projected[j].x, projected[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  } else if (m > 0.78) {
+    const a4 = ((m - 0.78) / 0.22) * 0.25 * bright;
+    ctx.strokeStyle = `rgba(192, 132, 252, ${a4})`;
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < N; i++) {
+      const j = (i + 1) % N;
+      ctx.beginPath();
+      ctx.moveTo(projected[i].x, projected[i].y);
+      ctx.lineTo(projected[j].x, projected[j].y);
+      ctx.stroke();
+    }
+  }
+
+  projected.sort((a, b) => b.z - a.z);
+
+  for (const pt of projected) {
+    const node = nodes[pt.i];
+    if (m > 0.2 && m < 0.48 && node.rootType === 'extra') continue;
+
+    let r = 2.6;
+    let color = `rgba(56, 189, 248, ${0.78 * bright})`;
+
+    if (m < 0.25 && node.isHamming) {
+      r = 4.5;
+      color = `rgba(250, 204, 21, ${0.95 * bright})`;
+    } else if (m >= 0.2 && m < 0.5) {
+      if (node.rootType === 'spin') {
+        r = 3.2;
+        color = `rgba(250, 204, 21, ${0.88 * bright})`;
+      } else {
+        r = 2.9;
+        color = `rgba(56, 189, 248, ${0.85 * bright})`;
+      }
+    } else if (m >= 0.5 && m < 0.82) {
+      r = 3.4;
+      color = node.dIdx === 5
+        ? `rgba(244, 114, 182, ${0.9 * bright})`
+        : `rgba(52, 211, 153, ${0.88 * bright})`;
+    } else if (m >= 0.82) {
+      r = 3.3;
+      color = (pt.i % 8 === 0)
+        ? `rgba(250, 204, 21, ${0.95 * bright})`
+        : `rgba(192, 132, 252, ${0.86 * bright})`;
+    }
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  rotY = savedY; rotX = savedX;
+  requestAnimationFrame(draw);
+}
+
+updateUI(0);
+draw();
+</script>
+</body>
+</html>
+</template>
+<!-- end 8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2 -->
 </div>
 
 <script>
@@ -20515,7 +21054,7 @@ function drawStretch() {
 // globals can't touch the playground. The small shim below runs first inside the frame:
 // while another tab is open it holds the page's animation frames and timers, freezes its
 // clock and suspends its sound, then picks up where it left off.
-const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3', 'e8studio', 'e8insp'];
+const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole', 'ocean', 'fourd', 'polychora', 'fireflies', 'horned', 'nonorient', 'penteract', 'leech', 'pentlite', 'hopf', 'bh2', 'bh3', 'e8studio', 'e8insp', 'e8studio2'];
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
@@ -20977,7 +21516,7 @@ loop();
     ['Waves, sums & sound', ['sum','ringsum','zeros','pendulum','trilogy','ocean','fireflies']],
     ['Black holes', ['blackhole','bh2','bh3']],
     ['4D & higher dimensions', ['fourd','polychora','horned','nonorient','penteract','leech','pentlite','hopf']],
-    ['E₈ pair', ['e8studio','e8insp']],
+    ['E₈ pair', ['e8studio','e8insp','e8studio2']],
   ];
   const btns = [...document.querySelectorAll('.tabs .tab')];
   const byKey = {}; btns.forEach(b => { byKey[b.dataset.mode] = b; });
