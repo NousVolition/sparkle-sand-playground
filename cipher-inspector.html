@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<!-- Homophonic Cipher Annealing Inspector — Copyright © 2026 NousVolition. All rights reserved. -->
+<!-- Single file, no outside libraries. Quadgram table built from public-domain Project Gutenberg books (see the script). -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homophonic Cipher Annealing Inspector</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #121722; --panel-alt: #181f2e; --border: #263147;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --gold: #fbbf24;
+    --green: #34d399; --red: #f87171; --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 13px; line-height: 1.45; padding: 14px; }
+  header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 10px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+  header h1 { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 0.3px; }
+  header .sub { color: var(--muted); font-size: 11px; }
+  .grid { display: grid; grid-template-columns: 360px 386px 1fr; gap: 12px; align-items: start; }
+  @media (max-width: 1180px) { .grid { grid-template-columns: 1fr; } #mid-card.wide { grid-column: auto; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+  .card h2 { font-size: 13px; color: var(--gold); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center; }
+  .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--panel-alt); border: 1px solid var(--border); color: var(--text); }
+  .badge.ok { border-color: var(--green); color: var(--green); }
+  textarea { width: 100%; height: 210px; background: #090c12; color: var(--text); border: 1px solid var(--border); border-radius: 5px;
+    padding: 6px; font-family: inherit; font-size: 11.5px; resize: vertical; }
+  select, input[type=number] { background: var(--panel-alt); color: var(--text); border: 1px solid var(--border); border-radius: 4px;
+    font-family: inherit; font-size: 11px; padding: 3px 4px; }
+  select { width: 100%; margin-bottom: 6px; }
+  .row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: 8px; font-size: 11px; color: var(--muted); }
+  .btn-sm { cursor: pointer; background: var(--panel-alt); border: 1px solid var(--border); color: var(--text); padding: 4px 8px;
+    border-radius: 4px; font-family: inherit; font-size: 11px; }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.hot { border-color: #f59e0b; color: #f59e0b; }
+  .inspector-box { margin-top: 8px; padding: 8px 10px; background: var(--panel-alt); border: 1px solid var(--border); border-radius: 5px; font-size: 11px; }
+  .kv { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+  .kv > span:first-child { color: var(--muted); }
+  .kv > span:last-child { color: var(--text); font-weight: 600; text-align: right; }
+  .canvas-wrap { background: #070a0f; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: 362px; margin-bottom: 8px; }
+  canvas { display: block; }
+  .cap { font-size: 10.5px; color: var(--muted); margin: 2px 0 8px; }
+  pre.out { white-space: pre-wrap; word-break: break-all; background: #090c12; border: 1px solid var(--border); border-radius: 5px;
+    padding: 6px; font-size: 11.5px; max-height: 170px; overflow-y: auto; }
+  .muted { color: var(--muted); }
+  .pass { color: var(--green) !important; } .fail { color: var(--red) !important; }
+  .detail { font-size: 10.5px; color: var(--muted); margin: -2px 0 5px 8px; }
+  .evidence { margin-top: 8px; font-size: 11px; line-height: 1.5; }
+  #reheat-note { display: none; margin-top: 6px; padding: 5px 8px; border: 1px solid #f59e0b; color: #f59e0b; border-radius: 4px; font-size: 11px; }
+  .note { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
+  .note a { color: var(--accent); }
+  .tab { cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 2px 8px; border-radius: 4px; font-family: inherit; font-size: 12px; }
+  .tab.on { color: var(--gold); border-color: var(--gold); }
+  input[type=range] { width: 150px; vertical-align: middle; }
+  #mid-card.wide { grid-column: 2 / span 2; }
+  #view-torus { gap: 10px; align-items: flex-start; }
+  .t-side { width: 310px; flex: 0 0 310px; background: #0d1520; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 11px; }
+  .t-side input[type=range] { width: 100%; accent-color: #2dd4bf; }
+  .t-title { color: #2dd4bf; font-weight: 700; margin-bottom: 8px; }
+  .t-lab { color: var(--muted); margin-top: 8px; display: flex; justify-content: space-between; }
+  .t-lab span { color: #2dd4bf; }
+  .t-btn { border-color: #2dd4bf; color: #2dd4bf; }
+  .t-hint { margin-top: 10px; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+  #view-synth { gap: 10px; align-items: flex-start; }
+  #synth-canvas { border: 1px solid var(--border); border-radius: 6px; flex: 1 1 auto; }
+  .t-side select { width: 100%; }
+  #torus { border: 1px solid var(--border); border-radius: 6px; flex: 1 1 auto; max-width: 100%; }
+  .help { margin-bottom: 12px; }
+  .help summary { cursor: pointer; color: var(--gold); font-weight: 700; font-size: 13px; }
+  .help ol { margin: 8px 0 0 20px; font-size: 12px; line-height: 1.6; }
+  .help li { margin-bottom: 3px; }
+  .hint-demo, .hint { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%;
+    border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
+  .hint { position: relative; cursor: help; }
+  .hint::before { content: '?'; }
+  .hint:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .hint .tip { display: none; position: absolute; z-index: 50; left: 50%; top: 19px; transform: translateX(-50%); width: 260px;
+    background: #0d1520; color: var(--text); border: 1px solid var(--accent); border-radius: 6px; padding: 7px 9px;
+    font-size: 11px; font-weight: 400; line-height: 1.45; text-align: left; white-space: normal; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+  .hint:hover .tip, .hint:focus .tip, .hint.open .tip { display: block; }
+  .lab-row { display: flex; align-items: center; font-size: 11px; margin-bottom: 4px; }
+  .prog { height: 8px; background: #090c12; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 3px 0 6px; }
+  #prog-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #2dd4bf, #f59e0b); transition: width 0.2s; }
+  .intro { flex-basis: 100%; font-size: 11.5px; line-height: 1.5; color: var(--text); background: var(--panel-alt); border: 1px solid var(--border);
+    border-left: 3px solid #2dd4bf; border-radius: 5px; padding: 7px 10px; margin-bottom: 10px; }
+  #view-torus, #view-synth { flex-wrap: wrap; }
+  footer { margin-top: 4px; padding: 8px 14px; color: var(--muted); font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>HOMOPHONIC CIPHER ANNEALING INSPECTOR</h1>
+    <div class="sub">Simulated Annealing • English Quadgram Score • Index of Coincidence • Chi-Square • Wirtinger Roughness Gauge • Independent Answer Check</div>
+  </div>
+  <span class="badge ok" id="status">Loading.</span>
+</header>
+
+<details class="card help" id="help-panel">
+  <summary>How to use this</summary>
+  <ol>
+    <li><b>Press Start.</b> A built-in test cipher is already loaded, so you can try it straight away. You can also paste your own cipher text into the box first.</li>
+    <li><b>Watch the cyan line</b> in the chart under the colored grid. When it climbs into the shaded band, the decoded text is starting to look like English.</li>
+    <li><b>The amber line is the &lsquo;heat&rsquo;.</b> It starts high, so the solver tries wild guesses, then cools, so it settles on the best ones it has found.</li>
+    <li><b>A run takes about 2 minutes</b> at Normal speed on a typical screen (about 4 minutes at Careful, about 1 minute at Fast) and stops by itself. The progress bar and &lsquo;time left&rsquo; line show the live estimate.</li>
+    <li><b>If the cyan line goes flat outside the band</b> (the state line then reads &lsquo;looks stuck&rsquo;), press Reheat, or choose a new seed and press Reset, then Start.</li>
+    <li><b>When it finishes,</b> read the Answer check on the right. It checks the result with separate code, and the decoded text appears above it.</li>
+    <li>Every small <span class="hint-demo">?</span> explains the item next to it. Point at it, tap it, or reach it with the Tab key.</li>
+  </ol>
+</details>
+
+<div class="grid">
+  <!-- PANEL 1: CIPHER AND CONTROLS -->
+  <div>
+    <div class="card">
+      <h2><span>1. Cipher Text</span><span class="badge" id="cipher-stats">—</span></h2>
+      <div class="lab-row"><span class="muted">Test cipher</span><span class="hint" data-hint="Ready-made ciphers for trying the page. The two tests were made from known English passages, so the page can show how many letters came out right."></span></div>
+      <select id="test-pick"></select>
+      <div class="lab-row"><span class="muted">Cipher text</span><span class="hint" data-hint="Each character that is not a space or line break counts as one cipher symbol. In a homophonic cipher, one letter can be written with several different symbols."></span></div>
+      <textarea id="cipher-in" spellcheck="false" placeholder="Paste cipher text. Each character that is not a space or line break is one symbol."></textarea>
+      <div class="row">
+        <button class="btn-sm" id="btn-load">Load test cipher</button><span class="hint" data-hint="Puts the chosen test cipher into the box above."></span>
+        <label>Seed <input type="number" id="seed" value="1" min="1" style="width:64px"></label><span class="hint" data-hint="The starting number for the random choices. The same seed repeats the same run; a different seed gives a fresh try. Press Reset after changing it."></span>
+      </div>
+      <div class="row">
+        <button class="btn-sm" id="btn-start">Start</button><span class="hint" data-hint="Start begins or continues the run, Pause holds it, and Reset starts over from a new random key."></span>
+        <button class="btn-sm" id="btn-pause">Pause</button>
+        <button class="btn-sm" id="btn-reset">Reset</button>
+        <button class="btn-sm hot" id="btn-reheat">Reheat</button><span class="hint" data-hint="Raises the heat back to 0.65 so the solver can shake loose from a near miss. The best key found so far is kept."></span>
+        <label><input type="checkbox" id="auto-reheat"> Auto-reheat</label><span class="hint" data-hint="Reheats by itself, up to 3 times, whenever the state line reads &lsquo;looks stuck&rsquo;."></span>
+      </div>
+      <div class="row">
+        <span>Speed</span>
+        <input type="range" id="speed" min="0" max="2" step="1" value="1" style="width:90px" aria-label="Speed: Careful, Normal or Fast">
+        <b id="speed-v" style="color:var(--text)">Normal</b><span class="hint" data-hint="How fast the heat drops after each batch of 400 steps (Careful 0.99975, Normal 0.9995, Fast 0.999). Fast takes about half the time of Normal and Careful about twice as long. Fast saves time. In testing, all three speeds solved about equally often, but a slower run may help on short or hard ciphers."></span>
+      </div>
+      <div id="reheat-note">Reheat suggested: the IoC curve has settled (W(IoC) below the line, or flat) while IoC is outside 0.060 to 0.075.</div>
+    </div>
+    <div class="card">
+      <h2><span>Solver Readout</span><span class="badge">stepBatch(400, 0.9995)</span></h2>
+      <div class="inspector-box" style="margin-top:0">
+        <div class="kv"><span>State<span class="hint" data-hint="exploring: the curves still jump around a lot (W at 450 or more). settling: the curves are calming down. locked in: the IoC line is calm, inside 0.060 to 0.080, and the score has stopped rising. looks stuck: the IoC line is calm but outside that range, so Reheat or a new seed may help."></span></span><span id="kv-state">—</span></div>
+        <div class="kv"><span>Time left<span class="hint" data-hint="Worked out from the current heat and the cooling speed: frames left = ln(heat &divide; 0.055) &divide; ln(1 &divide; rate), where ln is the natural logarithm, then divided by the measured screen refreshes per second. A reheat adds time back."></span></span><span id="kv-left">—</span></div>
+        <div class="prog" role="progressbar" aria-label="Run progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="prog"><div id="prog-fill"></div></div>
+        <div class="kv"><span>Temperature (1.50 → 0.05, stop ≤ 0.055)<span class="hint" data-hint="The &lsquo;heat&rsquo; of the search. While it is high the solver accepts many worse guesses so it can roam widely; as it cools it keeps mostly better guesses and settles. The run stops by itself at 0.055."></span></span><span id="kv-temp">—</span></div>
+        <div class="kv"><span>Steps<span class="hint" data-hint="Each step tries giving one cipher symbol a different letter. The page runs 400 steps for every screen refresh."></span></span><span id="kv-step">0</span></div>
+        <div class="kv"><span>Index of coincidence<span class="hint" data-hint="IoC: how often two letters picked at random from the text match. English text scores about 0.067; letters chosen fully at random score about 1/26 &asymp; 0.038."></span></span><span id="kv-ioc">—</span></div>
+        <div class="kv"><span>Chi-square vs English<span class="hint" data-hint="Chi-square: one number for how far the letter counts are from usual English counts; bigger means a bigger gap. English passages of this length average about 36, and 95% score below about 57."></span></span><span id="kv-chi">—</span></div>
+        <div class="kv"><span>Quadgram log10 score<span class="hint" data-hint="A quadgram is a run of four letters, such as TION. The score adds up how common each run is in English, using logarithms (powers of ten), so it is negative; closer to zero is more English-like. Per quadgram, English scores about &minus;4.13 and jumbled letters about &minus;4.90."></span></span><span id="kv-quad">—</span></div>
+        <div class="kv"><span>Accepted moves<span class="hint" data-hint="The share of tried steps the solver kept."></span></span><span id="kv-acc">—</span></div>
+        <div class="kv"><span>bestKey found at step<span class="hint" data-hint="The key is the table that gives each cipher symbol a letter. The best key is the highest-scoring one so far; it is never lost, even after a reheat."></span></span><span id="kv-beststep">—</span></div>
+        <div class="kv"><span>Reheats<span class="hint" data-hint="When each reheat happened, and whether you pressed it or Auto-reheat did."></span></span><span id="kv-reheats">none</span></div>
+        <div class="kv"><span>Wirtinger bound failures<span class="hint" data-hint="Counts any frame where the measured roughness (W, see the gauge) went below its proven lower limit of 1. It should always stay at 0; anything else would mean a mistake in the code."></span></span><span id="kv-viol">0</span></div>
+        <div class="kv"><span>Run time<span class="hint" data-hint="Time spent running so far, not counting pauses."></span></span><span id="kv-time">0.0 s</span></div>
+      </div>
+      <div class="note" style="margin-top:8px">
+        Each step moves one cipher symbol to a different letter and keeps the move by the Metropolis rule.
+        The solver score is 0.1 × (quadgram score − 0.5 × chi-square); the chi-square term keeps the key from
+        collapsing onto a few common letters. Temperature cools by 0.9995 once per batch of 400 steps.
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: HEATMAP, TELEMETRY, GAUGE -->
+  <div class="card" id="mid-card">
+    <h2><span>2. <button class="tab on" id="tab-tele">Telemetry</button><span class="hint" data-hint="Live charts of the solver: letter pairs, heat and IoC over time, and the roughness gauge."></span> <button class="tab" id="tab-mandala">Mandala</button><span class="hint" data-hint="Draws the cipher&rsquo;s reading order as lines between symbols placed on two rings."></span> <button class="tab" id="tab-torus">3D Cipher Torus &amp; Cube</button><span class="hint" data-hint="Shows the Z340 grid wrapped on a ring-doughnut shape (a torus), with a reading path drawn as a moving beam."></span> <button class="tab" id="tab-synth">Cipher Audio Synthesizer</button><span class="hint" data-hint="Plays the Z340 reading order as notes, one symbol per note, as a listening aid."></span></span><span class="badge">last 120 frames</span></h2>
+    <div id="view-tele">
+    <div class="canvas-wrap"><canvas id="heatmap" width="360" height="360"></canvas></div>
+    <div class="cap"><span class="hint" data-hint="A digraph is a pair of letters in a row. Each square counts how often one letter is followed by another in the current decoded text; English shows a few bright squares, such as TH and HE."></span> 26 × 26 digraph counts of the current decryption (row = first letter, column = second; square-root shading).</div>
+    <div class="canvas-wrap"><canvas id="spark" width="360" height="110"></canvas></div>
+    <div class="cap"><span class="hint" data-hint="The last 120 screen refreshes. Amber is the heat; cyan is the IoC. The shaded band is where English text usually sits, and the dashed line is the English average of 0.0667."></span> <span style="color:#f59e0b">Temperature</span> on 0 to 1.5; <span style="color:#2dd4bf">IoC</span> on 0.02 to 0.09; shaded band 0.062 to 0.070, dashed line 0.0667 (English).</div>
+    <div class="canvas-wrap"><canvas id="gauge" width="360" height="80"></canvas></div>
+    <div class="cap"><span class="hint" data-hint="Wirtinger W: a roughness number for the last stretch of each curve. A proven result says it can never go below 1 (one smooth wave); random jitter gives about 730 over 120 frames. Below 150 here means the curve has calmed down."></span> <span style="color:#a78bfa">W(IoC)</span> and <span style="color:#fbbf24">W(quadgram score)</span>, log scale 1 to about 3,000; red dotted line is the settled threshold W = 150.</div>
+    <div class="note">
+      <b>Wirtinger roughness gauge.</b> Each window of the last n frames is centered and treated as a cycle (the last point wraps to the first).
+      R = Σ(f(j+1) − f(j))² / Σ f(j)² and λ₁ = 2 − 2cos(2π/n), so W = R / λ₁. The bound W ≥ 1 is the discrete Wirtinger inequality on ZMod n,
+      proved in Lean as <code>wirtinger</code>, with <code>wirtinger_sharp</code> showing cos(2πj/n) reaches it for n ≥ 3:
+      <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean" target="_blank" rel="noopener">NousVolition/discrete-gap-inequalities-lean</a> (Wirtinger.lean).
+      Every frame checks R ≥ λ₁ − 10⁻¹² in the console. W near 1 needs a window shaped like one smooth wave; a steady climb gives roughly W ≈ 0.3n because of the wrap,
+      and frame-to-frame noise gives about 2/λ₁ (≈ 730 for n = 120). The inequality only bounds how rough the curve is; it does not prove that the solver converges.
+      <div id="selftest" style="margin-top:4px"></div>
+    </div>
+    </div>
+    <div id="view-mandala" style="display:none">
+      <div class="intro"><b>What you are looking at:</b> the cipher&rsquo;s symbols placed on two rings, with one line for each pair of neighbors in the chosen reading order. <b>What it is not:</b> a decoding or a test of meaning. The pattern is a picture of the reading order only.</div>
+      <div class="canvas-wrap"><canvas id="mandala" width="360" height="360"></canvas></div>
+      <div class="cap" id="m-info"></div>
+      <div class="inspector-box" style="margin-top:0">
+        <div class="kv"><span>Grid rows × columns</span><span><input type="number" id="m-rows" min="1" value="27" style="width:52px"> × <input type="number" id="m-cols" min="1" value="26" style="width:52px"></span></div>
+        <div class="kv"><span>Stride dx <b id="m-dx-v"></b></span><span><input type="range" id="m-dx" min="-12" max="12" value="1"></span></div>
+        <div class="kv"><span>Stride dy <b id="m-dy-v"></b></span><span><input type="range" id="m-dy" min="-12" max="12" value="0"></span></div>
+        <div class="kv"><span>Folds <b id="m-folds-v"></b></span><span><input type="range" id="m-folds" min="1" max="40" value="17"></span></div>
+        <div class="kv"><span>Twist (degrees) <b id="m-twist-v"></b></span><span><input type="range" id="m-twist" min="0" max="360" value="0"></span></div>
+        <div class="kv"><span>Chord opacity <b id="m-op-v"></b></span><span><input type="range" id="m-op" min="0.01" max="0.6" step="0.01" value="0.12"></span></div>
+        <div class="row" style="margin-top:4px">
+          <label><input type="checkbox" id="m-suk" checked> Sukhotin split</label>
+          <label><input type="checkbox" id="m-spin"> Slow spin</label>
+          <button class="btn-sm" id="m-preset">dx = 2, dy = 1</button>
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px">
+        <b>How the view is made.</b> The cipher fills a rows × columns grid row by row, and the grid is read by the stride:
+        each step moves dx columns right and dy rows down, wrapping at the edges. When the stride comes back to a cell it has
+        already read (this happens when the stride and the grid size share a factor), the reading jumps to the first unread
+        cell in row order, so every cell is read exactly once. Each pair of neighbors in that reading is drawn as a curved
+        chord: <span style="color:#fbbf24">gold</span> when it crosses between the rings, <span style="color:#2dd4bf">cyan</span> when it stays on one ring.
+        Sukhotin's vowel algorithm splits the symbols into an inner ring (likely vowels) and an outer ring (likely consonants);
+        it counts neighbors only along the unrolled reading order. The split is an estimate, not an identification, and on a
+        homophonic cipher it is weaker, because each letter is spread over several symbols. The reference rings and curved
+        chords are a display only. Folds = 17 matches the 17 columns of the Z340 grid; folds = 30 equals the Coxeter number
+        of E₈, but here that is only a display choice with no link between the cipher and E₈. The stride dx = 2, dy = 1 is
+        similar to the stride used in the 2020 Z340 solve by Oranchak, Blake and Van Eycke, which read two of the cipher's
+        three sections along a diagonal; it is not the same transposition. The Z340 grid in the test list is the Webtoy
+        transcription from the Zodiac Killer Ciphers Wiki (cross-checked against zkdecrypto); with a 20 × 17 grid, folds = 17
+        matches its width.
+      </div>
+    </div>
+    <div id="view-torus" style="display:none">
+      <div class="intro"><b>What you are looking at:</b> the 340 symbols of the Z340 cipher wrapped onto a ring-doughnut shape, so the grid&rsquo;s edges join up, with a beam tracing one reading order. <b>What it is not:</b> a solution or a proof of anything. The cube blend is a visual effect only.</div>
+      <aside class="t-side">
+        <div class="t-title">3D CIPHER TORUS &amp; CUBE</div>
+        <div class="t-lab">Topology Morph <span id="t-morph-v"></span></div>
+        <input type="range" id="t-morph" min="0" max="1" step="0.01" value="0">
+        <div class="row" style="margin-top:4px"><button class="btn-sm t-btn" id="t-torus">Torus</button><button class="btn-sm t-btn" id="t-cube">Cube</button><span>visual blend only</span></div>
+        <div class="t-lab">Δx <span id="t-dx-v"></span></div><input type="range" id="t-dx" min="0" max="16" value="2">
+        <div class="t-lab">Δy <span id="t-dy-v"></span></div><input type="range" id="t-dy" min="0" max="19" value="1">
+        <div class="t-lab">Laser Beam Length <span id="t-beam-v"></span></div><input type="range" id="t-beam" min="10" max="340" value="140">
+        <div class="t-lab">Laser Speed <span id="t-speed-v"></span></div><input type="range" id="t-speed" min="0" max="5" step="0.1" value="1.5">
+        <label class="t-lab" style="display:block"><input type="checkbox" id="t-spin" checked> Slow auto spin</label>
+        <div class="t-hint">
+          Drag to orbit, scroll to zoom. The 20 × 17 Z340 grid (Webtoy transcription, Zodiac Killer Ciphers Wiki) sits on a torus,
+          R = 135, tube radius 58: the column gives the angle around the hole and the row the angle around the tube.
+          A torus is the right shape for a grid that wraps on both edges. The cube is a visual blend only: a torus surface
+          cannot be turned into a cube surface without tearing, because one has a hole and the other does not.
+          The laser follows the stride order with the same skip-ahead reading as the mandala view, so every cell is read once.
+          Δx = 2, Δy = 1 is a knight's-move step that wraps around the torus as a helix. It is similar to, but not the same as,
+          the diagonal reading used in the 2020 solve (Oranchak, Blake, Van Eycke), which covered two of the three sections.
+        </div>
+      </aside>
+      <canvas id="torus" width="560" height="470" style="cursor:grab"></canvas>
+    </div>
+    <div id="view-synth" style="display:none">
+      <div class="intro"><b>What you are looking at and hearing:</b> the Z340 cipher read in the chosen order, one note per symbol, with the spectrum of the sound drawn around the shape. <b>What it is not:</b> evidence about what the cipher says. It is a listening aid for the reading order.</div>
+      <aside class="t-side">
+        <div class="t-title">CIPHER AUDIO SYNTHESIZER</div>
+        <div class="row" style="margin-top:0"><button class="btn-sm t-btn" id="s-play">Play</button><button class="btn-sm t-btn" id="s-pause">Pause</button><button class="btn-sm t-btn" id="s-restart">Restart</button></div>
+        <div class="t-lab">Tempo <span id="s-tempo-v"></span></div><input type="range" id="s-tempo" min="1" max="18" step="0.5" value="7.5">
+        <div class="t-lab">Scale</div>
+        <select id="s-scale"><option>D minor pentatonic</option><option>F Lydian</option><option>Hirajoshi on D</option><option>Whole tone</option></select>
+        <div class="t-lab">Echo: delay wet level (0.34 s, feedback 0.42) <span id="s-wet-v"></span></div><input type="range" id="s-wet" min="0" max="0.85" step="0.01" value="0.3">
+        <div class="t-lab">Δx <span id="s-dx-v"></span></div><input type="range" id="s-dx" min="0" max="16" value="2">
+        <div class="t-lab">Δy <span id="s-dy-v"></span></div><input type="range" id="s-dy" min="0" max="19" value="1">
+        <label class="t-lab" style="display:block"><input type="checkbox" id="s-spin" checked> Slow spin</label>
+        <div class="inspector-box" id="s-readout"></div>
+        <div class="t-hint">
+          The Z340 grid (the same Webtoy transcription as the torus tab) is read in stride order, one symbol per step.
+          Each symbol number picks a note of the scale between MIDI 48 and 76; symbols Sukhotin's split marks as likely
+          vowels play an octave lower on a triangle wave (peak 0.16, release 0.55 s), the others as a sine pluck (peak 0.11,
+          release 0.28 s). Pan follows the column: sin(2πc/17) × 0.7. The halo is the live spectrum (FFT size 128) and the
+          torus swells with the bass level; the trail shows the last 95 steps. Sound starts only when Play is pressed, and
+          Pause stops new notes while echoes fade. <b>The sound is a listening aid for the reading order, not evidence</b>
+          about what the cipher says.
+        </div>
+      </aside>
+      <canvas id="synth-canvas" width="560" height="470"></canvas>
+    </div>
+  </div>
+
+  <!-- PANEL 3: OUTPUT AND ANSWER CHECK -->
+  <div>
+    <div class="card">
+      <h2><span>3. Decoded Text</span><span class="badge" id="acc-best">—</span></h2>
+      <div class="cap">From bestKey (the best-scoring key seen so far):</div>
+      <pre class="out" id="dec-best"></pre>
+      <div class="cap" style="margin-top:8px">From the current key <span id="acc-cur"></span>:</div>
+      <pre class="out" id="dec-cur"></pre>
+    </div>
+    <div class="card">
+      <h2><span>4. Answer Check</span><span class="badge">separate code</span></h2>
+      <div class="row" style="margin-top:0;margin-bottom:8px">
+        <button class="btn-sm" id="btn-check">Check answer</button><span class="hint" data-hint="Checks the best key with separate code instead of trusting the solver. It also runs by itself when a run ends."></span>
+        <button class="btn-sm" id="btn-cert">Download certificate (JSON)</button><span class="hint" data-hint="Saves the cipher, the key and the decoded text in one file (JSON is a common plain-text data format), so anyone can check them again."></span>
+        <button class="btn-sm" id="btn-lean">Download Lean check</button><span class="hint" data-hint="Saves a small file for Lean, a program that checks proofs. Lean confirms that the key turns the cipher into exactly this text."></span>
+      </div>
+      <div class="inspector-box" id="cert-out"></div>
+      <div class="inspector-box">
+        <div style="color:var(--gold);margin-bottom:4px">Unicity distance (standard Shannon estimate)<span class="hint" data-hint="Roughly how many letters a cipher needs before only one sensible answer is likely, from Claude Shannon&rsquo;s formula. A cipher longer than this is a good sign, but the estimate is not a proof."></span></div>
+        <div id="unicity" class="note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>Copyright © 2026 NousVolition. All rights reserved.</footer>
+
+<script>
+/*
+ * Homophonic Cipher Annealing Inspector
+ * Copyright © 2026 NousVolition. All rights reserved.
+ *
+ * Quadgram table: counted from the first 90% of five public-domain Project Gutenberg
+ * books (Pride and Prejudice #1342, Frankenstein #84, The Adventures of Sherlock Holmes #1661,
+ * A Tale of Two Cities #98, Moby Dick #2701), letters A to Z only, 2,581,005 quadgrams in all.
+ * The top 6,000 quadgrams are kept (69.8% of all quadgram occurrences), with
+ * log10(count / total) rounded to steps of 0.02. The rarest kept quadgram has log10 p = -4.44;
+ * every other quadgram gets the floor value below.
+ */
+const QUAD_FLOOR = -5.0;
+const QUAD_PACKED = "-2.48:THATTHER|-2.58:NTHE|-2.64:WITH|-2.66:OFTH|-2.68:THES|-2.70:DTHEFTHEHERE|-2.72:OTHE|-2.76:TIONETHETTHE|-2.82:OULDINTHTHEM|-2.86:STHETHISIGHT|-2.88:EVEREANDANDTSAND|-2.90:HAVEINGTNDTH|-2.94:TOTHTHIN|-2.96:RTHEEDTHTHEC|-2.98:THEWHICHWHICFROMOUGH|-3.00:NGTHONTHWERE|-3.02:ATTHANDS|-3.04:VERYEDTOTHEITHEPHING|-3.06:THOUINGATANDEFORTHENTHEYATHEATIO|-3.08:DANDSOMEERTH|-3.10:HTHETHELEWAS|-3.12:TINGWHENWHATANDAANDIHATI|-3.14:UGHTTHEFMENTINGSTHEBYOUR|-3.16:BEENTHEDANCEGTHESAIDSELFTHANNESSETHAOUND|-3.18:RINGWHALABLERANDYTHEFORTTWASNINGTHEHTHETOVERORTH|-3.20:EDINANDWHEHAFOREWOULHALEINTOSTANASTH|-3.22:HANDREATKINGHATTWILLHEIR|-3.24:EREDNANDANDHLINGTIMEINGIEOFTENCEDNOTHEWAEHADHECOENTHINGH|-3.26:HESEDINGINGOTOBETHEAITHAUPONTTERYANDRETHDTHA|-3.28:EDANNDERHOUGDWITCOULTHTHMOREERINSTHAMTHEHERSKNOW|-3.30:LLTHHATHLIKESOFTEYOUIONSSIDE|-3.32:THEOTHEGHEMAHEARLONGERANNOTHENTI|-3.34:TAINNDINEREATTLEITWANHISOFHIWASAINTEITHTNGTOERESLOOKTHEE|-3.36:NTERALLTPRESOMTHUTTHHEADGAINEVENNGINLTHE|-3.38:LANDMOSTALLYSTERSWERITISLESSROMTCOMPHEST|-3.40:SHOUSUCHBEFOETHINEVEHERAINGLOMETIOUSFHISEINTTUREAGAIESOF|-3.42:METHHATSWASTHESASNOTPARTEDHISINGDINTLITTATTETTHASTRAESTHSIONVINGOURSANDMTURNBYTHRESS|-3.44:ESTOONOFEDWIDHERIONOEDBYRESTITTLHOULWELLMEANTOFTEWITIONANTHAATEDONLYHISSEWHAESSIISHEOTHIHEWH|-3.46:TERSINSTTYOUFORMBETHEARTHOSEOUNTNTOTDOWNEMANESANWHERGREADHISFTERDFORCTIOHEMOAFTEWARD|-3.48:CONSANGECOMEANDEEREIHISHBUTTEINGUNDEREADTILLINGWEBUTINESENTLABOUSFORRESEMAND|-3.50:HATWHEROTOHIEAREHADBMUCHROUGHEWOHERTHERIEMENRTHANGANISTELIGHEATHMUSTESTILLOWGHTHANDCINHISTINASTOINEDSEEMIHAVBEIN|-3.52:ERETBUTIANDFECONNGHIETTEHECASSEDTEDTAINTEREWADBEBOUTENTOHIMSGOODLLINLEASEDHEISHAENDEHALLRIEDMIGHSHEDSINTITHO|-3.54:ECOUTHROERSAERHAANDBSENTANDLATURSHIPOUSEVERTHISCMSELANDDTAKEESTRHELAENTAPASSTINTLASTSUREWASSISTHENTSTFORNIGHITHHECTIANDOHINK|-3.56:NGERGANDEWHIERENNTINREDTHETHCEOFHEPRULDNSTRETERTIRSTERSTROUNHISFNDHEHESHEDITAINSHENIENINASNOONCEDYOUCOUNRATIERTOOUTHAPPEORETEDONHOUSESSE|-3.58:ARRITENTTEREEARSDBEENDWHESTAELIZTHREEROFLIZAECOMTALLUCHASISTRNINABETHEFIANDPESSAMISSESENCAMESHEWARDSONSICONTIBLEATISSBUTTWITDHIMVERSASHE|-3.60:YINGCHANULDBSPECWASNZABESTILYOUAIZABIONTERALLLEDERSOREASPECTITHICALLINGBENTEHISWRIGHINGMESHEEHERHISPEALLHATAATINETIMHISTHENTFIRSINGFOYOUALLECHARPONTFORA|-3.62:ITHELDNOSWHINTEDONANIMSENDSORIENNEDTSPEREMORTERIYOUWNOTTURNERNEDLDBEERSEAVEBOUTOREMAMADESHERISCOHERWEHEASEVEPERSNYOUONEOFATHLACEEENTCHAPHEDETHEV|-3.64:EASTTHOSLEANATERALESGHTESERVSWITEQUEEBEEHERHHIMANTHINDEDESSOSYOUNHERLETHYOUNHEWIPLACNTLYSHALIENDNEOFMETOCOMMNFORTERAATHITRANARGEHOUTNGOFEYESNDANNCEOVEBEURSEREALHEMISTTHHISMINDITSHE|-3.66:ROOMVETHESPEASSEFACETTHITELLTONEOINTERSIUSINCTEDHELIHISBVENTINDEINGENTOFARTHSHEAOMENDFROENOTFYOUATITMANYEWORDONTDELIFOUNOUTTWHILHERFESAIOMANEWHOIWASCEANULDHREANTANCALLOESHORSELATHAENED|-3.68:HEDIWINGSHEHAWAYEWHEASONANINERTATOMEHROUERATDHAVASINREWAHILEBACKDSHEERHEHISAHIMTRANGEPARARTOHEDOALITYTHANDTOSHESAUGHEEMEGHTOAREDANDRAPTEHAPPFRIEHEHOHEGRNCEASETHNALLAKINEDATALONYTHIPTER|-3.70:REVEHAPTNINTEHIMEGRECHININGUEMEDCETHREHELIFEASTENGLETHHITHAVNCESDONEHEDAYOUTMAKETANTARTIINANISINOTHALDHANWITOUSAEACHICHIOFHEOUNGOWTHEPREANTHTTENBLETGIVEIMESETURPOSEEATEJUSTHOWESTARNWHINOTA|-3.72:SSIOCONCENTTTABLSOONGHISTHADNDREIHADHELOHEINHEBEGENTMINGERWAOFMYTOHEFORHNCETNSTAESTEYOUSJECTCHEDESSTPLEAERWHOWINTIVETORESSOFHISOISONONSTELINHEPAYEAROWERSIBLWAYSONTOWORDGHTTSTORGINGDEARIVEDEDFOIONILYTHONESPRISFECTDTOTNTANNDONLOVEVERA|-3.74:AVESISNOETHOOMPARESOMINDSSHEAUSERECOYOUHOHISUREDMBERHATMESHIALLIHESPSSINONDEENANSEENGHTSCOURHESUHEBOHENAEFRORETOISHOESHAESINUTOFAVINREISEAVERTAIDISTCHTHWINDPORTNDITREOFPEARROWNHEYWDENTNEARIONWPOSSTEDALYINEOTHREDASEDTDERSFHERINALNDOFHISIYOUMLIVEARINFULLORANONHIEDUP|-3.76:SAMEEWERRABLPPEASTEDHREESTOOREDIOFITKETHHADNAVENFFERREINICANNGHEGETHRATEHELETBUTNDHIHENEOKEDELIEAINEWENTDBYTNOFTLETONNERATCHRANCECHAHERMBREAICHHHISLEARDESEASTHINERANTENFEELMYSEFALLGHTAEPRO|-3.78:ANDNAVERERVERTOFILLIEMARNOTBENHETSOFASSIDWASNETHYSELEFIRPINGTWHESONEHADAVERENSWEEREFSHADINGCSTRUOWNTONGTBUTAEHISRSANIDTHAMONMALLSTROLATEEOFHCTORRYOULMESTENDEDASAVETSUPPULARHHISEWOUDBUTOOKEIDENCERTANTOHEISASSOESAMAYTHEREMOWEDDWHETEVESEOFATALECTESTENHEFOANYOTTINOSSIOPENTOWAHANTORMESTAT|-3.80:RWASNCEIHOLMOLMEFEREONSOETOTLINEMONSANNEACCONTLEBECAALLAHEMETYOFENERPERIFTHIHESOBOATISTIISITORRYERSHENSERENOHISESCONATESPOINHEFAEELIISTAASANTNOTNDSHICALSOFAALWANONEISTOHOPEUTHEHISDSTOFEASOESEEHEHENTTHSATIREMETHIMROUSHEPEITINNATUEEVETERNTATITEDILLBEYWERTELYWHOLINCESINENOTSQUITTOSEESIDERWIGINTIEVEITYONDHAGHTIATYOCAPT|-3.82:INDOHECHITIOANOTSSTHONWHDARCHTHAANSWWTHEROSSMANNEDFRWEVEALLSERECOURTWASILOWENDSTBJECLENTNISHMARKNOWTDTHICAUSOURADOORTERWLYANCEIVGREERETUNTIOREFOTERMADNOTREEDIDNCREAEDMEAINANAMEURESOFWHVERHOONEAVEAEPERONETSWHEOREAOWEVHESIINITFTHAHOLEAIDTLEOFAIDHWORKNSOFDALLRACTNSIDYOFTMANWDWHAOUHAARCYARESTESTOHER|-3.84:WHITYFORNDWANEDAHADSHATYNDCOGTHACESSILLASNOWOWARITTEANTINDASNGSOAMANRIOUTLEMGENEEDISNDWIOMEATOGERFOREDWHSALLENOURSTAATSHOMINNDSACASEAYINNATIUAREMONGEWINCONVERABHEPOROMHHEAVSARETHASKANDSHOWRDERONSESHANININHARDIDNOYINTHENHEMAIIDERLWAYHERLURINHAVIMAINRALLFORIANDGRDINWHOSESOMBELIRINTEASEANNOHITEWATEITTHALMOLYTOITANDISCHERBOMESLESTDINAEADIOTBESTONDERTRTEDREETITSEONININATLADYSHORSWASLEAROKINOGET|-3.86:EENAORDSDTOHUNTECRIEEDMYETWEOOKIDSOMNTTOCONDNWHOBUTHOFTELITYDERETOCOELLIVERIRLOROMPLFFICTWHAEYWEDERANDALFISHOHIMNCEDSTOTNNOTONOTBUTWDEVEQUEELETTAKENRMANCONFONEASITIMETIENDINGATLORRDOUTEHASBLESOFFIENNEIENTRHISHATEORNINHIMHEOTOUTASHECDRESSAILEITHINGRRWITEXPERIVESMANESWHNDNOSSIBARTEAHABIDEADUPOTITWOFANOINGEASIARLYAGREIKEAHIMI|-3.88:LIEVPERMHIGHERITSINCHENSYHADTATEGHTBORESNEANERYOICULDEEDERMIRSTHHETRTREAEETHCOVEEWILANDYQUESMOMEDATTMPLETENEBINGWHOMIVINNBUTOUARORTAEDOUTWEEEOFARSOFTSEECOLLTEMPISFATISTWISHOSEEINHERRIEELLOOFALDOUBEIGHNGONMATTRENCCANNFOUROTTHSOTHBLEAASSULEFTEADYTEDBARETKINDBODYYWITHATCUESTUSEDSOFHHALFLEMALONENOWNWANDDESTSCENNDEEWORLSEDAHECRATANLANCGHERDSTHSSANORLDERELHYOUOHAVMISEHADTELESAPTACARRSONTRECEONEDPTAISTRIVENIMEDIWASOSHISEARANGITELIGBUSIORDEDOFTRDAREIVEEARIEHAVMEIN|-3.90:EINSUTITUSTHRMINRIESPANDRSONECAUOREHRYTHRENTADTHINGDOURETERRPPEDTWHIITHSHARPMORNSMALNNETDEDTRISOSPEALOSEHOURHOLDDIFFTHEUEPLALECTAMILEMINFORSNGWHMRLOSEANDONOERBEEATTTEDHEONELISHONSASPROVISIDMANFAMIETERTITIFINDCHASOTTOUTHINOWIELLEERMAHEBALMOSERISASHITOHATOOKERSWOFCOACTIORTUROFTTCHEHERCMINECENTALINALLHURNIFORWWEENTLEANGLYKTHEMPANTEDWAINIDREAONALLLANEXCEUSAN|-3.92:TSTHEFARITHMBETWFFECTISAHATOTOMAINMYDARKINWHETTHELFAASBEMATEANWHERCOONEREISAMASTNOTIOUSLERFOSHARCLOSHANGEMATEMOSORTONGUPBANDBENNNGWILTHATWOUNGLIHETODDENMYDERISETOFAICHTSTBETOYOOSEDALTHNWASLYDIYBUTCULAALSOUTINMEDTPEAKONHEESERUNDTLATIHEVEGARDEROUUALLTEROATELLAINWTHAOLLOULDSCKETSCOMHINTANANESWEYOUCREYOFTENOPLEEPRIETHRTOMYMANSVENOMANIRHEAASTAECRENGSTNSANICHWLOCKPERHISEDNATEBUTSINGPRECTNDISEASUILLE|-3.94:SENSEARLDITIASIFITEDROMAENSIRHAPNOUGEENSASTIANYTGHIMLEAVSOWNHEENLEINOMEOFELLTRAITICARESPHASTGONEONEWERREHISRCLEAOSITDEATORSEDERIRSHEEVILSHINADINIMANIKETTIESTSANOWNARONGUHAVDHEAYYOUHIMWBESTGHTWRHERDSOFEREHELATUITEBOTHWHOWVEDTERVARELINESTERASATLAEFULEANSLEDTRESHPPOSINCODAYSYWASNERSDWHITOFHAREAOUTIFASTSIGNIDHEEDALECEIEDNONCONINSOLEDAUNTIREWEWALKOUWIRTUNEHOUETWONSHEERYTHATDPPINLYREELONSWHOORITOFYOSEASMARRAPEREMONDTOBRBUT|-3.96:OVEDEDAYMANANGFOECARISMATRATARANASITPTHEIMINNCERRELYNIONNDLESORTRCHAHENOGLEYEREBHTERNGAGEEQUENESORDIHAPSANTAATWAMOTHENEVWHOHATHOOREIESOLDIREENDSPROPENTRRAINSFROASURENOWISSIADANTIHAMEWHASALBOURRDSTHAIRNCEWROVEBETTPLAIOSETILLBTFROLDTHNDBEACHERATHNTOAPOORUNDAATONEYHAERHIIVERVOURHWASGWITRTHIMEOFTORYCAREEMBEYDEAHERPOLONEREPLLYOCIRCEDOFGOINYCONEOFMMRDAANTSGLANFOLLECAMROTHYONELEMEHOHADTOS|-3.98:DOESOURNREMOUSTRSTOBSTOMSONSFEARNOWAAVEHSETOHERDORMAUSTONDWENDOWIRECICATSVERMWHAOICEIMTONCOMNTHORYINMFORHEYHCHHEONGEJANECKEDITATEADAELFTIMTHNGLACETOHOMEOUBTAYBEWASHNYTHESPOATWHHTTHROADNFROERIOTOANSTHOINGNLLOFEGANATLEHETIDRAWTHUSONTIOUROWANTHEDTEATUIVESFELTARENSSTOUSLYLACKWONDGROUPEOPEOPLOURIAMETARDANOTEASTRARSAIEDTPOSIPROVEDSOTOODGFOROMUCLYOUINKIIDESOCTODOCT|-4.00:ONVESTICESITIDONTCONILLSRTICORYORAVEEEDIIFYOKEEPSOFMUGHIEDIDSTEACINGHTOFELFIRSTOERYSTTOTCTLYIFTHTLESIREDUDDEILEDESSHWEARACTEAGESENTWSBENEMIGAVOURWARATSODEFAILITATEAREPLHEWEOWANIESTOBSENKINNOURORHETTOBUPPOTIREEENDFIREHEBRORHIREARNTILENCHFACTEDBENSOMCIOUHEYAFARGASWEELLALARGGEOFIFICCEPTBSEREARNTSOMUSTBORRONGALILENSSOMCHILEOLDISTRUWILARDESLEERPOONGSAETOOHHERTYANEDARCEEDAFEWASKESILE|-4.02:ABLYESNOTETHSSESLDINUNTANGASSPIRDOYOKEDAOMHISWELROPENOTORESANDFOETOSAINLHEMTTREMELVEPENEDESIONITEFOUEXPRXPREIENCONEIOWITONASARDTETOBNEDISOUNSWORLISTURTHWASDMEREUSTINTOHOMEWACESOSTASSURAMINKNEWRSINYHEAARPOQUEGLYBELTHIISPEDTOMIVENDCONNDMAILLTTRONUNDIEROOWASCUEEQSCHAISRETASTEDGELESHDTHOIMPOMESTSITWAIDMECANSEATMYFAETOHUTWHEITWWAYTROMIHATBOREMRACEOLLIITTONDATARDILLNODEEPNEWHEOUTRITITRUCERFASTOPDESCLIEDDENCBLACORWANDYOICOUNDLONDSETOFIDSEEUREOSBEEOWNICEINISSOVESTELASSATTDCOMOURCISOWERFEHEPLTTHONTAIRFROCHESSPARNQUIDEADCIENLOFTAVELESOUOURHACQU|-4.04:WICKSONAEHOWDNESERMOUTTOEOFFSTUBSCARGEANEMEANOWWVERBHISGELLSRESUVEANHATPMILYTUBBPOONLLUSULLYURETWRITENGLEINAPENDNDSIOUSTEDOOWNTHENGTEBOATTEDTOUTRROWTERHTHHECKINDEOFEASAEDBUMEASLLENOPERNGOUNITYNGEDOUTSCOLOERNOMINALYCOAYANPARECROSASSHEMEMENDOREDHNTRYISLIOFINSTEPSIGHERNAEWATSCRIFORDNDDEDISAOFFEELANNTRAYHAVNDIFNSTHGOFTTHALEENOEMUSILLNHEMUISHIRECARMEDERCHESSWHASBITWOREQUANETDAUGAMESTLASANTELDERECASDHADPERFASSATOLDENCOEADSILINTHEKONGA|-4.06:RHADINDTTRACLINSNOWSEWAYERLOHILDORNETEDONSTEMONTFAIREMISNSTRINLYELOOSOFSGINARWHECKHAEQUAOUCHIMMEENEAEQUIQUIRBEARATEVERBUSWHASTIOIAGELESOPONHWALLINEAPRECMMONSECOIMETPENTDITWSKEDENATISANASPEALRENCHEGESTHANAWASMRYOFHORTREWHRRIARIAGGERSURDEIFFEETRAORWHUREABROURSISMHISSCOUPLIESASTURALSUDDISMOPOKETUDEONFIEMADOMORNGMALESAONEETOSAOMEDORECSSISMTHARESIEITIDETHISPOUTTEGTOTIESATOLESTAIANCIVEDABECOILLUOOKAIMPROWWHRONENWHAMANEWASFWASEISWANEXTOBEAOMISVEMERYANRSBEOMMONDMORVEDATWEUSTASFACSEYE|-4.08:FINEOSSEGOUTITSOHATNIWILHADEHADOHTBETOWHWASPTINUALLBHIPSOBJEAFFETATTTURADSANAVEDHINDONELVOICYOUDIRCUAPPIDSAITOITLEEPISERNLYTRYTOONTRESATVERWETANTALKINQUNGBEFICEFORGOLDMTLEDAIDIRTANSHAVECTOESWINOTMMEMBSPOKRMWHNWHEFANDASASECORWHETSLIKOLLEERCEANDUORINRWHARUSTONDORELASUFFNVERICKHLLSOONWIWOMAFORCWEHAESIRINTAYCOMDSTOORSOPROSINTINITSTWILSEWHHHIMLVESELEANDEAYOUIREACMANTECESTAGERWHIEOFSTSINENWHARDOOACHEGENTHYOMESAREAKENITEADOETOMITUDHEANOARDDHOLOCONDSTRARCHIDEOAMEDOONAISSTULDTECAPALEAEFACINSURDTHHEALREPEIATEAKETUNTRTHWHEGAROCOMENORPLANTODOMOVE|-4.10:LUSTELYTSAPPTICUNABLITYAWOODTINELNOTPOWESHEIDASTMONEHETAVETOISCHNETTULDETORMACEATKNOITWINSTOASMAMANONGBUHEGADINEETCHBELOONFOPANIMILECHOFERMWHEUNENSHRWHOFWHATHOFECALRINETSTOALLWTTOMSEDHXPECSPENCHHALYASMADABOARLENCQUENHANIESECERSUATIVEMPTEYARWIFEESCAADAMTUPONDMYITTITEDMQUALYAREENTUETINEINHONOUIRITDTOAHADHEFINLORDDOVEDDOWHEBLMAYBENTYACEDSOVEYWHEIVETWATCOUSIOSEAETOAHEBUOATSYFATAPPRRPRILEDISSHOSEDIADDEELITEREOIONEOWNOOBESINGYBLEDURPROCCUESONEDREFEETPLETOCKEENSATWERMWITHUNDISSPAGINAGEDIONHHISNBEGAOHADCOMIREDOHARLECURPARAICHSPAINASSTNGSICANTSEETCHAITONITERDAPPY|-4.12:OANDWASBISFIHEEXLREAASHAESIGESETSPREARKEISFOLDMADITSADMIHATFIFHEMPOSRDANEALTONISEANIMINUSPOSRCONOTTEEONLEENHREENIKNOASEDSTOWIDINDTHRPROBVELYTSELWISEGALLEDSTRFULBLEIOSPETNOWESTTHEYSMEDADNOWBLOOCEASRISTONTECCOUCESOARATISSEANOFAVEMTRUEIMENURREIMAGRKEDSEINREITELIKEXTRSIMPFHIMRHIMESURPROCNTIMERONSIVENGFRBROTNDHOREAMCURIIELDRAGETARTWNINOOTHECTAASTTERFRTORSISAPREPAOPINOWASSOUTNTSAVEHEUSHESEEIEDROPAPEDBYALICAOFMAKHAMEATIINUTHEOLHERROKENINGGREHIBUTNERIECEWHDNEVANTLLDREEHINERTINNINHENWGHTFSTIMTRESISISEATAALKEONMYELLTQUARTLETTCHAASIOOFORICHADISPRTHODVANTLYACIALHEONOMMEDBEFTODEENLYRFATERERNCOUYESTSTEE|-4.14:ARISUCHTUCHITONTSAVESMORSINSEAGAROMMLFORWNTONOFAAIRSENGEESCEOFREEPASDECKORGEHTANINSIHEFETENAYWHINEINIESONUTEINDAITALADEAOWHEHELPENDASOMUIMEADEDACARTENIGISWINDENOREVERLYEALISELVPIRIINEVLLHETEANALLMLENGEIGNGAVEREDWHETWERNETEDFPERARLESDSHIUTHOTISFSUALYNOTSINAHTHIISDEAKESERYWHHADGEDTGLADHENCVEYORCUMNGROEUPOYSTECHEROPPERRORONWAURIOIVELARACSBANELYACATIOUCACTURINERELIVYHISDLOOATSTEDEATCOMACETOURFDHOWWHISSHETONYONEITERVIDAGAEDYOONEHRICAOMEIARDLRCOLADVANETOEPOSREPRINASPREVHORRUTNOTEOFLKEDTONLINDSMENDNEDHMSTAOUBLEEPIANTTONSWDESPTANYTISHAYTOSEARBEAUHERNOSTIDLIKAIDSDINHOFSOIGNECHWAATIHPROFNCHASECRYSHORITSDBETLDANSITTEISNDAREVIOUPRINSETTUPTHITHWEOVEONATTOINTOWNPROMEDHOGFROTDOWEDHA|-4.16:HORSTHITTCOUSAGEEKINERYMNDFRGBUTOSAYUTASREGAONSHARNEERDAGYOUSURPADOFEDMALEDGTINCOREDTOLOEAUTFITSCIDEHEVITICEEONTUMANLLYAHTTOKEDTINFOENGARSAIBEHIAMEAOOKSIONBLIARFIEDIVEAATETCTOFTOUCBENEMISTTAILATWIOODARONTWAITEALOADRESAYIEHANORSTADESRITYTINAFFORPLAYCASISAYTINETELETRSATISPRUNDSTMENHEYONDCAVERMCORDBUCKECTSEPINUTHAALTOESMAOTINIFEADMYSRREDHESCISHTNGCOCHEEIAMSPATIEANTDWHOATDODTOWOLITNCEHBESILLITWAYAWASRNKTHINNOENSOCTINLASSMAGISCREDMISEEXPEATLRANTONONULATTTIMEAPPNGELILETTHEJDROPHARAEADEISALTOFMYSHETHSOENDTPECIOFLIEGROESCRISBEILESOMAKISLASHELEDSHEKNOAYSAERLIHEMSNDEVHEDRACHIMESOEDESTPREEMASENYOEEINOLDENATTGOVERSOMCERNETOWWILDLOODNOWLBOOKIDEDILLOSPLACCASEDIALATTTASIGANTNTALONGSRNESOLDISESTSCOVNANTASCOPINEDSTAUNCHARNA|-4.18:MENAVIDEHEHINGRENDDIBLEORTINIMATISLELOWIWASWPPERDITAENHIOLENEETSEITSETOPSSTRTROUTMANSMUCEDELUTANALOFCEDTINKTMATIRISHISHMLOUDAGERHIMBETOFHEGEAILEVEDINTSTDURIDETEOWNHNOFHSSAIHEASHONONGWASUPOOWLEITSALFINOCCAATCOEMTOHUSBHIMHORALLKINERLENTSOREFUNGENUTONNGSHSOLIEAVISTLEADEDESUNNDPROSTEVEALICKEESASSSENETRERECISUBJMINTATTODIESNOONNASTEREGNGABEANYRNERSQUIYSAIEIHAVILLARBUTOPREASSECTLMOUTUBJEOWNSMMENUREIMOUNRTONMPREALANEDEVNDSUHADCOUMAHMENHEEVNGDOTEADCITYMEWIDEROACHOHADLEEPEOLVEMYSTKTHACATEMMEDEDECERMENTREASFOHOTHLINTDSINHEAPYPROARTSEHELALARVEHIEINDNCEMDASIARKSDEANUSUAULDAASRERDLYBERETERLTOMOHUMAHEGOAWHIESBUEIMPUNDRLEWHSTHRSUSPUNGETOASEDAWASYOQUICUICKTHOWNGYONTOMEWELHELDITOFAGEAALETAILOROSEDAMEWLEDGRATRSTRREDBREWIDBEAROKEEADTDMORRMERNDDOITHYDEDIATTAISASERSSRRIVASHOHIMOYOUKDABOESPAERPAHADRSINHSTOHRITEIEDAISEYNEERHALI|-4.20:UBLITITSLYHAUSBAARRYSANTDREDDASHTNESMPLITSWHCUMSURSTINHAERICEHOLAWHAHANCSTOSCTERIETYYMANOFOUSIHASONLOFBECHIETITUOUKNEMPLRCOUTNIGOURMERCAURSUTBEFYDIAISEAMPERVANTEISTNEATAKEATINSERFUOMHETSAIOFASQUIENEDBUMSTYFROLOWSNGNODEVINGMYECOLSTURCENESTCOOREOLTHOOSTRHFORNLYASTASDUCEETOLERWOPRETETRUNDARSSITOBLEROCECORNCROWERYPDINSLFANRPOSUPANEBROTHORFTHOTFULIONFSABOTTOHOSEWUGHAOWHIPERCFIVEESUBOLUTMBUTREDSSUCCLOUREABLEARMTAKIGAGELLIAINYOUTIOERWEERROISWHEQUORIDELLASNITIHEQUESSSDIATGRANENASENTMTORILEDOLLHIARREATMYURPOOWHACKANRETCEHARSOULTARBUSEILIESLETEHEATNOTWVESOIFITCESALBUTBLINNICAUSETSTALTYTHYHERSIREOURWREYEHERUAMERUCKE|-4.22:ROBAEMAYMOTIENONDDEDNDIATIAMERRIMENOTBEAMESSSSTAAMENRAISNHADADNESSPRALEMARLEOBETPERTDYETNTICTIFININSSEHEEABOSEDBHTINHATLGIRLTHIRNSAIWASLCEHEITYTREFEEFELTOFFSCAPEREYANIMESAWYOWNERYDERPEHEPUORTIASTSRUNCROLLNDWOPTIOVARIRHANAREFSBEFDDISINSAOASTHOWITTOSVEINCANDOFMENDMERATTELSENANYENTFAVEIOODSEREVENAMEPEAREDMARRAFESSPEQUQUODCHISRSHAERDINDNETIALOMEFGULAONNEEYEAORTWYOTHEGOOSWIFISSUUCCETIMAANISEAKINTIRMEONSMILINARUKNOFORYRRESYVEREAROBUTOOSINOTONSITSTMAYUTESYTOTHEEASSELIDETNOTFREREALKINDLANEROTSTREPLIOSESLLHARSWEJOINEWALASATPOLIRTERAMEILOSTEDDOUBLEEDOCNDOUFRANICHMOUSSRENESHEMPARINOWHATMAHSHERNOTHONEERNIMYOWHANKESOREFISERRYVICESEQUNCEBCLAIINISATOFERDEINCIMRCOURCHUTIFTERCSTAKOFDEOMEHHROWCASTIDMROMWHHADDEDLIMEMOPURSESTSNSTTLEVINORTEAFTNTONEDLYACONECTTLYFOITIENDBYTUALFWHINOTCDOFHNTURSTNONEWAUCANATNOREBUVIEWBLEWNDAFDAYANCINTOSTMPORDAWAARMEEWARDROUMEFOBANK|-4.24:ANITECRISESSAGOOSOFFOFSUREDEBLEMYWHAOKNOENOFMESIFREEREBEETORSSOOUFFEDENLUIETTASHRDOFWINEAWINCREWEGRARSWHEDIFUNDOONSCEEMSINENERYETONCMERIDANCONBUEIRSSTTOONEYHWHIEHEWCRETTUNENTITADTOADDRHERYTODIESUPMMERELOWYAGEDPROEBESEMTHSPRIDINDISWONDLIENEXEEYESASINCLUIRONLAUGFICIEXPLEENIHOWAOUSHFAVOALLCOURPSOCIRENDRINKISSHKYOUSLOWORRERNAYERYLYALLDCHANSUCURANTEDSDSHOSOLUATIMTSHOKNESTSUCNOTDTMORULDINGEARITWTBETTOVEATTILANTESALESUMFINGACEISDISHEFRUPERSSEESWAYCOLDOROFLLECABITTALISLIGHISVHOFTDAFTNTOWHADFDDREVERCELEGUSEAPPROSWEEAIRAVEITEMYSADSTLONDAINOKEDHISSAISSBRUSHESFORISIICEAVESATOFSTSWEBYHIEASYPPENNGMELEHEOWNWOUMUAISEINNENCLEDMADESTUPRAY|-4.26:ANDKESUCITYIINTRSTITENHAIECEINONTERFMRSBLIPSEANOISAWTCHIETITRDSHELFOSONOLSOFEENMILLYDIHAUENTDLESLLCOPURPTHWAMBLETOFOENWEVOYAOYAGEPEQNGHOLLYIUENCOUTWREVINESHISMIREEAHIMFKILLSDARSWILAUNTUTYOYATTILLHEDAGDTODRDENFLASDARNENWIOBABALEISREADONLHEELERYBREMINDFIATEIRCHIHSOMEDCOOBEDNTELIALLEPTIORCECEITNDUNETAIHIEFOUTEATICTIWAISESERTEGHTNDANGNSHOOLDAKEDIEBEFLIVIACROAMEOBROKMURDRBUCUSTEHASAARITEOFIDTAKRETTACKEOMEBONEBHEYCNTOSTAIRFSOMUMUSSAYSFANCREHANDROOMFOORTEAGETMYCOIMWHCKTHARSOPUBLNGHARFECACHADENOOPPONSATITWEOOSEEENGHEACEPENISCAIREAOWHOIRTHLFTOAUTIEETIGSOFBRIGPENSSITYMWHIMEDOTERVATIEITBEEMBLQUAIMAKIRUCKOFMOMEDEMEHETUCKANHAOINELYDETSHANDMRTHEQAGEOEOFCATORRASTLIGETENCOTSOTOTAYCOUHADPSTOLNSINPOSTIAMAUAINOURLIWOUETONESCOOTIORVALSTRYHEFLYARDECULDEDHICESAREOEFERSELENEEDSINDISVEWAYILLMEGATTANYSUSESYCHAEINCTOGOANBEEFLEERLAPONMLLSANTWHECHIUPTO|-4.28:NDYECURETRICENTBDPERNECEATIFSOFWTENSRCOMADISKEANGLISTLENHEIMCLINHABINSWHEMERINSPNARYSESAREFLEDEFACKAGETTLOTHOWSAHURRDMETSOLDATENSUMMIONMUMBENSEICQUAINCLRIVAILTHRSTINESOFINAUNCOLIAMINIONOMOASMUNGBONDSWREESEAGEITEWOUSCITESFIELPECUCTTHRITTNOTPTLIKBEHATERPAKEHLFTHISCRELFWANATNDMITEWHIMEIMEETOSTSASACTBEERMOTTAREIRINISBRLHISDOFFONGBONEMRADEEXAMASTLITMAFINIYBODSUPERDEDAYOFLLERNYOFAINWELLMERSPELADERFIARKATITHINFADISHSOFONEWIASEALYONIGNOASTWPINIERHODHEWLARLLEDBERUNGATHNSIELSONBRINESTWHECLBOVEBILIFEVENNECGMANHAREBERTBOUNITORGTHIHEMWRTHREASHITNORODUODUCEBACWASGEWTHERYCTLYTANCHDLEATISIPEATNGOVYDISFIDEBELLREDFAROUTOWEEVIAIATHILORLUCIABOVELICHADIKSANYSOMANDVSESORANSGUISMHERRTOTOFSERINCESARGOLDNEDWISATONECRMENETHWVELLEENCTRADONGIYESARBINOUDOLLTOINUEHENYMESHSIEUIEUR|-4.30:SKINMANHERSBRMISTWENHASEROTEAYSOLWITETTIHEKNASLISSHAFORBIVEMERPRADHEHARMARMSGABOSOLEANHEBEATGHBOUMAYODISITEAWNANEAMOESBELEADACEORDAYSOLVDRIVHTWHERIGENBEYWOUULIATPERLOTTLABODMRSTOACCESTAYSTCAPESTOCLEWIENSTASOFHESLTOSPNEHAMILIWEEKOTALGDOWAMOMEATSANCYUARTDBESRELEAKERTRAVEADFMITTDEDBPATHONTAPANYIRESANENDEGRLUDETISNLCOMENEWSENCANIOIMONOUANDVERLYSENANCONHAIDIDUSPETOPPEDEDURFALOWLVIATNDPAFRESLEISEBARFINTANSAETALFOOTDTOLORONRTWONTFOINSEYOFHUIREIEDIYSEEORNOEINFEEDEPROAORMONDICAGENEDNEYOUBBESOLOUSNORAACKTINEWITSTNTOIOOMAEAWAEGINFOLDVANCDHARPAIRESSMAREREETAANEASECUDMIRNSEECULINOTLBUTMSNESIXEDMENSNTASSHEEADIEUISHNDESLLYTBLEFOLATNGMOBLICGWHIIRELESLIOLEACHAMSTABATSAELLYAGEWYFRIEMOVHOWTEAVOAPARLTERNCRETLOONGSELLREUTATBONEANTUECROATASDIVIFIGUSUNDTLYSBYANRETIANONYTHOCELLANSTWORSTEINKINTLLSTRSHONINAATEMUTWIEELSEMSEEWISUTELSOFBRRYIOUWOIVILSORRYWELNERWEHEHOLDTHATRINOFINFLHETURASSOREWGGEDLICEAWTHALLDSQUA|-4.32:RIBEEENLLAIMETENIGURNARRRKINTAPPSHOPNGUIATREHORENLYSNTOBNHEAINVIIGNITEARSEMEDTOCTBESSEEHISDAOTTADATHSERTREONICONROMWLVEDNFIDGATEOFSTANSORPARQUISENALDOTHGUREIESWTOLIEBETNSHARIALRDSAISPAEHORTFIRONDIGHTYTBEIMPATHADMIMUSEARCACEWULDDOFFATPARYSTRCHATUNCLITNETRUSDOWSRYVEILDAPULLDMRLDPREINTSSCALALLRBLECOFMITYINORATHILLATMOTOENNGSWTEASIMPESHIMROACEPLEERYAAILIASCAYWHOSCOROOKTEHAPGHINURNTEDMRSBROCKLESAFEDEAVTSONINEIZINGINACBABLCULTVESEORMYMPARDUCTLESIHENDLADIANUNNOBLEIAMHEKIEBELANEWNGRAATFINCEFFILLTYTOEIDEUREWAVEYNKOFUSEEOFARDTOOINMAETRIECLONEDOEHESISBONTUCRGESESSFREPORMORSHAPEFRECONNEHENRSEEFCOUNTORVESSANGUIVEIOWNETTHRANEXEBREKEHIERYIOFLAEIROEFEEANGIENTDOTHOKWITURTOGHTLYPREOWTONDPOEOFWHESMOURBIRANCALMSTMAWEWECKTOERSCICETTVERSEITOTELWORTIEDHECIAONSUFFINANALITASOLOUFANYTOSUUDEDATSUENREEDRAASESANYMTTACAINFINVALITIUNCEORSHAFORGWASKEDOUNDHTHMEIDHOTTOOEDEEELYSEDWAWINTAROFEENBGWHAEAMEYEYE|-4.34:ASDEAANDHENMNTYOENTCSSAGIRETINAFNDUCSOFCTINHSONWDWELEYONPASTADALXCEPERYFSMADEADDIBLYNDLYLYHEGROWETTLMYHEAREMCHSHEBEAOREFETODISAROMONOOKHISETFIRMNAHARTURUSIOERMYLYATEDABOMEMCCURMWHEDTORTERYDFULCEWISSMASULTMMANOUSNCTIVSELYMNOTSAGACLUDCATHTOKNRRIBRIBLIMPLNACCSBEIAINHOMEROMITLEDHRGETCREDALLNETMEIFIEENFOTERBMEBUALTERTTHAINBNUPOPOUTUCIETDISTEDLOROUUCTIERBYSHIRHIREBLEBLAIDHANOIABLOMMASTSILINDYONDOLDSCCESRRANNTSHTWELUGHHINLOOHEAADCOHUNTESSBDICACCOMKETOESISSENDESEVULDREVEDANYAHINALLAGEMOTCEDILCONEADWHECIWERSRNALSEIGINCTONBEORRIROWSROPPFITWISGREEARSHTHINVEWAYOEXTELUTELEDWADYCITSHFRIGTIENDTOGEWEAEBODSSUCEDOVSAWAOSTOHEAIDALOINCRSERAMYFRBARRLEWAALEWIFELNEURANDJTENIOSOMIKELNTATNTAGUPPEESPITOEXHEFUPICTHETERANYHANHLECOLLYSNOTRATEOEARFNIFILERAICERSHEFINKOSHMELEBUCOMFISENMEFRLETMHECEDEDWINAHANYWLDHEUSEOEAIRHESWOWLYOODEPREP|-4.36:SITEDFINRIORNSCITWOODTOPSAWHSTWHGRAVTOALEHALMORTERBRELYIXPLAUTSHEISHETOCHEERSTAYELEVUWOUOWSOCHTOASLENTRODDINNCHOVINCHADGNDBUWARMSENGEYETNDFEBROWARELVERDSSARSSWHBUTEINDWJUDGLYWHOBLIBEYOHASNTHARTPROHEDHOWSTSSTINDSPAYWHDIANSLIPHTEDIGHBDMEAADENDRENGETOAVECRSTTYHANNERTSUITOUWEENSUGTHOIDITTACHDILYGHTMARMAILEAIDSTKERSANESOVEAESSLSWOUHERGUNITTTEMNTRIEACCESAYULTIRFACNYOTEENWTORTSOFLHOISREEDINSHLEFOLEVEUNGMOFACIONCDITHYOUFOURDRWILIDELFLECUCHOODANDBYHERAGLLATEDUNNKNONONTCORRNEDFTDAYACCUSAWTALEBGMENICEOECLAITHDOYEDYPARDDESSIFIOFAMIREMIDSHLDSEFRENACOMARSIGTOHLOOMNTSWACKSINGVARSTUANDHEMBWASVDEASOUTFHEHURPENURSIEFAMNEASLWASYWORVEOFSUBSOWOFISAYSITOORMINECTNAFTEMETLSANSRESVELOHEOPAYHELYWIIHOPMRBIVERLRSTEENDUNEWSAKEIHBUTOUNCYESICCUPANWINDDRBEGICHOTYSTONELIOLICRAWINGAWNTBEKEPTHEVAADOWAILSSLANFLOO|-4.38:ISFROVETOSEOHEOFORHAOFMRICTINOTKWAYWISPLLASHONABNDELATWOSSONURELHITHHWITOCEEOSEIRETACRIMNDAGMEATNOWMUTALIKESWESHENISERHUARIOAIROADSOVIOLETWIMYOULYSADWERYRESIVEHINFRINEOGSANEBRIHIHACENDROFAPEDIONAHDAHATHOMNOVEMOUREISSIFFIYDESSITAOSSTITHCUNTOERORARLOATSEEIRCTWHOSENORUTHFURTORELATHTSTLYDIAMROWIADETOLEROSTTABSOHEPINGISMEWAONCLFULTHENRNCIERCEINEXPTESOASGOFRONONVIEDOWOODIEMPEWHIMYDIDESWAMENWVEDORSHIBEHEEANARUPTCEBUUSEHISBUOUSONITWOFHAVICTROUBTARYOSECNOLDRKNEEBLAOCEARHOLSPOUTRYVGNEUSONITOSOSTWIARTYFIFTTEENOTICULDCEWANITERSMINFICARSIDVENSRIMEPHERRYWHDYCAITFOPUTTGINESPICRDTOSERIARFRNSPENIMASLONNEIGOWNBRSESVENGCEFODOURIEDWIZEDAREYMOUSRNATPONDOPROTRETIMWINESIEAVYREPUTRIKORSASMOKWOMENITEGERANTHROESNNDPENDCHSMISDEALTICOWHOITORAUALIEFFEUTTIFEANTOUSEROWSTUDOALLSERERTALVENAIFULHORIARCESISASTFOVASTUNGLVILILLSECEWAATCAIDYOERSFMEHOGUARURAGRYWEPAUSYMINDESEUNNIROFEOLESYETHEPOIEPTHEHUNIANSUROFETAKSYETNSEAWESTVEDHHASIETOULYSHLNESFELIOWNFPPREALLFNFINTDIDRBENRWORETTYRDSOSELINSENDANYVERFARECLERSURHOMPLORSEAALLPNOUNCARCANHOONMEELTHFWITEDMOATIWLAMEEDDE|-4.40:ESLEPPLITWORAREISTOUERGETESAASEVPREHCIESPLESTUNAESYOUCHERTOMAMNOLHERAVEPBALLENNOSAGONDRASEPAICIOYMENOCHACKHOUREHADFOISEEORASSIFTEFOLSEWIFRAIKEOFTMEAILLCRQUIRTOHANKSSEDWRAPPEINMASABNITTINDHUARDERYHPEDAPRODTLONHTENICKLWERTISLORHAVOCKHJERRELOVREWOIBELDECLFCONOATTISUNGHANEOUSCUSTNOCEACCENHAVSITHRITARAFTONEFIRREEREESOFPOODTSOLAHSUCOLLYATPRERDONTMEMODEDOINORTSTRUTFIXEAYHAONENSDESIMASNDIWDOFAEIRFYOULNDTADTURLAGEBRANTATAELFSEATOBEASETOGRCELYMORHOLLKSOFOFROGEINOMEPULLETHAPAPPLRANKFMANNESANSIBITYWOREPGRASNDIDISTSTYETIESIUPINIMEWRWAYCHMAICTUNSOLGLOOORBESPAICLERCEBEWHOCTMIGHOODMEALMASSMYLINUEDAWORNHEWSAFTTETOANXIINMEONGLAVEEYOUONGSUCHWEDCARTOKEITCHHEORYETIROWDETABASAPPELEIPPELOATLAMPINCHSQUEOTESEDAFROPOAYWIFASHRWISSITUAYEDSPITOTCOUNATSTOAEDAMAVEFIFEIACKIERIASPEECAPAEMALAYOUHISUAVEGDDARNDEXSTSTONCOLLWHOODORFRICIVIOBUTLSTHEALWSALIMANBOOMSFULAAVEOAMEWDCOUSEDMEEXCEEDSURCOASMOTALOGOTOBESELLBUWASUSARMBERALYSTEADLCURRUTSOEORGLESWCRIBWHOABEDIMPROLARENENTRIFIPIECOANYSSPERNEYDINMYEVEUTEDBORNIRATYTOHYCATRDONEPOOONORHOMIEDDISSBETAGAIMPAELEFDINNRHUSRSETINAMIOLEARDHSSIVAINMRPERSESHITHFEIRETISEATPANGCASPASHIMNAGUELASKABIN|-4.42:HTHORUCTORDATHCOODOUPPORRMATTSTAILLDECHOETSOADDININEBURNTHTOINKSENAREPAITOPACHITNEWTOFPRRGEDOMPRDONHITBUEOPEEMOUCEDATHSUUGHSADITMESWTSPEBLEHDSHAGROOTOTEINOUCISETHUNTERXHEYEEAKFNALOIEDBDITTFSUCEBYTBESUOODHMPASWWHANDUPPONISOFIDLETRRYTAIDAWYOUYDAYCOATDSUCARPESSHITSTIASVEONFEUTBERDISSCIEOMECAMBEOLDHERBOISELNOWBCHIHTBECATEWDIEDBROATSHISWEAOONSKHOLISDINALIEADVADVEEENFOSELTCANINDUINREARTADREWOTAKIMHEODTHITHRALLUSANOVENEOORAILLMLYUNERTYHEYMOLOOEAPOILEIERSMERYGOPESWEDTNLIKSONHTHMYAYNOREGOESEMAMOURYSTWEETEEDTELLWASILLICILUSICLOTWRETCHYOSMENULLOHOSTRMONDSTUDNIGCRUNGEOREROAOMPOONDUEHIGOISTLYWATINDTHHAEXACXACTHWHAOOKOPHILINCAYASTAIDOETSATMUSFONELYENDSTISOFRKEITCELYHBOUVEHAIRWIILDRSAMOOFAFICEINERINGWODHESREBYEFRIATBEMERCMYMIDATLGEROFITTRTIOOFFTCLESRCHETEDUSHOOATROMRWILITAHEGLARKNLANKRLOCHIPAISFEYPERIVIDOFEVDDLEITUAIGHEGRACESMOSGREDYINKABLHMANRALIFBEIORAMATFOOTREECOVOUCODTOIWSOFITITODINERILLYLOAMOSADSEDAMOKOFTNDGOROFHNSPITONAILLFTOPEAPROOPETAHEAYREAEIRHKENOEBOTSHAMPERPSPONDWOUOFHOIMEDWAKENASIWAYFRAWNKETSDESOMYHAEANCEIRBANKIEENEOTKNNTWIFEATETHSCHOOCESWDECEPROTTMISOUSFRIGIDHEHDEPEGEMETOCHASNEEPUTREELSSATLIMEPRIVNAGENDFATISSXPERNDIHIEDOENEIAKEMNDDASEMBEXCLELLHIROFFEWMEPEOONGRLLARSGRATEPSRASIOMMYCABIESESSWINDARTGLAS|-4.44:UCHMULDPEUNDITSSTABOUOUSGHITOUSPNOFMARLICTUAANYBATIANTOUORIGPTEDISACNOTGIAMNSHOECANSHOWMRASHOURGEVIDNLESVATEATTRRTOBEOCCNGESOURRASAMEPLYTOMRIKNEOATAYSTAELDEEBEIRTHYPEDTNGPAAMEFGEDALYCAATDIESTLNQUESFARREFRITWHLEITGEDIACLEMYREWEATKENTNAGARRATLDYOCEREVEROETELEEKSLYMAEWENWAVETOFWRSEDRICKDNEYOVINDBECALFAFICUHARGTOSHSARYRETRNDBRFOROKENE";
+
+/* ---------- Core: shared by the page and the headless Node tests ---------- */
+
+// Standard English letter frequencies (percent, A to Z), the usual published
+// table for large bodies of English text.
+const ENGLISH_FREQ = [
+  8.167, 1.492, 2.782, 4.253, 12.702, 2.228, 2.015, 6.094, 6.966, 0.153, 0.772, 4.025, 2.406,
+  6.749, 7.507, 1.929, 0.095, 5.987, 6.327, 9.056, 2.758, 0.978, 2.360, 0.150, 1.974, 0.074
+];
+const ENGLISH_IOC = 0.0667;
+// Cooling rate per batch of 400 steps for each speed setting.
+const SPEEDS = { Careful: 0.99975, Normal: 0.9995, Fast: 0.999 };
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// Small seeded random number source (mulberry32), so runs can be repeated.
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// English quadgram model. The packed table is "logp:QUADQUAD...|logp:...",
+// where logp is log10(count / total). Anything not in the table gets the floor.
+class QuadgramModel {
+  constructor(packed, floor) {
+    this.floor = floor;
+    this.table = new Float32Array(26 * 26 * 26 * 26).fill(floor);
+    this.size = 0;
+    for (const group of packed.split('|')) {
+      const cut = group.indexOf(':');
+      const logp = parseFloat(group.slice(0, cut));
+      const quads = group.slice(cut + 1);
+      for (let i = 0; i + 4 <= quads.length; i += 4) {
+        const c = quads.charCodeAt(i) - 65, d = quads.charCodeAt(i + 1) - 65,
+              e = quads.charCodeAt(i + 2) - 65, f = quads.charCodeAt(i + 3) - 65;
+        this.table[((c * 26 + d) * 26 + e) * 26 + f] = logp;
+        this.size++;
+      }
+    }
+  }
+  // Sum of log10 probabilities over every quadgram in a letter array (0 to 25).
+  score(letters, n) {
+    const t = this.table;
+    let s = 0;
+    let idx = (letters[0] * 26 + letters[1]) * 26 + letters[2];
+    for (let i = 3; i < n; i++) {
+      idx = (idx % 17576) * 26 + letters[i];
+      s += t[idx];
+    }
+    return s;
+  }
+}
+
+// Real measurements of a decryption: index of coincidence, chi-square against
+// English letter frequencies, and the English quadgram log-probability score.
+class CryptanalysisTelemetry {
+  constructor(model) { this.model = model; this.counts = new Float64Array(26); }
+  evaluate(letters, n) {
+    const counts = this.counts;
+    counts.fill(0);
+    for (let i = 0; i < n; i++) counts[letters[i]]++;
+    let coinc = 0, chi2 = 0;
+    for (let k = 0; k < 26; k++) {
+      coinc += counts[k] * (counts[k] - 1);
+      const expected = n * ENGLISH_FREQ[k] / 100;
+      chi2 += (counts[k] - expected) * (counts[k] - expected) / expected;
+    }
+    const ioc = n > 1 ? coinc / (n * (n - 1)) : 0;
+    const quadScore = n >= 4 ? this.model.score(letters, n) : 0;
+    return { ioc, chi2, quadScore, quadPerGram: n >= 4 ? quadScore / (n - 3) : 0 };
+  }
+}
+
+// Ring buffer of the last `capacity` telemetry frames.
+class TelemetryRecorder {
+  constructor(capacity = 120, stepsPerFrame = 400) {
+    this.capacity = capacity;
+    this.stepsPerFrame = stepsPerFrame;
+    this.reset();
+  }
+  reset() {
+    this.buf = new Array(this.capacity);
+    this.head = 0;   // next write slot
+    this.count = 0;
+    this.step = 0;
+  }
+  record(temp, ioc, quadScore, chi2) {
+    this.step += this.stepsPerFrame;
+    this.buf[this.head] = { step: this.step, temp, ioc, quadScore, chi2 };
+    this.head = (this.head + 1) % this.capacity;
+    if (this.count < this.capacity) this.count++;
+  }
+  // Frames from oldest to newest.
+  frames() {
+    const out = [];
+    const start = (this.head - this.count + this.capacity) % this.capacity;
+    for (let i = 0; i < this.count; i++) out.push(this.buf[(start + i) % this.capacity]);
+    return out;
+  }
+  latest() { return this.count ? this.buf[(this.head - 1 + this.capacity) % this.capacity] : null; }
+}
+
+// Read cipher text: every character that is not white space is one symbol.
+function parseCipher(text) {
+  const symbols = [];
+  const index = new Map();
+  const seq = [];
+  for (const ch of text) {
+    if (/\s/.test(ch)) continue;
+    if (!index.has(ch)) { index.set(ch, symbols.length); symbols.push(ch); }
+    seq.push(index.get(ch));
+  }
+  return { symbols, seq: Uint16Array.from(seq) };
+}
+
+// The symbol set used for built-in test ciphers.
+const SYMBOL_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+=#@&%$*?!<>';
+
+// Build a homophonic cipher from English plaintext. Each letter gets at least one
+// symbol; the rest are handed out by English frequency (common letters get more).
+function makeHomophonicCipher(plaintext, nSymbols, rng) {
+  const letters = plaintext.toUpperCase().replace(/[^A-Z]/g, '');
+  const share = new Array(26).fill(1);
+  let spare = nSymbols - 26;
+  const want = ENGLISH_FREQ.map(f => f / 100 * nSymbols);
+  while (spare > 0) {
+    let best = 0, gap = -Infinity;
+    for (let k = 0; k < 26; k++) { const g = want[k] - share[k]; if (g > gap) { gap = g; best = k; } }
+    share[best]++; spare--;
+  }
+  const pool = SYMBOL_POOL.slice(0, nSymbols).split('');
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const homophones = [];
+  const trueKey = {};
+  let p = 0;
+  for (let k = 0; k < 26; k++) {
+    homophones.push(pool.slice(p, p + share[k]));
+    for (const s of pool.slice(p, p + share[k])) trueKey[s] = ALPHA[k];
+    p += share[k];
+  }
+  let out = '';
+  for (let i = 0; i < letters.length; i++) {
+    const h = homophones[letters.charCodeAt(i) - 65];
+    out += h[Math.floor(rng() * h.length)];
+    if (i % 5 === 4) out += (i % 50 === 49) ? '\n' : ' ';
+  }
+  return { cipherText: out.trim(), plainLetters: letters, trueKey, homophones };
+}
+
+// Simulated annealing over keys that send each cipher symbol to a plaintext letter.
+class AnnealingSolver {
+  constructor(seq, nSymbols, model, rng, opts = {}) {
+    this.seq = seq;
+    this.n = seq.length;
+    this.nSymbols = nSymbols;
+    this.model = model;
+    this.rng = rng;
+    this.tempStart = opts.tempStart ?? 1.5;
+    this.tempEnd = opts.tempEnd ?? 0.05;
+    // Solver fitness = scoreScale · (quadgram score − chiWeight · chi-square).
+    // The chi-square term stops the search from collapsing onto a few common letters.
+    this.chiWeight = opts.chiWeight ?? 0.5;
+    this.scoreScale = opts.scoreScale ?? 0.1;
+    this.counts = new Float64Array(26);
+    this.expected = ENGLISH_FREQ.map(f => f / 100 * seq.length);
+    this.letters = new Uint8Array(this.n);
+    // Positions of each symbol, so a reassignment only rewrites those letters.
+    this.positions = Array.from({ length: nSymbols }, () => []);
+    for (let i = 0; i < this.n; i++) this.positions[seq[i]].push(i);
+    this.reset();
+  }
+  reset() {
+    this.temp = this.tempStart;
+    this.steps = 0;
+    this.accepted = 0;
+    this.key = new Uint8Array(this.nSymbols);
+    // Start from a frequency-weighted random key.
+    for (let s = 0; s < this.nSymbols; s++) this.key[s] = this.randomLetter();
+    this.applyKey(this.key);
+    this.counts.fill(0);
+    for (let i = 0; i < this.n; i++) this.counts[this.letters[i]]++;
+    this.score = this.fitness();
+    this.bestKey = this.key.slice();
+    this.bestScore = this.score;
+    this.bestStep = 0;
+  }
+  randomLetter() {
+    let r = this.rng() * 100, k = 0;
+    while (k < 25 && r >= ENGLISH_FREQ[k]) { r -= ENGLISH_FREQ[k]; k++; }
+    return k;
+  }
+  chiSquare() {
+    let c = 0;
+    for (let k = 0; k < 26; k++) { const d = this.counts[k] - this.expected[k]; c += d * d / this.expected[k]; }
+    return c;
+  }
+  fitness() { return this.scoreScale * (this.model.score(this.letters, this.n) - this.chiWeight * this.chiSquare()); }
+  applyKey(key) { for (let i = 0; i < this.n; i++) this.letters[i] = key[this.seq[i]]; }
+  // Run n Metropolis steps, then cool the temperature once by coolRate.
+  stepBatch(n, coolRate) {
+    const rng = this.rng, letters = this.letters, key = this.key;
+    for (let it = 0; it < n; it++) {
+      const s = Math.floor(rng() * this.nSymbols);
+      const old = key[s];
+      let nu = Math.floor(rng() * 25);
+      if (nu >= old) nu++;                       // always a different letter
+      const pos = this.positions[s];
+      for (let j = 0; j < pos.length; j++) letters[pos[j]] = nu;
+      this.counts[old] -= pos.length; this.counts[nu] += pos.length;
+      const cand = this.fitness();
+      const delta = cand - this.score;
+      if (delta >= 0 || rng() < Math.exp(delta / this.temp)) {
+        key[s] = nu; this.score = cand; this.accepted++;
+        if (cand > this.bestScore) { this.bestScore = cand; this.bestKey = key.slice(); this.bestStep = this.steps + it + 1; }
+      } else {
+        for (let j = 0; j < pos.length; j++) letters[pos[j]] = old;
+        this.counts[old] += pos.length; this.counts[nu] -= pos.length;
+      }
+    }
+    this.steps += n;
+    this.temp = Math.max(this.tempEnd, this.temp * coolRate);
+    return this.score;
+  }
+  // Raise the temperature again; bestKey and bestScore are kept as they are.
+  reheat(temp = 0.65) { this.temp = temp; }
+  decode(key) { let s = ''; for (let i = 0; i < this.n; i++) s += ALPHA[key[this.seq[i]]]; return s; }
+  lettersFor(key) { const a = new Uint8Array(this.n); for (let i = 0; i < this.n; i++) a[i] = key[this.seq[i]]; return a; }
+}
+
+// Wirtinger roughness gauge, from the proved discrete Wirtinger inequality on the
+// cycle ZMod n (theorem `wirtinger`, sharpness `wirtinger_sharp`, in
+// NousVolition/discrete-gap-inequalities-lean, Wirtinger.lean): for f with sum 0,
+//   (2 - 2cos(2π/n)) · Σ f(j)²  ≤  Σ (f(j+1) - f(j))²,  with equality for cos(2πj/n), n ≥ 3.
+// The window is centered (mean removed) and treated as a cycle, so the last point
+// wraps to the first. W = R / λ₁ ≥ 1 always. It bounds roughness only; it says
+// nothing about whether the solver converges.
+function wirtingerGauge(values) {
+  const n = values.length;
+  if (n < 3) return null;
+  let mean = 0;
+  for (const v of values) mean += v;
+  mean /= n;
+  let energy = 0, rough = 0, scale = 0;
+  for (let j = 0; j < n; j++) {
+    const f = values[j] - mean, g = values[(j + 1) % n] - mean;
+    energy += f * f;
+    rough += (g - f) * (g - f);
+    scale = Math.max(scale, Math.abs(values[j]));
+  }
+  const lambda1 = 2 - 2 * Math.cos(2 * Math.PI / n);
+  // "About 0": the spread is below rounding noise for numbers of this size.
+  const flat = energy <= n * Math.pow(1e-9 * Math.max(scale, 1e-12), 2);
+  if (flat) return { n, lambda1, R: NaN, W: NaN, flat: true };
+  const R = rough / energy;
+  return { n, lambda1, R, W: R / lambda1, flat: false };
+}
+
+// The sharp case: f(j) = cos(2πj/n) should give W = 1 to rounding.
+function wirtingerSelfTest(ns = [3, 4, 5, 7, 12, 60, 120]) {
+  return ns.map(n => {
+    const f = Array.from({ length: n }, (_, j) => Math.cos(2 * Math.PI * j / n));
+    const g = wirtingerGauge(f);
+    return { n, W: g.W, ok: Math.abs(g.W - 1) < 1e-9 };
+  });
+}
+
+
+// One animation frame of work: a batch of steps, a telemetry frame, the two
+// Wirtinger gauges, the per-frame bound check, and the stall rule.
+class RunController {
+  constructor(solver, telemetry, recorder, opts = {}) {
+    this.solver = solver; this.telemetry = telemetry; this.recorder = recorder;
+    this.batch = opts.batch ?? 400;
+    this.coolRate = opts.coolRate ?? 0.9995;
+    this.stopTemp = opts.stopTemp ?? 0.055;
+    this.reheatTemp = opts.reheatTemp ?? 0.65;
+    this.autoReheat = opts.autoReheat ?? false;
+    this.maxAutoReheats = opts.maxAutoReheats ?? 3;
+    // Stall rule, chosen from the headless runs (see the report): the IoC window
+    // counts as settled when it is flat or W(IoC) < wSettled, and the run counts
+    // as stuck when, in addition, IoC is outside [iocLow, iocHigh].
+    this.wSettled = opts.wSettled ?? 150;
+    this.wExploring = opts.wExploring ?? 450;
+    this.iocLow = opts.iocLow ?? 0.060;
+    this.iocHigh = opts.iocHigh ?? 0.080;
+    this.boundViolations = 0;
+    this.autoReheats = 0;
+    this.reheatLog = [];
+    this.framesSinceReheat = 0;
+    this.last = null;
+  }
+  get done() { return this.solver.temp <= this.stopTemp; }
+  reheat(reason) {
+    this.solver.reheat(this.reheatTemp);
+    this.reheatLog.push({ step: this.solver.steps, reason });
+    this.framesSinceReheat = 0;
+  }
+  frame() {
+    const s = this.solver;
+    s.stepBatch(this.batch, this.coolRate);
+    const e = this.telemetry.evaluate(s.letters, s.n);
+    this.recorder.record(s.temp, e.ioc, e.quadScore, e.chi2);
+    this.framesSinceReheat++;
+    const frames = this.recorder.frames();
+    const wIoc = wirtingerGauge(frames.map(f => f.ioc));
+    const wQuad = wirtingerGauge(frames.map(f => f.quadScore));
+    for (const g of [wIoc, wQuad]) {
+      if (g && !g.flat && !(g.R >= g.lambda1 - 1e-12)) {
+        this.boundViolations++;
+        if (typeof console !== 'undefined') console.assert(false, `Wirtinger bound failed: R=${g.R} < λ₁=${g.lambda1}`);
+      }
+    }
+    const full = frames.length >= this.recorder.capacity && this.framesSinceReheat >= this.recorder.capacity;
+    const settled = !!wIoc && (wIoc.flat || wIoc.W < this.wSettled);
+    const offBand = e.ioc < this.iocLow || e.ioc > this.iocHigh;
+    const suggest = full && settled && offBand;
+    if (suggest && this.autoReheat && this.autoReheats < this.maxAutoReheats) {
+      this.autoReheats++;
+      this.reheat('auto');
+    }
+    this.last = { eval: e, wIoc, wQuad, suggest, state: this.classify(frames, wIoc, e, full, settled, offBand) };
+    return this.last;
+  }
+  // Plain-words state, from the thresholds measured in the headless runs:
+  // exploring windows had W(IoC) about 490 to 930; settled ones mostly below 300.
+  classify(frames, wIoc, e, full, settled, offBand) {
+    if (!full || !wIoc) return 'exploring';
+    if (settled && offBand) return 'looks stuck';
+    const k = Math.min(20, frames.length >> 2), per = q => q / Math.max(1, this.solver.n - 3);
+    let a = 0, b = 0;
+    for (let i = 0; i < k; i++) { a += frames[i].quadScore; b += frames[frames.length - 1 - i].quadScore; }
+    const trend = per((b - a) / k);              // change in score per quadgram across the window
+    if (settled && !offBand && Math.abs(trend) < 0.01) return 'locked in';
+    if (!wIoc.flat && wIoc.W >= this.wExploring) return 'exploring';
+    return 'settling';
+  }
+  // Frames left until the stop temperature: ln(temp / stop) / ln(1 / rate).
+  framesLeft() { return Math.max(0, Math.log(this.solver.temp / this.stopTemp) / Math.log(1 / this.coolRate)); }
+  framesTotal() { return Math.log(this.solver.tempStart / this.stopTemp) / Math.log(1 / this.coolRate); }
+}
+
+/* ---------- Answer check: written apart from the solver on purpose ---------- */
+
+function exportCertificate(cipherText, symbols, key) {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const pairs = symbols.map((sym, i) => [sym, letters[key[i]]]);
+  let decoded = '';
+  const map = new Map(pairs);
+  for (const ch of cipherText) if (!/\s/.test(ch)) decoded += map.get(ch);
+  return { format: 'homophonic-key-certificate/1', cipherText, key: pairs, decoded };
+}
+
+// Checks a certificate using only its own fields and this code.
+function checkCertificate(cert) {
+  const checks = [];
+  const symbolsInCipher = [];
+  const seen = new Set();
+  for (const ch of String(cert.cipherText)) {
+    if (ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t') continue;
+    symbolsInCipher.push(ch);
+    seen.add(ch);
+  }
+  const pairs = Array.isArray(cert.key) ? cert.key : [];
+  const table = {};
+  let duplicate = null, badLetter = null;
+  for (const p of pairs) {
+    const sym = p[0], letter = p[1];
+    if (Object.prototype.hasOwnProperty.call(table, sym) && table[sym] !== letter) duplicate = sym;
+    if (Object.prototype.hasOwnProperty.call(table, sym)) duplicate = duplicate || sym;
+    table[sym] = letter;
+    if (typeof letter !== 'string' || letter.length !== 1 || letter < 'A' || letter > 'Z') badLetter = sym;
+  }
+  const missing = [...seen].filter(sym => !Object.prototype.hasOwnProperty.call(table, sym));
+  checks.push({ name: 'Every cipher symbol has a key entry', pass: missing.length === 0,
+    detail: missing.length ? `missing: ${missing.join(' ')}` : `${seen.size} symbols, all present` });
+  checks.push({ name: 'Each symbol maps to exactly one letter', pass: duplicate === null && badLetter === null,
+    detail: duplicate !== null ? `symbol ${duplicate} listed twice` : badLetter !== null ? `symbol ${badLetter} has no single A to Z letter` : `${pairs.length} entries, one letter each` });
+  let redo = '';
+  for (const sym of symbolsInCipher) redo += Object.prototype.hasOwnProperty.call(table, sym) ? table[sym] : '?';
+  checks.push({ name: 'Lengths agree', pass: redo.length === String(cert.decoded).length,
+    detail: `${redo.length} cipher symbols, ${String(cert.decoded).length} decoded letters` });
+  let firstDiff = -1;
+  const d = String(cert.decoded);
+  for (let i = 0; i < Math.max(redo.length, d.length); i++) if (redo[i] !== d[i]) { firstDiff = i; break; }
+  checks.push({ name: 'Re-decoding gives the decoded text exactly', pass: firstDiff === -1,
+    detail: firstDiff === -1 ? 'identical' : `first difference at position ${firstDiff}` });
+  return { pass: checks.every(c => c.pass), checks };
+}
+
+// Shannon unicity distance U = H(K) / D, with key space 26^S (any map from S symbols to letters).
+function unicityDistance(S, D = 3.2) {
+  const HK = S * Math.log2(26);
+  return { S, HK, D, U: HK / D };
+}
+
+// A small Lean 4 file, core Lean only, that restates the decoding as a theorem.
+function leanCertificate(cert, tactic = 'decide') {
+  const symIndex = new Map();
+  cert.key.forEach((p, i) => symIndex.set(p[0], i));
+  const cipher = [];
+  for (const ch of cert.cipherText) if (!/\s/.test(ch)) cipher.push(symIndex.get(ch));
+  const key = cert.key.map(p => p[1].charCodeAt(0) - 65);
+  const plain = [...cert.decoded].map(c => c.charCodeAt(0) - 65);
+  const list = a => '[' + a.join(', ') + ']';
+  const symbolsLine = cert.key.map((p, i) => `${i}=${p[0]}`).join(' ');
+  return `/-
+Homophonic cipher key check.
+Symbols are numbered by first appearance in the cipher text: ${symbolsLine}
+Letters are numbered A = 0, ..., Z = 25.
+Cipher length: ${cipher.length}. Key size: ${key.length}.
+Copyright © 2026 NousVolition. All rights reserved.
+-/
+
+set_option maxRecDepth 20000
+
+/-- The cipher text as symbol numbers. -/
+def cipher : List Nat := ${list(cipher)}
+
+/-- The key: entry i is the letter for symbol i. -/
+def key : List Nat := ${list(key)}
+
+/-- The expected plaintext as letter numbers. -/
+def plaintext : List Nat := ${list(plain)}
+
+/-- Decode each symbol by looking it up in the key (26 marks a missing entry). -/
+def decode (k c : List Nat) : List Nat := c.map (fun s => k.getD s 26)
+
+theorem key_letters : key.all (fun x => decide (x < 26)) = true := by ${tactic}
+
+theorem decodes : decode key cipher = plaintext := by ${tactic}
+`;
+}
+
+
+/* ---------- Mandala view helpers ---------- */
+
+// Read a rows × cols grid (filled row by row from the cipher) by the stride (dx, dy).
+// When the stride comes back to a visited cell early (gcd of stride and grid size
+// above 1), jump ahead to the first unvisited cell in row order, so every cell is
+// visited exactly once. Returns the visit order as cell numbers r * cols + c.
+function strideOrder(rows, cols, dx, dy) {
+  const visited = new Set();
+  const order = [];
+  let r = 0, c = 0, scan = 0;
+  const total = rows * cols;
+  while (order.length < total) {
+    if (visited.has(`${r},${c}`)) {
+      while (visited.has(`${Math.floor(scan / cols)},${scan % cols}`)) scan++;
+      r = Math.floor(scan / cols); c = scan % cols;
+    }
+    visited.add(`${r},${c}`);
+    order.push(r * cols + c);
+    r = ((r + dy) % rows + rows) % rows;
+    c = ((c + dx) % cols + cols) % cols;
+  }
+  return order;
+}
+
+// The symbol stream in stride order; cells past the end of the cipher are skipped.
+function unrollStream(seq, rows, cols, dx, dy) {
+  const out = [];
+  for (const cell of sharedStride(rows, cols, dx, dy)) if (cell < seq.length) out.push(seq[cell]);
+  return out;
+}
+
+// Sukhotin's vowel algorithm. Adjacency is counted only between neighbors in the
+// given stream (the unrolled reading order). Returns true for symbols it marks as
+// likely vowels. It is an estimate, and weaker on homophonic ciphers.
+function sukhotin(stream, nSymbols) {
+  const adj = Array.from({ length: nSymbols }, () => new Float64Array(nSymbols));
+  for (let i = 0; i + 1 < stream.length; i++) {
+    const a = stream[i], b = stream[i + 1];
+    if (a !== b) { adj[a][b]++; adj[b][a]++; }
+  }
+  const sum = adj.map(row => row.reduce((x, y) => x + y, 0));
+  const vowel = new Array(nSymbols).fill(false);
+  for (;;) {
+    let best = -1, bestSum = 0;
+    for (let k = 0; k < nSymbols; k++) if (!vowel[k] && sum[k] > bestSum) { bestSum = sum[k]; best = k; }
+    if (best < 0) break;
+    vowel[best] = true;
+    for (let k = 0; k < nSymbols; k++) if (!vowel[k]) sum[k] -= 2 * adj[k][best];
+  }
+  return vowel;
+}
+
+
+// Shared caches, so every tab uses one stride order and one Sukhotin result per setting.
+// The stride is worked out again only when rows, cols, dx or dy change.
+const STRIDE_CACHE = new Map();
+function sharedStride(rows, cols, dx, dy) {
+  const key = `${rows},${cols},${dx},${dy}`;
+  if (!STRIDE_CACHE.has(key)) {
+    if (STRIDE_CACHE.size > 64) STRIDE_CACHE.clear();
+    STRIDE_CACHE.set(key, strideOrder(rows, cols, dx, dy));
+  }
+  return STRIDE_CACHE.get(key);
+}
+const SUKHOTIN_CACHE = new WeakMap();
+function sharedSukhotin(seq, nSymbols, rows, cols, dx, dy) {
+  if (!SUKHOTIN_CACHE.has(seq)) SUKHOTIN_CACHE.set(seq, new Map());
+  const m = SUKHOTIN_CACHE.get(seq), key = `${nSymbols},${rows},${cols},${dx},${dy}`;
+  if (!m.has(key)) m.set(key, sukhotin(unrollStream(seq, rows, cols, dx, dy), nSymbols));
+  return m.get(key);
+}
+
+/* ---------- Synthesizer helpers (pure, so they can be tested in Node) ---------- */
+
+// Each scale: a root pitch class and its intervals in semitones, laid out over MIDI 48 to 76.
+const SYNTH_SCALES = {
+  'D minor pentatonic': { root: 2, intervals: [0, 3, 5, 7, 10] },   // D F G A C
+  'F Lydian': { root: 5, intervals: [0, 2, 4, 6, 7, 9, 11] },        // F G A B C D E
+  'Hirajoshi on D': { root: 2, intervals: [0, 2, 3, 7, 8] },         // D E F A Bb
+  'Whole tone': { root: 0, intervals: [0, 2, 4, 6, 8, 10] }          // MIDI 48, 50, ..., 76
+};
+function scaleNotes(name, lo = 48, hi = 76) {
+  const sc = SYNTH_SCALES[name], out = [];
+  for (let m = lo; m <= hi; m++) if (sc.intervals.includes(((m - sc.root) % 12 + 12) % 12)) out.push(m);
+  return out;
+}
+function midiToHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+// Symbol number k picks a scale note; likely vowels sound an octave lower.
+function noteForSymbol(k, isVowel, notes) { return notes[k % notes.length] - (isVowel ? 12 : 0); }
+function panForColumn(c, cols = 17) { return Math.sin(2 * Math.PI * c / cols) * 0.7; }
+const SYNTH_VOICES = {
+  vowel: { wave: 'triangle', peak: 0.16, release: 0.55 },
+  other: { wave: 'sine', peak: 0.11, release: 0.28 }
+};
+
+if (typeof module !== 'undefined') {
+  module.exports = { SPEEDS, ENGLISH_FREQ, ENGLISH_IOC, ALPHA, mulberry32, QuadgramModel, CryptanalysisTelemetry,
+    TelemetryRecorder, parseCipher, makeHomophonicCipher, AnnealingSolver, wirtingerGauge, wirtingerSelfTest,
+    RunController, strideOrder, sharedStride, sharedSukhotin, SYNTH_SCALES, scaleNotes, midiToHz, noteForSymbol, panForColumn, SYNTH_VOICES, STRIDE_CACHE, unrollStream, sukhotin, exportCertificate, checkCertificate, unicityDistance, leanCertificate };
+}
+
+
+/* ---------- Page wiring (runs only in a browser) ---------- */
+
+// Built-in test passages, public domain, from Project Gutenberg. Neither book is
+// part of the quadgram corpus, so the test is not scored on text the table has seen.
+const TEST_PASSAGES = [
+  { label: 'Test A: Alice\u2019s Adventures in Wonderland (Gutenberg #11)', seed: 7, text: "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, \"and what is the use of a book,\" thought Alice \"without pictures or conversations?\" So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to hear the Rabbit say to itself, \"Oh dear! Oh dear! I shall be late!\" (when she thought it over afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural);" },
+  { label: 'Test B: The Adventures of Tom Sawyer (Gutenberg #74)', seed: 14, text: "Saturday morning was come, and all the summer world was bright and fresh, and brimming with life. There was a song in every heart; and if the heart was young the music issued at the lips. There was cheer in every face and a spring in every step. The locust-trees were in bloom and the fragrance of the blossoms filled the air. Cardiff Hill, beyond the village and above it, was green with vegetation and it lay just far enough away to seem a Delectable Land, dreamy, reposeful, and inviting. Tom appeared on the sidewalk with a bucket of whitewash and a long-handled brush. He surveyed the fence, and all gladness left him and a deep melancholy settled down upon his spirit. Thirty yards of board fence nine feet high. Life to him seemed hollow, and existence but a burden. Sighing, he dipped his brush and passed it along the topmost plank; repeated the operation; did it again; compared the insignificant whitewashed streak with the far-reaching continent of unwhitewashed fence, and sat down on a tree-box discouraged." }
+];
+const TEST_SYMBOLS = 54;
+
+// Held-out English reference for the quadgram score per quadgram, from the last 10%
+// of each corpus book (kept out of the table): 409 windows of 700 letters.
+const ENGLISH_QUAD_REF = { mean: -4.128, sd: 0.065, p05: -4.238, p95: -4.023, windows: 409, letters: 700 };
+// The same windows had IoC 0.0657 on average (5% to 95%: 0.0615 to 0.0701) and chi-square 35.9 (95%: 57.2).
+const ENGLISH_CHI2_P95 = 57.2;
+const LEAN_TACTIC = 'decide';
+
+const QUAD_MODEL = new QuadgramModel(QUAD_PACKED, QUAD_FLOOR);
+
+/* ---------- CipherMandalaRenderer: a display of the symbol stream ---------- */
+class CipherMandalaRenderer {
+  constructor(canvas) { this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.spinAngle = 0; }
+  // opts: { seq, nSymbols, rows, cols, dx, dy, folds, twist, opacity, useSukhotin }
+  draw(o) {
+    const ctx = this.ctx, W = this.canvas.width, H = this.canvas.height, cx = W / 2, cy = H / 2;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#080d14'; ctx.fillRect(0, 0, W, H);
+    if (!o.seq || o.seq.length < 2) return null;
+    const stream = unrollStream(o.seq, o.rows, o.cols, o.dx, o.dy);
+    const vowel = o.useSukhotin ? sharedSukhotin(o.seq, o.nSymbols, o.rows, o.cols, o.dx, o.dy) : new Array(o.nSymbols).fill(false);
+    // Order each ring by symbol count so the layout does not depend on symbol names.
+    const count = new Array(o.nSymbols).fill(0); for (const s of stream) count[s]++;
+    const byCount = [...Array(o.nSymbols).keys()].filter(k => count[k] > 0).sort((a, b) => count[b] - count[a]);
+    const inner = byCount.filter(k => vowel[k]), outer = byCount.filter(k => !vowel[k]);
+    const R = Math.min(W, H) * 0.43, pos = new Array(o.nSymbols);
+    const place = (list, radius, offset) => list.forEach((k, j) => {
+      const th = offset + this.spinAngle + 2 * Math.PI * j / list.length;
+      const r = radius * (1 + 0.06 * Math.cos(o.folds * th));     // N-fold wave on the ring
+      pos[k] = { x: cx + r * Math.cos(th), y: cy + r * Math.sin(th), ring: vowel[k] ? 0 : 1 };
+    });
+    place(outer, R, -Math.PI / 2);
+    place(inner, R * 0.48, -Math.PI / 2 + o.twist * Math.PI / 180);
+    // Reference rings: N-fold outlines at both radii (decoration only).
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)'; ctx.lineWidth = 1;
+    for (const rad of (inner.length ? [R, R * 0.48] : [R])) {
+      ctx.beginPath();
+      for (let t = 0; t <= 360; t++) {
+        const th = this.spinAngle + 2 * Math.PI * t / 360, r = rad * (1 + 0.06 * Math.cos(o.folds * th));
+        const x = cx + r * Math.cos(th), y = cy + r * Math.sin(th);
+        if (t) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineWidth = 1;
+    let crossing = 0, within = 0;
+    for (let i = 0; i + 1 < stream.length; i++) {
+      const a = pos[stream[i]], b = pos[stream[i + 1]];
+      if (!a || !b || a === b) continue;
+      const cross = a.ring !== b.ring;
+      if (cross) crossing++; else within++;
+      ctx.strokeStyle = cross ? `rgba(251, 191, 36, ${o.opacity})` : `rgba(45, 212, 191, ${o.opacity})`;
+      // Curved chord: bend the control point toward the center.
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y);
+      ctx.quadraticCurveTo(cx + (mx - cx) * 0.35, cy + (my - cy) * 0.35, b.x, b.y);
+      ctx.stroke();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.font = '9px ui-monospace, Menlo, Consolas, monospace'; ctx.textAlign = 'center';
+    for (const k of byCount) { const p = pos[k]; ctx.fillStyle = p.ring ? '#cbd5e1' : '#fbbf24'; ctx.fillText(o.symbols[k], p.x, p.y + 3); }
+    ctx.textAlign = 'left'; ctx.fillStyle = '#94a3b8'; ctx.font = '10px ui-monospace, Menlo, Consolas, monospace';
+    ctx.fillText(`${o.rows}×${o.cols} dx ${o.dx} dy ${o.dy} folds ${o.folds}`, 6, 12);
+    if (o.useSukhotin) {
+      ctx.fillStyle = '#fbbf24'; ctx.fillText(`inner: likely vowels (${inner.length})`, 6, H - 18);
+      ctx.fillStyle = '#cbd5e1'; ctx.fillText(`outer: likely consonants (${outer.length})`, 6, H - 6);
+    }
+    return { streamLength: stream.length, inner: inner.length, outer: outer.length, crossing, within };
+  }
+}
+
+
+/* ---------- 3D Cipher Torus & Cube (hand-made projection on a 2D canvas) ---------- */
+
+// Z340 in the Webtoy ASCII transcription, 20 rows of 17 symbols. Source: Zodiac Killer
+// Ciphers Wiki, "Webtoy's transcription scheme" (David Oranchak). Cross-checked symbol by
+// symbol (as a one-to-one relabelling) against zkdecrypto's 340.zodiac.unsolved.txt.
+const Z340_GRID = [
+  "HER>pl^VPk|1LTG2d", "Np+B(#O%DWY.<*Kf)", "By:cM+UZGW()L#zHJ", "Spp7^l8*V3pO++RK2",
+  "_9M+ztjd|5FP+&4k/", "p8R^FlO-*dCkF>2D(", "#5+Kq%;2UcXGV.zL|", "(G2Jfj#O+_NYz+@L9",
+  "d<M+b+ZR2FBcyA64K", "-zlUV+^J+Op7<FBy-", "U+R/5tE|DYBpbTMKO", "2<clRJ|*5T4M.+&BF",
+  "z69Sy#+N|5FBc(;8R", "lGFN^f524b.cV4t++", "yBX1*:49CE>VUZ5-+", "|c.3zBK(Op^.fMqG2",
+  "RcT+L16C<+FlWB|)L", "++)WCzWcPOSHT/()p", "|FkdW<7tB_YOB*-Cc", ">MDHNpkSzZO8A|K;+"
+];
+
+class CipherTorusRenderer {
+  constructor(canvas, grid) {
+    this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.grid = grid;
+    this.rows = grid.length; this.cols = grid[0].length;
+    this.yaw = 0.6; this.pitch = 0.9; this.zoom = 1; this.head = 0;
+    this.R = 135; this.r = 58;
+  }
+  // Torus point for a cell: the column gives u, the row gives v.
+  torusPoint(row, col) {
+    const u = 2 * Math.PI * col / this.cols, v = 2 * Math.PI * row / this.rows;
+    const w = this.R + this.r * Math.cos(v);
+    return [w * Math.cos(u), w * Math.sin(u), this.r * Math.sin(v)];
+  }
+  // Push the torus point out along its direction to the surface of a cube.
+  cubePoint(p) {
+    const s = 120, m = Math.max(Math.abs(p[0]), Math.abs(p[1]), Math.abs(p[2])) || 1;
+    return [p[0] * s / m, p[1] * s / m, p[2] * s / m];
+  }
+  point(row, col, morph) {
+    const t = this.torusPoint(row, col), c = this.cubePoint(t);
+    return [t[0] + (c[0] - t[0]) * morph, t[1] + (c[1] - t[1]) * morph, t[2] + (c[2] - t[2]) * morph];
+  }
+  project(p) {
+    const cy = Math.cos(this.yaw), sy = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
+    const x1 = p[0] * cy - p[1] * sy, y1 = p[0] * sy + p[1] * cy;
+    const y2 = y1 * cp - p[2] * sp, z2 = y1 * sp + p[2] * cp;
+    const f = 700, k = f / (f + z2) * this.zoom * (this.pulse || 1);
+    return { x: this.canvas.width / 2 + x1 * k, y: this.canvas.height / 2 + y2 * k, z: z2, k };
+  }
+  draw(o) {
+    const ctx = this.ctx, W = this.canvas.width, H = this.canvas.height;
+    ctx.fillStyle = '#080d14'; ctx.fillRect(0, 0, W, H);
+    const pts = [];
+    for (let r = 0; r < this.rows; r++) for (let c = 0; c < this.cols; c++) {
+      const q = this.project(this.point(r, c, o.morph));
+      pts.push({ r, c, ch: this.grid[r][c], ...q });
+    }
+    const zs = pts.map(p => p.z), zmin = Math.min(...zs), zmax = Math.max(...zs);
+    const fade = z => 0.25 + 0.75 * (zmax - z) / Math.max(1e-9, zmax - zmin);
+    // Laser along the stride order, same skip-ahead reading as the mandala view.
+    const order = sharedStride(this.rows, this.cols, o.dx, o.dy);
+    const n = order.length, len = Math.min(o.beam, n - 1);
+    const headIdx = (o.head !== undefined ? o.head : Math.floor(this.head)) % n;
+    ctx.lineCap = 'round';
+    for (let s = len; s >= 1; s--) {
+      const a = pts[order[(headIdx - s + n) % n]], b = pts[order[(headIdx - s + 1 + n) % n]];
+      const gold = s <= 6;
+      const alpha = gold ? 0.95 : 0.85 * (1 - s / (len + 1));
+      ctx.strokeStyle = gold ? `rgba(251, 191, 36, ${alpha.toFixed(3)})` : `rgba(45, 212, 191, ${alpha.toFixed(3)})`;
+      ctx.lineWidth = gold ? 2.4 : 1.4;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    // Symbols, far to near.
+    pts.sort((a, b) => b.z - a.z);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const p of pts) {
+      const al = fade(p.z);
+      ctx.font = `${Math.max(7, 11 * p.k).toFixed(1)}px ui-monospace, Menlo, Consolas, monospace`;
+      ctx.fillStyle = `rgba(226, 232, 240, ${al.toFixed(3)})`;
+      ctx.fillText(p.ch, p.x, p.y);
+    }
+    const hp = this.project(this.point(Math.floor(order[headIdx] / this.cols), order[headIdx] % this.cols, o.morph));
+    ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(hp.x, hp.y, 4.5, 0, 2 * Math.PI); ctx.fill();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = '10px ui-monospace, Menlo, Consolas, monospace';
+    if (o.labels === false) return { orderLength: n, headIdx, cell: order[headIdx] };
+    ctx.fillStyle = '#2dd4bf'; ctx.fillText(`MORPH (${Math.round(o.morph * 100)}%)  visual blend only`, 8, 14);
+    ctx.fillStyle = '#94a3b8'; ctx.fillText(`Δx ${o.dx}  Δy ${o.dy}  cell ${headIdx + 1}/${n}`, 8, 28);
+    return { orderLength: n, unique: new Set(order).size };
+  }
+}
+
+
+/* ---------- Cipher Audio Synthesizer: a listening aid for the reading order ---------- */
+// Steps through the Z340 grid in stride order and plays one note per symbol. The sound
+// is a way to hear the reading order; it is not evidence about the cipher's content.
+class CipherSynth {
+  constructor() { this.ac = null; }
+  // Called only from a click, so audio never starts by itself.
+  ensure() {
+    if (this.ac) { if (this.ac.state === 'suspended') this.ac.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = this.ac = new AC();
+    this.master = ac.createGain(); this.master.gain.value = 0.8;
+    this.analyser = ac.createAnalyser(); this.analyser.fftSize = 128;
+    this.bins = new Uint8Array(this.analyser.frequencyBinCount);
+    this.bus = ac.createGain();
+    this.delay = ac.createDelay(1.0); this.delay.delayTime.value = 0.34;
+    this.feedback = ac.createGain(); this.feedback.gain.value = 0.42;
+    this.wet = ac.createGain(); this.wet.gain.value = 0.3;
+    this.bus.connect(this.master);                 // dry
+    this.bus.connect(this.delay);                  // echo
+    this.delay.connect(this.feedback); this.feedback.connect(this.delay);
+    this.delay.connect(this.wet); this.wet.connect(this.master);
+    this.master.connect(this.analyser); this.analyser.connect(ac.destination);
+  }
+  setWet(v) { if (this.ac) this.wet.gain.setTargetAtTime(v, this.ac.currentTime, 0.05); }
+  play(hz, isVowel, pan) {
+    if (!this.ac) return;
+    const ac = this.ac, t = ac.currentTime, v = isVowel ? SYNTH_VOICES.vowel : SYNTH_VOICES.other;
+    const osc = ac.createOscillator(), g = ac.createGain(), p = ac.createStereoPanner();
+    osc.type = v.wave; osc.frequency.value = hz; p.pan.value = pan;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(v.peak, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.008 + v.release);
+    osc.connect(g); g.connect(p); p.connect(this.bus);
+    osc.start(t); osc.stop(t + 0.03 + v.release);
+  }
+  spectrum() { if (!this.ac) return null; this.analyser.getByteFrequencyData(this.bins); return this.bins; }
+}
+
+if (typeof document !== 'undefined') {
+  const $ = id => document.getElementById(id);
+
+  // Accessible hints: hover, keyboard focus (Tab), or tap to show; Escape or a tap elsewhere hides.
+  let hintCount = 0;
+  function initHints(root) {
+    root.querySelectorAll('.hint:not([data-ready])').forEach(h => {
+      h.dataset.ready = '1';
+      const tip = document.createElement('span');
+      tip.className = 'tip'; tip.setAttribute('role', 'tooltip'); tip.id = `hint-tip-${++hintCount}`;
+      tip.innerHTML = h.dataset.hint;
+      h.appendChild(tip);
+      h.tabIndex = 0;
+      h.setAttribute('role', 'button');
+      h.setAttribute('aria-label', 'Help');
+      h.setAttribute('aria-describedby', tip.id);
+      h.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); const was = h.classList.contains('open');
+        document.querySelectorAll('.hint.open').forEach(x => x.classList.remove('open')); if (!was) { h.classList.add('open'); placeTip(tip); } });
+      h.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { h.classList.remove('open'); h.blur(); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.classList.toggle('open'); placeTip(tip); }
+      });
+      h.addEventListener('mouseenter', () => placeTip(tip));
+      h.addEventListener('focus', () => placeTip(tip));
+    });
+  }
+  // Keep a tip inside the window.
+  function placeTip(tip) {
+    tip.style.left = '50%'; tip.style.transform = 'translateX(-50%)';
+    requestAnimationFrame(() => {
+      const b = tip.getBoundingClientRect();
+      if (b.left < 6) tip.style.transform = `translateX(calc(-50% + ${6 - b.left}px))`;
+      else if (b.right > window.innerWidth - 6) tip.style.transform = `translateX(calc(-50% - ${b.right - window.innerWidth + 6}px))`;
+    });
+  }
+  document.addEventListener('click', () => document.querySelectorAll('.hint.open').forEach(x => x.classList.remove('open')));
+  initHints(document);
+
+  // The help panel is open on the first visit; after that the visitor's choice is remembered.
+  const HELP_KEY = 'homophonic-inspector-help';
+  const help = $('help-panel');
+  let helpPref = null;
+  try { helpPref = localStorage.getItem(HELP_KEY); } catch (e) { /* storage blocked */ }
+  help.open = helpPref !== 'closed';
+  help.addEventListener('toggle', () => { try { localStorage.setItem(HELP_KEY, help.open ? 'open' : 'closed'); } catch (e) { /* storage blocked */ } });
+
+  // Speed: cooling rate per batch.
+  const SPEED_NAMES = ['Careful', 'Normal', 'Fast'];
+  const speedName = () => SPEED_NAMES[+$('speed').value];
+  $('speed').addEventListener('input', () => {
+    $('speed-v').textContent = speedName();
+    if (ui.ctl) ui.ctl.coolRate = SPEEDS[speedName()];
+    render();
+  });
+  const ui = {
+    solver: null, ctl: null, recorder: new TelemetryRecorder(120, 400),
+    telemetry: new CryptanalysisTelemetry(QUAD_MODEL),
+    symbols: [], cipherText: '', truePlain: null, running: false, raf: 0, t0: 0, cert: null
+  };
+
+  // Load-time self-check of the gauge against the sharp case of the Lean theorem.
+  const selfTest = wirtingerSelfTest();
+  for (const r of selfTest) console.assert(r.ok, `Wirtinger self-check failed for n=${r.n}: W=${r.W}`);
+  $('selftest').textContent = `Load-time self-check, f(j) = cos(2\u03c0j/n): ` +
+    selfTest.map(r => `n=${r.n} W=${r.W.toFixed(12)}`).join(', ') +
+    (selfTest.every(r => r.ok) ? ' \u2014 all equal 1 to rounding.' : ' \u2014 FAILED.');
+
+  const sel = $('test-pick');
+  TEST_PASSAGES.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = p.label; sel.appendChild(o); });
+
+  { const o = document.createElement('option'); o.value = 'z340'; o.textContent = 'Z340 grid (Webtoy transcription; transposed, so this solver will not read it)'; sel.appendChild(o); }
+  function loadTest() {
+    if (sel.value === 'z340') { $('cipher-in').value = Z340_GRID.join('\n'); prepare(null); return; }
+    const p = TEST_PASSAGES[+sel.value];
+    const c = makeHomophonicCipher(p.text, TEST_SYMBOLS, mulberry32(p.seed));
+    $('cipher-in').value = c.cipherText;
+    prepare(c.plainLetters);
+  }
+
+  function prepare(truePlain) {
+    stop();
+    ui.cipherText = $('cipher-in').value;
+    const parsed = parseCipher(ui.cipherText);
+    ui.symbols = parsed.symbols;
+    ui.truePlain = truePlain || null;
+    if (parsed.seq.length < 8) { $('status').textContent = 'Please enter at least 8 cipher symbols.'; return false; }
+    const seed = parseInt($('seed').value, 10) || 1;
+    ui.solver = new AnnealingSolver(parsed.seq, parsed.symbols.length, QUAD_MODEL, mulberry32(seed));
+    ui.recorder.reset();
+    ui.ctl = new RunController(ui.solver, ui.telemetry, ui.recorder, { autoReheat: $('auto-reheat').checked, coolRate: SPEEDS[speedName()] });
+    ui.cert = null;
+    $('cert-out').innerHTML = '<span class="muted">Runs when the solver stops, or press Check answer.</span>';
+    $('cipher-stats').textContent = `${parsed.seq.length} symbols in the text, ${parsed.symbols.length} distinct.`;
+    showUnicity();
+    render();
+    $('status').textContent = 'Ready.';
+    if (ui.afterPrepare) ui.afterPrepare();
+    return true;
+  }
+
+  function start() {
+    if (!ui.solver || $('cipher-in').value !== ui.cipherText) { if (!prepare(ui.cipherText === $('cipher-in').value ? ui.truePlain : null)) return; }
+    if (ui.ctl.done) return;
+    ui.running = true; ui.t0 = performance.now() - (ui.elapsed || 0);
+    ui.raf = requestAnimationFrame(tick);
+    $('status').textContent = 'Running.';
+  }
+  function stop() { ui.running = false; ui.lastTick = 0; cancelAnimationFrame(ui.raf); }
+
+  function tick(now) {
+    if (!ui.running) return;
+    if (ui.lastTick && now > ui.lastTick) {
+      const inst = 1000 / (now - ui.lastTick);
+      ui.fps = ui.fps ? ui.fps * 0.95 + inst * 0.05 : inst;
+    }
+    ui.lastTick = now;
+    ui.ctl.autoReheat = $('auto-reheat').checked;
+    ui.ctl.frame();
+    ui.elapsed = performance.now() - ui.t0;
+    render();
+    if (ui.ctl.done) {
+      stop();
+      $('status').textContent = `Stopped: temperature reached ${ui.solver.temp.toFixed(3)} (stop at \u2264 0.055).`;
+      runAnswerCheck();
+      return;
+    }
+    ui.raf = requestAnimationFrame(tick);
+  }
+
+  function accuracy(text) {
+    if (!ui.truePlain) return null;
+    let ok = 0; for (let i = 0; i < text.length; i++) if (text[i] === ui.truePlain[i]) ok++;
+    return ok / text.length;
+  }
+
+  function group(text) { return text.replace(/(.{5})/g, '$1 ').replace(/((?:\S+ ){10})/g, '$1\n'); }
+
+  function render() {
+    const s = ui.solver; if (!s) return;
+    const cur = s.decode(s.key), best = s.decode(s.bestKey);
+    $('dec-cur').textContent = group(cur);
+    $('dec-best').textContent = group(best);
+    const ac = accuracy(cur), ab = accuracy(best);
+    $('acc-cur').textContent = ac === null ? '' : `${(ac * 100).toFixed(1)}% letters right`;
+    $('acc-best').textContent = ab === null ? 'no known plaintext' : `${(ab * 100).toFixed(1)}% letters right`;
+    const e = ui.telemetry.evaluate(s.letters, s.n);
+    $('kv-ioc').textContent = e.ioc.toFixed(4);
+    $('kv-chi').textContent = e.chi2.toFixed(1);
+    $('kv-quad').textContent = `${e.quadScore.toFixed(1)} (${e.quadPerGram.toFixed(3)} per quadgram)`;
+    $('kv-temp').textContent = s.temp.toFixed(4);
+    $('kv-step').textContent = s.steps.toLocaleString('en-US');
+    $('kv-acc').textContent = `${(100 * s.accepted / Math.max(1, s.steps)).toFixed(1)}%`;
+    $('kv-beststep').textContent = s.bestStep.toLocaleString('en-US');
+    $('kv-time').textContent = `${((ui.elapsed || 0) / 1000).toFixed(1)} s`;
+    $('kv-reheats').textContent = ui.ctl.reheatLog.length ? ui.ctl.reheatLog.map(r => `${r.reason} @ ${r.step.toLocaleString('en-US')}`).join(', ') : 'none';
+    const fps = ui.fps || 60;
+    const left = ui.ctl.framesLeft(), total = ui.ctl.framesTotal();
+    const secs = left / fps;
+    const fmtT = x => x >= 60 ? `${Math.floor(x / 60)} min ${String(Math.round(x % 60)).padStart(2, '0')} s` : `${Math.round(x)} s`;
+    $('kv-left').textContent = ui.ctl.done ? 'finished' : `about ${fmtT(secs)} (${Math.round(left).toLocaleString('en-US')} frames at ${fps.toFixed(0)}/s${ui.fps ? '' : ', assumed'})`;
+    const pct = Math.max(0, Math.min(100, 100 * (1 - left / total)));
+    $('prog-fill').style.width = `${pct.toFixed(1)}%`;
+    $('prog').setAttribute('aria-valuenow', pct.toFixed(0));
+    const st = ui.ctl.done ? 'finished' : ui.ctl.last ? ui.ctl.last.state : 'not started';
+    $('kv-state').textContent = st;
+    $('kv-state').style.color = { 'exploring': '#f59e0b', 'settling': '#38bdf8', 'locked in': '#34d399', 'looks stuck': '#f87171' }[st] || '';
+    drawHeatmap(s.letters, s.n);
+    drawSparkline();
+    drawGauge();
+    const last = ui.ctl.last;
+    $('reheat-note').style.display = last && last.suggest ? 'block' : 'none';
+  }
+
+  function drawHeatmap(letters, n) {
+    const cv = $('heatmap'), ctx = cv.getContext('2d');
+    const W = cv.width, pad = 14, cell = (W - pad) / 26;
+    const m = new Float64Array(676); let max = 1;
+    for (let i = 0; i + 1 < n; i++) { const k = letters[i] * 26 + letters[i + 1]; m[k]++; if (m[k] > max) max = m[k]; }
+    ctx.fillStyle = '#070a0f'; ctx.fillRect(0, 0, W, cv.height);
+    for (let a = 0; a < 26; a++) for (let b = 0; b < 26; b++) {
+      const v = Math.sqrt(m[a * 26 + b] / max);
+      ctx.fillStyle = v === 0 ? '#0d121b' : `rgba(56, 189, 248, ${0.12 + 0.88 * v})`;
+      ctx.fillRect(pad + b * cell, pad + a * cell, cell - 1, cell - 1);
+    }
+    ctx.fillStyle = '#94a3b8'; ctx.font = '8px ui-monospace, Menlo, Consolas, monospace'; ctx.textAlign = 'center';
+    for (let k = 0; k < 26; k++) {
+      ctx.fillText(ALPHA[k], pad + k * cell + cell / 2, 10);
+      ctx.fillText(ALPHA[k], 6, pad + k * cell + cell / 2 + 3);
+    }
+  }
+
+  function drawSparkline() {
+    const cv = $('spark'), ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height, top = 22, bot = H - 4;
+    const frames = ui.recorder.frames();
+    ctx.fillStyle = '#0b131e'; ctx.fillRect(0, 0, W, H);
+    const yIoc = v => bot - (Math.min(0.09, Math.max(0.02, v)) - 0.02) / 0.07 * (bot - top);
+    const yTemp = v => bot - Math.min(1.5, Math.max(0, v)) / 1.5 * (bot - top);
+    // English IoC band and target line
+    ctx.fillStyle = 'rgba(45, 212, 191, 0.12)';
+    ctx.fillRect(0, yIoc(0.070), W, yIoc(0.062) - yIoc(0.070));
+    ctx.strokeStyle = 'rgba(45, 212, 191, 0.7)'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, yIoc(0.0667)); ctx.lineTo(W, yIoc(0.0667)); ctx.stroke(); ctx.setLineDash([]);
+    const x = i => frames.length <= 1 ? W : i / (ui.recorder.capacity - 1) * W;
+    const line = (color, f) => {
+      if (frames.length < 2) return;
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+      frames.forEach((fr, i) => { const px = x(i), py = f(fr); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+      ctx.stroke();
+    };
+    line('#f59e0b', fr => yTemp(fr.temp));
+    line('#2dd4bf', fr => yIoc(fr.ioc));
+    const last = ui.recorder.latest();
+    ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'; ctx.textAlign = 'left';
+    const ioc = last ? last.ioc : 0, temp = last ? last.temp : (ui.solver ? ui.solver.temp : 0), step = last ? last.step : 0;
+    ctx.fillStyle = '#2dd4bf'; ctx.fillText(`IoC ${ioc.toFixed(4)} (target 0.0667)`, 6, 13);
+    ctx.fillStyle = '#f59e0b'; ctx.fillText(`temp ${temp.toFixed(3)}`, 196, 13);
+    ctx.fillStyle = '#cbd5e1'; ctx.fillText(`step ${step}`, 274, 13);
+  }
+
+  function drawGauge() {
+    const cv = $('gauge'), ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height, top = 16, bot = H - 12;
+    ctx.fillStyle = '#0b131e'; ctx.fillRect(0, 0, W, H);
+    const last = ui.ctl && ui.ctl.last;
+    const n = ui.recorder.count;
+    // log10 W from 0 (the floor, W = 1) to 3.5
+    const y = w => bot - Math.min(3.5, Math.max(0, Math.log10(w))) / 3.5 * (bot - top);
+    ctx.strokeStyle = '#34d399'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y(1)); ctx.lineTo(W, y(1)); ctx.stroke();
+    ctx.font = '9px ui-monospace, Menlo, Consolas, monospace'; ctx.fillStyle = '#34d399'; ctx.textAlign = 'right';
+    ctx.fillText('Wirtinger floor W = 1', W - 4, bot + 10);
+    if (n >= 3) {
+      const lam = 2 - 2 * Math.cos(2 * Math.PI / n), noise = 2 / lam;
+      ctx.strokeStyle = 'rgba(148,163,184,0.6)'; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(0, y(noise)); ctx.lineTo(W, y(noise)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'right'; ctx.fillText(`noise level 2/\u03bb\u2081 \u2248 ${noise.toFixed(0)}`, W - 4, y(noise) - 3);
+      ctx.strokeStyle = 'rgba(248,113,113,0.6)'; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(0, y(ui.ctl.wSettled)); ctx.lineTo(W, y(ui.ctl.wSettled)); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ui.gaugeHist = ui.gaugeHist || [];
+    if (last && ui.gaugeHist.lastStep !== ui.solver.steps) {
+      ui.gaugeHist.push({ wi: last.wIoc, wq: last.wQuad }); if (ui.gaugeHist.length > 120) ui.gaugeHist.shift();
+      ui.gaugeHist.lastStep = ui.solver.steps;
+    }
+    const plot = (color, pick) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 1.3; ctx.beginPath(); let on = false;
+      ui.gaugeHist.forEach((g, i) => { const v = pick(g); if (!v || v.flat) { on = false; return; }
+        const px = i / 119 * W, py = y(v.W); if (on) ctx.lineTo(px, py); else ctx.moveTo(px, py); on = true; });
+      ctx.stroke();
+    };
+    plot('#a78bfa', g => g.wi);
+    plot('#fbbf24', g => g.wq);
+    ctx.textAlign = 'left'; ctx.font = '10px ui-monospace, Menlo, Consolas, monospace';
+    const fmt = g => !g ? '\u2014' : g.flat ? 'flat' : g.W.toFixed(1);
+    ctx.fillStyle = '#a78bfa'; ctx.fillText(`W(IoC) ${fmt(last && last.wIoc)}`, 6, 11);
+    ctx.fillStyle = '#fbbf24'; ctx.fillText(`W(quad) ${fmt(last && last.wQuad)}`, 130, 11);
+    ctx.fillStyle = '#94a3b8'; ctx.fillText(`n ${n}`, 270, 11);
+    $('kv-viol').textContent = ui.ctl ? String(ui.ctl.boundViolations) : '0';
+  }
+
+  function showUnicity() {
+    const S = ui.symbols.length, len = ui.solver ? ui.solver.n : 0;
+    const u = unicityDistance(S);
+    $('unicity').innerHTML =
+      `U = H(K) / D, with H(K) = log\u2082(26<sup>S</sup>) = S \u00b7 log\u2082 26 (key space: any map from the S symbols to the 26 letters).<br>` +
+      `S = ${S}: H(K) = ${S} \u00d7 ${Math.log2(26).toFixed(4)} = ${u.HK.toFixed(1)} bits; D = ${u.D} bits per letter; ` +
+      `U = ${u.HK.toFixed(1)} / ${u.D} = <b>${u.U.toFixed(1)} letters</b>. ` +
+      `This cipher has ${len} letters, ${len > u.U ? `about ${(len / u.U).toFixed(1)} times U, so it is longer than U` : 'which is not longer than U'}.<br>` +
+      `<span class="muted">This is the standard Shannon estimate, not a proof that the answer is unique.</span>`;
+  }
+
+  function runAnswerCheck() {
+    const s = ui.solver; if (!s) return;
+    const cert = exportCertificate(ui.cipherText, ui.symbols, s.bestKey);
+    ui.cert = cert;
+    const res = checkCertificate(JSON.parse(JSON.stringify(cert)));
+    const letters = new Uint8Array([...cert.decoded].map(c => c.charCodeAt(0) - 65));
+    const e = ui.telemetry.evaluate(letters, letters.length);
+    const inBand = e.ioc >= 0.062 && e.ioc <= 0.070;
+    const z = (e.quadPerGram - ENGLISH_QUAD_REF.mean) / ENGLISH_QUAD_REF.sd;
+    const CHECK_HINTS = {
+      'Every cipher symbol has a key entry': 'Every symbol that appears in the cipher has a letter in the key.',
+      'Each symbol maps to exactly one letter': 'No symbol is given two different letters, and every entry is a single letter from A to Z.',
+      'Lengths agree': 'The decoded text has exactly one letter for each cipher symbol.',
+      'Re-decoding gives the decoded text exactly': 'Decoding the cipher again with the key, using separate code, gives the very same text.'
+    };
+    let html = res.checks.map(c => `<div class="kv"><span>${c.name}<span class="hint" data-hint="${CHECK_HINTS[c.name] || ''}"></span></span><span class="${c.pass ? 'pass' : 'fail'}">${c.pass ? 'PASS' : 'FAIL'}</span></div><div class="detail">${c.detail}</div>`).join('');
+    html += `<div class="evidence"><b>English evidence (not proof):</b><span class="hint" data-hint="Signs that the decoded text is English: the IoC, the chi-square and the quadgram score, each compared with real English. Evidence is not proof; it says the answer looks like English, not that it is the only answer."></span> IoC ${e.ioc.toFixed(4)} ${inBand ? 'is inside' : 'is outside'} the 0.062 to 0.070 band; ` +
+      `chi-square ${e.chi2.toFixed(1)} (held-out English: 95% of windows below ${ENGLISH_CHI2_P95}); ` +
+      `quadgram score ${e.quadPerGram.toFixed(3)} per quadgram against held-out English ${ENGLISH_QUAD_REF.mean.toFixed(3)} \u00b1 ${ENGLISH_QUAD_REF.sd.toFixed(3)} ` +
+      `(${z >= 0 ? '+' : ''}${z.toFixed(1)} sd). The reference comes from the last 10% of each corpus book, kept out of the quadgram table, in ${ENGLISH_QUAD_REF.windows} windows of ${ENGLISH_QUAD_REF.letters} letters.</div>`;
+    setTimeout(() => initHints($('cert-out')), 0);
+    $('cert-out').innerHTML = `<div class="kv"><span>Certificate<span class="hint" data-hint="A record of the cipher, the key and the decoded text, checked below by code kept apart from the solver."></span></span><span class="${res.pass ? 'pass' : 'fail'}">${res.pass ? 'ALL CHECKS PASS' : 'CHECK FAILED'}</span></div>` + html;
+  }
+
+  function download(name, text, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  // Mandala view
+  const mandala = new CipherMandalaRenderer($('mandala'));
+  function defaultGrid(len) {
+    const cols = len === 340 ? 17 : Math.max(1, Math.round(Math.sqrt(len)));
+    return { cols, rows: Math.max(1, Math.ceil(len / cols)) };
+  }
+  function setGridDefaults() {
+    const g = defaultGrid(ui.solver ? ui.solver.n : 0);
+    $('m-rows').value = g.rows; $('m-cols').value = g.cols;
+  }
+  function drawMandala() {
+    if (!ui.solver || $('view-mandala').style.display === 'none') return;
+    const v = id => +$(id).value;
+    ['m-dx', 'm-dy', 'm-folds', 'm-twist', 'm-op'].forEach(id => { $(id + '-v').textContent = $(id).value; });
+    const info = mandala.draw({ seq: ui.solver.seq, nSymbols: ui.symbols.length, symbols: ui.symbols,
+      rows: Math.max(1, v('m-rows')), cols: Math.max(1, v('m-cols')), dx: v('m-dx'), dy: v('m-dy'),
+      folds: v('m-folds'), twist: v('m-twist'), opacity: v('m-op'), useSukhotin: $('m-suk').checked });
+    if (info) $('m-info').textContent = `${info.streamLength} symbols read; ${info.crossing} gold chords (between rings), ${info.within} cyan chords (within a ring).`;
+  }
+  function spinLoop() {
+    if ($('m-spin').checked && $('view-mandala').style.display !== 'none') { mandala.spinAngle += 0.003; drawMandala(); }
+    requestAnimationFrame(spinLoop);
+  }
+  ['m-rows', 'm-cols', 'm-dx', 'm-dy', 'm-folds', 'm-twist', 'm-op', 'm-suk'].forEach(id => $(id).addEventListener('input', drawMandala));
+  $('m-preset').onclick = () => { $('m-dx').value = 2; $('m-dy').value = 1; drawMandala(); };
+  function showView(which) {
+    $('view-tele').style.display = which === 'tele' ? 'block' : 'none';
+    $('view-mandala').style.display = which === 'mandala' ? 'block' : 'none';
+    $('view-torus').style.display = which === 'torus' ? 'flex' : 'none';
+    $('view-synth').style.display = which === 'synth' ? 'flex' : 'none';
+    $('mid-card').classList.toggle('wide', which === 'torus' || which === 'synth');
+    $('tab-synth').classList.toggle('on', which === 'synth');
+    $('tab-torus').classList.toggle('on', which === 'torus');
+    $('tab-tele').classList.toggle('on', which === 'tele'); $('tab-mandala').classList.toggle('on', which === 'mandala');
+    if (which === 'mandala') drawMandala(); else render();
+  }
+  // 3D torus and cube view
+  const torus = new CipherTorusRenderer($('torus'), Z340_GRID);
+  const tv = id => +$(id).value;
+  let drag = null, lastT = 0;
+  $('torus').addEventListener('mousedown', e => { drag = { x: e.clientX, y: e.clientY }; });
+  window.addEventListener('mouseup', () => { drag = null; });
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    torus.yaw += (e.clientX - drag.x) * 0.01; torus.pitch += (e.clientY - drag.y) * 0.01;
+    drag = { x: e.clientX, y: e.clientY };
+  });
+  $('torus').addEventListener('wheel', e => { e.preventDefault(); torus.zoom = Math.min(3, Math.max(0.4, torus.zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); }, { passive: false });
+  $('t-torus').onclick = () => { $('t-morph').value = 0; };
+  $('t-cube').onclick = () => { $('t-morph').value = 1; };
+  function torusLoop(t) {
+    const dt = lastT ? Math.min(0.1, (t - lastT) / 1000) : 0; lastT = t;
+    if ($('view-torus').style.display !== 'none') {
+      const speed = tv('t-speed');
+      if ($('t-spin').checked && !drag) torus.yaw += 0.15 * dt;
+      torus.head += speed * 10 * dt;            // cells per second = 10 × speed
+      $('t-morph-v').textContent = `MORPH (${Math.round(tv('t-morph') * 100)}%)`;
+      $('t-speed-v').textContent = `${speed.toFixed(1)} (${(speed * 10).toFixed(0)} cells/s)`;
+      ['t-dx', 't-dy', 't-beam'].forEach(id => { $(id + '-v').textContent = $(id).value; });
+      torus.draw({ morph: tv('t-morph'), dx: tv('t-dx'), dy: tv('t-dy'), beam: tv('t-beam') });
+    }
+    requestAnimationFrame(torusLoop);
+  }
+  requestAnimationFrame(torusLoop);
+
+  // Cipher Audio Synthesizer tab
+  const Z340 = (() => { const p = parseCipher(Z340_GRID.join('')); return { grid: Z340_GRID, rows: 20, cols: 17, seq: p.seq, symbols: p.symbols }; })();
+  const synthTorus = new CipherTorusRenderer($('synth-canvas'), Z340.grid);
+  const synth = new CipherSynth();
+  const sy = { playing: false, pos: 0, acc: 0, last: 0, pulse: 0, lastNote: null };
+  function synthSize() {
+    const cv = $('synth-canvas'), box = cv.parentElement;
+    const w = Math.max(240, Math.min(900, Math.floor(box.clientWidth - 330)));
+    if (w > 0 && cv.width !== w) { cv.width = w; cv.height = Math.round(w * 0.84); }
+  }
+  window.addEventListener('resize', synthSize);
+  function synthStep() {
+    const dx = +$('s-dx').value, dy = +$('s-dy').value;
+    const order = sharedStride(Z340.rows, Z340.cols, dx, dy);
+    const vowel = sharedSukhotin(Z340.seq, Z340.symbols.length, Z340.rows, Z340.cols, dx, dy);
+    const cell = order[sy.pos % order.length], r = Math.floor(cell / Z340.cols), c = cell % Z340.cols;
+    const k = Z340.seq[cell], isV = vowel[k];
+    const midi = noteForSymbol(k, isV, scaleNotes($('s-scale').value));
+    const hz = midiToHz(midi);
+    synth.play(hz, isV, panForColumn(c, Z340.cols));
+    sy.lastNote = { sym: Z340.symbols[k], type: isV ? 'likely vowel (triangle, octave down)' : 'likely consonant (sine pluck)', hz, midi, r: r + 1, c: c + 1, pos: sy.pos % order.length };
+    sy.pos = (sy.pos + 1) % order.length;
+  }
+  function synthLoop(t) {
+    const dt = sy.last ? Math.min(0.1, (t - sy.last) / 1000) : 0; sy.last = t;
+    if ($('view-synth').style.display !== 'none') {
+      synthSize();
+      const tempo = +$('s-tempo').value;
+      $('s-tempo-v').textContent = `${tempo.toFixed(1)} steps/s`;
+      $('s-wet-v').textContent = (+$('s-wet').value).toFixed(2);
+      ['s-dx', 's-dy'].forEach(id => { $(id + '-v').textContent = $(id).value; });
+      if (sy.playing) {
+        sy.acc += dt;
+        let guard = 0;
+        while (sy.acc >= 1 / tempo && guard++ < 4) { sy.acc -= 1 / tempo; synthStep(); }
+      }
+      // Bass level from the lowest FFT bins pulses the torus.
+      const bins = synth.spectrum();
+      let bass = 0; if (bins) { for (let i = 0; i < 4; i++) bass += bins[i]; bass /= 4 * 255; }
+      sy.pulse += (bass - sy.pulse) * 0.25;
+      synthTorus.pulse = 1 + 0.12 * sy.pulse;
+      if ($('s-spin').checked) synthTorus.yaw += 0.12 * dt;
+      const head = Math.max(0, sy.pos - 1);
+      const cv = $('synth-canvas'), ctx = cv.getContext('2d');
+      synthTorus.zoom = cv.width / 640;
+      synthTorus.draw({ morph: 0, dx: +$('s-dx').value, dy: +$('s-dy').value, beam: 95, head, labels: false });
+      // FFT halo: 64 bars around the center.
+      if (bins) {
+        const cx = cv.width / 2, cyy = cv.height / 2, R0 = cv.width * 0.34;
+        ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = 2;
+        for (let i = 0; i < bins.length; i++) {
+          const a = 2 * Math.PI * i / bins.length - Math.PI / 2, len = bins[i] / 255 * cv.width * 0.06;
+          ctx.strokeStyle = `rgba(45, 212, 191, ${(0.25 + 0.6 * bins[i] / 255).toFixed(3)})`;
+          ctx.beginPath(); ctx.moveTo(cx + R0 * Math.cos(a), cyy + R0 * Math.sin(a));
+          ctx.lineTo(cx + (R0 + len) * Math.cos(a), cyy + (R0 + len) * Math.sin(a)); ctx.stroke();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.font = '10px ui-monospace, Menlo, Consolas, monospace'; ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'left';
+      ctx.fillText(`${sy.playing ? 'playing' : synth.ac ? 'paused' : 'press Play to start sound'} · bass ${(sy.pulse * 100).toFixed(0)}%`, 8, 14);
+      const n = sy.lastNote;
+      $('s-readout').innerHTML = n
+        ? `<div class="kv"><span>Symbol</span><span>${n.sym.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span></div><div class="kv"><span>Type</span><span>${n.type}</span></div>` +
+          `<div class="kv"><span>Pitch</span><span>${n.hz.toFixed(2)} Hz (MIDI ${n.midi})</span></div><div class="kv"><span>(r, c)</span><span>(${n.r}, ${n.c}) · step ${n.pos + 1}/340</span></div>`
+        : '<span class="muted">No note yet.</span>';
+    }
+    requestAnimationFrame(synthLoop);
+  }
+  $('s-play').onclick = () => { synth.ensure(); synth.setWet(+$('s-wet').value); sy.playing = true; };
+  $('s-pause').onclick = () => { sy.playing = false; };      // no new notes; echoes fade out
+  $('s-restart').onclick = () => { sy.pos = 0; sy.acc = 0; };
+  $('s-wet').addEventListener('input', () => synth.setWet(+$('s-wet').value));
+  ['s-dx', 's-dy'].forEach(id => $(id).addEventListener('input', () => { sy.pos = 0; }));
+  requestAnimationFrame(synthLoop);
+  $('tab-synth').onclick = () => showView('synth');
+  $('tab-torus').onclick = () => showView('torus');
+  $('tab-tele').onclick = () => showView('tele');
+  $('tab-mandala').onclick = () => showView('mandala');
+  ui.afterPrepare = () => { setGridDefaults(); drawMandala(); };
+  requestAnimationFrame(spinLoop);
+
+  $('btn-load').onclick = loadTest;
+  $('btn-start').onclick = start;
+  $('btn-pause').onclick = () => { stop(); $('status').textContent = 'Paused.'; };
+  $('btn-reset').onclick = () => { ui.elapsed = 0; ui.gaugeHist = []; prepare(ui.cipherText === $('cipher-in').value ? ui.truePlain : null); };
+  $('btn-reheat').onclick = () => {
+    if (!ui.ctl) return;
+    ui.ctl.reheat('manual');
+    render();
+    if (!ui.running) start();
+  };
+  $('btn-check').onclick = runAnswerCheck;
+  $('btn-cert').onclick = () => { if (!ui.cert) runAnswerCheck(); if (ui.cert) download('homophonic-certificate.json', JSON.stringify(ui.cert, null, 2), 'application/json'); };
+  $('btn-lean').onclick = () => { if (!ui.cert) runAnswerCheck(); if (ui.cert) download('HomophonicKeyCheck.lean', leanCertificate(ui.cert, LEAN_TACTIC), 'text/plain'); };
+
+  loadTest();
+  const qs = new URLSearchParams(location.search);
+  if (qs.has('mandala')) showView('mandala');
+  if (qs.has('torus')) showView('torus');
+  if (qs.has('synth')) showView('synth');
+  if (qs.has('morph')) $('t-morph').value = qs.get('morph');
+  // ?ff=N runs N frames at once (same code as the animation), for quick inspection.
+  if (qs.has('ff')) {
+    const t = performance.now();
+    for (let i = 0, n = +qs.get('ff') || 0; i < n && !ui.ctl.done; i++) { ui.ctl.frame(); drawGauge(); }
+    ui.elapsed = performance.now() - t;
+    render();
+    if (ui.ctl.done) runAnswerCheck();
+  }
+  if (qs.has('autorun')) start();
+}
+
+if (typeof module !== 'undefined') Object.assign(module.exports, { Z340_GRID, TEST_PASSAGES, ENGLISH_QUAD_REF });
+
+</script>
+</body>
+</html>
