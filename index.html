@@ -12706,6 +12706,11 @@ window.__travelerPoint = travelerPoint;
   </div>
   <div class="note">
     <b>How it's built:</b> the Golay code is spanned by the 23 shifts of the quadratic-residue pattern mod 23, plus a parity bit and the all-ones word. Coordinates are scaled by √8, so every shortest vector has squared length 32 here (4 in the usual scale).<br><br>
+    <b>Lean proofs:</b> this Golay generator matches the proved code after relabeling the 24 coordinates. The existing lattice proofs then give the smallest squared length, 32, and all 196,560 shortest vectors.
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/93bd83600728124ec12becfd3cdc4e23778da1d1/PlaygroundGolay.lean#L182" target="_blank" rel="noopener noreferrer">Generator proof</a> ·
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/93bd83600728124ec12becfd3cdc4e23778da1d1/PlaygroundLeech.lean#L104" target="_blank" rel="noopener noreferrer">Shortest-vector proof</a> ·
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/93bd83600728124ec12becfd3cdc4e23778da1d1/docs/playground-golay.md" target="_blank" rel="noopener noreferrer">Evidence and checks</a>.<br>
+    The page's generated vectors pass a separate JavaScript check. The projection and animation are not Lean-verified; the lattice's volume and symmetry group remain unproved here.<br><br>
     <b>Why 23-fold:</b> shifting coordinates 0…22 around a circle is a symmetry of this code, so the picture repeats 23 times around the centre. The Leech lattice has no roots, so it has no Coxeter plane; this 23-fold view is a real symmetry instead.<br><br>
     <b>History:</b> Leech found the lattice in 1965 via the Golay code (1949). It can also be built from three copies of E₈ (a Turyn-style construction), which is not drawn here.
   </div>

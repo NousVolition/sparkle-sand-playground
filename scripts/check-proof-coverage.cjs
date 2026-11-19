@@ -140,7 +140,7 @@ const leechResult = run(leechCode + `
   const distribution = {}; for (const w of weights) distribution[w] = (distribution[w] || 0) + 1;
   const shells = [0,0,0], distinct = new Set();
   for (let i=0; i<n; i++) { shells[shellOf[i]]++; distinct.add(vecs.slice(i*24, (i+1)*24).join(',')); }
-  ({code, distribution, shells, vectors: n, allocated: N, distinct: distinct.size, allNorm32});
+  ({code, basis, distribution, shells, vectors: n, allocated: N, distinct: distinct.size, allNorm32});
 `);
 same(leechResult.distribution, {0:1, 8:759, 12:2576, 16:759, 24:1});
 same(leechResult.shells, [1104,97152,98304]);
@@ -158,7 +158,24 @@ same(table, leechResult.distribution);
 delete leechResult.code;
 leechResult.golay_codewords = tabSet.size;
 leechResult.mod11_codewords_in_common_without_permutation = common;
-leechResult.table_status = 'hand-entered in GolayLeechBridge; agrees with external enumeration, not a Lean correspondence';
+const bridge = lean('PlaygroundGolay.lean');
+function bridgeArray(name) {
+  const m = bridge.match(new RegExp('def ' + name + '[\\s\\S]*?#\\[([^\\]]+)\\]'));
+  assert(m, name); return m[1].split(',').map(Number);
+}
+same(leechResult.basis, bridgeArray('basisMasks'));
+const coordinateMap = bridgeArray('coordinateMap');
+assert.equal(new Set(coordinateMap).size, 24);
+const permuteWord = w => coordinateMap.reduce((v,j,i) => v | (((w >>> i) & 1) << j), 0);
+for (const w of tabSet) assert(formalSet.has(permuteWord(w)));
+leechResult.playground_to_lean_coordinates = coordinateMap;
+leechResult.mapped_codewords = tabSet.size;
+leechResult.correspondence_status = 'Code equivalence and lattice-result transfer are proved in PlaygroundGolay/PlaygroundLeech; this script separately replays the JavaScript.';
+const replay = JSON.parse(execFileSync(process.execPath,
+  [path.join(leanRoot, 'scripts/check_playground_golay.cjs'), process.argv[3] || path.join(root, 'index.html')],
+  {encoding:'utf8'}));
+assert.equal(replay.status, 'PASS');
+leechResult.mapped_vectors_satisfying_lattice_rule = replay.mapped_vectors_satisfying_InLeech_rule;
 
 // Ferro: isolate the actual three simultaneous smoothing passes, before area rescaling.
 const smoothing = between(html, '    const smoothAmount = Math.min(0.95, surfaceTension);', '    //    (c) Rescale edge radii', 'ferro.smoothing');
