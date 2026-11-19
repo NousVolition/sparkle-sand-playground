@@ -299,6 +299,25 @@ Third-party material is governed by its own terms.
   #copyNote { position: absolute; right: 18px; bottom: 2px; font-size: 10px; line-height: 12px; color: var(--muted); opacity: 0.55; white-space: nowrap; }
   #copyNote a { color: inherit; }
   #copyNote:hover { opacity: 0.9; }
+  /* Background color choice (header swatches); --bg follows it on the page and in every frame */
+  .bg-pick { position: relative; flex: none; display: flex; align-items: center; }
+  .bg-swatches { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 20px; }
+  .bg-sw { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); cursor: pointer; padding: 0; }
+  .bg-sw[aria-checked="true"] { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .bg-sw:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .bg-pick-btn { display: none; }
+  .bg-dot { display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: var(--bg); border: 1px solid rgba(255,255,255,0.5); }
+  .page-tab { background: var(--bg); }
+  html.bg-light .page-tab .page-copy { color: #4a5260; opacity: 1; }
+  @media (max-width: 1100px) and (min-width: 701px) { .bg-swatches { gap: 4px; padding: 3px 5px; } .bg-sw { width: 16px; height: 16px; } }
+  @media (max-width: 700px) {
+    .bg-pick { order: 4; }
+    header .playnav { flex: 1 1 calc(100% - 52px); }
+    .bg-pick-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 44px; border-radius: 50%; border: 1px dashed var(--border); background: transparent; cursor: pointer; padding: 0; }
+    .bg-swatches { display: none; position: absolute; z-index: 1001; top: calc(100% + 6px); right: 0; background: var(--panel); box-shadow: 0 8px 24px rgba(0,0,0,0.5); padding: 8px 10px; gap: 10px; }
+    .bg-pick.open .bg-swatches { display: flex; }
+    .bg-sw { width: 28px; height: 28px; }
+  }
   /* Controls in one place: a left side panel (desktop), a collapsible Controls drawer above the picture (phones) */
   :root { --side-w: 280px; }
   #ctlToggle { display: none; }
@@ -360,6 +379,10 @@ Third-party material is governed by its own terms.
     </div>
     <button class="pn-arrow" id="playNext" title="Next playground" aria-label="Next playground">&#8250;</button>
   </nav>
+  <div class="bg-pick" id="bgPick">
+    <button type="button" class="bg-pick-btn" id="bgPickBtn" aria-haspopup="true" aria-expanded="false" aria-controls="bgSwatches" title="Background color"><span class="bg-dot"></span></button>
+    <div class="bg-swatches" id="bgSwatches" role="radiogroup" aria-label="Background color"></div>
+  </div>
   <div class="tabs">
     <button class="tab active" data-mode="sand">1. Sand</button>
     <button class="tab" data-mode="loop">2. Loop</button>
@@ -22103,6 +22126,127 @@ loop();
   window.addEventListener('hashchange', fromHash);
   fromHash();
   sync();
+})();
+</script>
+<script>
+// Background color choice: six calm tones. The host's --bg follows it; every frame gets a message and a small
+// added stylesheet (page and same-colored large containers), and on the light tone, text that sits right on the
+// page is darkened where it would be hard to read. Canvases keep a dark backing on the light tone.
+(function bgPalette() {
+  const PALETTE = [
+    { id: 'night', name: 'Near-black (as before)', bg: '#0b0e14' },
+    { id: 'navy', name: 'Deep navy', bg: '#0d1730' },
+    { id: 'slate', name: 'Slate gray', bg: '#262d38' },
+    { id: 'charcoal', name: 'Warm charcoal', bg: '#27231f' },
+    { id: 'teal', name: 'Deep teal', bg: '#0b2a2c' },
+    { id: 'cream', name: 'Soft cream (light)', bg: '#f2ede2', light: true }
+  ];
+  const root = document.documentElement, wrap = document.getElementById('bgPick'), box = document.getElementById('bgSwatches'), btn = document.getElementById('bgPickBtn');
+  let cur = PALETTE[0];
+  try { cur = PALETTE.find(p => p.id === localStorage.getItem('sparkle.bg')) || PALETTE[0]; } catch (e) {}
+  const sws = PALETTE.map(p => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'bg-sw'; b.setAttribute('role', 'radio'); b.dataset.bg = p.id;
+    b.title = p.name; b.setAttribute('aria-label', p.name); b.style.background = p.bg;
+    b.addEventListener('click', () => { set(p, true); wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+    box.appendChild(b); return b;
+  });
+  btn.addEventListener('click', e => { e.stopPropagation(); const o = wrap.classList.toggle('open'); btn.setAttribute('aria-expanded', String(o)); });
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) { wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } });
+
+  // --- inside a frame (same page origin, so the host can add a stylesheet directly) ---
+  const rgb = c => { const m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return null; const v = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: v[0], g: v[1], b: v[2], a: v.length > 3 ? v[3] : 1 }; };
+  const hexRgb = h => ({ r: parseInt(h.slice(1, 3), 16), g: parseInt(h.slice(3, 5), 16), b: parseInt(h.slice(5, 7), 16), a: 1 });
+  const lum = c => { const f = x => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const same = (a, b) => a && b && Math.abs(a.r - b.r) < 3 && Math.abs(a.g - b.g) < 3 && Math.abs(a.b - b.b) < 3;
+  function frameApply(f) {
+    let d, w;
+    try { d = f.contentDocument; w = f.contentWindow; } catch (e) { return; }
+    if (!d || !d.body || !w) return;
+    try { w.postMessage({ type: 'sparkle-bg', bg: cur.bg, id: cur.id, light: !!cur.light }, '*'); } catch (e) {}
+    const gcs = el => w.getComputedStyle(el);
+    if (!f.__spPage) {   // first time: remember this page's own background and the large containers that share it
+      const hb = rgb(gcs(d.documentElement).backgroundColor), bb = rgb(gcs(d.body).backgroundColor);
+      const page = (bb && bb.a > 0.5) ? bb : (hb && hb.a > 0.5) ? hb : { r: 11, g: 14, b: 20, a: 1 };
+      f.__spPage = page;
+      const W = w.innerWidth, H = w.innerHeight;
+      d.body.querySelectorAll('*').forEach(el => {
+        if (el.tagName === 'CANVAS' || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+        const c = rgb(gcs(el).backgroundColor);
+        if (!c || c.a < 0.9 || !same(c, page)) return;
+        const r = el.getBoundingClientRect();
+        if (r.width * r.height >= 0.2 * W * H) el.setAttribute('data-sp-bg', '');
+      });
+    }
+    const pageHex = '#' + [f.__spPage.r, f.__spPage.g, f.__spPage.b].map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
+    let st = d.getElementById('sparkle-bg-css');
+    if (!st) { st = d.createElement('style'); st.id = 'sparkle-bg-css'; }
+    (d.head || d.documentElement).appendChild(st);   // keep it last
+    st.textContent = cur.id === 'night' ? '' :
+      ':root{--sp-bg:' + cur.bg + '}html,body{background:var(--sp-bg)!important}[data-sp-bg]{background-color:var(--sp-bg)!important}' +
+      (cur.light ? 'canvas{background-color:' + pageHex + '}' : '');
+    frameText(f, d, w);
+  }
+  // light tone: darken text whose own backing is the page (so not inside a dark card), and undo it otherwise
+  function frameText(f, d, w) {
+    d.querySelectorAll('[data-sp-fg]').forEach(el => { el.style.removeProperty('color'); el.style.removeProperty('-webkit-text-fill-color'); el.removeAttribute('data-sp-fg'); });
+    if (!cur.light) return;
+    const bgc = hexRgb(cur.bg), ink = { r: 20, g: 26, b: 36 };
+    // same hue, deepened step by step until it reads well on the light tone
+    const deepen = c => { for (let t = 0.1; t <= 1.001; t += 0.1) { const m = { r: c.r * (1 - t) + ink.r * t, g: c.g * (1 - t) + ink.g * t, b: c.b * (1 - t) + ink.b * t }; if (contrast(m, bgc) >= 4.5) return 'rgb(' + [m.r, m.g, m.b].map(Math.round).join(',') + ')'; } return 'rgb(20,26,36)'; };
+    const faint = img => { const a = (img.match(/rgba?\([^)]+\)/g) || []).map(rgb); return a.length > 0 && a.every(c => c && c.a < 0.5); };
+    const gcs = el => w.getComputedStyle(el);
+    const backing = el => {
+      for (let p = el; p && p !== d.documentElement; p = p.parentElement) {
+        if (p === d.body || p.hasAttribute('data-sp-bg')) return 'page';
+        const cs = gcs(p), c = rgb(cs.backgroundColor);
+        if ((c && c.a >= 0.5) || (cs.backgroundImage && cs.backgroundImage !== 'none' && !/^url/.test(cs.backgroundImage) && !faint(cs.backgroundImage) && !/text/.test(cs.webkitBackgroundClip || cs.backgroundClip || ''))) return 'own';
+      }
+      return 'page';
+    };
+    const els = new Set();
+    const tw = d.createTreeWalker(d.body, NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) if (n.nodeValue.trim() && n.parentElement && !/^(SCRIPT|STYLE|OPTION)$/.test(n.parentElement.tagName)) els.add(n.parentElement);
+    els.forEach(el => {
+      const cs = gcs(el);
+      if (cs.webkitTextFillColor && /rgba?\(0, 0, 0, 0\)|transparent/.test(cs.webkitTextFillColor)) {   // gradient-filled text
+        let g = null;
+        for (let p = el; p && !g; p = p.parentElement) { const ps = gcs(p); if (/text/.test(ps.webkitBackgroundClip || ps.backgroundClip || '')) g = (ps.backgroundImage.match(/rgba?\([^)]+\)/g) || []).map(rgb); }
+        if (!g || !g.length || g.every(c => c && contrast(c, bgc) >= 3) || backing(el) !== 'page') return;
+        el.style.setProperty('-webkit-text-fill-color', deepen(g[0]), 'important'); el.setAttribute('data-sp-fg', '');
+        return;
+      }
+      const c = rgb(cs.color);
+      if (!c || contrast(c, bgc) >= 3) return;
+      if (backing(el) !== 'page') return;
+      el.style.setProperty('color', deepen(c), 'important'); el.setAttribute('data-sp-fg', '');
+    });
+  }
+  function set(p, save) {
+    cur = p;
+    root.style.setProperty('--bg', p.bg);
+    root.classList.toggle('bg-light', !!p.light);
+    sws.forEach(b => b.setAttribute('aria-checked', String(b.dataset.bg === p.id)));
+    btn.title = 'Background color: ' + p.name;
+    if (save) try { localStorage.setItem('sparkle.bg', p.id); } catch (e) {}
+    Object.values(pageFrames).forEach(frameApply);
+  }
+  const show0 = pageTabShow;
+  pageTabShow = function (k) {
+    show0.apply(this, arguments);
+    const f = pageFrames[k];
+    if (f && !f.__spHook) {
+      f.__spHook = true;
+      f.addEventListener('load', () => {
+        frameApply(f);
+        let t = 0;   // new text on the light tone: check again, at most about once a second
+        try { new f.contentWindow.MutationObserver(() => { if (t || !cur.light) return; t = setTimeout(() => { t = 0; if (cur.light) frameText(f, f.contentDocument, f.contentWindow); }, 1200); })
+          .observe(f.contentDocument.body, { childList: true, subtree: true }); } catch (e) {}
+      });
+    }
+  };
+  set(cur, false);
 })();
 </script>
 <script>
