@@ -299,6 +299,54 @@ Third-party material is governed by its own terms.
   #copyNote { position: absolute; right: 18px; bottom: 2px; font-size: 10px; line-height: 12px; color: var(--muted); opacity: 0.55; white-space: nowrap; }
   #copyNote a { color: inherit; }
   #copyNote:hover { opacity: 0.9; }
+  /* Controls in one place: a left side panel (desktop), a collapsible Controls drawer above the picture (phones) */
+  :root { --side-w: 280px; }
+  #ctlToggle { display: none; }
+  @media (min-width: 761px) {
+    body.lp-native { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    body.lp-native > header { grid-column: 1 / -1; grid-row: 1; }
+    body.lp-native > #controls { grid-column: 1; grid-row: 2; min-height: 0; overflow-y: auto; overscroll-behavior: contain; flex-wrap: wrap; align-items: center; align-content: flex-start; gap: 10px 8px; padding: 14px 14px 20px; border-bottom: 0; border-right: 1px solid var(--border); }
+    body.lp-native > #canvas-container { grid-column: 2; grid-row: 2; }
+    body.lp-native #controls label { flex: 1 1 100%; justify-content: space-between; }
+    body.lp-native #controls input[type="range"] { flex: 1 1 auto; width: auto; min-width: 60px; max-width: 170px; }
+    body.lp-native #controls .palette { flex-wrap: wrap; }
+    body.lp-native #controls .tick-label { flex: 1 1 100%; }
+    body.lp-native #controls .linked-note { flex: 1 1 100%; }
+    body.lp-native #tab-stretch .stc-row { flex: 1 1 100%; }
+    body.lp-native #controls > #tab-stretch { flex: 1 1 100%; min-width: 0; }
+    body.lp-native #tab-stretch .control-group { flex: 1 1 100%; flex-wrap: wrap; }
+    body.lp-native #tab-stretch .stc-row > span { flex: 1 1 100%; white-space: normal; }
+  }
+  @media (max-width: 760px) {
+    body.lp-native #ctlToggle { display: flex; align-items: center; gap: 6px; width: 100%; padding: 8px 14px; min-height: 40px; background: var(--panel); color: var(--text); border: 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; font-weight: 600; text-align: left; cursor: pointer; }
+    body.lp-native.ctl-closed > #controls { display: none; }
+  }
+  /* tab 10 Ferro: its toolbar and sliders move into the same left panel */
+  body #ferroStage #fs-side { display: none; }
+  body #ferroStage #fs-sideToggle { display: none; }
+  @media (min-width: 761px) {
+    body #ferroStage #fs-side { display: flex; flex-direction: column; position: absolute; left: 0; top: 0; bottom: 0; width: var(--side-w); overflow-y: auto; overscroll-behavior: contain; padding: 14px; background: var(--panel); border-right: 1px solid var(--border); z-index: 2; }
+    body #ferroStage #fs-sideBody { display: flex; flex-direction: column; gap: 12px; }
+    body #ferroStage #fs-simCanvas { position: absolute; left: var(--side-w); top: 0; width: calc(100% - var(--side-w)); height: 100%; }
+    body #ferroStage .fs-hud-top { left: calc(var(--side-w) + 14px); }
+    body #ferroStage .fs-hud-bottom { display: none; }
+    body #ferroStage #fs-side .fs-toolbar { justify-content: flex-start; max-width: none; }
+    body #ferroStage #fs-side .fs-toolbar select { flex: 1 1 100%; }
+    body #ferroStage #fs-side .fs-controls-grid { grid-template-columns: 1fr; max-width: none; }
+  }
+  @media (max-width: 760px) {
+    body #ferroStage { overflow-y: auto; }
+    body #ferroStage #fs-side { display: block; padding: 10px 10px 0; }
+    body #ferroStage #fs-sideToggle { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 40px; font-size: 0.9rem; font-weight: 600; }
+    body #ferroStage #fs-sideBody { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    body.ctl-closed #ferroStage #fs-sideBody { display: none; }
+    body #ferroStage #fs-side .fs-toolbar { justify-content: flex-start; max-width: none; }
+    body #ferroStage #fs-simCanvas { height: 400px; margin-top: 10px; }
+    body #ferroStage .fs-hud-top { position: static; flex-direction: column; align-items: stretch; padding: 10px 10px 0; }
+    body #ferroStage .fs-metrics-panel { min-width: 0; max-width: none; }
+    body #ferroStage .fs-hud-bottom { display: none; }
+    body #ferroStage #fs-copy { position: static; padding: 8px 10px 12px; text-align: right; white-space: normal; }
+  }
 </style>
 </head>
 <body>
@@ -16815,7 +16863,7 @@ draw();
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
   body { min-height: 100vh; }
-  .wrap { display: grid; grid-template-columns: 300px 1fr 300px; gap: 14px; padding: 14px; height: 100vh; }
+  .wrap { display: grid; grid-template-columns: 280px 1fr 300px; gap: 14px; padding: 14px; height: 100vh; }
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
   .side { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   h1 { font-size: 1.05rem; font-weight: 600; }
@@ -16851,6 +16899,18 @@ draw();
     .wrap { grid-template-columns: 1fr; height: auto; }
     .stage { height: min(92vw, 560px); }
   }
+  /* controls stay in the left panel down to tablet widths; the ring panel sits under the grid */
+  @media (min-width: 761px) and (max-width: 1000px) {
+    .wrap { grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr); height: 100vh; }
+    .wrap > .side:first-child { grid-column: 1; grid-row: 1 / 3; }
+    .wrap > .stage { grid-column: 2; grid-row: 1; height: auto; }
+    .wrap > .side:last-child { grid-column: 2; grid-row: 2; }
+  }
+  #ctlToggle { display: none; }
+  @media (max-width: 760px) {
+    #ctlToggle { display: flex; align-items: center; gap: 6px; width: 100%; font-weight: 600; }
+    .wrap.ctl-closed > .side:first-child > .card:not(:first-child) { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -16860,6 +16920,7 @@ draw();
       <h1>Unit Distances on a Square Grid</h1>
       <div class="sub">Pick one length and join every pair of dots that is exactly that far apart.</div>
     </div>
+    <button id="ctlToggle" type="button" aria-expanded="true">&#9662; Controls</button>
     <div class="card">
       <label>Grid size <b><span id="nVal">10</span> × <span id="nVal2">10</span></b></label>
       <input type="range" id="n" min="3" max="20" step="1" value="10" aria-label="Grid size">
@@ -16932,6 +16993,17 @@ draw();
     </div>
   </div>
 </div>
+<script>
+// phones: the controls fold away under a Controls button (remembered)
+(function () {
+  const w = document.querySelector('.wrap'), b = document.getElementById('ctlToggle');
+  let closed = false;
+  try { closed = localStorage.getItem('sparkle.ctl.closed') === '1'; } catch (e) {}
+  const show = () => { w.classList.toggle('ctl-closed', closed); b.setAttribute('aria-expanded', String(!closed)); b.textContent = (closed ? '\u25B8 ' : '\u25BE ') + 'Controls'; };
+  b.addEventListener('click', () => { closed = !closed; show(); try { localStorage.setItem('sparkle.ctl.closed', closed ? '1' : '0'); } catch (e) {} window.dispatchEvent(new Event('resize')); });
+  show();
+})();
+</script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -21444,6 +21516,44 @@ const PAGE_SHIM = '<script>(function(){' +
   'window.__tabPause=function(){if(!active)return;active=false;pausedAt=pn();ctxs.forEach(function(c){c.__was=c.state==="running";if(c.__was)c.suspend();});};' +
   'window.__tabResume=function(){if(active)return;offset+=pn()-pausedAt;active=true;var w=q;q=[];w.forEach(function(cb){raf(function(t){cb(t-offset);});});ctxs.forEach(function(c){if(c.__was)c.resume();});};' +
   '})();<\/script>';
+// Left-panel layout for her frames whose controls sit in a bottom bar: an additive stylesheet,
+// put in by the small helper below before her page loads (desktop widths only; her files are unchanged).
+const FRAME_LAYOUT = {
+  sum: 'body{display:grid!important;grid-template-columns:var(--sp-side) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr) auto!important;height:100vh!important;min-height:0!important;overflow:hidden!important}' +
+    'body>header{grid-column:1/-1!important;grid-row:1!important}' +
+    'body>main{grid-column:2!important;grid-row:2!important;min-height:0!important;max-width:none!important}' +
+    'body>.insight-banner{grid-column:2!important;grid-row:3!important;max-width:none!important}' +
+    'body>.controls-bar{grid-column:1!important;grid-row:2/4!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:flex-start!important;overflow-y:auto!important;overscroll-behavior:contain;min-height:0!important;border-top:0!important;border-right:1px solid var(--border)!important;padding:14px!important;gap:14px!important}' +
+    '.controls-bar .slider-group{flex:none!important;min-width:0!important;flex-wrap:wrap!important;gap:8px 10px!important}' +
+    '.controls-bar .slider-group label{flex:1 1 100%!important}' +
+    '.controls-bar .readouts{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}' +
+    '.controls-bar>div:last-child{flex-wrap:wrap!important}',
+  pendulum: 'body{display:grid!important;grid-template-columns:var(--sp-side) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}' +
+    'body>header{grid-column:1/-1!important;grid-row:1!important}' +
+    'body>main{grid-column:2!important;grid-row:2!important;min-height:0!important;min-width:0!important}' +
+    'body>.controls-bar{grid-column:1!important;grid-row:2!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:flex-start!important;overflow-y:auto!important;overscroll-behavior:contain;min-height:0!important;border-top:0!important;border-right:1px solid var(--border)!important;padding:14px!important}' +
+    '.controls-bar .control-group{flex-direction:column!important;align-items:stretch!important;gap:12px!important}' +
+    '.controls-bar .control-group>*{width:100%!important;max-width:none!important}',
+  fireflies: 'body{display:grid!important;grid-template-columns:var(--sp-side) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}' +
+    'body>header{grid-column:1/-1!important;grid-row:1!important}' +
+    'body>main{grid-column:2!important;grid-row:2!important;min-height:0!important;min-width:0!important;width:auto!important}' +
+    'body>.controls-bar{grid-column:1!important;grid-row:2!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:flex-start!important;overflow-y:auto!important;overscroll-behavior:contain;min-height:0!important;border-top:0!important;border-right:1px solid var(--border)!important;padding:14px!important;gap:14px!important}' +
+    '.controls-bar .ctrl-group{min-width:0!important;width:100%!important}',
+  ocean: 'body{display:grid!important;grid-template-columns:var(--sp-side) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}' +
+    'body>header{grid-column:1/-1!important;grid-row:1!important}' +
+    'body>main{grid-column:2!important;grid-row:2!important;min-height:0!important;min-width:0!important}' +
+    'body>footer{grid-column:1!important;grid-row:2!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:flex-start!important;overflow-y:auto!important;overscroll-behavior:contain;min-height:0!important;border-top:0!important;border-right:1px solid var(--border)!important;padding:14px!important;gap:12px!important}' +
+    'footer .control{min-width:0!important;width:100%!important}',
+  polychora: '#controlsPanel{left:14px!important;right:auto!important;bottom:14px!important;width:var(--sp-side)!important;grid-template-columns:1fr!important;max-width:none!important}'
+};
+function pageHostShim(k) {
+  const css = FRAME_LAYOUT[k] ? ':root{--sp-side:' + getComputedStyle(document.documentElement).getPropertyValue('--side-w').trim() + '}@media (min-width: 761px){' + FRAME_LAYOUT[k] + '}' : '';
+  return '<script>(function(){var slots={};' +
+    'window.__sparkleCss=function(n,c){var el=slots[n];if(!el){el=slots[n]=document.createElement("style");el.setAttribute("data-sparkle",n);}el.textContent=c;var h=document.head||document.documentElement;if(el.parentNode!==h)h.appendChild(el);};' +
+    'window.addEventListener("message",function(e){var d=e.data;if(e.source!==window.parent||!d||d.type!=="sparkle-css")return;window.__sparkleCss(String(d.slot),String(d.css||""));window.dispatchEvent(new Event("resize"));});' +
+    (css ? 'window.__sparkleCss("layout",' + JSON.stringify(css) + ');' : '') +
+    '})();<\/script>';
+}
 const pageFrames = {};
 function pageTabsHide() {
   for (const k of PAGE_TABS) {
@@ -21462,7 +21572,7 @@ function pageTabShow(k) {
     f = pageFrames[k] = document.createElement('iframe');
     f.title = document.querySelector(`.tab[data-mode="${k}"]`).title;
     f.setAttribute('allow', 'autoplay');
-    f.srcdoc = '<!DOCTYPE html>\n' + PAGE_SHIM + document.getElementById('page-src-' + k).innerHTML;
+    f.srcdoc = '<!DOCTYPE html>\n' + PAGE_SHIM + pageHostShim(k) + document.getElementById('page-src-' + k).innerHTML;
     st.insertBefore(f, st.firstChild);
   } else if (f.contentWindow && f.contentWindow.__tabResume) f.contentWindow.__tabResume();
 }
@@ -21993,6 +22103,39 @@ loop();
   window.addEventListener('hashchange', fromHash);
   fromHash();
   sync();
+})();
+</script>
+<script>
+// Controls in one place: tabs 1-9 get a left side panel on desktop and a collapsible Controls drawer
+// on phones; tab 10's toolbar and sliders move into the same kind of panel. The open/closed choice is remembered.
+(function leftPanel() {
+  const body = document.body, ctl = document.getElementById('controls');
+  const tog = document.createElement('button');
+  tog.id = 'ctlToggle'; tog.type = 'button'; tog.setAttribute('aria-controls', 'controls');
+  ctl.parentNode.insertBefore(tog, ctl);
+  let closed = false;
+  try { closed = localStorage.getItem('sparkle.ctl.closed') === '1'; } catch (e) {}
+  const side = document.createElement('div'); side.id = 'fs-side';
+  const ftog = document.createElement('button'); ftog.id = 'fs-sideToggle'; ftog.type = 'button';
+  const sideBody = document.createElement('div'); sideBody.id = 'fs-sideBody';
+  const stage = document.getElementById('ferroStage');
+  side.append(ftog, sideBody);
+  sideBody.append(stage.querySelector('.fs-toolbar'), stage.querySelector('.fs-controls-grid'));
+  stage.insertBefore(side, stage.firstChild);
+  const show = () => {
+    body.classList.toggle('ctl-closed', closed);
+    [tog, ftog].forEach(b => { b.setAttribute('aria-expanded', String(!closed)); b.textContent = (closed ? '\u25B8 ' : '\u25BE ') + 'Controls'; });
+  };
+  const flip = () => { closed = !closed; show(); try { localStorage.setItem('sparkle.ctl.closed', closed ? '1' : '0'); } catch (e) {} };
+  tog.addEventListener('click', flip); ftog.addEventListener('click', flip);
+  show();
+  const kind = () => {
+    body.classList.toggle('lp-native', !PAGE_TABS.includes(mode) && mode !== 'ferro');
+    body.classList.toggle('lp-ferro', mode === 'ferro');
+  };
+  const sc = setControls;
+  setControls = function () { sc.apply(this, arguments); kind(); };
+  kind();
 })();
 </script>
 </body>
