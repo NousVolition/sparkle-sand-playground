@@ -1,9 +1,9 @@
 {
   "status": "PASS",
   "scope": "External source/computation comparison; no new Lean theorem and no interactive browser test",
-  "proof_revision": "93bd83600728124ec12becfd3cdc4e23778da1d1",
-  "html_sha256": "412a49fcfca10064ef32fb9fbf60fcc9c5dde72065ae75bff3eddff135b06f9c",
-  "coverage_js_sha256": "77e41bb807f899d5a83ec4caa16d18f543c60ba5fb8f2ec731d588d5aaa5aeab",
+  "proof_revision": "b9318754a0aab99b9aab3d5edaeb41649472f932",
+  "html_sha256": "2098fd8fe3236f6ead0689f64a576f25489a5bfd6cbe8baf90be5d8ff09d8572",
+  "coverage_js_sha256": "8b820c641e84ce437cf6cefebadfba9968eda0f9d2fffe477bcfd53e82fb0453",
   "node_version": "v24.22.1",
   "tabs_checked": 33,
   "status_counts": {
@@ -78,12 +78,27 @@
       "declaration": "PlaygroundLeech.card_play_shortest_vectors"
     },
     {
+      "file": "LeechBasis.lean",
+      "line": 379,
+      "declaration": "LeechBasis.basisMatrix_det"
+    },
+    {
+      "file": "LeechBasis.lean",
+      "line": 415,
+      "declaration": "LeechBasis.leech_unimodular"
+    },
+    {
+      "file": "LeechBasis.lean",
+      "line": 456,
+      "declaration": "LeechBasis.leech_norm_dvd_sixteen"
+    },
+    {
       "file": "Wirtinger.lean",
       "line": 228,
       "declaration": "CycleWirtinger.wirtinger_sharp"
     }
   ],
-  "axiom_declarations": 682,
+  "axiom_declarations": 711,
   "inline_scripts_syntax_checked": 36,
   "e8_enumerations": {
     "penteract": {
@@ -645,7 +660,7 @@
     }
   },
   "lean_source_sha256": {
-    "CheckAxioms.lean": "be137a0144457e547549febca2c4ac0752bd083746a4cdb00577ca118a525b43",
+    "CheckAxioms.lean": "5a8d030c48c0019b2a031090b8ada5c527f7d6ce19c1e036f36c3e37db2d7835",
     "RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
     "Wirtinger.lean": "e5e18956e8d4477ca3101a9c5e839981c4880530e5b7523d682a14c17d3e5093",
     "Poincare.lean": "e4a76d125f57885221ac70ed59749b9ea12143bcbca3a71c56e74ee6c05b4fd0",
@@ -655,6 +670,7 @@
     "E8PlumbingBridge.lean": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
     "PlaygroundGolay.lean": "8400f102e7c5f1827f354e0e41f6956753acdc09c6f9b568d2f4f7cf24564b0f",
     "PlaygroundLeech.lean": "d41c9a5ade003b8bacfe500338bca887a14b1f2c3cac6c7f6fb0081f594ffec3",
+    "LeechBasis.lean": "4ac835d05fe50ee2a5f098b279f669a8db2731187a47804467291c4557f8ec84",
     "GolayMatrixDistance.lean": "3194ab309e42a1a90d854dac5edd35d06f52da0b69c7e653704899e2bccb6c81",
     "GolayLeechBridge.lean": "cb8502cbfac6da2f6592ef2f923974e2650cc6678293744561cfd9ab00be7687"
   }
