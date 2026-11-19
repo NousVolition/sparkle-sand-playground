@@ -25162,6 +25162,89 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   });
 })();
 </script>
+<script id="backlitGlow">
+// ========== BACKLIT STONE ==========
+// On the stone beige (the starting background) the page reads as if lit from behind: a soft radial glow, lighter warm
+// beige in the middle (#ddd6c8) easing to a slightly deeper beige at the edges (#b3ab9c), with a very faint warm haze.
+// The canvas glow is dithered per pixel and the page glow carries a faint grain, so there are no bands.
+// Only the host changes: the page around her pages and the native canvases. Other swatches are untouched.
+(function backlitGlow() {
+  const STONE = '#c4bdb0', C = [221, 214, 200], E = [179, 171, 156], HAZE = [255, 236, 206];
+  // Plate and Waves draw pale grains and lines straight on the page color, so there the light stays at the stone tone in
+  // the middle and only the edges deepen (pale content never loses contrast)
+  const DIM = { plate: 1, waves: 1 }, CD = [196, 189, 176];
+  const dim = () => typeof mode !== 'undefined' && DIM[mode];
+  const root = document.documentElement;
+  const on = () => typeof pageBg !== 'undefined' && pageBg && pageBg.hex === STONE;
+  const grain = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .035'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+  const glowCss = `${grain}, radial-gradient(ellipse 70% 60% at 50% 42%, rgba(255,236,206,0.16), rgba(255,236,206,0) 70%), radial-gradient(ellipse 85% 80% at 50% 45%, #ddd6c8 0%, #d2cbbd 38%, #c2bbad 68%, #b3ab9c 100%)`;
+  const st = document.createElement('style');
+  st.textContent = `html.bg-glow body, html.bg-glow .page-tab { background: ${glowCss}; background-color: ${STONE}; }
+    html.bg-glow .page-tab .page-copy.has-chip { background: transparent; }`;
+  document.head.appendChild(st);
+  const sync = () => root.classList.toggle('bg-glow', getComputedStyle(root).getPropertyValue('--bg').trim().toLowerCase() === STONE);
+  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['style'] });
+  sync();
+
+  // the glow, in device pixels for a W x H (css px) area; dithered so the slow ramp has no steps
+  const sm = t => t * t * (3 - 2 * t);
+  function paint(W, H, d, alpha, soft) {
+    const c0 = soft ? CD : C, hzK = soft ? 0 : 0.16;
+    const cw = Math.max(1, Math.round(W * d)), ch = Math.max(1, Math.round(H * d));
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const g = cv.getContext('2d'), im = g.createImageData(cw, ch), px = im.data;
+    const cx = cw / 2, cy = ch * 0.45, rx = cw * 0.62, ry = ch * 0.62, A = Math.round(alpha * 255);
+    for (let y = 0, i = 0; y < ch; y++) {
+      const dy = (y - cy) / ry;
+      for (let x = 0; x < cw; x++, i += 4) {
+        const dx = (x - cx) / rx, r2 = dx * dx + dy * dy, t = sm(Math.min(1, Math.sqrt(r2) / 1.25));
+        const hz = hzK * Math.exp(-r2 * 2.2);
+        for (let k = 0; k < 3; k++) {
+          let v = c0[k] + (E[k] - c0[k]) * t;
+          v += (HAZE[k] - v) * hz;
+          px[i + k] = v + Math.random() + Math.random() - 1;   // triangular dither, about one level
+        }
+        px[i + 3] = A;
+      }
+    }
+    g.putImageData(im, 0, 0);
+    return cv;
+  }
+  const cache = new Map();
+  function pattern(alpha) {
+    const d = window.devicePixelRatio || 1, soft = !!dim(), key = width + 'x' + height + '@' + d + ':' + alpha + (soft ? ':dim' : '');
+    let p = cache.get(key);
+    if (!p) {
+      if (cache.size > 6) cache.clear();
+      p = ctx.createPattern(paint(width, height, d, alpha, soft), 'repeat');
+      if (p.setTransform) p.setTransform(new DOMMatrix([1 / d, 0, 0, 1 / d, 0, 0]));
+      cache.set(key, p);
+    }
+    return p;
+  }
+  const fill0 = bgFill, fade0 = bgFade;
+  bgFill = function (orig) { return on() ? pattern(1) : fill0(orig); };
+  bgFade = function (orig, a) { return on() ? pattern(a) : fade0(orig, a); };
+
+  // Magnets keeps a cached background (its own radial shading and a faint grid): on the stone it becomes the glow
+  if (typeof magBackground === 'function') {
+    const mb0 = magBackground;
+    magBackground = function () {
+      const was = magBg, c = mb0.apply(this, arguments);
+      if (on() && (c !== was || !c.__glow)) {
+        const g = c.getContext('2d'), d = window.devicePixelRatio || 1;
+        g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(paint(width, height, d, 1), 0, 0);
+        g.setTransform(d, 0, 0, d, 0, 0);
+        g.strokeStyle = 'rgba(148,163,184,0.06)'; g.lineWidth = 1; g.beginPath();
+        for (let x = 0.5; x < width; x += 40) { g.moveTo(x, 0); g.lineTo(x, height); }
+        for (let y = 0.5; y < height; y += 40) { g.moveTo(0, y); g.lineTo(width, y); }
+        g.stroke(); c.__glow = true;
+      }
+      return c;
+    };
+  }
+})();
+</script>
 </body>
 </html>
 
