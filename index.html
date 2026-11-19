@@ -23589,6 +23589,63 @@ setLinked(linkedOn);
 
 setControls();
 loop();
+// ========== FLASH CAUTION ==========
+// Entries whose recorded frames showed fast blinking or whole-screen pulsing start paused, with a small note and a
+// Play button. Her pages stay unedited: the frame's own pause helper holds them before their first animation frame.
+// Pressing Play is remembered for this browser session only; with reduced motion turned on they always start paused.
+(function flashGuard() {
+  const FLASHY = {
+    pendulum: 'Heads up: this one has a small spot that blinks fast. Press Play when ready.',
+    fireflies: 'Heads up: this one has pulsing, flashing lights. Press Play when ready.'
+  };
+  const reduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const okKey = k => 'sparkle.flash.ok.' + k;
+  const played = k => { if (reduce()) return !!played.now[k]; try { return sessionStorage.getItem(okKey(k)) === '1'; } catch (e) { return !!played.now[k]; } };
+  played.now = {};
+  const guarded = k => !!FLASHY[k] && !played(k);
+
+  const st = document.createElement('style');
+  st.textContent = `
+    .flash-veil { position: absolute; left: 0; right: 0; top: 0; bottom: 22px; z-index: 40; display: flex; align-items: center; justify-content: center;
+      background: rgba(8, 11, 18, 0.35); }
+    .flash-chip { display: flex; align-items: center; gap: 12px; max-width: min(92%, 460px); padding: 10px 12px 10px 16px; border-radius: 14px;
+      background: var(--chip-bg); color: var(--chip-fg); font: 500 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; box-shadow: 0 0 0 1px rgba(0,0,0,.25), 0 6px 20px rgba(0,0,0,.3); }
+    .flash-chip button { flex: none; min-height: 40px; padding: 6px 16px; border-radius: 999px; border: 0; background: #0e7490; color: #fff; font: 600 14px system-ui, sans-serif; cursor: pointer; }
+    .flash-chip button:focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }
+    @media (max-width: 700px) { .flash-chip { font-size: 13px; } }`;
+  document.head.appendChild(st);
+
+  const veils = {};
+  function veil(k) {
+    if (veils[k]) return veils[k];
+    const host = document.getElementById('page-' + k);
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const v = document.createElement('div');
+    v.className = 'flash-veil';
+    v.innerHTML = '<div class="flash-chip" role="note"><span></span><button type="button">\u25B6 Play</button></div>';
+    v.querySelector('span').textContent = FLASHY[k];
+    v.querySelector('button').addEventListener('click', () => {
+      played.now[k] = true;
+      try { sessionStorage.setItem(okKey(k), '1'); } catch (e) {}
+      v.remove(); delete veils[k];
+      const f = pageFrames[k];
+      if (f && f.contentWindow && f.contentWindow.__tabResume) f.contentWindow.__tabResume();
+    });
+    host.appendChild(v);
+    return (veils[k] = v);
+  }
+  // first load: the frame's helper pauses right away, before her page starts its animation
+  const shim0 = pageHostShim;
+  pageHostShim = function (k) { return shim0.apply(this, arguments) + (guarded(k) ? '<script>window.__tabPause&&window.__tabPause();<\/script>' : ''); };
+  const show0 = pageTabShow;
+  pageTabShow = function (k) {
+    show0.apply(this, arguments);
+    if (!guarded(k)) return;
+    const f = pageFrames[k];
+    if (f && f.contentWindow && f.contentWindow.__tabPause) f.contentWindow.__tabPause();
+    veil(k);
+  };
+})();
 // ========== PULL-DOWN MENU for choosing the playground ==========
 (function playMenu() {
   const GROUPS = [
