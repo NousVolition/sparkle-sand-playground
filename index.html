@@ -24078,6 +24078,9 @@ loop();
 // "Clear welcome" (or Clear) removes it, and it stays away for the rest of the session.
 const WELCOME_TITLE = "Through My Eyes\nNousVolition's Physics Playground";   // first line is the featured, larger one
 const WELCOME_RING_CAPTION = 'One bump and one dip around the ring. It costs exactly the floor. As much below the zero line as above, so the average is zero.';
+// Quiet welcome: only the sand title, the stars and the ring drawing show. The ring labels, both caption lines and
+// the tool hint are hidden while the welcome is up (set false to bring them back); a small Clear button stays.
+const WELCOME_QUIET = true;
 const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. Pick any of the 33 entries from the menu above.';
 (function sandWelcome() {
   const KEY = 'sparkle.welcome.off';
@@ -24203,7 +24206,8 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     for (let i = 0; i < gType.length; i++) if (gType[i] === STAMP && gOwner[i] === zeroLine.id) gColor[i] = c;
   }
   function buildRing(C, R, titleBottom, narrow) {
-    const capRows = Math.ceil((narrow ? 112 : 142) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL), labRows = Math.ceil((narrow ? 18 : 22) / CELL);
+    const capRows = Math.ceil((WELCOME_QUIET ? 40 : narrow ? 112 : 142) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL),
+      labRows = Math.ceil((WELCOME_QUIET ? 4 : narrow ? 18 : 22) / CELL);
     const room = R - titleBottom - 4 - capRows - floorRows - labRows;
     const Ro = Math.floor(Math.min(room / 2, C * (narrow ? 0.22 : 0.15)));
     if (Ro < 12) { ring = null; return titleBottom; }   // too little room: title only
@@ -24288,6 +24292,10 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       .sw-lab { position: absolute; z-index: 3; pointer-events: none; font: 600 12px/1.25 system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 170px;
         padding: 2px 8px; border-radius: 9px; background: var(--chip-bg); color: var(--chip-fg); box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
       .sw-lab[hidden] { display: none; }
+      html.welcome-quiet .sw-lab, html.welcome-quiet #sandWelcomeCap p { display: none !important; }
+      html.welcome-quiet #hint { visibility: hidden; }
+      html.welcome-quiet #sandWelcomeCap button { font-size: 11px; padding: 3px 10px; opacity: 0.75; }
+      html.welcome-quiet #sandWelcomeCap button:hover, html.welcome-quiet #sandWelcomeCap button:focus-visible { opacity: 1; }
       .sw-zero { transform: translateX(-50%); text-align: center; max-width: none; white-space: nowrap; }
       .sw-bump { color: #7a3f12; }
       .sw-dip { color: #0b5e57; text-align: right; transform: translateX(-100%); }
@@ -24313,6 +24321,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   const labs = {};
   function showCaption() {
     const on = active && mode === 'sand';
+    document.documentElement.classList.toggle('welcome-quiet', WELCOME_QUIET && on);
     if (!on && !cap) return;
     const c = caption();
     c.hidden = !on;
