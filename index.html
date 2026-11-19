@@ -19318,6 +19318,7 @@ function mattePixel(T, O, Col, PH, F, C, R, x, y, melt) {
   if (CRISP) {   // crisp grains: only real cells (and Melt seams) are drawn, fully opaque
     const self = T[y * C + x];
     if (self === EMPTY && !F[y * C + x]) return 0;
+    if (self === LOOSE && window.sandMat && sandMat.ownShape(Col[y * C + x])) return 0;
     const v = matteRGB(T, O, Col, PH, F, C, R, x, y, melt);
     return v ? ((v & 0xffffff) | 0xff000000) >>> 0 : 0;
   }
@@ -19463,6 +19464,7 @@ function updateMatteLayer() {
     if (melt) computeFill(fillMask, T, O, C, R, xs - 3, ys - 3, xe + 3, ye + 3);
     for (let y = ys; y < ye; y++) for (let x = xs; x < xe; x++) mattePix[y * C + x] = mattePixel(T, O, Col, gPhase, melt ? fillMask : NOFILL, C, R, x, y, melt);
     matteBufCtx.putImageData(matteImg, 0, 0, xs, ys, xe - xs, ye - ys);
+    if (window.sandMat) sandMat.clayTile(mattePix, Col, C, R, xs, ys, xe, ye);
     list.push(xs, ys, xe, ye);
   }
   const mc = matteCtx, pat = grainPattern(mc);
@@ -19474,6 +19476,7 @@ function updateMatteLayer() {
     mc.clearRect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
     mc.drawImage(matteBuf, sx, sy, ex - sx, ey - sy, sx * CELL, sy * CELL, (ex - sx) * CELL, (ey - sy) * CELL);
     if (CRISP) grainCells(mc, xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
+    if (window.sandMat) sandMat.clayFill(mc, sx, sy, ex, ey);   // clay: no gaps between grains, one smooth surface
     mc.globalCompositeOperation = 'source-atop';
     mc.fillStyle = pat;
     mc.fillRect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
@@ -19951,7 +19954,7 @@ function drawSand() {
         const y0 = ly === 0 && ty > 0 ? ty - 1 : ty, y1 = ly === TILE - 1 && ty < tilesY - 1 ? ty + 1 : ty;
         for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) TD[yy * TX + xx] = 1;
       }
-      if (t === LOOSE && (ph[i] & 3) === 0 && glints.length < 90) {
+      if (window.sandMat ? sandMat.glint(t, ph[i], Col[i], glints.length) : (t === LOOSE && (ph[i] & 3) === 0 && glints.length < 90)) {
         const a = (ph[i] * 4 + (f >> 1)) & 4095;
         if (a < GLINT_LEN) glints.push(grainX(i, t), grainY(i, t), a);
       }
@@ -19971,6 +19974,7 @@ function drawSand() {
     for (let y = ys; y <= ye; y++) {
       for (let x = xs, i = y * C + xs; x <= xe; x++, i++) {
         const t = T[i];
+        if (t === LOOSE && window.sandMat) sandMat.drawCell(lc, i, Col[i]);   // rocks, sprinkles, snow, glitter grains
       }
     }
     lc.restore();
@@ -19978,11 +19982,13 @@ function drawSand() {
   updateMatteLayer();
   ctx.imageSmoothingEnabled = !CRISP;   // the layer is already at screen resolution: copy it pixel for pixel
   ctx.drawImage(matteLayer, 0, 0, C * CELL, R * CELL);
+  if (window.sandMat) ctx.drawImage(sandLayer, 0, 0, C * CELL, R * CELL);   // grains drawn as their own shapes
   ctx.imageSmoothingEnabled = true;
   drawFallingMolds();
   drawLifted();
   const SP = SPR_PX;
   for (const p of flying) {
+    if (window.sandMat && sandMat.drawFlying(ctx, p)) continue;
     const idx = grainSprite(p.c);
     ctx.drawImage(atlas, (idx % SPR_COLS) * SP, ((idx / SPR_COLS) | 0) * SP, SP, SP,
       p.x - SPR_CSS / 2, p.y - SPR_CSS / 2, SPR_CSS, SPR_CSS);
@@ -24170,6 +24176,303 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     if (mode === 'bubbles') setTimeout(fill, 150);
   };
   if (mode === 'bubbles') setTimeout(fill, 150);
+})();
+</script>
+<script id="sandMaterials">
+// ========== SAND MATERIALS ==========
+// A Material picker in the Sand panel: Sand, Sprinkles, Rocks, Clay, Snow, Glitter. Every grain keeps its material in the
+// spare top byte of its packed color, so materials mix freely in one scene and travel with the grain wherever it goes.
+// Each has its own look, size, colors, pile angle and stickiness. Stamps and molds take the picked material too.
+(function sandMaterials() {
+  const SAND = 0, SPRINKLES = 1, ROCKS = 2, CLAY = 3, SNOW = 4, GLITTER = 5;
+  const LIST = [
+    [SAND, 'sand', 'Sand', 'Fine grains in your color, with a little sparkle.'],
+    [SPRINKLES, 'sprinkles', 'Sprinkles', 'Little colored rods that bounce once when they land.'],
+    [ROCKS, 'rocks', 'Rocks', 'Big gray-brown pebbles: they roll and stack steeply, and never stick.'],
+    [CLAY, 'clay', 'Clay', 'Soft and sticky: it stays where you put it and holds molded shapes best.'],
+    [SNOW, 'snow', 'Snow', 'Light flakes that drift down and pile into soft, low drifts.'],
+    [GLITTER, 'glitter', 'Glitter', 'The old sparkle: shiny round grains that twinkle.']
+  ];
+  const byKey = {}; LIST.forEach(m => { byKey[m[1]] = m[0]; });
+  let mat = (() => { try { return byKey[localStorage.getItem('sparkle.sand.mat')] || SAND; } catch (e) { return SAND; } })();
+  const matOf = c => 255 - (c >>> 24);
+  const withMat = (c, m) => (((c & 0xffffff) | ((255 - m) << 24)) >>> 0);
+  const pack = (r, g, b, m) => withMat((b << 16) | (g << 8) | r, m);
+  const rgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const rnd = a => a[(Math.random() * a.length) | 0];
+  const SPRINKLE_COLS = ['#ff4d8d', '#ffd23f', '#3ee0ff', '#7dff6a', '#b388ff', '#ff8a3d', '#ffffff', '#ff5e5e'];
+  const ROCK_COLS = ['#8a8178', '#6f665d', '#9b8f80', '#5c5650', '#a39a8e', '#7a6a58', '#857a6c'];
+  const SNOW_COLS = ['#f6f9ff', '#eaf1fb', '#dfe9f7', '#ffffff'];
+
+  function colorFor(m, hex, stamp) {
+    const k = 0.9 + Math.random() * 0.16;
+    if (m === SPRINKLES) { const [r, g, b] = rgb(rnd(SPRINKLE_COLS)); return pack(r, g, b, m); }
+    if (m === ROCKS) { const [r, g, b] = rgb(rnd(ROCK_COLS)); return pack(Math.min(255, r * k | 0), Math.min(255, g * k | 0), Math.min(255, b * k | 0), m); }
+    if (m === SNOW) { const [r, g, b] = rgb(rnd(SNOW_COLS)); return pack(r, g, b, m); }
+    if (m === GLITTER) {   // bright and a bit metallic
+      const [r, g, b] = rgb(hex), w = 0.18 + Math.random() * 0.2;
+      return pack(Math.min(255, r + (255 - r) * w | 0), Math.min(255, g + (255 - g) * w | 0), Math.min(255, b + (255 - b) * w | 0), m);
+    }
+    if (m === CLAY) {      // rich, soft, matte
+      const [r, g, b] = rgb(hex), L = 0.3 * r + 0.59 * g + 0.11 * b, kk = 0.86 + Math.random() * 0.04;
+      const f = v => Math.min(255, (v + (L - v) * 0.18) * kk | 0);
+      return pack(f(r), f(g), f(b), m);
+    }
+    return null;
+  }
+
+  // ----- pouring -----
+  const basePour = pourColor;
+  pourColor = function (hex) { const c = colorFor(mat, hex); return c === null ? basePour(hex) : c; };
+  const basePourSand = pourSand;
+  pourSand = function () {
+    const n0 = flying.length;
+    basePourSand.apply(this, arguments);
+    if (mat === ROCKS) for (let k = flying.length - 1; k >= n0; k--) if (Math.random() < 0.7) flying.splice(k, 1);   // fewer, bigger pieces
+    if (mat === SNOW) for (let k = n0; k < flying.length; k++) { flying[k].vy *= 0.4; flying[k].vx *= 1.5; }
+  };
+
+  // ----- landing -----
+  settleGrain = function (p) {
+    let cx = Math.min(gCols - 1, Math.max(0, (p.x / CELL) | 0));
+    let cy = Math.min(gRows - 1, Math.floor(p.y / CELL));
+    if (cy < 0) return;
+    const lim = cy - 2;
+    while (cy >= 0 && cy >= lim && gType[cy * gCols + cx] !== EMPTY) cy--;
+    if (cy < 0 || cy < lim) return;
+    const i = cy * gCols + cx, m = matOf(p.c);
+    gType[i] = LOOSE;
+    gColor[i] = p.c;
+    gSticky[i] = m === ROCKS || m === CLAY ? 1 : m === SNOW ? (Math.random() < cling * 0.25 ? 1 : 0) : (Math.random() < cling ? 1 : 0);
+  };
+
+  // ----- grains in the air -----
+  updateFlying = function () {
+    const W = gCols * CELL - 0.01;
+    const keep = [];
+    for (const p of flying) {
+      const m = matOf(p.c);
+      const G = m === SNOW ? 0.07 : m === ROCKS ? 0.32 : 0.25, maxV = m === SNOW ? 2 : 9;
+      p.vy = Math.min(p.vy + G, maxV);
+      if (m === SNOW) { p.vx += (Math.random() - 0.5) * 0.18; p.vx *= 0.97; } else p.vx *= 0.985;
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(p.vx), Math.abs(p.vy)) / (CELL * 0.8)));
+      let landed = false;
+      for (let s = 0; s < steps; s++) {
+        let nx = p.x + p.vx / steps, ny = p.y + p.vy / steps;
+        if (nx < 0) { nx = 0; p.vx = Math.abs(p.vx) * 0.4; }
+        else if (nx > W) { nx = W; p.vx = -Math.abs(p.vx) * 0.4; }
+        const cx = (nx / CELL) | 0, cy = Math.floor(ny / CELL);
+        if (cy >= gRows) { landed = true; break; }
+        if (cy >= 0 && gType[cy * gCols + cx] !== EMPTY) {
+          const ox = (p.x / CELL) | 0;
+          if (cx !== ox && gType[cy * gCols + ox] === EMPTY && p.vy > 0) { p.vx *= -0.3; p.y = ny; continue; }
+          if (p.vy < 0) { p.vy = 0; p.vx *= 0.5; continue; }
+          landed = true; break;
+        }
+        p.x = nx; p.y = ny;
+      }
+      if (landed && m === SPRINKLES && !p.b && p.vy > 1.6) {   // a light bounce
+        p.b = 1; p.vy = -p.vy * (0.3 + Math.random() * 0.15); p.vx += (Math.random() - 0.5) * 1.6;
+        keep.push(p); continue;
+      }
+      if (landed && m === ROCKS && !p.b && Math.abs(p.vx) < 0.6) { p.b = 1; p.vx = (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random()); p.vy = -0.6; keep.push(p); continue; }   // a short roll
+      if (landed) settleGrain(p); else keep.push(p);
+    }
+    flying = keep;
+  };
+
+  // ----- settled grains -----
+  updateGrid = function () {
+    const C = gCols, R = gRows, T = gType, S = gSticky, Col = gColor;
+    const flip = sandFrame & 1;
+    // clay holds on to molds and ledges beside it
+    const stuck = (j, ok) => ok && (T[j] === STAMP || T[j] === LEDGE);
+    const move = (i, j) => { T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; T[i] = EMPTY; };
+    for (let y = R - 2; y >= 0; y--) {
+      const row = y * C, below = row + C;
+      for (let k = 0; k < C; k++) {
+        const x = flip ? k : C - 1 - k;
+        const i = row + x;
+        if (T[i] !== LOOSE) continue;
+        const m = matOf(Col[i]);
+        if (T[below + x] === EMPTY) {
+          // clay sticks to whatever it touches at the sides
+          if (m === CLAY && (stuck(i - 1, x > 0) || stuck(i + 1, x < C - 1))) continue;
+          if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) {
+            flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i] });
+            T[i] = EMPTY;
+          } else move(i, below + x);
+          continue;
+        }
+        if (m === CLAY && Math.random() < 0.6) continue;   // clay slumps slowly and stays steep: it keeps the shape it was given
+        const dl = x > 0 ? T[below + x - 1] !== EMPTY : true;
+        const dr = x < C - 1 ? T[below + x + 1] !== EMPTY : true;
+        if (dl && dr) continue;
+        let dir;
+        if (!dl && !dr) dir = Math.random() < 0.5 ? -1 : 1;
+        else dir = dl ? 1 : -1;
+        if (T[i + dir] !== EMPTY) continue;
+        if (S[i]) {   // clingy grains (and rocks, which stack steeply) hold unless the drop is steep
+          const two = below + C + x + dir;
+          if (y + 2 >= R || T[two] !== EMPTY) continue;
+        }
+        if (m === SNOW && Math.random() < 0.6) {   // snow spreads out into soft, low drifts
+          const x2 = x + 2 * dir;
+          if (x2 >= 0 && x2 < C && T[i + 2 * dir] === EMPTY && T[below + x2] === EMPTY) { move(i, below + x2); continue; }
+        }
+        move(i, below + x + dir);
+      }
+    }
+  };
+
+  // ----- stamps and molds in the picked material -----
+  const baseMold = moldColor;
+  let stampMat = -1;
+  moldColor = function (hex) {
+    if (stampMat < 0 || stampMat === SAND) return baseMold(hex);
+    const c = colorFor(stampMat, hex, true);
+    return c === null ? baseMold(hex) : c;
+  };
+  function recolor(id, m) {
+    if (m !== SPRINKLES && m !== ROCKS && m !== SNOW && m !== GLITTER) return;
+    for (let i = 0; i < gType.length; i++) if (gOwner[i] === id && gType[i] === STAMP) gColor[i] = colorFor(m, color, true);
+  }
+  const baseStamp = stampMold;
+  stampMold = function () {
+    stampMat = mat;
+    try { baseStamp.apply(this, arguments); } finally { stampMat = -1; }
+    recolor(nextObjId - 1, mat);
+  };
+  const baseSpawn = spawnFallingMold;
+  spawnFallingMold = function () {
+    stampMat = mat;
+    try { baseSpawn.apply(this, arguments); } finally { stampMat = -1; }
+  };
+  const baseCommit = commitFallingMold;
+  commitFallingMold = function (F) {
+    const m = matOf(F.mc);
+    if (m === CLAY) F.impact = 0;                       // clay lands without crumbling
+    else if (m === ROCKS) F.impact = Math.min(3, (F.impact || 0) * 2 + 1);   // rock molds shed pieces
+    const keepMat = mat; mat = m;   // crumbs that fall off are the mold's own material
+    try { baseCommit.apply(this, arguments); } finally { mat = keepMat; }
+    recolor(F.id, m);
+  };
+
+  // ----- drawing -----
+  const SHAPED = { [SPRINKLES]: 1, [ROCKS]: 1, [SNOW]: 1, [GLITTER]: 1 };
+  function drawGrain(c, m, col, x, y, ph) {
+    const r = col & 255, g = (col >> 8) & 255, b = (col >> 16) & 255;
+    if (m === SPRINKLES) {
+      const a = ((ph >> 2) & 7) * Math.PI / 8, L = 2.6, dx = Math.cos(a) * L, dy = Math.sin(a) * L;
+      c.lineCap = 'round'; c.lineWidth = 1.8;
+      c.strokeStyle = `rgb(${r},${g},${b})`;
+      c.beginPath(); c.moveTo(x - dx, y - dy); c.lineTo(x + dx, y + dy); c.stroke();
+      c.lineWidth = 0.6; c.strokeStyle = 'rgba(255,255,255,0.45)';
+      c.beginPath(); c.moveTo(x - dx * 0.6 - 0.3, y - dy * 0.6 - 0.3); c.lineTo(x + dx * 0.2 - 0.3, y + dy * 0.2 - 0.3); c.stroke();
+      return;
+    }
+    if (m === ROCKS) {
+      const R0 = 4.3 + ((ph >> 3) & 3) * 0.5, n = 6 + (ph & 1), rot = ((ph >> 5) & 7) * 0.4;
+      const pts = [];
+      for (let v = 0; v < n; v++) {
+        const a = rot + v / n * Math.PI * 2, rr = R0 * (0.78 + (((ph >> (v % 9)) & 1) ? 0.22 : 0.05));
+        pts.push(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.86);
+      }
+      c.fillStyle = `rgb(${r},${g},${b})`;
+      c.beginPath(); c.moveTo(pts[0], pts[1]); for (let v = 2; v < pts.length; v += 2) c.lineTo(pts[v], pts[v + 1]); c.closePath(); c.fill();
+      // facets: lit from the top left
+      for (let v = 0; v < n; v++) {
+        const j = (v + 1) % n, mx = (pts[v * 2] + pts[j * 2]) / 2 - x, my = (pts[v * 2 + 1] + pts[j * 2 + 1]) / 2 - y;
+        const lit = -(mx + my) / (R0 * 1.4);
+        c.fillStyle = lit > 0 ? `rgba(255,255,255,${(lit * 0.22).toFixed(3)})` : `rgba(0,0,0,${(-lit * 0.3).toFixed(3)})`;
+        c.beginPath(); c.moveTo(x - 0.4, y - 0.4); c.lineTo(pts[v * 2], pts[v * 2 + 1]); c.lineTo(pts[j * 2], pts[j * 2 + 1]); c.closePath(); c.fill();
+      }
+      c.lineWidth = 0.5; c.strokeStyle = 'rgba(20,16,12,0.55)';
+      c.beginPath(); c.moveTo(pts[0], pts[1]); for (let v = 2; v < pts.length; v += 2) c.lineTo(pts[v], pts[v + 1]); c.closePath(); c.stroke();
+      return;
+    }
+    if (m === SNOW) {
+      c.fillStyle = `rgb(${r},${g},${b})`;
+      c.beginPath(); c.arc(x, y, 2.05, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(150,175,215,0.35)';
+      c.beginPath(); c.arc(x + 0.5, y + 0.6, 1.2, 0, Math.PI * 2); c.fill();
+      return;
+    }
+    // glitter: the round shiny grain sprite
+    const idx = grainSprite(col), atlas = sandAtlas(), dw = SPR_CSS * (0.86 + ((ph >> 8) & 3) * 0.08);
+    c.drawImage(atlas, (idx % SPR_COLS) * SPR_PX, ((idx / SPR_COLS) | 0) * SPR_PX, SPR_PX, SPR_PX, x - dw / 2, y - dw / 2, dw, dw);
+  }
+  let clayBuf = null, clayCtx = null, clayImg = null, clayPix = null;
+  window.sandMat = {
+    ownShape: c => !!SHAPED[matOf(c)],
+    drawCell(c, i, col) {
+      const m = matOf(col);
+      if (!SHAPED[m]) return;
+      drawGrain(c, m, col, grainX(i, LOOSE), grainY(i, LOOSE), gPhase[i]);
+    },
+    drawFlying(c, p) {
+      const m = matOf(p.c);
+      if (!SHAPED[m] || m === GLITTER) return false;
+      if (p.ph === undefined) p.ph = (Math.random() * 1024) | 0;
+      drawGrain(c, m, p.c, p.x, p.y, p.ph);
+      return true;
+    },
+    glint(t, ph, col, n) {
+      const m = matOf(col);
+      if (m === GLITTER) return (t === LOOSE || t === STAMP) && (ph & 1) === 0 && n < 600;
+      if (m === SAND) return t === LOOSE && (ph & 3) === 0 && n < 90;
+      if (m === SNOW) return t === LOOSE && (ph & 15) === 0 && n < 120;
+      return false;
+    },
+    clayTile(px, Col, C, R, xs, ys, xe, ye) {
+      if (!clayBuf || clayBuf.width !== C || clayBuf.height !== R) {
+        clayBuf = document.createElement('canvas'); clayBuf.width = C; clayBuf.height = R;
+        clayCtx = clayBuf.getContext('2d'); clayImg = clayCtx.createImageData(C, R); clayPix = new Uint32Array(clayImg.data.buffer);
+      }
+      for (let y = ys; y < ye; y++) for (let x = xs, i = y * C + xs; x < xe; x++, i++) clayPix[i] = px[i] && matOf(Col[i]) === CLAY ? px[i] : 0;
+      clayCtx.putImageData(clayImg, 0, 0, xs, ys, xe - xs, ye - ys);
+    },
+    clayFill(c, sx, sy, ex, ey) {
+      if (!clayBuf) return;
+      c.save();
+      c.globalCompositeOperation = 'source-over';   // smooth matte: no grain gaps or grain shading
+      c.imageSmoothingEnabled = false;
+      c.drawImage(clayBuf, sx, sy, ex - sx, ey - sy, sx * CELL, sy * CELL, (ex - sx) * CELL, (ey - sy) * CELL);
+      c.restore();
+    },
+    // a stamp color in the picked material (used by the Letters tool)
+    stampColor(hex) { const c = colorFor(mat, hex, true); return c === null ? baseMold(hex) : c; },
+    usesColor() { return mat === SAND || mat === CLAY || mat === GLITTER; },
+    get material() { return LIST.find(m => m[0] === mat)[1]; },
+    set material(k) { if (byKey[k] !== undefined) setMat(byKey[k]); },
+    test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER }
+  };
+  // the shaped grains are drawn on the tile layer: redraw it all once
+  if (typeof prevT !== 'undefined' && prevT) prevT.fill(255);
+
+  // ----- the picker -----
+  function setMat(m) {
+    mat = m;
+    try { localStorage.setItem('sparkle.sand.mat', LIST.find(x => x[0] === m)[1]); } catch (e) {}
+    const sel = document.getElementById('material');
+    if (sel) sel.value = LIST.find(x => x[0] === m)[1];
+    if (mode === 'sand') { hint.textContent = LIST.find(x => x[0] === m)[3]; hint.classList.remove('faded'); }
+  }
+  function addPicker() {
+    if (mode !== 'sand' || document.getElementById('material')) return;
+    const lab = document.createElement('label');
+    lab.className = 'mat-pick';
+    lab.title = 'What you pour and stamp with';
+    lab.innerHTML = 'Material <select id="material"></select>';
+    const sel = lab.querySelector('select');
+    LIST.forEach(([id, k, name]) => { const o = document.createElement('option'); o.value = k; o.textContent = name; if (id === mat) o.selected = true; sel.appendChild(o); });
+    sel.onchange = () => setMat(byKey[sel.value]);
+    const anchor = document.getElementById('meltBtn');
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(lab, anchor.nextSibling); else controlsDiv.appendChild(lab);
+  }
+  const baseControls = setControls;
+  setControls = function () { baseControls.apply(this, arguments); addPicker(); };
+  addPicker();
 })();
 </script>
 </body>
