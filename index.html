@@ -23568,7 +23568,17 @@ loop();
     e8studio: 'E₈ drawing: heavy for phones',
     e8insp: 'E₈ drawing: a little wider than a phone screen',
     e8studio2: 'E₈ drawing: heavy for phones',
-    cipher: 'A little wider than a phone screen'
+    cipher: 'A little wider than a phone screen',
+    // trimmed list: the phone menu keeps only hands-on touch play that runs smoothly
+    silk: 'Touch play, but slow on phones (about 29 frames a second)',
+    stretch: 'Slow on phones (about 9 frames a second)',
+    sum: 'Mostly sliders and reading: easier on a bigger screen',
+    ringsum: 'Mostly sliders and reading: easier on a bigger screen',
+    zeros: 'Mostly sliders and reading: easier on a bigger screen',
+    pendulum: 'Mostly sliders and watching: easier on a bigger screen',
+    trilogy: 'Mostly sliders and reading: easier on a bigger screen',
+    horned: 'Mostly sliders and watching: easier on a bigger screen',
+    'unit-distances': 'Mostly sliders and reading: easier on a bigger screen'
   };
   const FULL_KEY = 'sparkle.full';
   let fullParam = /[?&]full=1(&|$)/.test(location.search);
@@ -23611,7 +23621,7 @@ loop();
       });
       heavyOpts.forEach(o => { o.hidden = !heavyOpen; });
       heavyHead.setAttribute('aria-expanded', String(heavyOpen));
-      heavyHead.innerHTML = '<span>Best on a computer for now (' + heavyOpts.length + ')</span><span aria-hidden="true">' + (heavyOpen ? '▾' : '▸') + '</span>';
+      heavyHead.innerHTML = '<span>More on a computer (' + heavyOpts.length + ')</span><span aria-hidden="true">' + (heavyOpen ? '▾' : '▸') + '</span>';
     } else {
       list.append(fullBtn, ...homeOrder);
       homeOrder.forEach(el => { el.hidden = false; });
