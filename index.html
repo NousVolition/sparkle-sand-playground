@@ -6939,6 +6939,7 @@ requestAnimationFrame(frame);
 <!-- Tab 17: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
 <div class="page-tab" id="page-ocean" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
 <template id="page-src-ocean">
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6948,245 +6949,104 @@ requestAnimationFrame(frame);
 <style>
   :root {
     --bg: #080c14;
-    --panel: rgba(14, 21, 34, 0.88);
+    --panel: rgba(14, 21, 34, 0.9);
     --border: rgba(148, 178, 224, 0.2);
     --text: #e2e8f0;
     --muted: #94a3b8;
     --accent: #38bdf8;
     --warm: #f97316;
+    --ok: #4ade80;
+    --bad: #f87171;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg); color: var(--text);
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden; height: 100vh; width: 100vw;
+    display: flex; flex-direction: column; user-select: none;
   }
-  #dim-overlay {
-    position: fixed;
-    inset: 0;
-    background: #000;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 999;
-    transition: opacity 0.15s ease;
-  }
-  header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 10px 16px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    z-index: 10;
-  }
-  .title-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .title-group h1 {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    color: #f8fafc;
-  }
-  .badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgba(56, 189, 248, 0.15);
-    color: var(--accent);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-  }
-  .presets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  button {
-    background: rgba(30, 41, 59, 0.8);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 5px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  button:hover {
-    background: rgba(51, 65, 85, 0.9);
-    border-color: rgba(148, 178, 224, 0.45);
-  }
-  button.active {
-    background: rgba(56, 189, 248, 0.22);
-    border-color: var(--accent);
-    color: #fff;
-    font-weight: 600;
-  }
-  main {
-    position: relative;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  canvas#globeCanvas {
-    display: block;
-    cursor: grab;
-  }
-  canvas#globeCanvas:active {
-    cursor: grabbing;
-  }
-  .hud-card {
-    position: absolute;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 14px;
-    backdrop-filter: blur(8px);
-    font-size: 12px;
-    z-index: 5;
-  }
-  #hud-top-left {
-    top: 14px;
-    left: 14px;
-    max-width: 270px;
-  }
-  #hud-top-left h2 {
-    font-size: 13px;
-    margin-bottom: 6px;
-    color: #f8fafc;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .stat-row {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 4px;
-    color: var(--muted);
-  }
-  .stat-row span.val {
-    color: #f1f5f9;
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-  }
-  #inset-box {
-    position: absolute;
-    bottom: 14px;
-    left: 14px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 8px;
-    text-align: center;
-    z-index: 5;
-    cursor: pointer;
-    transition: transform 0.15s ease;
-  }
-  #inset-box:hover {
-    transform: scale(1.03);
-    border-color: var(--accent);
-  }
-  #inset-label {
-    font-size: 11px;
-    color: var(--accent);
-    margin-top: 4px;
-    font-weight: 600;
-  }
-  #legend-box {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 11px;
-    z-index: 5;
-  }
-  .legend-bar {
-    width: 14px;
-    height: 130px;
-    border-radius: 6px;
-    background: linear-gradient(to bottom, #7f0000, #d7301f, #fc8d59, #fdd49e, #e2e8f0, #9ecae1, #4292c6, #08519c, #081d58);
-    border: 1px solid rgba(255,255,255,0.2);
-  }
-  .legend-wrap {
-    display: flex;
-    gap: 8px;
-    align-items: stretch;
-    margin-top: 6px;
-  }
-  .legend-ticks {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-  footer {
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    padding: 10px 16px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    z-index: 10;
-  }
-  .control {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 130px;
-  }
-  .control label {
-    font-size: 11px;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-  }
-  .control label span {
-    color: #f8fafc;
-    font-variant-numeric: tabular-nums;
-  }
-  input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-  .btn-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  body.hide-ui header,
-  body.hide-ui footer,
-  body.hide-ui .hud-card,
-  body.hide-ui #legend-box,
-  body.hide-ui #inset-box {
-    opacity: 0;
-    pointer-events: none;
-  }
-  #unhide-btn {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 20;
-    display: none;
-  }
-  body.hide-ui #unhide-btn {
-    display: block;
+  #dim-overlay { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 999; transition: opacity 0.15s ease; }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); z-index: 10; }
+  .title-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .title-group h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; color: #f8fafc; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  button { background: rgba(30, 41, 59, 0.8); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; transition: all 0.15s ease; }
+  button:hover { background: rgba(51, 65, 85, 0.9); border-color: rgba(148, 178, 224, 0.45); }
+  button.active { background: rgba(56, 189, 248, 0.22); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.warm { border-color: rgba(249, 115, 22, 0.6); }
+  button.warm.active { background: rgba(249, 115, 22, 0.25); border-color: var(--warm); }
+  main { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  canvas#globeCanvas { display: block; cursor: grab; touch-action: none; }
+  canvas#globeCanvas:active { cursor: grabbing; }
+  .hud-card { position: absolute; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(8px); font-size: 12px; z-index: 5; }
+  #hud-top-left { top: 14px; left: 14px; max-width: 300px; }
+  #hud-top-left h2 { font-size: 13px; margin-bottom: 6px; color: #f8fafc; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .stat-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; color: var(--muted); }
+  .stat-row span.val { color: #f1f5f9; font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; }
+  .hud-sub { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border); color: var(--muted); line-height: 1.4; }
+  .hud-sub b { color: #f1f5f9; font-weight: 600; }
+  #inset-box { position: absolute; bottom: 14px; left: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px; text-align: center; z-index: 5; cursor: pointer; transition: transform 0.15s ease; }
+  #inset-box:hover { transform: scale(1.03); border-color: var(--accent); }
+  #inset-label { font-size: 11px; color: var(--accent); margin-top: 4px; font-weight: 600; }
+  #legend-box { position: absolute; top: 14px; right: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 11px; z-index: 5; }
+  #legendCanvas { display: block; margin-top: 6px; }
+  #arrow-key { position: absolute; bottom: 14px; right: 14px; max-width: 250px; font-size: 11px; line-height: 1.4; color: var(--muted); }
+  #arrow-key b { color: #f1f5f9; }
+  footer { background: var(--panel); border-top: 1px solid var(--border); padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; z-index: 10; }
+  .control { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+  .control label { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+  .control label span { color: #f8fafc; font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  input[type="range"]:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  body.hide-ui header, body.hide-ui footer, body.hide-ui .hud-card, body.hide-ui #legend-box, body.hide-ui #inset-box, body.hide-ui #drawer { opacity: 0; pointer-events: none; }
+  #unhide-btn { position: fixed; top: 12px; right: 12px; z-index: 20; display: none; }
+  body.hide-ui #unhide-btn { display: block; }
+
+  /* Equations drawer */
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(470px, 100%); background: rgba(10, 16, 27, 0.97); border-left: 1px solid var(--border); z-index: 8; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.2s ease; user-select: text; }
+  #drawer.open { transform: translateX(0); }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .drawer-head h3 { font-size: 13px; color: #f8fafc; }
+  .dtabs { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 12px 0; }
+  .dbody { flex: 1; overflow-y: auto; padding: 10px 14px 18px; font-size: 12.5px; line-height: 1.55; }
+  .dpane { display: none; }
+  .dpane.active { display: block; }
+  .dpane h4 { font-size: 13px; color: var(--warm); margin: 10px 0 4px; }
+  .dpane p { margin: 4px 0 6px; color: #cbd5e1; }
+  .dpane .eq { font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-size: 14px; color: #f8fafc; background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
+  .dpane .note { font-size: 11.5px; color: var(--muted); }
+  .dpane a, #proved a { color: var(--accent); text-underline-offset: 3px; }
+  .dpane code { font-size: 11.5px; color: #e2e8f0; }
+  .kv { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed rgba(148, 178, 224, 0.12); padding: 2px 0; }
+  .kv span:last-child { font-variant-numeric: tabular-nums; color: #f8fafc; text-align: right; }
+  .dctl { margin: 6px 0; }
+  .dctl label { font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; }
+  .dctl label span { color: #f8fafc; font-variant-numeric: tabular-nums; }
+  canvas.chart { width: 100%; height: 190px; display: block; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; }
+  .chart-key { font-size: 11px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+  .sw { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; border-radius: 2px; }
+  .ok { color: var(--ok); }
+  .bad { color: var(--bad); }
+  #proved .proved-group { margin: 12px 0 4px; color: var(--accent); font-weight: 700; font-size: 12.5px; }
+  #proved ul { padding: 0 0 0 1.2em; font-size: 12px; line-height: 1.55; color: #cbd5e1; }
+  #proved li { margin-bottom: 5px; }
+  .check-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  #check-summary.check-pass, .check-pass { color: var(--ok); }
+  #check-summary.check-fail, .check-fail { color: var(--bad); }
+  #check-summary { font-weight: 700; }
+  #check-out { margin-top: 6px; font-size: 11.5px; line-height: 1.5; }
+  @media (max-width: 640px) {
+    #legend-box { display: none; }
+    #arrow-key { display: none; }
+    #hud-top-left { max-width: calc(100% - 28px); padding: 8px 10px; font-size: 11px; }
+    .title-group h1 { font-size: 13px; }
+    footer { gap: 10px; padding: 8px 10px; }
+    .control { min-width: 140px; flex: 1; }
+    #eventDesc, #obsLine { display: none; }
+    #inset-box { transform: scale(0.7); transform-origin: bottom left; }
+    #inset-box:hover { transform: scale(0.72); }
   }
 </style>
 </head>
@@ -7197,15 +7057,16 @@ requestAnimationFrame(frame);
 <header>
   <div class="title-group">
     <h1>3D Spinning Ocean Wave & El Niño Relative Frame Studio</h1>
-    <span class="badge" id="frameBadge">Frame: Absolute SST</span>
+    <span class="badge" id="frameBadge">Frame: Standard anomaly</span>
   </div>
   <div class="presets">
-    <button onclick="applyPreset('1982')" id="btn-1982">1982 Classic</button>
-    <button onclick="applyPreset('1997')" id="btn-1997">1997 Super</button>
-    <button onclick="applyPreset('2015')" id="btn-2015">2015 Basin</button>
-    <button onclick="applyPreset('2023')" id="btn-2023">2023 Warm Bg</button>
-    <button onclick="applyPreset('2026')" id="btn-2026" class="active">2026 Hot Bg</button>
-    <button onclick="applyPreset('lanina')" id="btn-lanina">La Niña Cool</button>
+    <button onclick="applyPreset('1982')" id="btn-1982">1982–83</button>
+    <button onclick="applyPreset('1997')" id="btn-1997">1997–98</button>
+    <button onclick="applyPreset('2015')" id="btn-2015">2015–16</button>
+    <button onclick="applyPreset('2023')" id="btn-2023">2023–24</button>
+    <button onclick="applyPreset('2026')" id="btn-2026" class="active">2026 now</button>
+    <button onclick="applyPreset('lanina')" id="btn-lanina">1988–89 La Niña</button>
+    <button onclick="toggleDrawer()" id="drawerBtn" class="warm">∑ Equations and proofs</button>
   </div>
 </header>
 
@@ -7214,59 +7075,157 @@ requestAnimationFrame(frame);
 
   <div class="hud-card" id="hud-top-left">
     <h2>
-      <span id="eventTitle">2026 Event (Nov 1–15)</span>
-      <span style="font-size:11px;color:var(--accent);" id="modeShort">ABS</span>
+      <span id="eventTitle">2026 El Niño (CPC, Nov 12, 2026)</span>
+      <span style="font-size:11px;color:var(--accent);" id="modeShort">STD</span>
     </h2>
-    <div style="color:var(--muted);line-height:1.4;margin-bottom:6px;" id="eventDesc">
-      Strong equatorial Kelvin wave riding atop a warm global ocean background.
-    </div>
-    <div class="stat-row"><span>Niño 3.4 Raw Anomaly:</span><span class="val" id="statRaw">+2.45 °C</span></div>
-    <div class="stat-row"><span>Tropical Mean Baseline:</span><span class="val" id="statBg">+0.85 °C</span></div>
-    <div class="stat-row"><span>Relative Wave Signal:</span><span class="val" id="statRel">+1.60 °C</span></div>
-    <div class="stat-row"><span>Kelvin Wave Phase:</span><span class="val" id="statPhase">Eastward Peak</span></div>
+    <div style="color:var(--muted);line-height:1.4;margin-bottom:6px;" id="eventDesc"></div>
+    <div class="stat-row"><span>Niño 3.4 box mean:</span><span class="val" id="statRaw">–</span></div>
+    <div class="stat-row"><span>Tropical mean, 20°S–20°N:</span><span class="val" id="statBg">–</span></div>
+    <div class="stat-row"><span>Relative (box − tropics):</span><span class="val" id="statRel">–</span></div>
+    <div class="stat-row"><span>Against ±0.5 °C:</span><span class="val" id="statClass">–</span></div>
+    <div class="stat-row"><span>Cycle stage:</span><span class="val" id="statPhase">Held at preset</span></div>
+    <div class="hud-sub" id="obsLine"></div>
   </div>
 
-  <div id="inset-box" onclick="toggleFrame()" title="Click to swap main globe and inset reference frame">
+  <div id="inset-box" onclick="toggleFrame()" title="Click to swap the main globe and the inset frame">
     <canvas id="insetCanvas" width="126" height="126"></canvas>
-    <div id="inset-label">Inset: Relative Frame ⇄</div>
+    <div id="inset-label">Inset: Relative frame ⇄</div>
   </div>
 
   <div id="legend-box">
-    <div style="font-weight:600;color:#f8fafc;">SST Anomaly (°C)</div>
-    <div class="legend-wrap">
-      <div class="legend-bar"></div>
-      <div class="legend-ticks">
-        <span>+4.0°</span>
-        <span>+2.0°</span>
-        <span>0.0°</span>
-        <span>-2.0°</span>
-        <span>-3.0°</span>
-      </div>
-    </div>
+    <div style="font-weight:600;color:#f8fafc;">SST anomaly (°C)</div>
+    <canvas id="legendCanvas" width="70" height="150"></canvas>
   </div>
+  <div class="hud-card" id="arrow-key"><b>White arrows:</b> Kelvin waves, which always travel east along the equator. <b>Blue arrows:</b> Rossby waves, which always travel west just off the equator. Warm and cool waves travel the same ways.</div>
+
+  <aside id="drawer" aria-label="Equations and proofs">
+    <div class="drawer-head">
+      <h3>Equations and proofs</h3>
+      <button onclick="toggleDrawer()">✕ Close</button>
+    </div>
+    <div class="dtabs">
+      <button class="dtab active" data-pane="store">1. Heat store</button>
+      <button class="dtab" data-pane="cycle">2. Recharge cycle</button>
+      <button class="dtab" data-pane="proved">3. What is proved here</button>
+    </div>
+    <div class="dbody">
+      <section class="dpane active" id="pane-store">
+        <h4>The warm-water store with the winds held fixed</h4>
+        <p>In the recharge oscillator of Jin (1997), the thermocline depth h in the western Pacific (how deep the warm upper layer reaches) changes by</p>
+        <div class="eq">dh/dt = −r·h − α·b·T</div>
+        <p>where T is the sea surface temperature anomaly in the east. If the winds are held fixed, T is a constant T*, and the push u = −α·b·T* is steady. The equation becomes dh/dt = u − r·h, which is exactly the store in <a id="lnkGap1" target="_blank" rel="noopener">Gap.lean</a>:</p>
+        <div class="eq">store = x₀ + u·t if r = 0, and u/r + (x₀ − u/r)·e<sup>−r·t</sup> if r &gt; 0</div>
+        <p>With a damping r &gt; 0 the store levels off at u/r. With r = 0 it grows without end (<code>finite_iff_gap</code>). Cool, stronger trade winds (T* &lt; 0) fill the store; warm, weaker winds (T* &gt; 0) drain it.</p>
+        <div class="dctl"><label>Held SST anomaly T* <span id="vTs">−1.0 °C</span></label><input type="range" id="sTs" min="-2.5" max="2.5" step="0.1" value="-1"></div>
+        <div class="dctl"><label>Damping r <span id="vR">0.125 per month</span></label><input type="range" id="sR" min="0" max="0.25" step="0.005" value="0.125"></div>
+        <div class="dctl"><label>Starting depth anomaly x₀ <span id="vX">0 m</span></label><input type="range" id="sX" min="-30" max="30" step="1" value="0"></div>
+        <canvas class="chart" id="storeChart"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#f97316"></i>store h(t)</span><span><i class="sw" style="background:#38bdf8"></i>level u/r</span><span><i class="sw" style="background:#64748b"></i>same push with r = 0 (runs off the chart)</span><span><i class="sw" style="background:#4ade80"></i>step-by-step solution (dots)</span></div>
+        <div class="kv"><span>Push u = −α·b·T*</span><span id="oU">–</span></div>
+        <div class="kv"><span>Level u/r</span><span id="oLevel">–</span></div>
+        <div class="kv"><span>h at 36 months, formula</span><span id="oH36">–</span></div>
+        <div class="kv"><span>h at 36 months, step by step</span><span id="oH36n">–</span></div>
+        <div class="kv"><span>Never farther from u/r than at the start</span><span id="oLevels">–</span></div>
+        <div class="kv"><span>Lean statement in force</span><span id="oLean">–</span></div>
+        <h4>The other half: the temperature with h held fixed</h4>
+        <p>Jin's temperature equation is dT/dt = R·T + γ·h with R = γ·b − c, where γ·b is the Bjerknes feedback (warm water weakens the trade winds, which warms it further) and c is the damping. With h held fixed this is the same store with rate −R. It levels off only when R &lt; 0. <span id="oRnote"></span></p>
+        <p class="note">Lean proves the single store. The full ocean–atmosphere system is not one store: T and h push on each other, which is what tab 2 shows.</p>
+      </section>
+
+      <section class="dpane" id="pane-cycle">
+        <h4>Jin's recharge oscillator (1997)</h4>
+        <div class="eq">dT/dt = R·T + γ·h &nbsp;&nbsp; dh/dt = −r·h − α·b·T</div>
+        <p>Jin's values: c = 1, γ = 0.75, r = 0.25, α = 0.125, b = 2.5·μ, in units of 2 months for time, 7.5 °C for T and 150 m for h. μ is the strength of the coupling between the ocean and the winds.</p>
+        <div class="dctl"><label>Coupling μ <span id="vMu">0.667</span></label><input type="range" id="sMu" min="0.55" max="0.75" step="0.005" value="0.6667"></div>
+        <div class="btn-row" style="margin:6px 0">
+          <button id="cycleBtn" class="warm" onclick="toggleCycle()">↻ Run the cycle on the globe: Off</button>
+          <button onclick="restartCycle()">⟲ Restart</button>
+        </div>
+        <canvas class="chart" id="cycleChart"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#f97316"></i>T, east Pacific SST anomaly (°C)</span><span><i class="sw" style="background:#38bdf8"></i>h, west Pacific depth anomaly (m ÷ 10)</span><span><i class="sw" style="background:#94a3b8"></i>±0.5 °C</span></div>
+        <div class="kv"><span>Bjerknes feedback minus damping, R = γ·b − c</span><span id="cR">–</span></div>
+        <div class="kv"><span>Growth per year, from (R − r)/2</span><span id="cGrow">–</span></div>
+        <div class="kv"><span>Period</span><span id="cPer">–</span></div>
+        <div class="kv"><span>Coupling where the cycle neither grows nor fades, μ = (c + r)/(γ·2.5)</span><span id="cMuc">–</span></div>
+        <div class="kv"><span>Model time shown</span><span id="cTime">–</span></div>
+        <p>How it turns: a warm east weakens the winds, and the weaker winds drain the warm-water store (h falls). Once the store is drained, the east cools, the winds strengthen, and the store fills again. The draining and filling sets the period.</p>
+        <p class="note">This is the linear model with no weather noise and no seasons. The real ocean is irregular, with events every 2 to 7 years. When the cycle runs on the globe, the page sets the Niño 3.4 box mean to 7.5·T °C and keeps the shapes of the pattern as drawn.</p>
+      </section>
+
+      <section class="dpane" id="pane-proved">
+        <div id="proved">
+          <p class="note">This panel separates four kinds of statement: facts a computer has checked in Lean, facts from published science, numbers this page recomputes itself, and pictures that are only for display. The Lean files are in <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean" target="_blank" rel="noopener">NousVolition/discrete-gap-inequalities-lean</a>.</p>
+
+          <div class="proved-group">Proved in Lean (checked step by step by a computer)</div>
+          <ul>
+            <li><b>A store with a steady push.</b> A store with input u and damping r follows x₀ + u·t when r = 0 and u/r + (x₀ − u/r)·e<sup>−r·t</sup> otherwise; the second changes at the rate u − r·(store) (<code>breathe_deriv</code>). <a id="lnkGap2" target="_blank" rel="noopener">Gap.lean</a></li>
+            <li><b>Finite exactly when damped.</b> For u &gt; 0 and r ≥ 0, the store stays bounded for all time exactly when r &gt; 0 (<code>finite_iff_gap</code>); with r = 0 it passes every level (<code>keep_unbounded</code>).</li>
+            <li><b>Levelling.</b> For r ≥ 0 and t ≥ 0 the store is never farther from u/r than it started (<code>breathe_levels</code>), with any sign of u.</li>
+            <li><b>Push ended, push continuing.</b> With u = 0 the store fades as x₀·e<sup>−r·t</sup> (<code>input_ended</code>); started at u/r it stays there (<code>steady_input_stays</code>).</li>
+            <li><b>Where it applies on this page.</b> Each of these is stated for one store with a fixed push. Here it is applied to h with the winds held fixed (tab 1). It is not a statement about the coupled ocean and atmosphere.</li>
+          </ul>
+
+          <div class="proved-group">From the published science, not in Lean</div>
+          <ul>
+            <li><b>Bjerknes feedback.</b> Warm water in the east weakens the trade winds, and weaker winds let the east warm further (Bjerknes 1969, <i>Mon. Wea. Rev.</i> 97, 163–172).</li>
+            <li><b>Recharge oscillator.</b> The equations, the parameter values and the scales of tab 2 are from Jin (1997), <i>J. Atmos. Sci.</i> 54, 811–829, which reports a period that stays within 3 to 5 years over a wide range of coupling.</li>
+            <li><b>Delayed oscillator.</b> An earlier account of the same cycle in which Kelvin waves travel east and Rossby waves travel west and reflect at the western shore, returning after a delay (Suarez and Schopf 1988, <i>J. Atmos. Sci.</i> 45, 3283–3287; Battisti and Hirst 1989, <i>J. Atmos. Sci.</i> 46, 1687–1712). Jin shows the recharge oscillator contains it without an explicit delay.</li>
+            <li><b>Heat content leads.</b> The equatorial warm-water volume rises before El Niño and falls during it (Wyrtki 1985, <i>J. Geophys. Res.</i> 90, 7129–7132; Meinen and McPhaden 2000, <i>J. Climate</i> 13, 3551–3559).</li>
+            <li><b>Kelvin waves.</b> First-mode equatorial Kelvin waves travel east at about 2.5 to 3 m/s, so they cross the Pacific in about 2 to 3 months; Rossby waves travel west at about a third of that speed.</li>
+            <li><b>Period.</b> El Niño and La Niña recur irregularly every 2 to 7 years (McPhaden, Zebiak and Glantz 2006, <i>Science</i> 314, 1740–1745).</li>
+            <li><b>The indices.</b> The Niño 3.4 box is 5°N–5°S, 170°W–120°W. The Oceanic Niño Index (ONI) is the 3-month running mean of the sea surface temperature anomaly in that box. The Relative Oceanic Niño Index (RONI) subtracts the mean anomaly over the tropics, 20°N–20°S, and rescales the result so its spread matches the ONI (L'Heureux et al. 2024, <i>J. Climate</i> 37). NOAA's Climate Prediction Center now uses the RONI for official monitoring, with El Niño at +0.5 °C or more and La Niña at −0.5 °C or less, using the 1991–2020 base period. Past episodes are those where the threshold holds for at least five overlapping 3-month seasons.</li>
+            <li><b>Observed values.</b> The ONI and RONI peaks shown for each preset are from the Climate Prediction Center files <a href="https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt" target="_blank" rel="noopener">oni.ascii.txt</a> and <a href="https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt" target="_blank" rel="noopener">RONI.ascii.txt</a>, read on Nov 19, 2026. The 2026 weekly value of +2.5 °C is from the <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.html" target="_blank" rel="noopener">ENSO Diagnostic Discussion of Nov 12, 2026</a>. Recent values may still be revised.</li>
+          </ul>
+
+          <div class="proved-group">Checked by this page</div>
+          <p class="note">Press <b>Run checks</b> to recompute each item in your browser and see pass or fail.</p>
+          <ul>
+            <li>The store formula against a step-by-step solution, its derivative, its levelling, and the bounded and unbounded cases of <code>finite_iff_gap</code>.</li>
+            <li>That Jin's h equation with T held fixed is the Lean store with u = −α·b·T*.</li>
+            <li>Jin's critical coupling 2/3, the period at that coupling, the period seen in a step-by-step run, and that it lies within 2 to 7 years.</li>
+            <li>The Niño 3.4 box, the box mean and the tropical mean shown on the globe, the ±0.5 °C label, and that each preset's box mean equals its observed value.</li>
+            <li>The color key, and the direction of the wave arrows for warm and cool waves.</li>
+          </ul>
+
+          <div class="proved-group">Illustrative only</div>
+          <ul>
+            <li>The shapes on the globe (the warm or cool tongue, the cooler band off the equator, the warm patches farther north and south, the fine ripple), the colors and the coastlines are drawn by simple formulas, not taken from measured maps. Only the box mean of each preset is set to an observed value.</li>
+            <li>The box mean on the globe is a single moment of the drawn pattern, not a 3-month mean, so it stands in for the index rather than being it.</li>
+            <li>The relative value on the globe is box mean minus tropical mean without the RONI rescaling, so it is smaller than the official RONI.</li>
+            <li>The animation speed has no physical meaning.</li>
+            <li><b>Not used here.</b> The ring results (<code>wirtinger</code>, RingDecay, <code>grid_gap</code>) describe smoothing around a closed loop. The equatorial Pacific is closed by land at both ends, and its waves reflect at the shores rather than going around, so a ring does not fit this ocean and the page does not claim one.</li>
+          </ul>
+          <div class="check-row">
+            <button type="button" class="active" id="run-checks-btn">Run checks</button>
+            <span id="check-summary"></span>
+          </div>
+          <div id="check-out"></div>
+        </div>
+      </section>
+    </div>
+  </aside>
 </main>
 
 <footer>
   <div class="btn-row">
-    <button onclick="toggleFrame()" id="frameBtn" class="active">🌐 Frame: Absolute</button>
-    <button onclick="toggleCurrents()" id="currBtn" class="active">〰 Wave Currents: On</button>
+    <button onclick="toggleFrame()" id="frameBtn" class="active">🌐 Frame: Standard</button>
+    <button onclick="toggleCurrents()" id="currBtn" class="active">〰 Wave arrows: On</button>
     <button onclick="toggleNinoBox()" id="boxBtn" class="active">▭ Niño 3.4: On</button>
     <button onclick="toggleSpin()" id="spinBtn">⟳ Auto-Spin: Off</button>
     <button onclick="togglePause()" id="pauseBtn">⏸ Pause</button>
     <button onclick="toggleSound()" id="soundBtn">🔇 Sound: Off</button>
     <button onclick="toggleUI()">👁 Hide UI</button>
   </div>
-
   <div class="control">
-    <label>Kelvin Wave Amp <span id="valAmp">2.3 °C</span></label>
-    <input type="range" id="sliderAmp" min="-2.5" max="3.5" step="0.05" value="2.3">
+    <label>Tongue strength <span id="valAmp">–</span></label>
+    <input type="range" id="sliderAmp" min="-3.5" max="4.5" step="0.05" value="2.3">
   </div>
   <div class="control">
-    <label>Background Warming <span id="valBg">+0.85 °C</span></label>
+    <label>Tropical background <span id="valBg">–</span></label>
     <input type="range" id="sliderBg" min="-0.6" max="1.6" step="0.05" value="0.85">
   </div>
   <div class="control">
-    <label>Wave Phase Speed <span id="valSpeed">1.0x</span></label>
+    <label>Animation speed <span id="valSpeed">1.0x</span></label>
     <input type="range" id="sliderSpeed" min="0" max="3" step="0.1" value="1.0">
   </div>
   <div class="control">
@@ -7274,63 +7233,46 @@ requestAnimationFrame(frame);
     <input type="range" id="sliderDim" min="0" max="0.55" step="0.01" value="0">
   </div>
 </footer>
-
 <script>
+const LEAN = 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/';
+document.getElementById('lnkGap1').href = LEAN + 'Gap.lean';
+document.getElementById('lnkGap2').href = LEAN + 'Gap.lean';
+
 const canvas = document.getElementById('globeCanvas');
 const ctx = canvas.getContext('2d');
 const insetCanvas = document.getElementById('insetCanvas');
 const ictx = insetCanvas.getContext('2d');
 
 let state = {
-  preset: '2026',
-  relativeFrame: false,
-  showCurrents: true,
-  showNinoBox: true,
-  autoSpin: false,
-  paused: false,
-  soundOn: false,
-  kelvinAmp: 2.3,
-  bgWarming: 0.85,
-  waveSpeed: 1.0,
-  rotLon: -135 * Math.PI / 180,
-  rotLat: 6 * Math.PI / 180,
-  phase: 0.6,
-  time: 0
+  preset: '2026', relativeFrame: false, showCurrents: true, showNinoBox: true,
+  autoSpin: false, paused: false, soundOn: false,
+  kelvinAmp: 2.3, bgWarming: 0.85, waveSpeed: 1.0,
+  rotLon: -135 * Math.PI / 180, rotLat: 6 * Math.PI / 180,
+  phase: 0.6, time: 0, cycleOn: false, holdTarget: null
 };
 
+// Observed peaks: CPC oni.ascii.txt and RONI.ascii.txt, read Nov 19, 2026.
+// target = the Niño 3.4 value each preset's box mean is set to.
 const presets = {
-  '1982': {
-    title: '1982 Event (Nov 1–15)',
-    desc: 'Classic eastern Pacific El Niño against a near-neutral 20th-century ocean baseline.',
-    amp: 2.45, bg: -0.05, phase: 0.5
-  },
-  '1997': {
-    title: '1997 Super El Niño',
-    desc: 'Massive equatorial Kelvin wave tongue reaching +4°C off South America with cool off-equatorial flanks.',
-    amp: 3.15, bg: 0.15, phase: 0.75
-  },
-  '2015': {
-    title: '2015 Basin-Wide Event',
-    desc: 'Broad central-to-eastern Pacific warming paired with warm subtropical blobs.',
-    amp: 2.65, bg: 0.45, phase: 0.45
-  },
-  '2023': {
-    title: '2023 Warm Background',
-    desc: 'Strong El Niño amplified by widespread global tropical ocean warmth.',
-    amp: 2.15, bg: 0.75, phase: 0.55
-  },
-  '2026': {
-    title: '2026 Hot Background',
-    desc: 'Strong equatorial Kelvin wave riding atop a warm global ocean background.',
-    amp: 2.30, bg: 0.85, phase: 0.60
-  },
-  'lanina': {
-    title: 'La Niña Cool Tongue',
-    desc: 'Upwelling cold Kelvin wave cools the central and eastern equatorial Pacific.',
-    amp: -1.85, bg: 0.25, phase: 0.50
-  }
+  '1982': { title: '1982–83 El Niño', bg: -0.05, phase: 0.5, target: 2.14,
+    desc: 'Very strong El Niño, warmest in the far east of the Pacific, during a cooler tropical background than today.',
+    obs: 'Observed peak: ONI +2.14 °C and RONI +2.40 °C (Dec–Feb 1982–83).' },
+  '1997': { title: '1997–98 El Niño', bg: 0.15, phase: 0.75, target: 2.37,
+    desc: 'Very strong El Niño with the largest warming near the coast of South America and cooler water off the equator to the west.',
+    obs: 'Observed peak: ONI +2.37 °C and RONI +2.28 °C (Nov–Jan 1997–98).' },
+  '2015': { title: '2015–16 El Niño', bg: 0.45, phase: 0.45, target: 2.59,
+    desc: 'Very strong El Niño centered farther west than 1997, with an unusually warm patch in the northeast Pacific.',
+    obs: 'Observed peak: ONI +2.59 °C and RONI +2.25 °C (Nov–Jan 2015–16).' },
+  '2023': { title: '2023–24 El Niño', bg: 0.75, phase: 0.55, target: 1.99,
+    desc: 'Strong by the traditional index but only moderate by the relative index, because the whole tropical ocean was unusually warm.',
+    obs: 'Observed peak: ONI +1.99 °C (Nov–Jan 2023–24) and RONI +1.42 °C (Oct–Dec 2023).' },
+  '2026': { title: '2026 El Niño (CPC, Nov 12, 2026)', bg: 0.85, phase: 0.6, target: 2.5,
+    desc: 'Strengthening El Niño on a warm tropical background; CPC expects a strong to very strong event through Jan–Mar 2027.',
+    obs: 'Observed: weekly Niño 3.4 +2.5 °C (CPC, Nov 12, 2026); latest ONI +2.46 °C and RONI +1.97 °C (Aug–Oct 2026).' },
+  'lanina': { title: '1988–89 La Niña', bg: -0.1, phase: 0.5, target: -1.85,
+    desc: 'Strong La Niña: stronger trade winds raise the thermocline in the east and bring cooler water to the surface.',
+    obs: 'Observed peak: ONI −1.85 °C (Nov–Jan 1988–89) and RONI −1.95 °C (Oct–Dec 1988).' }
 };
-
 // Simplified continental polygons (lon in deg, lat in deg) for visual grounding
 const continents = [
   // North America
@@ -7362,56 +7304,72 @@ function isLand(lonDeg, latDeg) {
   return false;
 }
 
-// Compute SST anomaly at (lonDeg in [-180, 180], latDeg in [-90, 90])
-function computeSST(lonDeg, latDeg, useRelative) {
-  // Normalize lon to [0, 360) for Pacific math (Pacific is ~120E to 280E / -80W)
-  let lon360 = ((lonDeg % 360) + 360) % 360;
+// Standard SST anomaly of the drawn pattern (fixed baseline), in °C.
+function field(lonDeg, latDeg, amp, bgW, phase) {
+  const lon360 = ((lonDeg % 360) + 360) % 360;
   const latRad = latDeg * Math.PI / 180;
-
-  // Equatorial Kelvin wave packet centered around 190E to 275E (170W to 85W)
-  const waveCenter = 225 + 14 * Math.sin(state.phase);
-  const dLon = (lon360 - waveCenter) / 48;
+  // Equatorial tongue centered near 135°W; the ripple on it travels east as the phase grows.
+  const dLon = (lon360 - 225) / 48;
   const eqGauss = Math.exp(-(latDeg * latDeg) / 52);
   const lonEnv = Math.exp(-0.5 * dLon * dLon) * (lon360 > 135 && lon360 < 286 ? 1 : 0.12);
-  const kelvinWave = state.kelvinAmp * eqGauss * lonEnv * (0.88 + 0.16 * Math.cos((lon360 - 210) * Math.PI / 45 - state.phase));
-
-  // Off-equatorial Rossby / horse-shoe cooling (or warming in La Nina) around +/- 12 deg lat
-  const rossbyLat = (Math.abs(latDeg) - 11.5) / 5.5;
-  const rossbyLon = (lon360 - 175) / 42;
-  const rossbySignal = -0.38 * state.kelvinAmp * Math.exp(-rossbyLat * rossbyLat) * Math.exp(-rossbyLon * rossbyLon);
-
-  // Subtropical Pacific & Atlantic warm blobs + natural wave texture
+  const tongue = amp * eqGauss * lonEnv * (0.88 + 0.16 * Math.cos((lon360 - 210) * Math.PI / 45 - phase));
+  // Band off the equator in the west, of opposite sign (the horseshoe pattern)
+  const offLat = (Math.abs(latDeg) - 11.5) / 5.5;
+  const offLon = (lon360 - 175) / 42;
+  const offBand = -0.38 * amp * Math.exp(-offLat * offLat) * Math.exp(-offLon * offLon);
+  // Warm patches farther north and south, and a fine ripple
   const blob1 = 0.55 * Math.exp(-Math.pow((lon360 - 205) / 30, 2) - Math.pow((latDeg - 36) / 14, 2));
   const blob2 = 0.45 * Math.exp(-Math.pow((lon360 - 220) / 35, 2) - Math.pow((latDeg + 34) / 15, 2));
-  const fineWave = 0.18 * Math.sin(lon360 * 0.14 + state.phase * 1.4) * Math.cos(latDeg * 0.18);
-
-  // Tropical background warming concentrated in 35S - 45N
+  const fineWave = 0.18 * Math.sin(lon360 * 0.14 + phase * 1.4) * Math.cos(latDeg * 0.18);
   const tropMask = Math.exp(-Math.pow(latDeg / 48, 2));
-  const bg = state.bgWarming * (0.45 + 0.65 * tropMask) + (blob1 + blob2) * Math.max(0, state.bgWarming + 0.2);
-
-  let val = kelvinWave + rossbySignal + bg + fineWave * Math.cos(latRad);
-
-  if (useRelative) {
-    // Subtract tropical mean baseline (~20S to 20N average)
-    const tropicalMean = state.bgWarming * 0.96 + 0.18 * state.kelvinAmp;
-    val -= tropicalMean;
-  }
-  return val;
+  const bg = bgW * (0.45 + 0.65 * tropMask) + (blob1 + blob2) * Math.max(0, bgW + 0.2);
+  return tongue + offBand + bg + fineWave * Math.cos(latRad);
 }
 
+// Ocean sample points (area weighted by cos latitude)
+const BOX_PTS = [], TROP_PTS = [];
+for (let la = -5; la <= 5; la += 1) for (let lo = -170; lo <= -120; lo += 1)
+  if (!isLand(lo, la)) BOX_PTS.push([lo, la, Math.cos(la * Math.PI / 180)]);
+for (let la = -20; la <= 20; la += 2) for (let lo = -179; lo <= 180; lo += 2)
+  if (!isLand(lo, la)) TROP_PTS.push([lo, la, Math.cos(la * Math.PI / 180)]);
+function meanOver(pts, amp, bgW, phase) {
+  let s = 0, w = 0;
+  for (const [lo, la, c] of pts) { s += c * field(lo, la, amp, bgW, phase); w += c; }
+  return s / w;
+}
+const boxMean = (amp, bgW, phase) => meanOver(BOX_PTS, amp, bgW, phase);
+const tropMean = (amp, bgW, phase) => meanOver(TROP_PTS, amp, bgW, phase);
+// The box mean is linear in amp, so the amp giving a target box mean is one division.
+function ampForBox(target, bgW, phase) {
+  const b0 = boxMean(0, bgW, phase), b1 = boxMean(1, bgW, phase);
+  return (target - b0) / (b1 - b0);
+}
+
+let stats = { box: 0, trop: 0, rel: 0 };
+function computeStats() {
+  stats.box = boxMean(state.kelvinAmp, state.bgWarming, state.phase);
+  stats.trop = tropMean(state.kelvinAmp, state.bgWarming, state.phase);
+  stats.rel = stats.box - stats.trop;
+}
+function computeSST(lonDeg, latDeg, useRelative) {
+  const v = field(lonDeg, latDeg, state.kelvinAmp, state.bgWarming, state.phase);
+  return useRelative ? v - stats.trop : v;
+}
+
+// ±0.5 °C threshold, with the 0.5 °C strength steps of CPC's strength outlook
+function classify(v) {
+  const a = Math.abs(v);
+  if (a < 0.5) return 'Neutral';
+  const s = a < 1.0 ? 'weak' : a < 1.5 ? 'moderate' : a < 2.0 ? 'strong' : 'very strong';
+  return (v > 0 ? 'El Niño, ' : 'La Niña, ') + s;
+}
+
+const SST_STOPS = [
+  [-3.2, [8, 29, 88]], [-2.0, [8, 81, 156]], [-1.0, [66, 146, 198]], [-0.35, [158, 202, 225]],
+  [0.0, [226, 232, 240]], [0.45, [253, 212, 158]], [1.2, [252, 141, 89]], [2.3, [215, 48, 31]], [3.6, [127, 0, 0]]
+];
 function sstToRGB(v) {
-  // Clamp to [-3.5, 4.0]
-  const stops = [
-    [-3.2, [8, 29, 88]],
-    [-2.0, [8, 81, 156]],
-    [-1.0, [66, 146, 198]],
-    [-0.35, [158, 202, 225]],
-    [0.0, [226, 232, 240]],
-    [0.45, [253, 212, 158]],
-    [1.2, [252, 141, 89]],
-    [2.3, [215, 48, 31]],
-    [3.6, [127, 0, 0]]
-  ];
+  const stops = SST_STOPS;
   if (v <= stops[0][0]) return stops[0][1];
   if (v >= stops[stops.length - 1][0]) return stops[stops.length - 1][1];
   for (let i = 0; i < stops.length - 1; i++) {
@@ -7419,16 +7377,26 @@ function sstToRGB(v) {
     const [v1, c1] = stops[i + 1];
     if (v >= v0 && v <= v1) {
       const t = (v - v0) / (v1 - v0);
-      return [
-        Math.round(c0[0] + (c1[0] - c0[0]) * t),
-        Math.round(c0[1] + (c1[1] - c0[1]) * t),
-        Math.round(c0[2] + (c1[2] - c0[2]) * t)
-      ];
+      return [0, 1, 2].map(k => Math.round(c0[k] + (c1[k] - c0[k]) * t));
     }
   }
   return [226, 232, 240];
 }
 
+// Color key drawn from sstToRGB itself, with ticks at their true positions
+const LEG = { top: 6, bottom: 144, vmax: 4, vmin: -3.5, ticks: [4, 2, 1, 0, -1, -2, -3] };
+const legY = v => LEG.top + (LEG.vmax - v) / (LEG.vmax - LEG.vmin) * (LEG.bottom - LEG.top);
+function drawLegend() {
+  const lc = document.getElementById('legendCanvas'), g = lc.getContext('2d');
+  g.clearRect(0, 0, lc.width, lc.height);
+  for (let y = LEG.top; y <= LEG.bottom; y++) {
+    const v = LEG.vmax - (y - LEG.top) / (LEG.bottom - LEG.top) * (LEG.vmax - LEG.vmin);
+    const c = sstToRGB(v); g.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; g.fillRect(2, y, 14, 1);
+  }
+  g.strokeStyle = 'rgba(255,255,255,0.25)'; g.strokeRect(1.5, LEG.top - 0.5, 15, LEG.bottom - LEG.top + 2);
+  g.fillStyle = '#94a3b8'; g.font = '10px system-ui, sans-serif'; g.textBaseline = 'middle';
+  for (const t of LEG.ticks) { const y = legY(t); g.fillRect(16, Math.round(y), 4, 1); g.fillText((t > 0 ? '+' : '') + t.toFixed(1) + '°', 23, y); }
+}
 // Offscreen pixel buffer for crisp fast globe rendering
 const texCanvas = document.createElement('canvas');
 const texCtx = texCanvas.getContext('2d');
@@ -7555,46 +7523,21 @@ function renderSphere(targetCtx, cx, cy, R, useRelative, stepPx, detailed) {
     targetCtx.setLineDash([]);
   }
 
-  // Equatorial Kelvin & Rossby wave flow arrows
+  // Wave travel arrows: Kelvin east along the equator, Rossby west just off it
   if (detailed && state.showCurrents && Math.abs(state.kelvinAmp) > 0.15) {
-    const dir = state.kelvinAmp >= 0 ? 1 : -1;
-    targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
-    targetCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    targetCtx.lineWidth = 1.5;
-
-    for (let i = 0; i < 9; i++) {
-      const baseLon = -175 + ((i * 13 + state.phase * 18 * dir) % 95 + 95) % 95;
-      const p1 = project(baseLon, 0);
-      const p2 = project(baseLon + 7 * dir, 0);
+    for (const seg of arrowSegments(state.phase)) {
+      const p1 = project(seg.lon1, seg.lat), p2 = project(seg.lon2, seg.lat);
       if (p1.z > 0.15 && p2.z > 0.15) {
-        targetCtx.beginPath();
-        targetCtx.moveTo(p1.x, p1.y);
-        targetCtx.lineTo(p2.x, p2.y);
-        targetCtx.stroke();
-        const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        targetCtx.strokeStyle = seg.kind === 'kelvin' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(147, 197, 253, 0.75)';
+        targetCtx.fillStyle = seg.kind === 'kelvin' ? 'rgba(255, 255, 255, 0.88)' : 'rgba(147, 197, 253, 0.85)';
+        targetCtx.lineWidth = 1.5;
+        targetCtx.beginPath(); targetCtx.moveTo(p1.x, p1.y); targetCtx.lineTo(p2.x, p2.y); targetCtx.stroke();
+        const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x), hl = seg.kind === 'kelvin' ? 6 : 5;
         targetCtx.beginPath();
         targetCtx.moveTo(p2.x, p2.y);
-        targetCtx.lineTo(p2.x - 6 * Math.cos(ang - 0.5), p2.y - 6 * Math.sin(ang - 0.5));
-        targetCtx.lineTo(p2.x - 6 * Math.cos(ang + 0.5), p2.y - 6 * Math.sin(ang + 0.5));
-        targetCtx.closePath();
-        targetCtx.fill();
-      }
-    }
-
-    // Off-equatorial Rossby westward return arrows at +/- 11 deg
-    targetCtx.strokeStyle = 'rgba(147, 197, 253, 0.65)';
-    targetCtx.fillStyle = 'rgba(147, 197, 253, 0.8)';
-    for (const latSign of [-11, 11]) {
-      for (let i = 0; i < 5; i++) {
-        const baseLon = -175 + ((i * 19 - state.phase * 10 * dir) % 85 + 85) % 85;
-        const p1 = project(baseLon, latSign);
-        const p2 = project(baseLon - 6 * dir, latSign);
-        if (p1.z > 0.15 && p2.z > 0.15) {
-          targetCtx.beginPath();
-          targetCtx.moveTo(p1.x, p1.y);
-          targetCtx.lineTo(p2.x, p2.y);
-          targetCtx.stroke();
-        }
+        targetCtx.lineTo(p2.x - hl * Math.cos(ang - 0.5), p2.y - hl * Math.sin(ang - 0.5));
+        targetCtx.lineTo(p2.x - hl * Math.cos(ang + 0.5), p2.y - hl * Math.sin(ang + 0.5));
+        targetCtx.closePath(); targetCtx.fill();
       }
     }
   }
@@ -7612,20 +7555,30 @@ function renderSphere(targetCtx, cx, cy, R, useRelative, stepPx, detailed) {
   targetCtx.fill();
 }
 
+// Arrow segments in longitude. Kelvin waves always go east, Rossby waves always go west,
+// whatever the sign of the anomaly they carry.
+function arrowSegments(phase) {
+  const segs = [];
+  for (let i = 0; i < 9; i++) {
+    const lon1 = -175 + ((i * 13 + phase * 18) % 95 + 95) % 95;
+    segs.push({ kind: 'kelvin', lat: 0, lon1, lon2: lon1 + 7 });
+  }
+  for (const lat of [-6, 6]) for (let i = 0; i < 5; i++) {
+    const lon1 = -170 + ((i * 19 - phase * 6) % 85 + 85) % 85;
+    segs.push({ kind: 'rossby', lat, lon1, lon2: lon1 - 6 });
+  }
+  return segs;
+}
+
+const fmt = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2) + ' °C';
 function updateStats() {
-  const rawNino = computeSST(-145, 0, false);
-  const relNino = computeSST(-145, 0, true);
-  const bgVal = rawNino - relNino;
-
-  const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(2) + ' °C';
-  document.getElementById('statRaw').textContent = fmt(rawNino);
-  document.getElementById('statBg').textContent = fmt(bgVal);
-  document.getElementById('statRel').textContent = fmt(relNino);
-
-  const ph = Math.sin(state.phase);
-  document.getElementById('statPhase').textContent =
-    state.kelvinAmp < -0.3 ? 'Cool Upwelling' :
-    ph > 0.4 ? 'Eastward Surge' : ph < -0.4 ? 'Basin Recharge' : 'Equatorial Crest';
+  document.getElementById('statRaw').textContent = fmt(stats.box);
+  document.getElementById('statBg').textContent = fmt(stats.trop);
+  document.getElementById('statRel').textContent = fmt(stats.rel);
+  document.getElementById('statClass').textContent = classify(stats.box);
+  document.getElementById('statPhase').textContent = state.cycleOn ? cycleStage() : 'Held at preset';
+  document.getElementById('valAmp').textContent = (state.kelvinAmp >= 0 ? '+' : '−') + Math.abs(state.kelvinAmp).toFixed(2);
+  if (state.cycleOn) document.getElementById('sliderAmp').value = state.kelvinAmp;
 }
 
 function resize() {
@@ -7633,94 +7586,101 @@ function resize() {
   canvas.width = stage.clientWidth;
   canvas.height = stage.clientHeight;
 }
-window.addEventListener('resize', resize);
+window.addEventListener('resize', () => { resize(); drawStoreChart(); drawCycleChart(); });
 resize();
 
-// Drag rotation
 let dragging = false, lastX = 0, lastY = 0;
-canvas.addEventListener('pointerdown', e => {
-  dragging = true;
-  lastX = e.clientX;
-  lastY = e.clientY;
-});
+canvas.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
 window.addEventListener('pointermove', e => {
   if (!dragging) return;
-  const dx = e.clientX - lastX;
-  const dy = e.clientY - lastY;
-  lastX = e.clientX;
-  lastY = e.clientY;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
   state.rotLon -= dx * 0.0065;
   state.rotLat = Math.max(-1.15, Math.min(1.15, state.rotLat + dy * 0.0065));
 });
 window.addEventListener('pointerup', () => dragging = false);
 
-// Controls & Presets
 function applyPreset(key) {
   const p = presets[key];
   if (!p) return;
+  if (state.cycleOn) toggleCycle();
   state.preset = key;
-  state.kelvinAmp = p.amp;
   state.bgWarming = p.bg;
   state.phase = p.phase;
-  document.getElementById('sliderAmp').value = p.amp;
+  state.holdTarget = p.target;
+  state.kelvinAmp = ampForBox(p.target, p.bg, p.phase);
+  document.getElementById('sliderAmp').value = state.kelvinAmp;
   document.getElementById('sliderBg').value = p.bg;
-  document.getElementById('valAmp').textContent = (p.amp >= 0 ? '+' : '') + p.amp.toFixed(2) + ' °C';
-  document.getElementById('valBg').textContent = (p.bg >= 0 ? '+' : '') + p.bg.toFixed(2) + ' °C';
+  document.getElementById('valBg').textContent = (p.bg >= 0 ? '+' : '−') + Math.abs(p.bg).toFixed(2) + ' °C';
   document.getElementById('eventTitle').textContent = p.title;
   document.getElementById('eventDesc').textContent = p.desc;
-
-  document.querySelectorAll('.presets button').forEach(b => b.classList.remove('active'));
+  document.getElementById('obsLine').innerHTML = p.obs + ' The box mean here is set to <b>' + fmt(p.target) + '</b>.';
+  document.querySelectorAll('.presets button[id^="btn-"]').forEach(b => b.classList.remove('active'));
   const activeBtn = document.getElementById('btn-' + key);
   if (activeBtn) activeBtn.classList.add('active');
+  computeStats(); updateStats();
+}
+function clearPresetLabel() {
+  state.holdTarget = null;
+  document.querySelectorAll('.presets button[id^="btn-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('eventTitle').textContent = 'Custom settings';
+  document.getElementById('eventDesc').textContent = 'Set by the sliders; not tied to an observed event.';
+  document.getElementById('obsLine').textContent = '';
 }
 
 function toggleFrame() {
   state.relativeFrame = !state.relativeFrame;
-  document.getElementById('frameBadge').textContent = state.relativeFrame ? 'Frame: Relative Anomaly' : 'Frame: Absolute SST';
-  document.getElementById('frameBtn').textContent = state.relativeFrame ? '🌐 Frame: Relative' : '🌐 Frame: Absolute';
-  document.getElementById('modeShort').textContent = state.relativeFrame ? 'REL' : 'ABS';
-  document.getElementById('inset-label').textContent = state.relativeFrame ? 'Inset: Absolute Frame ⇄' : 'Inset: Relative Frame ⇄';
+  document.getElementById('frameBadge').textContent = state.relativeFrame ? 'Frame: Relative (minus tropical mean)' : 'Frame: Standard anomaly';
+  document.getElementById('frameBtn').textContent = state.relativeFrame ? '🌐 Frame: Relative' : '🌐 Frame: Standard';
+  document.getElementById('modeShort').textContent = state.relativeFrame ? 'REL' : 'STD';
+  document.getElementById('inset-label').textContent = state.relativeFrame ? 'Inset: Standard frame ⇄' : 'Inset: Relative frame ⇄';
 }
-
 function toggleCurrents() {
   state.showCurrents = !state.showCurrents;
   const btn = document.getElementById('currBtn');
-  btn.textContent = state.showCurrents ? '〰 Wave Currents: On' : '〰 Wave Currents: Off';
+  btn.textContent = state.showCurrents ? '〰 Wave arrows: On' : '〰 Wave arrows: Off';
   btn.classList.toggle('active', state.showCurrents);
+  document.getElementById('arrow-key').style.display = state.showCurrents ? '' : 'none';
 }
-
 function toggleNinoBox() {
   state.showNinoBox = !state.showNinoBox;
   const btn = document.getElementById('boxBtn');
   btn.textContent = state.showNinoBox ? '▭ Niño 3.4: On' : '▭ Niño 3.4: Off';
   btn.classList.toggle('active', state.showNinoBox);
 }
-
 function toggleSpin() {
   state.autoSpin = !state.autoSpin;
   const btn = document.getElementById('spinBtn');
   btn.textContent = state.autoSpin ? '⟳ Auto-Spin: On' : '⟳ Auto-Spin: Off';
   btn.classList.toggle('active', state.autoSpin);
 }
-
 function togglePause() {
   state.paused = !state.paused;
   const btn = document.getElementById('pauseBtn');
   btn.textContent = state.paused ? '▶ Resume' : '⏸ Pause';
   btn.classList.toggle('active', state.paused);
 }
-
-function toggleUI() {
-  document.body.classList.toggle('hide-ui');
+function toggleUI() { document.body.classList.toggle('hide-ui'); }
+function toggleDrawer() {
+  const d = document.getElementById('drawer');
+  d.classList.toggle('open');
+  document.getElementById('drawerBtn').classList.toggle('active', d.classList.contains('open'));
+  drawStoreChart(); drawCycleChart();
 }
+document.querySelectorAll('.dtab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.dtab').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('.dpane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + b.dataset.pane));
+  drawStoreChart(); drawCycleChart();
+}));
 
 document.getElementById('sliderAmp').addEventListener('input', e => {
-  state.kelvinAmp = parseFloat(e.target.value);
-  document.getElementById('valAmp').textContent = (state.kelvinAmp >= 0 ? '+' : '') + state.kelvinAmp.toFixed(2) + ' °C';
+  state.kelvinAmp = parseFloat(e.target.value); clearPresetLabel(); computeStats(); updateStats();
 });
 document.getElementById('sliderBg').addEventListener('input', e => {
   state.bgWarming = parseFloat(e.target.value);
-  document.getElementById('valBg').textContent = (state.bgWarming >= 0 ? '+' : '') + state.bgWarming.toFixed(2) + ' °C';
+  document.getElementById('valBg').textContent = (state.bgWarming >= 0 ? '+' : '−') + Math.abs(state.bgWarming).toFixed(2) + ' °C';
+  if (!state.cycleOn) clearPresetLabel();
+  computeStats(); updateStats();
 });
 document.getElementById('sliderSpeed').addEventListener('input', e => {
   state.waveSpeed = parseFloat(e.target.value);
@@ -7739,7 +7699,6 @@ function toggleSound() {
   const btn = document.getElementById('soundBtn');
   btn.textContent = state.soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
   btn.classList.toggle('active', state.soundOn);
-
   if (state.soundOn && !audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const bufSize = audioCtx.sampleRate * 2;
@@ -7753,19 +7712,11 @@ function toggleSound() {
       data[i] *= 2.5;
     }
     const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
+    noise.buffer = buffer; noise.loop = true;
     const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 260;
-
-    waveGain = audioCtx.createGain();
-    waveGain.gain.value = 0.06;
-
-    noise.connect(filter);
-    filter.connect(waveGain);
-    waveGain.connect(audioCtx.destination);
+    filter.type = 'lowpass'; filter.frequency.value = 260;
+    waveGain = audioCtx.createGain(); waveGain.gain.value = 0.06;
+    noise.connect(filter); filter.connect(waveGain); waveGain.connect(audioCtx.destination);
     noise.start();
   }
   if (audioCtx) {
@@ -7774,32 +7725,305 @@ function toggleSound() {
   }
 }
 
-let lastTime = performance.now();
+// ---------------- Her store (Gap.lean) ----------------
+const keep = (u, x0, t) => x0 + u * t;
+const breathe = (r, u, x0, t) => u / r + (x0 - u / r) * Math.exp(-r * t);
+const store = (r, u, x0, t) => r === 0 ? keep(u, x0, t) : breathe(r, u, x0, t);
+// RK4 for dx/dt = f(x)
+function rk4Scalar(f, x, dt) {
+  const k1 = f(x), k2 = f(x + dt / 2 * k1), k3 = f(x + dt / 2 * k2), k4 = f(x + dt * k3);
+  return x + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+}
+
+// ---------------- Jin (1997) recharge oscillator ----------------
+const JIN = { c: 1, gamma: 0.75, r: 0.25, alpha: 0.125, b0: 2.5, tUnitMonths: 2, TUnit: 7.5, hUnit: 150 };
+let mu = 0.6667;
+function roParams(m) {
+  const b = JIN.b0 * m, R = JIN.gamma * b - JIN.c;
+  const tr = R - JIN.r, det = -R * JIN.r + JIN.gamma * JIN.alpha * b;
+  const disc = tr * tr / 4 - det;
+  const omega = disc < 0 ? Math.sqrt(-disc) : 0;
+  return { b, R, tr, det, sigma: tr / 2, omega, periodMonths: omega > 0 ? 2 * Math.PI / omega * JIN.tUnitMonths : Infinity };
+}
+function roDeriv(T, h, m) {
+  const b = JIN.b0 * m, R = JIN.gamma * b - JIN.c;
+  return [R * T + JIN.gamma * h, -JIN.r * h - JIN.alpha * b * T];
+}
+function roStep(s, dt, m) {
+  const [a1, b1] = roDeriv(s.T, s.h, m);
+  const [a2, b2] = roDeriv(s.T + dt / 2 * a1, s.h + dt / 2 * b1, m);
+  const [a3, b3] = roDeriv(s.T + dt / 2 * a2, s.h + dt / 2 * b2, m);
+  const [a4, b4] = roDeriv(s.T + dt * a3, s.h + dt * b3, m);
+  s.T += dt / 6 * (a1 + 2 * a2 + 2 * a3 + a4);
+  s.h += dt / 6 * (b1 + 2 * b2 + 2 * b3 + b4);
+  s.t += dt;
+}
+const RO_START = { T: 2.0 / 7.5, h: 0 };
+let ro = { T: RO_START.T, h: RO_START.h, t: 0 }, roHist = [];
+function restartCycle() { ro = { T: RO_START.T, h: RO_START.h, t: 0 }; roHist = [{ t: 0, T: ro.T, h: ro.h }]; drawCycleChart(); }
+restartCycle();
+function cycleStage() {
+  const Tc = ro.T * JIN.TUnit, dh = roDeriv(ro.T, ro.h, mu)[1];
+  const fill = dh < 0 ? 'store draining' : 'store filling';
+  if (Tc >= 0.5) return 'El Niño, ' + fill;
+  if (Tc <= -0.5) return 'La Niña, ' + fill;
+  return 'Neutral, ' + fill;
+}
+function toggleCycle() {
+  state.cycleOn = !state.cycleOn;
+  const btn = document.getElementById('cycleBtn');
+  btn.textContent = state.cycleOn ? '↻ Run the cycle on the globe: On' : '↻ Run the cycle on the globe: Off';
+  btn.classList.toggle('active', state.cycleOn);
+  document.getElementById('sliderAmp').disabled = state.cycleOn;
+  if (!state.cycleOn) { clearPresetLabel(); return; }
+  state.holdTarget = null;
+  {
+    document.querySelectorAll('.presets button[id^="btn-"]').forEach(b => b.classList.remove('active'));
+    document.getElementById('eventTitle').textContent = 'Recharge cycle (Jin 1997)';
+    document.getElementById('eventDesc').textContent = 'The Niño 3.4 box mean follows 7.5·T °C from the linear recharge oscillator; the pattern shapes are drawn.';
+    document.getElementById('obsLine').textContent = 'A model run, not an observed event.';
+  }
+}
+function updateCycleReadouts() {
+  const p = roParams(mu);
+  document.getElementById('vMu').textContent = mu.toFixed(3);
+  document.getElementById('cR').textContent = p.R.toFixed(3) + ' per 2 months';
+  const growYr = p.sigma / JIN.tUnitMonths * 12;
+  document.getElementById('cGrow').textContent = (growYr >= 0 ? '+' : '−') + Math.abs(growYr).toFixed(3) + (Math.abs(growYr) < 5e-4 ? ' (neither)' : growYr > 0 ? ' (grows)' : ' (fades)');
+  document.getElementById('cPer').textContent = isFinite(p.periodMonths) ? p.periodMonths.toFixed(1) + ' months = ' + (p.periodMonths / 12).toFixed(2) + ' years' : 'no cycle';
+  document.getElementById('cMuc').textContent = ((JIN.c + JIN.r) / (JIN.gamma * JIN.b0)).toFixed(4) + ' = 2/3';
+  document.getElementById('cTime').textContent = (ro.t * JIN.tUnitMonths / 12).toFixed(1) + ' years';
+}
+document.getElementById('sMu').addEventListener('input', e => { mu = parseFloat(e.target.value); updateCycleReadouts(); updateStoreReadouts(); drawStoreChart(); });
+
+// ---------------- Store tab readouts (real units: m, months) ----------------
+function storeInputs() {
+  const Ts = parseFloat(document.getElementById('sTs').value);
+  const r = parseFloat(document.getElementById('sR').value);
+  const x0 = parseFloat(document.getElementById('sX').value);
+  // u = −α·b·T* in Jin units (h units per 2 months), converted to meters per month
+  const uJin = -JIN.alpha * JIN.b0 * mu * (Ts / JIN.TUnit);
+  const u = uJin * JIN.hUnit / JIN.tUnitMonths;
+  return { Ts, r, x0, u };
+}
+function storeNumeric(r, u, x0, tEnd, dt) {
+  let x = x0; const n = Math.round(tEnd / dt);
+  for (let k = 0; k < n; k++) x = rk4Scalar(v => u - r * v, x, dt);
+  return x;
+}
+function updateStoreReadouts() {
+  const { Ts, r, x0, u } = storeInputs();
+  document.getElementById('vTs').textContent = (Ts >= 0 ? '+' : '−') + Math.abs(Ts).toFixed(1) + ' °C';
+  document.getElementById('vR').textContent = r.toFixed(3) + ' per month' + (Math.abs(r - 0.125) < 1e-9 ? ' (Jin)' : '');
+  document.getElementById('vX').textContent = x0.toFixed(0) + ' m';
+  document.getElementById('oU').textContent = (u >= 0 ? '+' : '−') + Math.abs(u).toFixed(2) + ' m per month' + (u > 0 ? ' (filling)' : u < 0 ? ' (draining)' : '');
+  document.getElementById('oLevel').textContent = r > 0 ? (u / r).toFixed(2) + ' m' : 'none: grows without end';
+  const hf = store(r, u, x0, 36), hn = storeNumeric(r, u, x0, 36, 0.05);
+  document.getElementById('oH36').textContent = hf.toFixed(4) + ' m';
+  document.getElementById('oH36n').textContent = hn.toFixed(4) + ' m';
+  let lev = '–';
+  if (r > 0) {
+    let ok = true;
+    for (let t = 0; t <= 120; t += 0.5) if (Math.abs(store(r, u, x0, t) - u / r) > Math.abs(x0 - u / r) + 1e-12) ok = false;
+    lev = ok ? '<span class="ok">yes, up to 120 months</span>' : '<span class="bad">no</span>';
+  } else lev = 'not stated for r = 0';
+  document.getElementById('oLevels').innerHTML = lev;
+  let lean;
+  if (u > 0 && r > 0) lean = '<code>finite_iff_gap</code>: bounded, since r &gt; 0';
+  else if (u > 0 && r === 0) lean = '<code>finite_iff_gap</code>, <code>keep_unbounded</code>: not bounded';
+  else if (u === 0) lean = r > 0 ? '<code>input_ended</code>: fades as x₀·e<sup>−rt</sup>' : 'nothing moves';
+  else lean = r > 0 ? '<code>breathe_levels</code> (any sign of u)' : 'falls without end (sign flip of <code>keep_unbounded</code>)';
+  document.getElementById('oLean').innerHTML = lean;
+  const p = roParams(mu);
+  document.getElementById('oRnote').textContent = 'At the current coupling μ = ' + mu.toFixed(3) + ', R = ' + p.R.toFixed(3) +
+    (p.R < 0 ? ' < 0, so the temperature alone would level off.' : ' ≥ 0, so the temperature alone would not level off; only the draining of h turns it back.');
+}
+['sTs', 'sR', 'sX'].forEach(id => document.getElementById(id).addEventListener('input', () => { updateStoreReadouts(); drawStoreChart(); }));
+
+function prepChart(id) {
+  const c = document.getElementById(id);
+  const w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) return null;
+  const dpr = window.devicePixelRatio || 1;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+function axes(g, w, h, pad, xmax, ymin, ymax, xlab, ylab) {
+  g.strokeStyle = 'rgba(148,178,224,0.25)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(pad.l, pad.t); g.lineTo(pad.l, h - pad.b); g.lineTo(w - pad.r, h - pad.b); g.stroke();
+  const y0 = pad.t + (ymax - 0) / (ymax - ymin) * (h - pad.t - pad.b);
+  if (ymin < 0 && ymax > 0) { g.setLineDash([2, 3]); g.beginPath(); g.moveTo(pad.l, y0); g.lineTo(w - pad.r, y0); g.stroke(); g.setLineDash([]); }
+  g.fillStyle = '#94a3b8'; g.font = '10px system-ui, sans-serif';
+  g.fillText(ylab, pad.l + 4, pad.t + 10); g.fillText(xlab, w - pad.r - g.measureText(xlab).width, h - 4);
+  g.fillText(ymax.toFixed(0), 2, pad.t + 8); g.fillText(ymin.toFixed(0), 2, h - pad.b);
+}
+function drawStoreChart() {
+  const C = prepChart('storeChart'); if (!C) return;
+  const { g, w, h } = C, pad = { l: 30, r: 8, t: 8, b: 16 };
+  const { r, x0, u } = storeInputs(), tMax = 72;
+  let vals = [];
+  for (let t = 0; t <= tMax; t += 1) vals.push(store(r, u, x0, t));
+  if (r > 0) vals.push(u / r, x0 + 2 * (u / r - x0));
+  let ymax = Math.max(5, ...vals), ymin = Math.min(-5, ...vals);
+  ymax = Math.ceil(ymax / 5) * 5; ymin = Math.floor(ymin / 5) * 5;
+  const X = t => pad.l + t / tMax * (w - pad.l - pad.r), Y = v => pad.t + (ymax - v) / (ymax - ymin) * (h - pad.t - pad.b);
+  axes(g, w, h, pad, tMax, ymin, ymax, 'months', 'h (m)');
+  g.save(); g.beginPath(); g.rect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b); g.clip();
+  g.strokeStyle = '#64748b'; g.lineWidth = 1.5; g.beginPath();
+  for (let t = 0; t <= tMax; t += 1) { const p = [X(t), Y(keep(u, x0, t))]; t ? g.lineTo(...p) : g.moveTo(...p); } g.stroke();
+  g.restore();
+  if (r > 0) { g.strokeStyle = '#38bdf8'; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(X(0), Y(u / r)); g.lineTo(X(tMax), Y(u / r)); g.stroke(); g.setLineDash([]); }
+  g.strokeStyle = '#f97316'; g.lineWidth = 2.2; g.beginPath();
+  for (let t = 0; t <= tMax; t += 0.5) { const p = [X(t), Y(store(r, u, x0, t))]; t ? g.lineTo(...p) : g.moveTo(...p); } g.stroke();
+  g.fillStyle = '#4ade80'; let x = x0;
+  for (let t = 0; t <= tMax; t += 6) { g.beginPath(); g.arc(X(t), Y(x), 2.6, 0, 2 * Math.PI); g.fill(); x = storeNumeric(r, u, x, 6, 0.05); }
+}
+function drawCycleChart() {
+  const C = prepChart('cycleChart'); if (!C) return;
+  const { g, w, h } = C, pad = { l: 30, r: 8, t: 8, b: 16 };
+  const span = 120; // months shown
+  const tNow = ro.t * JIN.tUnitMonths, t0 = Math.max(0, tNow - span);
+  const ymax = 5, ymin = -5;
+  const X = t => pad.l + (t - t0) / span * (w - pad.l - pad.r), Y = v => pad.t + (ymax - v) / (ymax - ymin) * (h - pad.t - pad.b);
+  axes(g, w, h, pad, span, ymin, ymax, 'months', '°C, m÷10');
+  g.strokeStyle = 'rgba(148,163,184,0.6)'; g.setLineDash([3, 3]);
+  for (const v of [0.5, -0.5]) { g.beginPath(); g.moveTo(pad.l, Y(v)); g.lineTo(w - pad.r, Y(v)); g.stroke(); } g.setLineDash([]);
+  const pts = roHist.filter(p => p.t * JIN.tUnitMonths >= t0);
+  for (const [key, col, sc] of [['h', '#38bdf8', JIN.hUnit / 10], ['T', '#f97316', JIN.TUnit]]) {
+    g.strokeStyle = col; g.lineWidth = 2; g.beginPath();
+    pts.forEach((p, i) => { const q = [X(p.t * JIN.tUnitMonths), Y(Math.max(ymin, Math.min(ymax, p[key] * sc)))]; i ? g.lineTo(...q) : g.moveTo(...q); });
+    g.stroke();
+  }
+}
+// ---------------- Run checks ----------------
+function runPageChecks() {
+  const results = [];
+  const check = (name, ok, detail) => results.push({ name, ok: !!ok, detail: detail || '' });
+
+  // 1. Store formula and its derivative (breathe_deriv), against a step-by-step solution
+  let maxErr = 0, dErr = 0;
+  for (const r of [0.02, 0.125, 0.25, 1]) for (const u of [2, 0.5, -1.5]) for (const x0 of [-20, 0, 15]) {
+    maxErr = Math.max(maxErr, Math.abs(storeNumeric(r, u, x0, 36, 0.02) - breathe(r, u, x0, 36)));
+    for (const t of [0.5, 5, 30]) { const e = 1e-5, dn = (breathe(r, u, x0, t + e) - breathe(r, u, x0, t - e)) / (2 * e); dErr = Math.max(dErr, Math.abs(dn - (u - r * breathe(r, u, x0, t)))); }
+  }
+  check('Store formula u/r + (x₀ − u/r)e^(−rt) equals the step-by-step solution of dh/dt = u − r·h', maxErr < 1e-6, `largest difference ${maxErr.toExponential(1)} m at 36 months`);
+  check('The store changes at the rate u − r·store (breathe_deriv)', dErr < 1e-5, `largest difference ${dErr.toExponential(1)}`);
+  // 2. Levelling (breathe_levels), any sign of u
+  let levOk = true;
+  for (const r of [0, 0.01, 0.125, 0.5]) for (const u of [2, -2, 0.3]) for (const x0 of [-25, 0, 25]) {
+    if (r === 0) continue;
+    for (let t = 0; t <= 400; t += 0.5) if (Math.abs(breathe(r, u, x0, t) - u / r) > Math.abs(x0 - u / r) + 1e-9) levOk = false;
+  }
+  check('Never farther from u/r than at the start, for either sign of u (breathe_levels)', levOk, '27 cases, t up to 400 months');
+  // 3. finite_iff_gap: bounded iff r > 0 when u > 0
+  const u = 2.08, x0 = -10;
+  let unb = true; for (const M of [100, 1e4, 1e7]) { const t = Math.abs(M - x0) / u + 1; if (!(store(0, u, x0, t) > M)) unb = false; }
+  let bnd = true; for (const r of [0.01, 0.125, 0.25]) { const M = Math.abs(u / r) + Math.abs(x0 - u / r); for (let t = 0; t <= 5000; t += 1) if (Math.abs(store(r, u, x0, t)) > M + 1e-9) bnd = false; }
+  check('With r = 0 the store passes every level; with r > 0 it stays within |u/r| + |x₀ − u/r| (finite_iff_gap)', unb && bnd, 'levels 100, 10 000, 10 000 000; r = 0.01, 0.125, 0.25 up to 5000 months');
+  // 4. input_ended, steady_input_stays
+  let ieOk = true; for (const r of [0.05, 0.25]) for (const t of [0, 3, 40]) { if (Math.abs(breathe(r, 0, 12, t) - 12 * Math.exp(-r * t)) > 1e-12) ieOk = false; if (Math.abs(breathe(r, u, u / r, t) - u / r) > 1e-12) ieOk = false; }
+  check('With no push the store fades as x₀e^(−rt); started at u/r it stays (input_ended, steady_input_stays)', ieOk, '');
+  // 5. Jin's h equation with T held fixed is the Lean store
+  let jinErr = 0;
+  for (const Ts of [-2, -0.5, 1.5]) for (const m of [0.6, 2 / 3, 0.72]) {
+    const uJin = -JIN.alpha * JIN.b0 * m * (Ts / JIN.TUnit);
+    let s = { T: Ts / JIN.TUnit, h: 0.05, t: 0 };
+    const hold = s.T;
+    for (let k = 0; k < 1000; k++) {
+      const f = hh => -JIN.r * hh - JIN.alpha * JIN.b0 * m * hold; s.h = rk4Scalar(f, s.h, 0.01);
+    }
+    jinErr = Math.max(jinErr, Math.abs(s.h - breathe(JIN.r, uJin, 0.05, 10)));
+  }
+  check('Jin\u2019s dh/dt = −r·h − α·b·T with T held fixed is the Lean store with u = −α·b·T*', jinErr < 1e-9, `largest difference ${jinErr.toExponential(1)} (Jin units)`);
+  // 6. Recharge oscillator facts
+  const muc = (JIN.c + JIN.r) / (JIN.gamma * JIN.b0), pc = roParams(muc);
+  check('Jin\u2019s parameters give a cycle that neither grows nor fades at μ = 2/3', Math.abs(muc - 2 / 3) < 1e-12 && Math.abs(pc.tr) < 1e-12, `μ = ${muc.toFixed(6)}, R − r = ${pc.tr.toExponential(1)}`);
+  check('Period at μ = 2/3 is 4π·√(32/3) ≈ 41.0 months, inside 2 to 7 years', Math.abs(pc.periodMonths - 4 * Math.PI * Math.sqrt(32 / 3)) < 1e-9 && pc.periodMonths > 24 && pc.periodMonths < 84, `${pc.periodMonths.toFixed(2)} months = ${(pc.periodMonths / 12).toFixed(2)} years`);
+  let sim = { T: RO_START.T, h: 0, t: 0 }, prev = sim.T, ups = [], peakFirst = 0, peakLast = 0;
+  for (let k = 0; k < 30000; k++) {
+    roStep(sim, 0.005, muc);
+    if (prev < 0 && sim.T >= 0) ups.push(sim.t);
+    if (sim.t < 20.5) peakFirst = Math.max(peakFirst, Math.abs(sim.T));
+    if (sim.t > 130) peakLast = Math.max(peakLast, Math.abs(sim.T));
+    prev = sim.T;
+  }
+  const simPer = (ups[ups.length - 1] - ups[0]) / (ups.length - 1) * JIN.tUnitMonths;
+  check('A step-by-step run at μ = 2/3 repeats every 41.0 months and keeps its size', Math.abs(simPer - pc.periodMonths) < 0.05 && Math.abs(peakLast / peakFirst - 1) < 0.01, `${simPer.toFixed(2)} months over ${ups.length - 1} cycles; size ratio ${(peakLast / peakFirst).toFixed(4)}`);
+  const pg = roParams(0.72), pf = roParams(0.6);
+  check('Stronger coupling grows, weaker coupling fades, and the period stays within 2 to 7 years', pg.sigma > 0 && pf.sigma < 0 && [pg, pf].every(p => p.periodMonths > 24 && p.periodMonths < 84), `μ = 0.72: ${(pg.periodMonths / 12).toFixed(2)} yr; μ = 0.6: ${(pf.periodMonths / 12).toFixed(2)} yr`);
+  // 7. Globe numbers
+  let inBox = BOX_PTS.every(([lo, la]) => lo >= -170 && lo <= -120 && la >= -5 && la <= 5) && BOX_PTS.length > 500;
+  check('Niño 3.4 box samples lie in 5°N–5°S, 170°W–120°W', inBox, `${BOX_PTS.length} ocean points, 1° apart`);
+  let s = 0, w = 0, s2 = 0, w2 = 0;
+  for (let la = -5; la <= 5; la += 1) for (let lo = -170; lo <= -120; lo += 1) if (!isLand(lo, la)) { const c = Math.cos(la * Math.PI / 180); s += c * field(lo, la, state.kelvinAmp, state.bgWarming, state.phase); w += c; }
+  for (let la = -20; la <= 20; la += 2) for (let lo = -179; lo <= 180; lo += 2) if (!isLand(lo, la)) { const c = Math.cos(la * Math.PI / 180); s2 += c * field(lo, la, state.kelvinAmp, state.bgWarming, state.phase); w2 += c; }
+  computeStats(); updateStats();
+  const shown = [document.getElementById('statRaw').textContent, document.getElementById('statBg').textContent, document.getElementById('statRel').textContent];
+  if (state.holdTarget != null) { const pv = presets[state.preset]; check('The held preset still shows its observed value after the animation has run', Math.abs(stats.box - pv.target) < 1e-9 && shown[0] === fmt(pv.target), `${shown[0]} for ${pv.title}`); }
+  check('Shown box mean, tropical mean and relative value match a fresh count', shown[0] === fmt(s / w) && shown[1] === fmt(s2 / w2) && shown[2] === fmt(s / w - s2 / w2), shown.join(', '));
+  const cls = [[0.49, 'Neutral'], [0.5, 'El Niño, weak'], [1.2, 'El Niño, moderate'], [1.7, 'El Niño, strong'], [2.5, 'El Niño, very strong'], [-0.5, 'La Niña, weak'], [-1.85, 'La Niña, strong'], [-0.3, 'Neutral']];
+  check('Labels follow the ±0.5 °C threshold and 0.5 °C strength steps', cls.every(([v, l]) => classify(v) === l) && document.getElementById('statClass').textContent === classify(stats.box), '8 test values and the live value');
+  let pErr = 0;
+  for (const k of Object.keys(presets)) { const p = presets[k]; pErr = Math.max(pErr, Math.abs(boxMean(ampForBox(p.target, p.bg, p.phase), p.bg, p.phase) - p.target)); }
+  check('Each preset\u2019s box mean equals its observed Niño 3.4 value', pErr < 1e-9, `largest difference ${pErr.toExponential(1)} °C over 6 presets`);
+  // 8. Color key and arrows
+  const lc = document.getElementById('legendCanvas').getContext('2d');
+  let legOk = true;
+  for (const t of LEG.ticks) { const d = lc.getImageData(8, Math.round(legY(t)), 1, 1).data, c = sstToRGB(t); if (Math.max(...[0, 1, 2].map(i => Math.abs(d[i] - c[i]))) > 12) legOk = false; }
+  check('Color key ticks sit on the colors the globe uses for those values', legOk, LEG.ticks.join(', ') + ' °C');
+  let arrOk = true;
+  for (const ph of [0, 1.3, 4.0]) for (const seg of arrowSegments(ph)) { if (seg.kind === 'kelvin' && !(seg.lon2 > seg.lon1 && seg.lat === 0)) arrOk = false; if (seg.kind === 'rossby' && !(seg.lon2 < seg.lon1 && seg.lat !== 0)) arrOk = false; }
+  const savedAmp = state.kelvinAmp; state.kelvinAmp = -1.5; const coolSegs = arrowSegments(state.phase); state.kelvinAmp = savedAmp;
+  if (coolSegs.some(sg => sg.kind === 'kelvin' && sg.lon2 < sg.lon1)) arrOk = false;
+  check('Kelvin arrows point east and Rossby arrows west, for warm and cool waves', arrOk, '');
+  // 9. Live store readout
+  const si = storeInputs();
+  check('Tab 1 readout at 36 months matches the Lean formula', document.getElementById('oH36').textContent === store(si.r, si.u, si.x0, 36).toFixed(4) + ' m', document.getElementById('oH36').textContent);
+
+  const pass = results.filter(r => r.ok).length;
+  const sum = document.getElementById('check-summary');
+  sum.textContent = `${pass}/${results.length} passed`; sum.className = pass === results.length ? 'check-pass' : 'check-fail';
+  document.getElementById('check-out').innerHTML = results.map(r => `<div class="${r.ok ? 'check-pass' : 'check-fail'}">${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? ` <span style="color:var(--muted)">(${r.detail})</span>` : ''}</div>`).join('');
+  window.__checkResults = results;
+  return results;
+}
+document.getElementById('run-checks-btn').addEventListener('click', runPageChecks);
+
+// ---------------- Main loop ----------------
+let lastTime = performance.now(), chartTimer = 0;
 function loop(now) {
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
-
   if (!state.paused) {
     state.time += dt;
     state.phase += dt * 0.9 * state.waveSpeed;
-    if (state.autoSpin && !dragging) {
-      state.rotLon += dt * 0.22;
-    }
+    if (state.autoSpin && !dragging) state.rotLon += dt * 0.22;
+    // 1 Jin time unit (2 months) per 1.25 s at 1x
+    const steps = 4, h = dt * 0.8 * state.waveSpeed / steps;
+    for (let k = 0; k < steps; k++) roStep(ro, h, mu);
+    if (Math.abs(ro.T) * JIN.TUnit > 6) restartCycle();
+    const last = roHist[roHist.length - 1];
+    if (!last || ro.t - last.t > 0.1) { roHist.push({ t: ro.t, T: ro.T, h: ro.h }); if (roHist.length > 2000) roHist.shift(); }
+    if (state.cycleOn) state.kelvinAmp = ampForBox(ro.T * JIN.TUnit, state.bgWarming, state.phase);
+    else if (state.holdTarget != null) state.kelvinAmp = ampForBox(state.holdTarget, state.bgWarming, state.phase);
   }
-
+  computeStats();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const R = Math.min(canvas.width, canvas.height) * 0.39;
-  const stepMain = dragging ? 3 : 2;
-  renderSphere(ctx, canvas.width * 0.5, canvas.height * 0.5, R, state.relativeFrame, stepMain, true);
-
+  renderSphere(ctx, canvas.width * 0.5, canvas.height * 0.5, R, state.relativeFrame, dragging ? 3 : 2, true);
   ictx.clearRect(0, 0, insetCanvas.width, insetCanvas.height);
   renderSphere(ictx, 63, 63, 56, !state.relativeFrame, 3, false);
-
   updateStats();
+  chartTimer += dt;
+  if (chartTimer > 0.2) { chartTimer = 0; if (document.getElementById('drawer').classList.contains('open')) drawCycleChart(); updateCycleReadouts(); }
   requestAnimationFrame(loop);
 }
 
+drawLegend();
 applyPreset('2026');
+updateStoreReadouts();
+updateCycleReadouts();
 requestAnimationFrame(loop);
 </script>
 </body>
