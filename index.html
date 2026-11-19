@@ -287,6 +287,17 @@ Third-party material is governed by its own terms.
   .pn-arrow:hover { background: var(--accent); color: #000; border-color: var(--accent); }
   .pn-list { position: absolute; z-index: 1000; top: calc(100% + 6px); left: 0; right: 0; min-width: 300px; max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; background: #10141e; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); padding: 6px; }
   .pn-list[hidden] { display: none; }
+  .pn-full, .pn-heavy-head, .pn-opt[hidden], .pn-group[hidden] { display: none; }
+  html.lite-able .pn-full { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin: 2px 0 4px; padding: 10px; min-height: 40px; border: 1px solid var(--border); border-radius: 8px; background: #161c28; color: var(--text, #e6e6f0); font-size: 0.9rem; cursor: pointer; text-align: left; }
+  .pn-full .pn-sw { flex: none; width: 34px; height: 20px; border-radius: 999px; background: #2a3242; position: relative; transition: background .15s; }
+  .pn-full .pn-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; transition: left .15s; }
+  .pn-full[aria-checked="true"] .pn-sw { background: var(--accent); }
+  .pn-full[aria-checked="true"] .pn-sw::after { left: 17px; background: #000; }
+  .pn-full small { display: block; color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
+  html.lite .pn-heavy-head { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 8px; padding: 10px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: left; }
+  .pn-note { display: none; }
+  html.lite .pn-note { display: block; font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+  html.lite .pn-opt[aria-selected="true"] .pn-note { color: #000; }
   .pn-group { padding: 10px 10px 4px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .pn-opt { display: flex; gap: 8px; align-items: baseline; width: 100%; padding: 9px 10px; min-height: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--text, #e6e6f0); font-size: 0.95rem; text-align: left; cursor: pointer; }
   .pn-opt .pn-num { flex: none; min-width: 2em; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -22125,6 +22136,79 @@ loop();
     o.addEventListener('click', () => { choose(k); close(true); });
     list.appendChild(o); opts.push(o);
   }
+  // ---- Lite phone version ----
+  // On small screens the menu lists the lighter entries; the heavy ones sit in a collapsed group at the end, each still one tap away.
+  // Measured at 390x844 with touch and a 4x slower CPU (frames per second while running, and anything wider than the screen).
+  // "Full version" in the menu (remembered) or ?full=1 lists everything as on a computer. Links like #23 open any entry.
+  const HEAVY = {
+    blackhole: 'Black hole: slow on phones, and two buttons run off the screen',
+    ocean: 'Slow on phones (about 23 frames a second)',
+    fourd: '4D drawing: heavy for phones',
+    polychora: '4D drawing: heavy for phones',
+    fireflies: 'Slow on phones (about 23 frames a second)',
+    nonorient: 'Slow on phones (about 21 frames a second)',
+    penteract: '5D drawing: very slow on phones (about 3 frames a second)',
+    leech: '24D drawing: slow on phones (about 12 frames a second)',
+    pentlite: '5D drawing: slow on phones (about 23 frames a second)',
+    hopf: '4D drawing: slow on phones (about 23 frames a second)',
+    bh2: 'Black hole: slow on phones (about 35 frames a second)',
+    bh3: 'Black hole: heavy for phones',
+    e8studio: 'E₈ drawing: heavy for phones',
+    e8insp: 'E₈ drawing: a little wider than a phone screen',
+    e8studio2: 'E₈ drawing: heavy for phones'
+  };
+  const FULL_KEY = 'sparkle.full';
+  let fullParam = /[?&]full=1(&|$)/.test(location.search);
+  let fullPref = (() => { try { return localStorage.getItem(FULL_KEY) === '1'; } catch (e) { return false; } })();
+  const smallScreen = () => innerWidth < 760 || (matchMedia('(pointer: coarse)').matches && Math.min(innerWidth, innerHeight) < 760);
+  function liteOn() { return smallScreen() && !fullParam && !fullPref; }
+  const homeOrder = [...list.children];   // the menu as built above (the full version)
+  opts.forEach(o => {
+    const n = HEAVY[o.dataset.pick];
+    if (n) { const sp = document.createElement('span'); sp.className = 'pn-note'; sp.textContent = n; o.lastChild.appendChild(sp); }
+  });
+  const fullBtn = document.createElement('button');
+  fullBtn.type = 'button'; fullBtn.className = 'pn-full'; fullBtn.setAttribute('role', 'switch');
+  fullBtn.innerHTML = '<span>Full version<small>Show every entry here, including the heavy ones</small></span><span class="pn-sw" aria-hidden="true"></span>';
+  fullBtn.addEventListener('click', () => {
+    fullPref = liteOn();   // turning it off also overrides ?full=1 for this visit
+    fullParam = false;
+    try { localStorage.setItem(FULL_KEY, fullPref ? '1' : '0'); } catch (e) {}
+    applyLite();
+  });
+  const heavyHead = document.createElement('button');
+  heavyHead.type = 'button'; heavyHead.className = 'pn-heavy-head'; heavyHead.setAttribute('aria-expanded', 'false');
+  let heavyOpen = false;
+  heavyHead.addEventListener('click', () => { heavyOpen = !heavyOpen; applyLite(); });
+  function applyLite() {
+    const lite = liteOn();
+    document.documentElement.classList.toggle('lite-able', smallScreen());
+    document.documentElement.classList.toggle('lite', lite);
+    fullBtn.setAttribute('aria-checked', String(!lite));
+    if (lite && HEAVY[current()]) heavyOpen = true;   // the entry showing now stays in view
+    const heavyOpts = opts.filter(o => HEAVY[o.dataset.pick]).sort((a, b) => order.indexOf(a.dataset.pick) - order.indexOf(b.dataset.pick));
+    if (lite) {
+      list.append(fullBtn, ...homeOrder.filter(el => !(el.dataset.pick && HEAVY[el.dataset.pick])), heavyHead, ...heavyOpts);
+      // a group whose entries all moved down gets hidden
+      homeOrder.forEach(el => {
+        if (!el.classList.contains('pn-group')) return;
+        let n = el.nextElementSibling, any = false;
+        while (n && n.classList.contains('pn-opt')) { if (!HEAVY[n.dataset.pick]) any = true; n = n.nextElementSibling; }
+        el.hidden = !any;
+      });
+      heavyOpts.forEach(o => { o.hidden = !heavyOpen; });
+      heavyHead.setAttribute('aria-expanded', String(heavyOpen));
+      heavyHead.innerHTML = '<span>Best on a computer for now (' + heavyOpts.length + ')</span><span aria-hidden="true">' + (heavyOpen ? '▾' : '▸') + '</span>';
+    } else {
+      list.append(fullBtn, ...homeOrder);
+      homeOrder.forEach(el => { el.hidden = false; });
+    }
+    opts.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+  }
+  applyLite();
+  let wasSmall = smallScreen();
+  window.addEventListener('resize', () => { if (smallScreen() !== wasSmall) { wasSmall = smallScreen(); applyLite(); } });
+
   let focusI = -1;
   function current() { const a = document.querySelector('.tabs .tab.active'); return a ? a.dataset.mode : order[0]; }
   function sync() {
@@ -22138,7 +22222,9 @@ loop();
     if (k !== current()) byKey[k].click(); else sync();
     if (!fromHash && history.replaceState) history.replaceState(null, '', '#' + k);
   }
+  const vis = () => opts.filter(o => !o.hidden);   // rows that are showing (the lite phone version hides some)
   function setFocus(i) {
+    const opts = vis();
     opts.forEach(o => o.classList.remove('pn-focus'));
     focusI = (i + opts.length) % opts.length;
     const o = opts[focusI]; o.classList.add('pn-focus'); o.focus({ preventScroll: true });
@@ -22149,9 +22235,9 @@ loop();
     if (!list.hidden) return;
     document.documentElement.style.setProperty('--pn-top', Math.round(menuBtn.getBoundingClientRect().bottom + 6) + 'px');
     list.hidden = false; menuBtn.setAttribute('aria-expanded', 'true');
-    const i = opts.findIndex(o => o.dataset.pick === current());
+    const i = vis().findIndex(o => o.dataset.pick === current());
     setFocus(i < 0 ? 0 : i);
-    opts[focusI].scrollIntoView({ block: 'center' });
+    vis()[focusI].scrollIntoView({ block: 'center' });
   }
   function close(refocus) {
     if (list.hidden) return;
@@ -22166,17 +22252,17 @@ loop();
     if (e.key === 'ArrowDown') { e.preventDefault(); setFocus(focusI + 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setFocus(focusI - 1); }
     else if (e.key === 'Home') { e.preventDefault(); setFocus(0); }
-    else if (e.key === 'End') { e.preventDefault(); setFocus(opts.length - 1); }
-    else if (e.key === 'PageDown') { e.preventDefault(); setFocus(Math.min(opts.length - 1, focusI + 8)); }
+    else if (e.key === 'End') { e.preventDefault(); setFocus(vis().length - 1); }
+    else if (e.key === 'PageDown') { e.preventDefault(); setFocus(Math.min(vis().length - 1, focusI + 8)); }
     else if (e.key === 'PageUp') { e.preventDefault(); setFocus(Math.max(0, focusI - 8)); }
-    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(opts[focusI].dataset.pick); close(true); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(vis()[focusI].dataset.pick); close(true); }
     else if (e.key === 'Escape') { e.preventDefault(); close(true); }
     else if (e.key === 'Tab') { close(false); }
     else if (/^[0-9]$/.test(e.key)) {   // type a number to jump to it (e.g. 2 then 3 for 23)
       const now = Date.now();
       typed = (now - typedAt < 900 ? typed : '') + e.key; typedAt = now;
-      const i = opts.findIndex(o => num(byKey[o.dataset.pick]) === typed);
-      const j = i >= 0 ? i : opts.findIndex(o => num(byKey[o.dataset.pick]).startsWith(typed));
+      const i = vis().findIndex(o => num(byKey[o.dataset.pick]) === typed);
+      const j = i >= 0 ? i : vis().findIndex(o => num(byKey[o.dataset.pick]).startsWith(typed));
       if (j >= 0) setFocus(j);
     }
   });
@@ -22184,7 +22270,10 @@ loop();
   document.addEventListener('pointerdown', e => { if (!list.hidden && !list.contains(e.target) && !menuBtn.contains(e.target)) close(false); }, true);
   window.addEventListener('blur', () => close(false));   // a click inside one of her pages
   window.addEventListener('resize', () => close(false));
-  const step = d => { const i = order.indexOf(current()); choose(order[(i + d + order.length) % order.length]); };
+  const step = d => {
+    const seq = liteOn() && !HEAVY[current()] ? order.filter(k => !HEAVY[k]) : order;
+    const i = seq.indexOf(current()); choose(seq[(i + d + seq.length) % seq.length]);
+  };
   document.getElementById('playPrev').addEventListener('click', () => step(-1));
   document.getElementById('playNext').addEventListener('click', () => step(1));
   btns.forEach(b => b.addEventListener('click', () => setTimeout(sync, 0)));
