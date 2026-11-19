@@ -24123,47 +24123,60 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   // inside it on the left, with radial slope ticks between the wave and the zero line (warm brown on the bump side,
   // teal on the dip side). The words around it are small labels on the page; the ring itself is sand.
   let ring = null;   // { cx, cyUp (rows up from the floor), r0, a } in cells
+  let zeroLine = null;
+  function zeroTone() {
+    if (!zeroLine || !gType) return;
+    const l = document.documentElement.classList.contains('bg-light');
+    if (l === zeroLine.light) return;
+    zeroLine.light = l;
+    const c = l ? zeroLine.lite : zeroLine.dark;
+    for (let i = 0; i < gType.length; i++) if (gType[i] === STAMP && gOwner[i] === zeroLine.id) gColor[i] = c;
+  }
   function buildRing(C, R, titleBottom, narrow) {
     const capRows = Math.ceil((narrow ? 112 : 118) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL), labRows = Math.ceil((narrow ? 18 : 22) / CELL);
     const room = R - titleBottom - 4 - capRows - floorRows - labRows;
-    const Ro = Math.floor(Math.min(room / 2, C * (narrow ? 0.2 : 0.15)));
+    const Ro = Math.floor(Math.min(room / 2, C * (narrow ? 0.22 : 0.15)));
     if (Ro < 12) { ring = null; return titleBottom; }   // too little room: title only
-    const r0 = Ro / 1.36, a = r0 * 0.36, cx = C / 2, cy = titleBottom + 4 + Ro;
-    const th = narrow ? 1.7 : 2.3;
-    tc.width = C; tc.height = R;
-    const pass = (col, draw) => {
-      tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, C, R);
-      tg.strokeStyle = '#fff'; tg.fillStyle = '#fff'; tg.lineCap = 'round'; tg.lineJoin = 'round';
-      draw(tg);
-      const d = tg.getImageData(0, 0, C, R).data, id = nextObjId++, mc = moldColor(col);
-      ids.add(id);
-      for (let i = 0, j = 3; i < C * R; i++, j += 4) if (d[j] > 110 && gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
-    };
+    // wave amplitude about a fifth of the radius; every cell is placed by its distance to the curve, so the wave, the
+    // dashed zero line and the ticks come out as clean strokes with no stray specks
+    const r0 = Ro / (narrow ? 1.22 : 1.2), a = r0 * (narrow ? 0.22 : 0.2), cx = C / 2, cy = titleBottom + 4 + Ro;
     const wave = t => r0 + a * Math.cos(t);   // bump at angle 0 (right), dip at pi (left)
-    // slope ticks first, so the ring and the zero line draw over their ends
-    const ticks = side => g => {
-      g.lineWidth = narrow ? 1.1 : 1.4;
-      for (let k = 0; k < 36; k++) {
-        const t = k / 36 * Math.PI * 2, c = Math.cos(t);
-        if ((side > 0) !== (c > 0) || Math.abs(a * c) < (narrow ? 3 : 4)) continue;
-        const r1 = r0 + Math.sign(c) * (narrow ? 1.6 : 2.4), r2 = wave(t) - Math.sign(c) * 1.2;
-        g.beginPath(); g.moveTo(cx + Math.cos(t) * r1, cy - Math.sin(t) * r1); g.lineTo(cx + Math.cos(t) * r2, cy - Math.sin(t) * r2); g.stroke();
+    const thW = narrow ? 0.8 : 1.05;          // half-width of the wave line, in cells
+    const thZ = narrow ? 0.75 : 0.9;           // half-width of the zero line
+    const nDash = Math.max(10, Math.round(r0 * 0.32)) * 2;
+    const nTick = narrow ? 20 : 28;
+    const light = (() => { const m = /#([0-9a-f]{6})/i.exec(getComputedStyle(document.documentElement).getPropertyValue('--bg')); if (!m) return false;
+      const n = parseInt(m[1], 16); return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255 > 0.6; })();
+    const mk = col => { const id = nextObjId++; ids.add(id); return { id, mc: moldColor(col) }; };
+    const W = mk('#a78bfa'), Z = mk(light ? '#3b4558' : '#dfe6f0'), TB = mk('#c0804e'), TT = mk('#2dd4bf');
+    // the zero line keeps its contrast when the background changes between dark and light later
+    zeroLine = { id: Z.id, light, dark: light ? moldColor('#dfe6f0') : Z.mc, lite: light ? Z.mc : moldColor('#3b4558') };
+    const x0 = Math.max(0, Math.floor(cx - Ro - 2)), x1 = Math.min(C - 1, Math.ceil(cx + Ro + 2));
+    const y0 = Math.max(0, Math.floor(cy - Ro - 2)), y1 = Math.min(R - 1, Math.ceil(cy + Ro + 2));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const i = y * C + x;
+      if (gType[i] !== EMPTY) continue;
+      const dx = x + 0.5 - cx, dy = cy - (y + 0.5), rho = Math.hypot(dx, dy);
+      let t = Math.atan2(dy, dx); if (t < 0) t += Math.PI * 2;
+      const w = wave(t);
+      let o = null;
+      if (Math.abs(rho - w) <= thW) o = W;
+      else if (Math.abs(rho - r0) <= thZ) { if ((Math.floor(t / (Math.PI * 2) * nDash) & 1) === 0) o = Z; }
+      if (o) { gType[i] = STAMP; gOwner[i] = o.id; gColor[i] = o.mc; }
+    }
+    // slope ticks: evenly spaced, one-cell radial strokes from the zero line to the wave
+    for (let k = 0; k < nTick; k++) {
+      const tk = k / nTick * Math.PI * 2, c = Math.cos(tk), sg = Math.sign(c);
+      if (Math.abs(a * c) < (narrow ? 2.0 : 3.4)) continue;
+      const o = c > 0 ? TB : TT, r1 = r0 + sg * (thZ + 0.3), r2 = wave(tk) - sg * (thW + 0.3);
+      const ux = Math.cos(tk), uy = -Math.sin(tk), L = Math.abs(r2 - r1);
+      for (let s = 0; s <= L; s += 0.3) {
+        const r = r1 + sg * s, x = Math.floor(cx + ux * r), y = Math.floor(cy + uy * r);
+        if (x < 0 || y < 0 || x >= C || y >= R) continue;
+        const i = y * C + x;
+        if (gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = o.id; gColor[i] = o.mc; }
       }
-    };
-    pass('#b7794a', ticks(1));    // warm brown on the bump side
-    pass('#2dd4bf', ticks(-1));   // teal on the dip side
-    pass('#e2e8f0', g => {        // the dashed zero line (the average circle)
-      g.lineWidth = narrow ? 1.3 : 1.7;
-      const n = Math.max(12, Math.round(r0 * 0.45)) * 2;
-      for (let k = 0; k < n; k += 2) { g.beginPath(); g.arc(cx, cy, r0, k / n * Math.PI * 2, (k + 1) / n * Math.PI * 2); g.stroke(); }
-    });
-    pass('#a78bfa', g => {        // the ring: one cosine wave around the circle
-      g.lineWidth = th;
-      g.beginPath();
-      for (let k = 0; k <= 240; k++) { const t = k / 240 * Math.PI * 2, r = wave(t); const x = cx + Math.cos(t) * r, y = cy - Math.sin(t) * r; k ? g.lineTo(x, y) : g.moveTo(x, y); }
-      g.closePath(); g.stroke();
-    });
-    tg.setTransform(1, 0, 0, 1, 0, 0);
+    }
     ring = { cx, cyUp: R - cy, r0, a, Ro };
     return Math.ceil(cy + Ro + labRows);
   }
@@ -24196,16 +24209,22 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       #sandWelcomeCap button { pointer-events: auto; font: 600 12px system-ui, sans-serif; padding: 5px 12px; border-radius: 999px;
         border: 1px solid rgba(148,163,184,.45); background: rgba(15,23,42,.55); color: #e2e8f0; cursor: pointer; }
       #sandWelcomeCap button:hover { border-color: #00d4ff; color: #fff; }
-      html.bg-light #sandWelcomeCap { color: #334155; text-shadow: none; }
+      html.bg-light #sandWelcomeCap { text-shadow: none; }
       html.bg-light #sandWelcomeCap button { background: rgba(255,255,255,.7); color: #1e293b; border-color: rgba(51,65,85,.35); }
-      #sandWelcomeCap .wr-cap { font-size: 13px; color: #e2e8f0; }
-      .sw-lab { position: absolute; z-index: 3; pointer-events: none; font: 600 12px/1.25 system-ui, -apple-system, "Segoe UI", sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,.7); max-width: 170px; }
+      /* captions and labels sit on a solid chip like the copyright chip, so they read on every background */
+      #sandWelcomeCap p { display: inline-block; padding: 3px 10px; border-radius: 10px; background: var(--chip-bg); color: var(--chip-fg);
+        text-shadow: none; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+      #sandWelcomeCap .wr-cap { font-size: 13px; }
+      .sw-lab { position: absolute; z-index: 3; pointer-events: none; font: 600 12px/1.25 system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 170px;
+        padding: 2px 8px; border-radius: 9px; background: var(--chip-bg); color: var(--chip-fg); box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
       .sw-lab[hidden] { display: none; }
-      .sw-zero { color: #cbd5e1; transform: translateX(-50%); text-align: center; max-width: none; white-space: nowrap; }
-      .sw-bump { color: #e0a274; }
-      .sw-dip { color: #5eead4; text-align: right; transform: translateX(-100%); }
-      html.bg-light .sw-lab { text-shadow: none; } html.bg-light .sw-zero { color: #334155; } html.bg-light .sw-bump { color: #8a4f22; } html.bg-light .sw-dip { color: #0f766e; }
-      @media (max-width: 700px) { #sandWelcomeCap { font-size: 12px; line-height: 1.35; } #sandWelcomeCap .wr-cap { font-size: 11px; } #sandWelcomeCap p { margin-bottom: 4px; } #sandWelcomeCap button { padding: 4px 10px; font-size: 11px; } .sw-lab { font-size: 10.5px; max-width: 92px; } }`;
+      .sw-zero { transform: translateX(-50%); text-align: center; max-width: none; white-space: nowrap; }
+      .sw-bump { color: #7a3f12; }
+      .sw-dip { color: #0b5e57; text-align: right; transform: translateX(-100%); }
+      html.chip-on-light .sw-bump { color: #f0b080; } html.chip-on-light .sw-dip { color: #5eead4; }
+      @media (max-width: 700px) { #sandWelcomeCap { font-size: 12px; line-height: 1.3; } #sandWelcomeCap .wr-cap { font-size: 11px; } #sandWelcomeCap p { margin-bottom: 3px; padding: 2px 8px; }
+        #sandWelcomeCap .wl-line { display: inline; margin: 0 4px 0 0; padding: 1px 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone; } #sandWelcomeCap .wr-cap { display: block; margin: 0 auto 4px; width: fit-content; }
+        .sw-lab { padding: 1px 6px; } .sw-lab.sw-zero { max-width: none; } #sandWelcomeCap button { padding: 4px 10px; font-size: 11px; } .sw-lab { font-size: 10.5px; max-width: 92px; } }`;
     document.head.appendChild(st);
     cap = document.createElement('div');
     cap.id = 'sandWelcomeCap'; cap.hidden = true;
@@ -24231,6 +24250,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     Object.values(labs).forEach(el => { el.hidden = !ringOn; });
     c.querySelector('.wr-cap').hidden = !ring;
     if (!on) return;
+    zeroTone();
     const t = Math.round(canvas.offsetTop + (gRows - floorGap) * CELL + 12);
     if (t !== lastTop) { c.style.top = t + 'px'; lastTop = t; }
     if (ringOn) {   // the labels sit around the ring, which keeps its distance from the floor
@@ -24239,7 +24259,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       if (key !== lastKey) {
         lastKey = key;
         const R0 = ring.r0 * CELL, Ro = ring.Ro * CELL, gap = 8;
-        labs.zero.style.left = (ox + cx) + 'px'; labs.zero.style.top = (oy + cy + Ro + 2) + 'px';
+        labs.zero.style.left = (ox + cx) + 'px'; labs.zero.style.top = (oy + cy + Ro + 5) + 'px';
         labs.bump.style.left = (ox + cx + (ring.r0 + ring.a) * CELL + gap) + 'px'; labs.bump.style.top = (oy + cy - 8) + 'px';
         labs.dip.style.left = (ox + cx - R0 - gap) + 'px'; labs.dip.style.top = (oy + cy - 8) + 'px';
       }
