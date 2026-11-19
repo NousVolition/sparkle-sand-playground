@@ -328,6 +328,7 @@ Third-party material is governed by its own terms.
   .bg-sw { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); cursor: pointer; padding: 0; }
   .bg-sw[aria-checked="true"] { outline: 2px solid var(--accent); outline-offset: 2px; }
   .bg-sw:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .bg-sw.auto { font: 700 9px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px #000; display: inline-flex; align-items: center; justify-content: center; }
   .bg-pick-btn { display: none; }
   .bg-dot { display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: var(--bg); border: 1px solid rgba(255,255,255,0.5); }
   .page-tab { background: var(--bg); }
@@ -23791,20 +23792,35 @@ loop();
 // page is darkened where it would be hard to read. Canvases keep a dark backing on the light tone.
 (function bgPalette() {
   const PALETTE = [
-    { id: 'night', name: 'Near-black (as before)', bg: '#0b0e14' },
-    { id: 'navy', name: 'Deep navy', bg: '#0d1730' },
-    { id: 'slate', name: 'Slate gray', bg: '#262d38' },
-    { id: 'charcoal', name: 'Warm charcoal', bg: '#27231f' },
-    { id: 'teal', name: 'Deep teal', bg: '#0b2a2c' },
-    { id: 'cream', name: 'Soft cream (light)', bg: '#f2ede2', light: true }
+    { id: 'auto', name: 'Auto (a calm tone picked for each entry)', bg: '#1c2230' },
+    { id: 'night', name: 'Soft near-black', bg: '#141820' },
+    { id: 'navy', name: 'Deep navy', bg: '#16203a' },
+    { id: 'slate', name: 'Slate gray', bg: '#2e3440' },
+    { id: 'charcoal', name: 'Warm charcoal', bg: '#2a2622' },
+    { id: 'teal', name: 'Deep teal', bg: '#143234' },
+    { id: 'stone', name: 'Muted stone (light)', bg: '#c4bdb0', light: true }
   ];
+  // Auto: a background per entry, picked by eye and checked for contrast against that entry's content colors, and
+  // ordered so neighbors in the menu stay close (dark slate tones, Magnets a lighter mid gray because its deep and bright
+  // blues both blend into a dark tone; never a jump to a light tone).
+  // Her pages keep their own page color, and the host around the frame takes that same color.
+  const AUTO = { sand: '#1c2230', loop: '#1c2230', bubbles: '#1e2431', plate: '#222834', waves: '#222834', silk: '#1e2431',
+    crystal: '#252b37', magnets: '#525760', stretch: '#2b313d', ferro: '#252b37' };
+  const OWN = { sum: '#0b0e14', ringsum: '#0b0f19', zeros: '#0b0e14', pendulum: '#0f131a', trilogy: '#0f131a', blackhole: '#0b0e17',
+    ocean: '#080c14', fourd: '#080b12', polychora: '#070912', fireflies: '#070b14', horned: '#0b0e17', nonorient: '#0c0f17',
+    penteract: '#090c14', leech: '#070913', pentlite: '#080b16', hopf: '#070913', bh2: '#0b0e17', bh3: '#07090f',
+    e8studio: '#07090f', e8insp: '#0b0e14', e8studio2: '#07090f', 'unit-distances': '#0b0e14', cipher: '#0b0e14' };
+  const NIGHT_FRAME = { id: 'night', bg: '#0b0e14' };
+  // what her frames see: on Auto and soft near-black they keep their own colors (nothing injected)
+  const F = () => (cur.id === 'auto' || cur.id === 'night') ? NIGHT_FRAME : cur;
   const root = document.documentElement, wrap = document.getElementById('bgPick'), box = document.getElementById('bgSwatches'), btn = document.getElementById('bgPickBtn');
   let cur = PALETTE[0];
-  try { cur = PALETTE.find(p => p.id === localStorage.getItem('sparkle.bg')) || PALETTE[0]; } catch (e) {}
+  try { const v = localStorage.getItem('sparkle.bg'); cur = PALETTE.find(p => p.id === (v === 'cream' ? 'stone' : v)) || PALETTE[0]; } catch (e) {}
   const sws = PALETTE.map(p => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'bg-sw'; b.setAttribute('role', 'radio'); b.dataset.bg = p.id;
     b.title = p.name; b.setAttribute('aria-label', p.name); b.style.background = p.bg;
+    if (p.id === 'auto') { b.classList.add('auto'); b.textContent = 'A'; b.style.background = 'conic-gradient(#1c2230 0 25%, #2b313d 0 50%, #525760 0 75%, #222834 0)'; }
     b.addEventListener('click', () => { set(p, true); wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
     box.appendChild(b); return b;
   });
@@ -23821,7 +23837,7 @@ loop();
     let d, w;
     try { d = f.contentDocument; w = f.contentWindow; } catch (e) { return; }
     if (!d || !d.body || !w) return;
-    try { w.postMessage({ type: 'sparkle-bg', bg: cur.bg, id: cur.id, light: !!cur.light }, '*'); } catch (e) {}
+    try { w.postMessage({ type: 'sparkle-bg', bg: F().bg, id: F().id, light: !!F().light }, '*'); } catch (e) {}
     const gcs = el => w.getComputedStyle(el);
     if (!f.__spPage) {   // first time: remember this page's own background and the large containers that share it
       const hb = rgb(gcs(d.documentElement).backgroundColor), bb = rgb(gcs(d.body).backgroundColor);
@@ -23840,9 +23856,9 @@ loop();
     let st = d.getElementById('sparkle-bg-css');
     if (!st) { st = d.createElement('style'); st.id = 'sparkle-bg-css'; }
     (d.head || d.documentElement).appendChild(st);   // keep it last
-    st.textContent = cur.id === 'night' ? '' :
-      ':root{--sp-bg:' + cur.bg + '}html,body{background:var(--sp-bg)!important}[data-sp-bg]{background-color:var(--sp-bg)!important}' +
-      (cur.light ? 'canvas{background-color:' + pageHex + '}' : '');
+    st.textContent = F().id === 'night' ? '' :
+      ':root{--sp-bg:' + F().bg + '}html,body{background:var(--sp-bg)!important}[data-sp-bg]{background-color:var(--sp-bg)!important}' +
+      (F().light ? 'canvas{background-color:' + pageHex + '}' : '');
     frameText(f, d, w);
     framePaint(f, w);
   }
@@ -23872,13 +23888,13 @@ loop();
         return orig.call(this, x, y, wd, ht);
       };
     }
-    w.__spBg = (cur.id !== 'night' && !cur.light) ? Object.assign(hexRgb(cur.bg), { hex: cur.bg }) : null;
+    w.__spBg = (F().id !== 'night' && !F().light) ? Object.assign(hexRgb(F().bg), { hex: F().bg }) : null;
   }
   // light tone: darken text whose own backing is the page (so not inside a dark card), and undo it otherwise
   function frameText(f, d, w) {
     d.querySelectorAll('[data-sp-fg]').forEach(el => { el.style.removeProperty('color'); el.style.removeProperty('-webkit-text-fill-color'); el.removeAttribute('data-sp-fg'); });
-    if (!cur.light) return;
-    const bgc = hexRgb(cur.bg), ink = { r: 20, g: 26, b: 36 };
+    if (!F().light) return;
+    const bgc = hexRgb(F().bg), ink = { r: 20, g: 26, b: 36 };
     // same hue, deepened step by step until it reads well on the light tone
     const deepen = c => { for (let t = 0.1; t <= 1.001; t += 0.1) { const m = { r: c.r * (1 - t) + ink.r * t, g: c.g * (1 - t) + ink.g * t, b: c.b * (1 - t) + ink.b * t }; if (contrast(m, bgc) >= 4.5) return 'rgb(' + [m.r, m.g, m.b].map(Math.round).join(',') + ')'; } return 'rgb(20,26,36)'; };
     const faint = img => { const a = (img.match(/rgba?\([^)]+\)/g) || []).map(rgb); return a.length > 0 && a.every(c => c && c.a < 0.5); };
@@ -23909,10 +23925,39 @@ loop();
       el.style.setProperty('color', deepen(c), 'important'); el.setAttribute('data-sp-fg', '');
     });
   }
+  // the background for the entry on screen; changes fade over about 300 ms
+  const isLight = h => { const c = hexRgb(h); return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255 > 0.6; };
+  function target() {
+    const page = typeof PAGE_TABS !== 'undefined' && PAGE_TABS.includes(mode);
+    if (cur.id === 'auto') return page ? (OWN[mode] || '#0b0e14') : (AUTO[mode] || cur.bg);
+    if (cur.id === 'night' && page) return OWN[mode] || '#0b0e14';
+    return cur.bg;
+  }
+  let shown = null, tween = 0;
+  function applyBg(fade) {
+    const to = target();
+    if (to === shown) return;
+    const from = shown; shown = to;
+    cancelAnimationFrame(tween);
+    const lightTo = isLight(to);
+    if (!fade || !from || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.style.setProperty('--bg', to); root.classList.toggle('bg-light', lightTo); return;
+    }
+    const A = hexRgb(from), B = hexRgb(to), t0 = performance.now(), D = 300;
+    const hx = v => Math.round(v).toString(16).padStart(2, '0');
+    const step = now => {
+      const u = Math.min(1, (now - t0) / D), e = u * u * (3 - 2 * u);
+      root.style.setProperty('--bg', '#' + hx(A.r + (B.r - A.r) * e) + hx(A.g + (B.g - A.g) * e) + hx(A.b + (B.b - A.b) * e));
+      if (u >= 0.5) root.classList.toggle('bg-light', lightTo);
+      if (u < 1) tween = requestAnimationFrame(step); else root.style.setProperty('--bg', to);
+    };
+    tween = requestAnimationFrame(step);
+  }
+  const sc0 = setControls;
+  setControls = function () { sc0.apply(this, arguments); applyBg(true); };
   function set(p, save) {
     cur = p;
-    root.style.setProperty('--bg', p.bg);
-    root.classList.toggle('bg-light', !!p.light);
+    applyBg(save);
     sws.forEach(b => b.setAttribute('aria-checked', String(b.dataset.bg === p.id)));
     btn.title = 'Background color: ' + p.name;
     if (save) try { localStorage.setItem('sparkle.bg', p.id); } catch (e) {}
