@@ -19315,6 +19315,12 @@ function mattePixel(T, O, Col, PH, F, C, R, x, y, melt) {
     }
   }
   if (!cnt) return 0;
+  if (CRISP) {   // crisp grains: only real cells (and Melt seams) are drawn, fully opaque
+    const self = T[y * C + x];
+    if (self === EMPTY && !F[y * C + x]) return 0;
+    const v = matteRGB(T, O, Col, PH, F, C, R, x, y, melt);
+    return v ? ((v & 0xffffff) | 0xff000000) >>> 0 : 0;
+  }
   let v = matteRGB(T, O, Col, PH, F, C, R, x, y, melt);
   const self = T[y * C + x];
   if (v) { if (cnt < 9 && self === LOOSE) cnt = Math.max(cnt, 3.9); else if (cnt < 9 && self !== EMPTY) cnt = Math.max(cnt, 5); else if (cnt < 9) cnt = Math.max(cnt + 2, 6); }
@@ -19356,6 +19362,49 @@ function grainPattern(c) {
   return grainPat;
 }
 
+// ---------- Crisp grains ----------
+// The sand used to be painted as one pixel per cell, scaled up 3x (and again for high-DPI screens) with smoothing on,
+// plus a soft half-transparent rim around every shape: that is what made Sand look blurry.
+// Now each cell is scaled up sharp and shaped into a small round grain with a lit top-left and a shaded bottom-right,
+// drawn at the screen's real resolution. Set CRISP to false for the old soft look.
+const CRISP = true;
+let cellPats = null, cellPatKey = '';
+function cellPatterns(c) {
+  const d = window.devicePixelRatio || 1, n = Math.max(3, Math.round(CELL * d)), key = n + ':' + d;
+  if (cellPats && cellPatKey === key) return cellPats;
+  const mk = () => { const cv = document.createElement('canvas'); cv.width = cv.height = n; return cv; };
+  // grain shape (alpha): rounded, so neighbors read as separate grains with tiny gaps at the corners
+  const m = mk(), mg = m.getContext('2d'), mi = mg.createImageData(n, n);
+  // light and shade on each grain
+  const h = mk(), hg = h.getContext('2d'), hi = hg.createImageData(n, n);
+  const r0 = n / 2;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = (x + 0.5 - r0) / r0, dy = (y + 0.5 - r0) / r0, q = Math.pow(Math.abs(dx), 3) + Math.pow(Math.abs(dy), 3);
+    const k = (y * n + x) * 4;
+    mi.data[k + 3] = q <= 1.25 ? 255 : q <= 1.7 ? 200 : 140;
+    const lit = -(dx + dy) / 2;   // +1 top-left, -1 bottom-right
+    if (lit > 0.3) { hi.data[k] = hi.data[k + 1] = hi.data[k + 2] = 255; hi.data[k + 3] = Math.min(34, lit * 38) | 0; }
+    else if (lit < -0.3) { hi.data[k + 3] = Math.min(46, -lit * 50) | 0; }
+  }
+  mg.putImageData(mi, 0, 0); hg.putImageData(hi, 0, 0);
+  const sc = new DOMMatrix().scale(CELL / n, CELL / n);
+  const pm = c.createPattern(m, 'repeat'), ph = c.createPattern(h, 'repeat');
+  pm.setTransform(sc); ph.setTransform(sc);
+  cellPats = { mask: pm, shade: ph }; cellPatKey = key;
+  return cellPats;
+}
+// shape the cells in a rectangle (CSS px, cell aligned) into grains
+function grainCells(c, x, y, w, h) {
+  const P = cellPatterns(c);
+  c.save();
+  c.globalCompositeOperation = 'destination-in'; c.fillStyle = P.mask;
+  c.beginPath(); c.rect(x, y, w, h); c.clip();
+  c.fillRect(x, y, w, h);
+  c.globalCompositeOperation = 'source-atop'; c.fillStyle = P.shade;
+  c.fillRect(x, y, w, h);
+  c.restore();
+}
+
 function ensureMatteLayer() {
   const d = window.devicePixelRatio || 1;
   if (matteLayer && pMT && pMT.length === gType.length && matteLayer._c === gCols && matteLayer._d === d) return;
@@ -19369,7 +19418,7 @@ function ensureMatteLayer() {
   matteLayer._c = gCols; matteLayer._d = d;
   matteCtx = matteLayer.getContext('2d');
   matteCtx.setTransform(d, 0, 0, d, 0, 0);
-  matteCtx.imageSmoothingEnabled = true;
+  matteCtx.imageSmoothingEnabled = !CRISP;   // crisp: each cell scales up as a sharp block, not a bilinear smear
   matteCtx.imageSmoothingQuality = 'high';
   pMT = new Uint8Array(gType.length).fill(255);
   fillMask = new Uint8Array(gType.length);
@@ -19424,6 +19473,7 @@ function updateMatteLayer() {
     mc.beginPath(); mc.rect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL); mc.clip();
     mc.clearRect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
     mc.drawImage(matteBuf, sx, sy, ex - sx, ey - sy, sx * CELL, sy * CELL, (ex - sx) * CELL, (ey - sy) * CELL);
+    if (CRISP) grainCells(mc, xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
     mc.globalCompositeOperation = 'source-atop';
     mc.fillStyle = pat;
     mc.fillRect(xs * CELL, ys * CELL, (xe - xs) * CELL, (ye - ys) * CELL);
@@ -19451,8 +19501,9 @@ function renderPiece(cells, minx, miny, maxx, maxy, pad) {
   base.width = Math.ceil(wCss * d); base.height = Math.ceil(hCss * d);
   const bc = base.getContext('2d');
   bc.setTransform(d, 0, 0, d, 0, 0);
-  bc.imageSmoothingEnabled = true; bc.imageSmoothingQuality = 'high';
+  bc.imageSmoothingEnabled = !CRISP; bc.imageSmoothingQuality = 'high';
   bc.drawImage(sb, pad - 2 * CELL, pad - 2 * CELL, lw * CELL, lh * CELL);
+  if (CRISP) { bc.save(); bc.translate(pad - 2 * CELL, pad - 2 * CELL); grainCells(bc, 0, 0, lw * CELL, lh * CELL); bc.restore(); }
   bc.globalCompositeOperation = 'source-atop';
   bc.fillStyle = grainPattern(bc);
   bc.fillRect(0, 0, wCss, hCss);
@@ -19925,8 +19976,9 @@ function drawSand() {
     lc.restore();
   }
   updateMatteLayer();
-  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingEnabled = !CRISP;   // the layer is already at screen resolution: copy it pixel for pixel
   ctx.drawImage(matteLayer, 0, 0, C * CELL, R * CELL);
+  ctx.imageSmoothingEnabled = true;
   drawFallingMolds();
   drawLifted();
   const SP = SPR_PX;
@@ -23901,7 +23953,7 @@ loop();
 // (each word is a real stamp: lift it with Stamp, carve it, pour over it), two stars and a small dune.
 // "Clear welcome" (or Clear) removes it, and it stays away for the rest of the session.
 const WELCOME_TITLE = "Welcome to NousVolition's Physics Playground";
-const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. Pick any of the 32 entries from the menu above.';
+const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. Pick any of the 33 entries from the menu above.';
 (function sandWelcome() {
   const KEY = 'sparkle.welcome.off';
   const off = () => { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } };
