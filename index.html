@@ -235,6 +235,17 @@ Third-party material is governed by its own terms.
   .page-tab .page-copy { flex: none; height: 14px; line-height: 14px; padding: 0 16px; text-align: right; font-size: 10px; color: var(--muted); opacity: 0.55; white-space: nowrap; overflow: hidden; }
   .page-tab .page-copy a { color: inherit; }
   .page-tab .page-copy:hover { opacity: 0.9; }
+  /* Copyright line on its own small strip: a solid chip whose colors contrast with the chosen background */
+  :root { --chip-bg: rgba(236, 240, 245, 0.94); --chip-fg: #121722; }
+  html.chip-on-light { --chip-bg: rgba(18, 23, 34, 0.92); --chip-fg: #f2f4f8; }
+  .copy-chip { display: inline-block; max-width: 100%; padding: 1px 8px; border-radius: 9px; background: var(--chip-bg); color: var(--chip-fg); font-size: 10px; line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; box-shadow: 0 0 0 1px rgba(0,0,0,0.25); }
+  .copy-chip a { color: inherit; text-decoration: underline; }
+  #copyNote.has-chip, .page-tab .page-copy.has-chip, body #ferroStage #fs-copy.has-chip { opacity: 1; color: var(--chip-fg); z-index: 50; }
+  #copyNote.has-chip { bottom: 1px; }
+  #copyNote.has-chip .copy-chip { --chip-bg: rgba(236, 240, 245, 0.94); --chip-fg: #121722; }   /* the header itself stays dark */
+  .page-tab .page-copy.has-chip { position: relative; height: auto; min-height: 20px; line-height: 18px; padding: 1px 12px; display: flex; align-items: center; justify-content: flex-end; background: var(--bg); }
+  body #ferroStage #fs-copy.has-chip { bottom: 3px; right: 12px; }
+  @media (max-width: 520px) { .copy-chip { white-space: normal; } #page-horned .page-copy.has-chip .copy-chip { text-align: right; } }
   @media (max-width: 520px) { #page-horned .page-copy { height: auto; white-space: normal; padding-top: 1px; padding-bottom: 1px; } }   /* room for the field guide link on phones */
   /* 15 tabs, all visible: tabs 1-10 on the first row, tabs 11-15 with Sound and Linked on a second row */
   .tab-break { display: none; }
@@ -17177,6 +17188,28 @@ draw();
 <!-- end Unit Distances on a Square Grid -->
 </div>
 
+<script>
+// Copyright chips: wrap each in-tab copyright line in a small solid chip (same text and LICENSE link), and pick the
+// chip colors from how light the current background is, so it reads on every background choice.
+(function copyChips() {
+  const lines = [document.getElementById('copyNote'), document.getElementById('fs-copy'), ...document.querySelectorAll('.page-tab .page-copy')].filter(Boolean);
+  lines.forEach(el => {
+    const chip = document.createElement('span'); chip.className = 'copy-chip';
+    while (el.firstChild) chip.appendChild(el.firstChild);
+    el.appendChild(chip); el.classList.add('has-chip');
+  });
+  const root = document.documentElement;
+  const fit = () => {
+    const v = getComputedStyle(root).getPropertyValue('--bg').trim();
+    const m = /^#([0-9a-f]{6})$/i.exec(v);
+    if (!m) return;
+    const n = parseInt(m[1], 16), ch = [n >> 16, (n >> 8) & 255, n & 255].map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    root.classList.toggle('chip-on-light', 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2] > 0.4);
+  };
+  fit();
+  new MutationObserver(fit).observe(root, { attributes: true, attributeFilter: ['style', 'class'] });
+})();
+</script>
 <script>
 const canvas = document.getElementById('main');
 const ctx = canvas.getContext('2d');
