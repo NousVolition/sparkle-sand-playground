@@ -24534,6 +24534,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
 
   function build() {
     tones.clear();
+    slimeReset();
     const C = gCols, R = gRows;
     const parts = WELCOME_TITLE.split('\n').map(x => x.trim().split(/\s+/)), words = [].concat(...parts);
     const narrow = C < 220;
@@ -24575,6 +24576,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         const d = tg.getImageData(0, 0, C, R).data;
         const id = nextObjId++, mc = inkColor(id, WORD_COLORS[n++ % WORD_COLORS.length]);
         ids.add(id);
+        slimeAdd({ kind: 'word', id, word, x, base: line.base, f: line.f, sx, stroke: !narrow, narrow, top: line === L[0], hex: WORD_COLORS[(n - 1) % WORD_COLORS.length] });
         for (let q = 0, j = 3; q < C * R; q++, j += 4) {
           if (d[j] > 110 && gType[q] === EMPTY) { gType[q] = STAMP; gOwner[q] = id; gColor[q] = mc; }
         }
@@ -24592,6 +24594,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     spots.forEach(([x0, y0, col]) => {
       x0 = Math.round(x0); y0 = Math.round(y0);
       const id = nextObjId++, mc = inkColor(id, col); ids.add(id);
+      slimeAdd({ kind: 'star', id, x0, y0, sn, hex: col });
       for (let y = 0; y < sn; y++) for (let x = 0; x < sn; x++) {
         if (!m[y * sn + x]) continue;
         const gx = x0 + x, gy = y0 + y;
@@ -24614,6 +24617,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     }
     floorGap = R - bottom;
     built = active = true; touched = false; bC = C; bR = R;
+    slimeArm(C, R);
   }
 
   // ---- "The equal case" ring, molded in sand under the title ----
@@ -24663,6 +24667,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       const n = parseInt(m[1], 16); return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255 > 0.6; })();
     const mk = col => { const id = nextObjId++; ids.add(id); return { id, mc: inkColor(id, col) }; };
     const W = mk('#a78bfa'), Z = mk(light ? '#3b4558' : '#dfe6f0'), TB = mk('#c0804e'), TT = mk('#2dd4bf');
+    { const rg = { cx, cy, r0, a, thW, thZ, nDash, nTick, narrow }; [['wave', W], ['zero', Z], ['tickB', TB], ['tickT', TT]].forEach(([kind, m]) => slimeAdd({ kind, id: m.id, ring: rg })); }
     // the zero line keeps its contrast when the background changes between dark and light later
     zeroLine = { id: Z.id, light, dark: light ? moldColor('#dfe6f0') : Z.mc, lite: light ? Z.mc : moldColor('#3b4558') };
     const x0 = Math.max(0, Math.floor(cx - Ro - 2)), x1 = Math.min(C - 1, Math.ceil(cx + Ro + 2));
@@ -24835,7 +24840,232 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     while (acc >= STEP && n < 4) { stepSand.apply(this, arguments); acc -= STEP; n++; }
     if (n === 4) acc = 0;
   };
+  // ---- Glossy slime look for the welcome ----
+  // The title, stars and ring are drawn as smooth glossy-slime shapes on a layer just above the sand (same layout,
+  // device-pixel sharp at any zoom). The sand cells stay underneath with the same shapes, hidden while the slime
+  // covers them, so Carve, Pour, Stamp and Clear still work on real sand. A shape gives way the moment it is
+  // disturbed: if any of its cells is carved, lifted or moved, or anything new comes to rest against it, that shape's
+  // slime fades out in about a third of a second and its real sand shows. Untouched shapes stay slime.
+  // Clear and Clear welcome remove everything.
+  const SLIME_FADE = 350;
+  const slime = { L: [], shapes: [], hid: new Set(), ov: null, key: '', R: 0, failed: false, fading: false, n: 0 };
+  function slimeReset() {
+    slime.L = []; slime.shapes = []; slime.key = '';
+    if (slime.hid.size) { slime.hid.clear(); redrawSand(); }
+  }
+  const slimeAdd = o => { slime.L.push(o); };
+  function redrawSand() {   // both cached sand layers draw again in full
+    if (typeof prevT !== 'undefined' && prevT) prevT.fill(255);
+    if (typeof pMT !== 'undefined' && pMT) pMT.fill(255);
+  }
+  // each shape's cells, kept as (column, rows up from the floor) so they survive a change of height
+  function slimeArm(C, R) {
+    slime.R = R;
+    const byId = new Map();
+    slime.L.forEach(o => byId.set(o.id, { o, xs: [], ups: [], base: 0, alpha: 1, gone: 0, cv: null }));
+    for (let y = 0; y < R; y++) for (let x = 0, i = y * C; x < C; x++, i++) {
+      if (gType[i] !== STAMP) continue;
+      const s = byId.get(gOwner[i]); if (s) { s.xs.push(x); s.ups.push(R - y); }
+    }
+    slime.shapes = [...byId.values()].filter(s => s.xs.length);
+    slime.shapes.forEach(s => { s.base = foreign(s); });
+    slime.hid = new Set(slime.shapes.map(s => s.o.id));
+    slime.key = ''; slime.failed = false;
+    redrawSand();
+  }
+  const isForeign = j => gType[j] !== EMPTY && !(gType[j] === STAMP && ids.has(gOwner[j]));
+  function foreign(s) {   // how many cells of other things touch this shape
+    const C = gCols, R = gRows; let n = 0;
+    for (let k = 0; k < s.xs.length; k++) {
+      const x = s.xs[k], y = R - s.ups[k];
+      if (y < 0 || x >= C) continue;
+      const i = y * C + x;
+      if (x > 0 && isForeign(i - 1)) n++;
+      if (x < C - 1 && isForeign(i + 1)) n++;
+      if (y > 0 && isForeign(i - C)) n++;
+      if (y < R - 1 && isForeign(i + C)) n++;
+    }
+    return n;
+  }
+  function disturbed(s) {
+    const C = gCols, R = gRows;
+    for (let k = 0; k < s.xs.length; k++) {
+      const x = s.xs[k], y = R - s.ups[k];
+      if (y < 0 || x >= C) return true;
+      const i = y * C + x;
+      if (gType[i] !== STAMP || gOwner[i] !== s.o.id) return true;
+    }
+    return foreign(s) > s.base;
+  }
+  function reveal(s) {
+    if (s.gone) return;
+    s.gone = performance.now(); slime.fading = true;
+    slime.hid.delete(s.o.id); redrawSand();
+  }
+  // the hidden sand under the slime draws nothing (the slime is drawn instead)
+  const mp1 = mattePixel;
+  mattePixel = function (T, O, Col, PH, F, C, R, x, y, melt) {
+    if (slime.hid.size && T === gType) { const i = y * C + x; if (T[i] === STAMP && slime.hid.has(O[i])) return 0; }
+    return mp1(T, O, Col, PH, F, C, R, x, y, melt);
+  };
+
+  // ---- drawing the slime ----
+  const SFONT = n => `800 ${n}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+  const srgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const smix = (h, t, k) => { const a = srgb(h), b = srgb(t); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',')})`; };
+  const mkc = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h); return [c, c.getContext('2d')]; };
+  function shapeGeom(o, light) {
+    const C = CELL;
+    if (o.kind === 'word') {
+      tg.setTransform(1, 0, 0, 1, 0, 0); tg.font = SFONT(o.f * C);
+      const tw = tg.measureText(o.word).width;
+      return { hex: light ? (LIGHT_INK[o.hex] || o.hex) : o.hex, size: o.f * C,
+        box: [o.sx * o.x * C, (o.base - o.f) * C, o.sx * (o.x * C + tw), (o.base + o.f * 0.4) * C],
+        draw(g) {
+          g.save(); g.scale(o.sx, 1); g.font = SFONT(o.f * C); g.lineJoin = 'round';
+          g.fillText(o.word, o.x * C, o.base * C);
+          g.lineWidth = (o.stroke ? Math.max(1, o.f * 0.06) * C : 0) + (o.narrow ? 0.025 : 0.03) * o.f * C;
+          g.strokeText(o.word, o.x * C, o.base * C);
+          g.restore();
+        } };
+    }
+    if (o.kind === 'star') {
+      const h = o.sn * C / 2, cx = o.x0 * C + h, cy = o.y0 * C + h;
+      return { hex: light ? (LIGHT_INK[o.hex] || o.hex) : o.hex, size: h, box: [cx - h * 1.1, cy - h * 1.1, cx + h * 1.1, cy + h * 1.25],
+        draw(g) {
+          g.beginPath();
+          for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = (i % 2 ? 0.43 : 1) * h * 0.97; g.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r + 0.1 * h); }
+          g.closePath(); g.fill(); g.lineJoin = 'round'; g.lineWidth = h * 0.14; g.stroke();
+        } };
+    }
+    // ring parts: the wave, the dashed zero line, and the slope ticks on each side
+    const R = o.ring, P = (r, t) => [(R.cx + r * Math.cos(t)) * C, (R.cy - r * Math.sin(t)) * C], ext = (R.r0 + R.a + R.thW + 2) * C;
+    const box = [R.cx * C - ext, R.cy * C - ext, R.cx * C + ext, R.cy * C + ext];
+    if (o.kind === 'wave') return { hex: light ? LIGHT_INK['#a78bfa'] : '#a78bfa', size: R.thW * 2 * C * 2.2, line: 1, box, draw(g) {
+      g.beginPath(); for (let i = 0; i <= 360; i++) { const t = i / 360 * Math.PI * 2; g.lineTo(...P(R.r0 + R.a * Math.cos(t), t)); }
+      g.closePath(); g.lineWidth = R.thW * 2 * C; g.lineJoin = 'round'; g.stroke();
+    } };
+    if (o.kind === 'zero') return { hex: light ? '#3b4558' : '#dfe6f0', size: R.thZ * 2 * C * 2.2, line: 1, box, draw(g) {
+      g.lineWidth = R.thZ * 2 * C; g.lineCap = 'round';
+      for (let k = 0; k < R.nDash; k += 2) { const t1 = k / R.nDash * Math.PI * 2, t2 = (k + 1) / R.nDash * Math.PI * 2, sh = 0.012;
+        g.beginPath(); g.arc(R.cx * C, R.cy * C, R.r0 * C, -t2 + sh, -t1 - sh); g.stroke(); }
+    } };
+    const hex = o.kind === 'tickB' ? '#c0804e' : '#2dd4bf';
+    return { hex: light ? LIGHT_INK[hex] : hex, size: C * 2.4, line: 1, box, draw(g) {
+      g.lineWidth = C * 1.1; g.lineCap = 'round';
+      for (let k = 0; k < R.nTick; k++) {
+        const tk = k / R.nTick * Math.PI * 2, c = Math.cos(tk), sg = Math.sign(c);
+        if (Math.abs(R.a * c) < (R.narrow ? 2.0 : 3.4) || (c > 0) !== (o.kind === 'tickB')) continue;
+        const r1 = R.r0 + sg * (R.thZ + 0.6), r2 = R.r0 + R.a * c - sg * (R.thW + 0.6);
+        g.beginPath(); g.moveTo(...P(r1, tk)); g.lineTo(...P(r2, tk)); g.stroke();
+      }
+    } };
+  }
+  function innerShadow(target, mask, tmp, color, blur, ox, oy) {   // shading kept inside the shape, so its edge stays sharp
+    const W = mask.width, H = mask.height, t = tmp.getContext('2d');
+    t.setTransform(1, 0, 0, 1, 0, 0); t.globalCompositeOperation = 'source-over'; t.clearRect(0, 0, W, H);
+    t.fillStyle = '#000'; t.fillRect(0, 0, W, H); t.globalCompositeOperation = 'destination-out'; t.drawImage(mask, 0, 0);
+    target.save(); target.setTransform(1, 0, 0, 1, 0, 0); target.globalCompositeOperation = 'source-atop';
+    target.shadowColor = color; target.shadowBlur = blur; target.shadowOffsetX = ox + W * 2; target.shadowOffsetY = oy;
+    target.drawImage(tmp, -W * 2, 0); target.restore();
+  }
+  function renderShape(s, d, light) {
+    const o = s.o, G = shapeGeom(o, light), sz = G.size, k = Math.max(1.2, Math.min(7, sz * 0.09)) * d;
+    const narrow = !!(o.narrow || (o.ring && o.ring.narrow));
+    const pad = Math.max(4, sz * 0.2);
+    const ox = Math.floor((G.box[0] - pad) * d), oy = Math.floor((G.box[1] - pad) * d);
+    const W = Math.ceil((G.box[2] + pad) * d) - ox, H = Math.ceil((G.box[3] + pad) * d) - oy;
+    const [mc, mg] = mkc(W, H), [bc, bg] = mkc(W, H), [tc, tgc] = mkc(W, H);
+    mg.setTransform(d, 0, 0, d, -ox, -oy); mg.fillStyle = mg.strokeStyle = '#fff';
+    G.draw(mg);
+    let bulge = null;
+    if (o.kind === 'word' && o.top && /^[TE]/.test(o.word)) {   // a small soft round bulge at the foot of the T and the E
+      const by = Math.round(o.base * CELL * d) - oy - 1;
+      if (by >= 0 && by < H) {
+        const id = mg.getImageData(0, by, W, 1).data; let a = -1, b = -1;
+        for (let x = 0; x < W; x++) { if (id[x * 4 + 3] > 200) { if (a < 0) a = x; b = x; } else if (a >= 0) break; }
+        if (a >= 0 && (b - a) / d > o.f * CELL * 0.1) {
+          const cx = ((a + b + 1) / 2 + ox) / d, sw = (b - a + 1) / d, rr = Math.min(sw * 0.62, o.f * CELL * 0.13), yy = o.base * CELL + rr * 0.25;
+          mg.beginPath(); mg.arc(cx, yy, rr, 0, Math.PI * 2); mg.fill(); bulge = [cx, yy, rr];
+        }
+      }
+    }
+    bg.drawImage(mc, 0, 0); bg.globalCompositeOperation = 'source-in';
+    if (o.kind === 'word') {
+      const top = (o.base - o.f * 0.82) * CELL * d - oy, bot = (o.base + o.f * 0.25) * CELL * d - oy, gr = bg.createLinearGradient(0, top, 0, bot);
+      gr.addColorStop(0, smix(G.hex, '#ffffff', narrow ? 0.3 : 0.22)); gr.addColorStop(0.55, G.hex); gr.addColorStop(1, smix(G.hex, '#000000', 0.12));
+      bg.fillStyle = gr;
+    } else bg.fillStyle = G.hex;
+    bg.fillRect(0, 0, W, H);
+    innerShadow(bg, mc, tc, 'rgba(10,6,40,0.55)', k * 1.1, -k * 0.35, -k * 0.55);   // gentle shading toward the lower edges
+    innerShadow(bg, mc, tc, G.line ? 'rgba(255,255,255,0.3)' : narrow ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.55)', k * 0.5, k * 0.25, k * 0.4);   // soft light rim along the top
+    if (!G.line && !narrow) {   // the glossy band, set in from the top of each stroke (left out on small screens, where it turns blotchy)
+      const h = Math.max(1, k * 0.7);
+      tgc.setTransform(1, 0, 0, 1, 0, 0); tgc.globalCompositeOperation = 'source-over'; tgc.clearRect(0, 0, W, H);
+      tgc.drawImage(mc, 0, 0); tgc.globalCompositeOperation = 'destination-out'; tgc.drawImage(mc, 0, h * 1.6);
+      tgc.globalCompositeOperation = 'destination-in'; tgc.drawImage(mc, 0, -h * 0.9); tgc.drawImage(mc, h * 0.9, 0); tgc.drawImage(mc, -h * 0.9, 0);
+      bg.save(); bg.globalCompositeOperation = 'source-atop'; bg.globalAlpha = 0.62; bg.filter = `blur(${(h * 0.35).toFixed(2)}px)`;
+      bg.drawImage(tc, 0, h * 0.7); bg.restore();
+    }
+    if (bulge) { const [x, y, r] = bulge; bg.save(); bg.globalCompositeOperation = 'source-atop'; bg.fillStyle = 'rgba(255,255,255,0.75)';
+      bg.beginPath(); bg.ellipse(x * d - ox - r * 0.35 * d, y * d - oy - r * 0.3 * d, r * 0.26 * d, r * 0.17 * d, -0.6, 0, Math.PI * 2); bg.fill(); bg.restore(); }
+    // thickness: a crisp deeper copy just below (no blur), then the body on top
+    const dep = Math.max(1, Math.round(Math.min(sz * 0.055, 4) * d));
+    const [fc, fg] = mkc(W, H + dep);
+    tgc.setTransform(1, 0, 0, 1, 0, 0); tgc.globalCompositeOperation = 'source-over'; tgc.clearRect(0, 0, W, H); tgc.drawImage(mc, 0, 0);
+    tgc.globalCompositeOperation = 'source-in'; tgc.fillStyle = smix(G.hex, '#05070d', 0.5); tgc.fillRect(0, 0, W, H);
+    fg.drawImage(tc, 0, dep); fg.drawImage(bc, 0, 0);
+    s.cv = fc; s.dx = ox; s.dy = oy;
+  }
+  function slimeOverlay() {
+    if (slime.ov) return slime.ov;
+    const o = document.createElement('canvas');
+    o.id = 'sandWelcomeSlime'; o.setAttribute('aria-hidden', 'true');
+    o.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;background:transparent;display:none';
+    canvas.insertAdjacentElement('afterend', o);
+    return (slime.ov = o);
+  }
+  function compose() {
+    const o = slime.ov, g = o.getContext('2d'), d = devicePixelRatio, now = performance.now();
+    const shift = Math.round((gRows - slime.R) * CELL * d);   // the floor stays put when the height changes
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, o.width, o.height);
+    let fading = false;
+    slime.shapes.forEach(s => {
+      if (!s.cv) return;
+      let a = 1;
+      if (s.gone) { a = 1 - (now - s.gone) / SLIME_FADE; if (a <= 0) return; fading = true; }
+      g.globalAlpha = a; g.drawImage(s.cv, s.dx, s.dy + shift);
+    });
+    g.globalAlpha = 1;
+    slime.fading = fading;
+  }
+  function slimeFail(e) {   // never leave the welcome invisible: fall back to the sand look
+    slime.failed = true; slime.hid.clear(); redrawSand();
+    if (slime.ov) slime.ov.style.display = 'none';
+    if (window.console) console.warn('welcome slime off:', e);
+  }
+  function slimeTick() {
+    requestAnimationFrame(slimeTick);
+    try {
+      const show = active && mode === 'sand' && slime.shapes.length && !slime.failed && slime.shapes.some(s => !s.gone || slime.fading);
+      if (!show) { if (slime.ov && slime.ov.style.display !== 'none') slime.ov.style.display = 'none'; return; }
+      const o = slimeOverlay(), d = devicePixelRatio, light = isLightBg();
+      const key = [canvas.width, canvas.height, canvas.style.width, canvas.style.height, canvas.style.transform, d, light, slime.R, gRows, gCols].join('|');
+      if (key !== slime.key) {
+        slime.key = key;
+        o.style.width = canvas.style.width; o.style.height = canvas.style.height; o.style.transform = canvas.style.transform;
+        o.width = canvas.width; o.height = canvas.height;
+        slime.shapes.forEach(s => renderShape(s, d, light));
+        compose();
+      }
+      if (o.style.display !== 'block') o.style.display = 'block';
+      if (++slime.n % 6 === 0) slime.shapes.forEach(s => { if (!s.gone && disturbed(s)) reveal(s); });
+      if (slime.fading) compose();
+    } catch (e) { slimeFail(e); }
+  }
+  requestAnimationFrame(slimeTick);
   window.sandWelcome = { clear: clearWelcome, isOn: () => active };
+  window.sandWelcome.slime = slime;
 })();
 </script>
 <script id="premadeBubbles">
