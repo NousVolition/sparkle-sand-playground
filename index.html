@@ -5444,15 +5444,10 @@ requestAnimationFrame(loop);
     padding: 12px 14px;
     border-bottom: 1px solid var(--panel-border);
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 10px;
     justify-content: space-between;
     align-items: center;
   }
   .mini-header h3 { font-size: 0.92rem; font-weight: 600; }
-  #gapLineBadge { white-space: nowrap; }
-  .proof-link { color: var(--accent); font-size: 0.74rem; text-underline-offset: 3px; }
-  .proof-link:hover, .proof-link:focus-visible { color: var(--text); }
   .badge {
     font-size: 0.74rem;
     padding: 3px 8px;
@@ -5546,8 +5541,7 @@ requestAnimationFrame(loop);
       <div class="mini-card">
         <div class="mini-header">
           <h3>1. Open Line (Poincaré)</h3>
-          <span class="badge" id="gapLineBadge">Gap &lambda;₂ = 2 − √3 ≈ 0.268</span>
-          <a class="proof-link" id="pathLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/PathSix.lean#L70" target="_blank" rel="noopener" aria-label="Lean proof of the six-point path gap (opens in a new tab)">Lean proof ↗</a>
+          <span class="badge" id="gapLineBadge">Gap &lambda;₂ = 0.268</span>
         </div>
         <canvas id="lineCanvas"></canvas>
         <div class="mini-footer">
@@ -23876,10 +23870,13 @@ loop();
     e8studio: '#07090f', e8insp: '#0b0e14', e8studio2: '#07090f', 'unit-distances': '#0b0e14', cipher: '#0b0e14' };
   const NIGHT_FRAME = { id: 'night', bg: '#0b0e14' };
   // what her frames see: on Auto and soft near-black they keep their own colors (nothing injected)
-  const F = () => (cur.id === 'auto' || cur.id === 'night') ? NIGHT_FRAME : cur;
+  const F = () => (cur.id === 'auto' || cur.id === 'night' || cur.id === 'stone') ? NIGHT_FRAME : cur;   // stone: beige shows around her pages only
   const root = document.documentElement, wrap = document.getElementById('bgPick'), box = document.getElementById('bgSwatches'), btn = document.getElementById('bgPickBtn');
   let cur = PALETTE[0];
-  try { const v = localStorage.getItem('sparkle.bg'); cur = PALETTE.find(p => p.id === (v === 'cream' ? 'stone' : v)) || PALETTE[0]; } catch (e) {}
+  // the starting background for every entry is the stone beige; Auto and the other swatches stay as picks (remembered)
+  const START = PALETTE.find(p => p.id === 'stone');
+  cur = START;
+  try { const v = localStorage.getItem('sparkle.bg'); cur = PALETTE.find(p => p.id === (v === 'cream' ? 'stone' : v)) || START; } catch (e) {}
   const sws = PALETTE.map(p => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'bg-sw'; b.setAttribute('role', 'radio'); b.dataset.bg = p.id;
@@ -24115,6 +24112,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   }
 
   function build() {
+    tones.clear();
     const C = gCols, R = gRows;
     const parts = WELCOME_TITLE.split('\n').map(x => x.trim().split(/\s+/)), words = [].concat(...parts);
     const narrow = C < 220;
@@ -24154,7 +24152,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         tg.fillText(word, x, line.base);
         if (!narrow) tg.strokeText(word, x, line.base);
         const d = tg.getImageData(0, 0, C, R).data;
-        const id = nextObjId++, mc = moldColor(WORD_COLORS[n++ % WORD_COLORS.length]);
+        const id = nextObjId++, mc = inkColor(id, WORD_COLORS[n++ % WORD_COLORS.length]);
         ids.add(id);
         for (let q = 0, j = 3; q < C * R; q++, j += 4) {
           if (d[j] > 110 && gType[q] === EMPTY) { gType[q] = STAMP; gOwner[q] = id; gColor[q] = mc; }
@@ -24172,7 +24170,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const m = moldMask('star', sn);
     spots.forEach(([x0, y0, col]) => {
       x0 = Math.round(x0); y0 = Math.round(y0);
-      const id = nextObjId++, mc = moldColor(col); ids.add(id);
+      const id = nextObjId++, mc = inkColor(id, col); ids.add(id);
       for (let y = 0; y < sn; y++) for (let x = 0; x < sn; x++) {
         if (!m[y * sn + x]) continue;
         const gx = x0 + x, gy = y0 + y;
@@ -24203,10 +24201,25 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   // teal on the dip side). The words around it are small labels on the page; the ring itself is sand.
   let ring = null;   // { cx, cyUp (rows up from the floor), r0, a } in cells
   let zeroLine = null;
+  // on the light (stone) background the welcome's sand takes deeper versions of the same colors, so it reads well
+  const LIGHT_INK = { '#ff6b9d': '#c2185b', '#00d4ff': '#0e7490', '#c084fc': '#7c3aed', '#fbbf24': '#b45309', '#34d399': '#047857',
+    '#fb923c': '#c2410c', '#a78bfa': '#6d28d9', '#c0804e': '#8a4f22', '#2dd4bf': '#0f766e' };
+  const tones = new Map();   // object id -> { d: color on dark, l: color on light }
+  let tonesLight = null;
+  const isLightBg = () => document.documentElement.classList.contains('bg-light');
+  function inkColor(id, hex) {
+    const t = { d: moldColor(hex), l: moldColor(LIGHT_INK[hex] || hex) };
+    tones.set(id, t); tonesLight = isLightBg();
+    return tonesLight ? t.l : t.d;
+  }
   function zeroTone() {
-    if (!zeroLine || !gType) return;
-    const l = document.documentElement.classList.contains('bg-light');
-    if (l === zeroLine.light) return;
+    if (!gType) return;
+    const l = isLightBg();
+    if (tones.size && l !== tonesLight) {
+      tonesLight = l;
+      for (let i = 0; i < gType.length; i++) { if (gType[i] !== STAMP) continue; const t = tones.get(gOwner[i]); if (t) gColor[i] = l ? t.l : t.d; }
+    }
+    if (!zeroLine || l === zeroLine.light) return;
     zeroLine.light = l;
     const c = l ? zeroLine.lite : zeroLine.dark;
     for (let i = 0; i < gType.length; i++) if (gType[i] === STAMP && gOwner[i] === zeroLine.id) gColor[i] = c;
@@ -24227,7 +24240,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const nTick = narrow ? 20 : 28;
     const light = (() => { const m = /#([0-9a-f]{6})/i.exec(getComputedStyle(document.documentElement).getPropertyValue('--bg')); if (!m) return false;
       const n = parseInt(m[1], 16); return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255 > 0.6; })();
-    const mk = col => { const id = nextObjId++; ids.add(id); return { id, mc: moldColor(col) }; };
+    const mk = col => { const id = nextObjId++; ids.add(id); return { id, mc: inkColor(id, col) }; };
     const W = mk('#a78bfa'), Z = mk(light ? '#3b4558' : '#dfe6f0'), TB = mk('#c0804e'), TT = mk('#2dd4bf');
     // the zero line keeps its contrast when the background changes between dark and light later
     zeroLine = { id: Z.id, light, dark: light ? moldColor('#dfe6f0') : Z.mc, lite: light ? Z.mc : moldColor('#3b4558') };
@@ -24919,6 +24932,58 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   setControls = function () { baseControls.apply(this, arguments); panel(); };
   panel();
   window.sandLetters = { place, state: ST };
+})();
+</script>
+<script id="lightInk">
+// ========== DEEPER INK ON THE LIGHT BACKGROUND ==========
+// Loop, Bubbles, Silk and Magnets draw light, glowing colors straight onto the page color. On the stone (light)
+// background those colors would wash out, so while it is up their colors are drawn as deeper versions of the same
+// hue, and "add light" blending draws normally. Background tones (the page color and its shades) are left alone.
+(function lightInk() {
+  const MODES = { loop: 1, bubbles: 1, silk: 1, magnets: 1 };
+  const root = document.documentElement;
+  const on = () => root.classList.contains('bg-light') && MODES[mode];
+  const P = CanvasRenderingContext2D.prototype;
+  const desc = n => Object.getOwnPropertyDescriptor(P, n);
+  const norm = document.createElement('canvas').getContext('2d');
+  const cache = new Map();
+  function deepen(v) {
+    if (typeof v !== 'string') return v;
+    let r = cache.get(v);
+    if (r !== undefined) return r;
+    norm.fillStyle = '#000'; norm.fillStyle = v;
+    const s = norm.fillStyle;   // '#rrggbb' or 'rgba(r, g, b, a)'
+    let R, G, B, A = 1;
+    if (s[0] === '#') { const n = parseInt(s.slice(1), 16); R = n >> 16; G = (n >> 8) & 255; B = n & 255; }
+    else { const m = s.match(/[\d.]+/g).map(Number); [R, G, B] = m; A = m.length > 3 ? m[3] : 1; }
+    const mx = Math.max(R, G, B) / 255, mn = Math.min(R, G, B) / 255, l = (mx + mn) / 2, d = mx - mn;
+    const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    const pb = typeof pageBg !== 'undefined' && pageBg ? pageBg : null;
+    const near = pb && Math.abs(R - pb.r) < 40 && Math.abs(G - pb.g) < 40 && Math.abs(B - pb.b) < 40 && sat < 0.25;
+    if (near || l < 0.36) { cache.set(v, v); return v; }   // background tones and already-deep colors stay
+    let h = 0;
+    if (d) { h = mx === R / 255 ? ((G - B) / 255 / d) % 6 : mx === G / 255 ? (B - R) / 255 / d + 2 : (R - G) / 255 / d + 4; h *= 60; if (h < 0) h += 360; }
+    const L2 = sat < 0.12 ? 0.22 : 0.3, S2 = sat < 0.12 ? sat : Math.min(1, Math.max(sat, 0.55) * 1.05);
+    r = `hsla(${h.toFixed(1)}, ${(S2 * 100).toFixed(1)}%, ${(L2 * 100).toFixed(1)}%, ${A})`;
+    if (cache.size > 4000) cache.clear();
+    cache.set(v, r);
+    return r;
+  }
+  ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(n => {
+    const d = desc(n);
+    Object.defineProperty(ctx, n, { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, on() ? deepen(v) : v); } });
+  });
+  const gco = desc('globalCompositeOperation');
+  Object.defineProperty(ctx, 'globalCompositeOperation', { configurable: true, get() { return gco.get.call(this); },
+    set(v) { gco.set.call(this, on() && (v === 'lighter' || v === 'screen' || v === 'plus-lighter') ? 'source-over' : v); } });
+  ['createLinearGradient', 'createRadialGradient'].forEach(n => {
+    const f = P[n];
+    ctx[n] = function () {
+      const g = f.apply(this, arguments);
+      if (on()) { const add = g.addColorStop; g.addColorStop = function (o, c) { return add.call(this, o, deepen(c)); }; }
+      return g;
+    };
+  });
 })();
 </script>
 </body>
