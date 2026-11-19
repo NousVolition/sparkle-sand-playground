@@ -345,6 +345,24 @@ Third-party material is governed by its own terms.
     .bg-pick.open .bg-swatches { display: flex; }
     .bg-sw { width: 28px; height: 28px; }
   }
+  /* narrow desktop windows (701-1100 px): the entry menu keeps a readable width and always shows the current entry
+     (a long name ends in an ellipsis). Other header items give way first: the color swatches fold into their dot button
+     and Sound / Linked get a little smaller; below 760 px the menu moves to its own row under the title. */
+  @media (min-width: 701px) and (max-width: 1100px) { .pn-wrap { min-width: 9rem; } }
+  @media (min-width: 701px) and (max-width: 960px) {
+    .bg-pick-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 1px dashed var(--border); background: transparent; cursor: pointer; padding: 0; }
+    .bg-swatches { display: none; position: absolute; z-index: 1001; top: calc(100% + 6px); right: 0; background: var(--panel); box-shadow: 0 8px 24px rgba(0,0,0,0.5); padding: 8px 10px; gap: 8px; }
+    .bg-pick.open .bg-swatches { display: flex; }
+    .tabs .sound-btn { padding: 6px 9px; font-size: 0.8rem; }
+  }
+  @media (min-width: 701px) and (max-width: 759px) {
+    header { flex-wrap: wrap; row-gap: 8px; }
+    body > header { padding-bottom: 26px; }   /* room for the copyright chip under the menu row */
+    header h1 { flex: 1; min-width: 0; }
+    header .tabs { order: 2; }
+    header .playnav { order: 3; flex: 1 1 calc(100% - 56px); }
+    .bg-pick { order: 4; }
+  }
   /* Controls in one place: a left side panel (desktop), a collapsible Controls drawer above the picture (phones) */
   :root { --side-w: 280px; }
   #ctlToggle { display: none; }
