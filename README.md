@@ -1,6 +1,10 @@
 # sparkle-sand-playground
 Interactive particle playground: kinetic sand, bubbles, sound plate, waves
 
+## Lean proofs across the playground
+
+The **Lean proofs** menu follows the selected tab. The [33-tab comparison](docs/lean-coverage.md) checks the tab's formulas, matrices and constructions against the Lean statements and their hypotheses. It distinguishes matching results, limited connections and pages with no matching proof in the reviewed library. The [reproducible checks](scripts/check-proof-coverage.cjs) and [saved output](docs/lean-coverage-check.json) record the external comparisons; they are separate from Lean's proof checking.
+
 ## Trilogy's gap proofs
 
 The path label in [Trilogy](https://nousvolition.github.io/sparkle-sand-playground/#trilogy) reads `2 − √3 ≈ 0.268`, with a link to [PathSix.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/PathSix.lean#L70). The Lean proof establishes the bound, an equality case and the rounding.

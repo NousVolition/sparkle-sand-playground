@@ -18,6 +18,8 @@ Third-party material is governed by its own terms.
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Through My Eyes · NousVolition's Physics Playground</title>
+<link rel="stylesheet" href="proof-coverage.css">
+<script src="proof-coverage.js" defer></script>
 <style>
   :root {
     --bg: #0b0e14;
@@ -408,6 +410,17 @@ Third-party material is governed by its own terms.
     <button type="button" class="bg-pick-btn" id="bgPickBtn" aria-haspopup="true" aria-expanded="false" aria-controls="bgSwatches" title="Background color"><span class="bg-dot"></span></button>
     <div class="bg-swatches" id="bgSwatches" role="radiogroup" aria-label="Background color"></div>
   </div>
+  <details id="proof-notes">
+    <summary>Lean proofs</summary>
+    <section class="proof-panel" aria-labelledby="proof-title">
+      <h2 id="proof-title">Proof coverage</h2>
+      <p id="proof-status">Loading proof notes…</p>
+      <p id="proof-note"></p>
+      <ul id="proof-links"></ul>
+      <p class="proof-scope">Compared with the discrete-gap-inequalities-lean library. A linked theorem proves its stated mathematical result; the browser implementation is checked separately.</p>
+      <a id="proof-record" href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/docs/lean-coverage.md" target="_blank" rel="noopener">Comparison and reproducible checks ↗</a>
+    </section>
+  </details>
   <div class="tabs">
     <button class="tab active" data-mode="sand">1. Sand</button>
     <button class="tab" data-mode="loop">2. Loop</button>
@@ -3615,7 +3628,7 @@ requestAnimationFrame(tick);
     <div class="card">
       <div class="card-header">
         <span class="card-title">Gap Size Distribution (Nearest Neighbors)</span>
-        <span class="badge" id="gapMatchBadge">GUE Match: 99.4%</span>
+        <span class="badge" id="gapMatchBadge">GUE-like illustration</span>
       </div>
       <canvas id="histCanvas" height="330"></canvas>
       <div class="legend">

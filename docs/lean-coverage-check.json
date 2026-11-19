@@ -1,0 +1,607 @@
+{
+  "status": "PASS",
+  "scope": "External source/computation comparison; no new Lean theorem and no interactive browser test",
+  "proof_revision": "c881c38ed38e582eca656752f660526b25ba7307",
+  "html_sha256": "0386cc941fb50e43ffef1bc933b5826658aa5a10a27f45671891a1212f3208da",
+  "coverage_js_sha256": "fdc5dc065bbce397692a7a0b3403bb6624149ce59319fb466a7c696ed4df0b52",
+  "node_version": "v24.22.1",
+  "tabs_checked": 33,
+  "status_counts": {
+    "No matching proof in this library": 21,
+    "Related theorem; limited match": 3,
+    "Some results proved; limits below": 9
+  },
+  "theorem_targets": [
+    {
+      "file": "RingDecay.lean",
+      "line": 191,
+      "declaration": "RingDecay.energy_heatStep_le_mean"
+    },
+    {
+      "file": "Wirtinger.lean",
+      "line": 168,
+      "declaration": "CycleWirtinger.wirtinger"
+    },
+    {
+      "file": "RingDecay.lean",
+      "line": 41,
+      "declaration": "RingDecay.gap_eq_four_sin_sq"
+    },
+    {
+      "file": "Poincare.lean",
+      "line": 69,
+      "declaration": "DiscretePoincare.poincare"
+    },
+    {
+      "file": "PathSix.lean",
+      "line": 70,
+      "declaration": "PathSix.poincare"
+    },
+    {
+      "file": "CubeCheeger.lean",
+      "line": 179,
+      "declaration": "CubeCheeger.gap"
+    },
+    {
+      "file": "EdgeOptimal.lean",
+      "line": 230,
+      "declaration": "HypercubeEdgeOptimal.max_dir_eq"
+    },
+    {
+      "file": "E8PlumbingBridge.lean",
+      "line": 188,
+      "declaration": "E8PlumbingBridge.total_E8_roots"
+    },
+    {
+      "file": "E8PlumbingBridge.lean",
+      "line": 79,
+      "declaration": "E8PlumbingBridge.E8_det"
+    },
+    {
+      "file": "GolayLeechBridge.lean",
+      "line": 78,
+      "declaration": "GolayLeechBridge.leech_kissing_decomposition"
+    },
+    {
+      "file": "GolayMatrixDistance.lean",
+      "line": 140,
+      "declaration": "GolayMatrixDistance.golay_weight_distribution"
+    },
+    {
+      "file": "Wirtinger.lean",
+      "line": 228,
+      "declaration": "CycleWirtinger.wirtinger_sharp"
+    }
+  ],
+  "axiom_declarations": 559,
+  "inline_scripts_syntax_checked": 35,
+  "e8_enumerations": {
+    "penteract": {
+      "integer": 112,
+      "even_parity_half": 128,
+      "distinct": 240,
+      "squared_norm": 2,
+      "vector_set_sha256": "21e7f2f7c4052584fcfbad984bb51ebf97cbb80285e9b1221cb859787079c326"
+    },
+    "pentlite": {
+      "integer": 112,
+      "even_parity_half": 128,
+      "distinct": 240,
+      "squared_norm": 2,
+      "vector_set_sha256": "21e7f2f7c4052584fcfbad984bb51ebf97cbb80285e9b1221cb859787079c326"
+    },
+    "e8studio": {
+      "integer": 112,
+      "even_parity_half": 128,
+      "distinct": 240,
+      "squared_norm": 2,
+      "vector_set_sha256": "21e7f2f7c4052584fcfbad984bb51ebf97cbb80285e9b1221cb859787079c326"
+    },
+    "e8studio2": {
+      "integer": 112,
+      "even_parity_half": 128,
+      "distinct": 240,
+      "squared_norm": 2,
+      "vector_set_sha256": "21e7f2f7c4052584fcfbad984bb51ebf97cbb80285e9b1221cb859787079c326"
+    },
+    "e8insp": {
+      "integer": 112,
+      "even_parity_half": 128,
+      "distinct": 240,
+      "squared_norm": 2,
+      "vector_set_sha256": "21e7f2f7c4052584fcfbad984bb51ebf97cbb80285e9b1221cb859787079c326"
+    }
+  },
+  "e8_gram_correspondence": {
+    "penteract": {
+      "tab_to_lean": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        5,
+        6
+      ],
+      "sign": -1,
+      "entries_checked": 64,
+      "determinant": 1
+    },
+    "e8insp": {
+      "tab_to_lean": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        5,
+        6
+      ],
+      "sign": -1,
+      "entries_checked": 64,
+      "determinant": 1,
+      "subset_determinants_external_only": [
+        {
+          "dropped_zero_based_index": 7,
+          "determinant": 4
+        },
+        {
+          "dropped_zero_based_index": 0,
+          "determinant": 2
+        },
+        {
+          "dropped_zero_based_index": 5,
+          "determinant": 8
+        }
+      ]
+    },
+    "e8studio2": {
+      "tab_to_lean": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        5,
+        6
+      ],
+      "sign": -1,
+      "entries_checked": 64,
+      "determinant": 1
+    }
+  },
+  "e8_tree_correspondence": {
+    "e8studio": {
+      "tab_to_lean": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "entries_checked": 64,
+      "determinant": 1
+    },
+    "e8studio2": {
+      "tab_to_lean": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        5,
+        6
+      ],
+      "entries_checked": 64,
+      "determinant": 1
+    }
+  },
+  "leech": {
+    "distribution": {
+      "0": 1,
+      "8": 759,
+      "12": 2576,
+      "16": 759,
+      "24": 1
+    },
+    "shells": [
+      1104,
+      97152,
+      98304
+    ],
+    "vectors": 196560,
+    "allocated": 196560,
+    "distinct": 196560,
+    "allNorm32": true,
+    "golay_codewords": 4096,
+    "mod11_codewords_in_common_without_permutation": 4,
+    "table_status": "hand-entered in GolayLeechBridge; agrees with external enumeration, not a Lean correspondence"
+  },
+  "ferro": [
+    {
+      "surface_tension": 0.02,
+      "t": 0.003355805810365653,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.04,
+      "t": 0.006757585133906008,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.06,
+      "t": 0.010206945642219245,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.08,
+      "t": 0.013705586890571997,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.1,
+      "t": 0.01725530769718514,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.12,
+      "t": 0.020858014293721583,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.14,
+      "t": 0.024515729347092508,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.16,
+      "t": 0.028230601968346647,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.18,
+      "t": 0.032004918842942154,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.2,
+      "t": 0.03584111663872208,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.22,
+      "t": 0.039741795874205565,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.24,
+      "t": 0.04370973646130333,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.26,
+      "t": 0.04774791517448623,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.28,
+      "t": 0.05185952534428351,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.3,
+      "t": 0.05604799912869968,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.32,
+      "t": 0.0603170327841821,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.34,
+      "t": 0.06467061544131941,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.36,
+      "t": 0.06911306199362327,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.38,
+      "t": 0.0736490508359201,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.4,
+      "t": 0.0782836673491254,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.42,
+      "t": 0.08302245422986965,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.44,
+      "t": 0.0878714700191443,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.46,
+      "t": 0.092837357510764,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.48,
+      "t": 0.09792742414109418,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.5,
+      "t": 0.1031497370079501,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.52,
+      "t": 0.10851323588311362,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.54,
+      "t": 0.11402786853191793,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.56,
+      "t": 0.11970475392386087,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.58,
+      "t": 0.12555638063907465,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.6,
+      "t": 0.13159685013596134,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.62,
+      "t": 0.13784217782791297,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.64,
+      "t": 0.1443106695509937,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.66,
+      "t": 0.15102339765455564,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.68,
+      "t": 0.1580048106646606,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.7000000000000001,
+      "t": 0.16528352495891524,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.72,
+      "t": 0.172893368981141,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.74,
+      "t": 0.1808747850570046,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.76,
+      "t": 0.1892767494046141,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.78,
+      "t": 0.19815946316011573,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.8,
+      "t": 0.20759822617871343,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.8200000000000001,
+      "t": 0.21768919133569148,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.84,
+      "t": 0.2285582383405093,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 3.552713678800501e-15
+    },
+    {
+      "surface_tension": 0.86,
+      "t": 0.2403752949074448,
+      "within_linked_step_bound": true,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.88,
+      "t": 0.25337879256695295,
+      "within_linked_step_bound": false,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    },
+    {
+      "surface_tension": 0.9,
+      "t": 0.26792055831936107,
+      "within_linked_step_bound": false,
+      "maximum_stencil_difference": 1.7763568394002505e-15
+    }
+  ],
+  "ring": [
+    {
+      "n": 6,
+      "first_height_squared": 0.9999999999999998,
+      "gap": 0.9999999999999998,
+      "difference": 0
+    },
+    {
+      "n": 24,
+      "first_height_squared": 0.0681483474218634,
+      "gap": 0.06814834742186338,
+      "difference": 2.7755575615628914e-17
+    },
+    {
+      "n": 120,
+      "first_height_squared": 0.0027409304908522516,
+      "gap": 0.0027409304908523335,
+      "difference": 8.196568423990414e-17
+    }
+  ],
+  "pendulum": [
+    {
+      "mode": "line",
+      "n": 14,
+      "maximum_acceleration_difference": 1.0604484401710579e-8,
+      "scope": "neighbor stencil only; no trajectory proof"
+    },
+    {
+      "mode": "ring",
+      "n": 14,
+      "maximum_acceleration_difference": 1.0604486178067418e-8,
+      "scope": "neighbor stencil only; no trajectory proof"
+    }
+  ],
+  "source_slices": {
+    "penteract.roots": {
+      "start": "  const e8Roots = [];",
+      "end": "  // 8 simple roots",
+      "sha256": "6e94195de9f0d7221058af5a738785fa2b584ac49982d482e7997a885e41e64e"
+    },
+    "pentlite.roots": {
+      "start": "const e8Roots = [];",
+      "end": "// Precompute 5D",
+      "sha256": "157c09bb09a4bdac1a90de9b3679cb7ec9e025ecf87c09373d114cea502bb737"
+    },
+    "e8studio.roots": {
+      "start": "const e8Roots = [];",
+      "end": "for (let i = 0; i < N; i++)",
+      "sha256": "4a1cec90a45e9500ee80a9b654c0b449363971fe064b75279fe09e7ed9216a86"
+    },
+    "e8studio2.roots": {
+      "start": "const e8Roots = [];",
+      "end": "// Real Coxeter plane",
+      "sha256": "4a1cec90a45e9500ee80a9b654c0b449363971fe064b75279fe09e7ed9216a86"
+    },
+    "e8insp.roots": {
+      "start": "  const roots = [];",
+      "end": "  // Tag the 8 simple roots",
+      "sha256": "03fefba59d3b7565d16d35e7d38f2bbfb57fa76e95a635b84c8d75761bcb1641"
+    },
+    "penteract.simple": {
+      "sha256": "fd4bd17ca9bc8ea2bb1bae2b7d941cbbc394a18a4ab915dc75f0e3ab8338fc85"
+    },
+    "e8insp.simple": {
+      "sha256": "1c473f63da3b2bb6432241ed2c551d18fde28ad0c4e8c10fd097b25e78923cce"
+    },
+    "e8studio2.simple": {
+      "sha256": "eabd8f6734ec8540dc1c2b3363f841dce1b365c54c79eb14023ffeefd1aff4b4"
+    },
+    "e8studio.tree": {
+      "sha256": "09c138c8f85fafc2046d46ebfb0d636e28998b0fbd5f0c54635c650adce69498"
+    },
+    "e8studio2.tree": {
+      "sha256": "47d40332c69c8aed6404af4debd040d34c0631f44d7e022aaa1bbbac5cbb95ab"
+    },
+    "leech.generator_and_vectors": {
+      "start": "const Q = [];",
+      "end": "document.getElementById('sTotal')",
+      "sha256": "679e289d3cdcb814b7225e756dfe56cd58789f8193d23082ee87ca4d9599b072"
+    },
+    "ferro.smoothing": {
+      "start": "    const smoothAmount = Math.min(0.95, surfaceTension);",
+      "end": "    //    (c) Rescale edge radii",
+      "sha256": "5b3ade754d416a42c24391620ce7b8b006f44fdb43c9ffbdb7ccb3831c4babc9"
+    },
+    "ringsum.bars": {
+      "start": "  // Exact sums for k = 1 .. n-1",
+      "end": "  document.getElementById('bar-total-val')",
+      "sha256": "fea24faf0a793ac73de40b72c79735500624845482e3ffadd8b5024ec4edfbf5"
+    },
+    "pendulum.step": {
+      "start": "function stepCoupled(dt) {",
+      "end": "function drawCoupled",
+      "sha256": "f26d98faa9a914c93e5850f7395c6808b992fc7e1fabf27efd6cebfc9267a3a9"
+    }
+  },
+  "lean_source_sha256": {
+    "CheckAxioms.lean": "9698fe1d37613c4a454b82183e83b0535ebee8576e5a5e1657270a3fa733e889",
+    "RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
+    "Wirtinger.lean": "e5e18956e8d4477ca3101a9c5e839981c4880530e5b7523d682a14c17d3e5093",
+    "Poincare.lean": "e4a76d125f57885221ac70ed59749b9ea12143bcbca3a71c56e74ee6c05b4fd0",
+    "PathSix.lean": "d8f35f7e0b6975388a4598dcc1e8c4db968e466a5fe7d6fd107b792e9aa7122f",
+    "CubeCheeger.lean": "c7dee65161ca232c5ca51dbcb4c1c594dcfe4f2714b0e94f24047fb9768d9509",
+    "EdgeOptimal.lean": "5ea6d3c18261dfd4e5dd0a68e559edd4c1109fd08b4315e71c3fe026216a6048",
+    "E8PlumbingBridge.lean": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
+    "GolayLeechBridge.lean": "0a2287c83c5d4cd85e75ef1e3fbdc2ac6319c530e3475d59db8f25202f888f05",
+    "GolayMatrixDistance.lean": "3194ab309e42a1a90d854dac5edd35d06f52da0b69c7e653704899e2bccb6c81"
+  }
+}
