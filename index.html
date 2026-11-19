@@ -23959,6 +23959,7 @@ loop();
 // (each word is a real stamp: lift it with Stamp, carve it, pour over it), two stars and a small dune.
 // "Clear welcome" (or Clear) removes it, and it stays away for the rest of the session.
 const WELCOME_TITLE = "Welcome to NousVolition's Physics Playground";
+const WELCOME_RING_CAPTION = 'One bump and one dip around the ring. It costs exactly the floor. As much below the zero line as above, so the average is zero.';
 const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. Pick any of the 33 entries from the menu above.';
 (function sandWelcome() {
   const KEY = 'sparkle.welcome.off';
@@ -23990,7 +23991,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const C = gCols, R = gRows, words = WELCOME_TITLE.split(/\s+/);
     const narrow = C < 220;
     const sx = narrow ? 0.74 : 1;   // narrow screens: letters a little narrower so they can be taller
-    const hBudget = narrow ? 0.56 : 0.42, maxLines = narrow ? 4 : 3;
+    const hBudget = narrow ? 0.34 : 0.27, maxLines = narrow ? 4 : 3;   // the title shares the screen with the ring below it
     // pick 1-3 lines, whichever gives the biggest letters inside 90% of the width and ~42% of the height
     let best = null;
     for (let n = 1; n <= Math.min(maxLines, words.length); n++) {
@@ -23999,7 +24000,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       if (!best || t.size > best.size + 1) best = Object.assign(t, { n });
     }
     const fs = Math.max(9, best.size), lh = Math.round(fs * 1.18);
-    const blockH = best.n * lh, top = Math.round(R * (narrow ? 0.07 : 0.2));
+    const blockH = best.n * lh, top = Math.round(R * (narrow ? 0.03 : 0.05));
     tc.width = C; tc.height = R;
     const k = fs / 100;
     const place = [];
@@ -24041,6 +24042,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         if (gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
       }
     });
+    bottom = buildRing(C, R, bottom, narrow);
     // a low dune of loose sand along the floor
     const peak = Math.max(4, Math.round(R * 0.05));
     for (let x = 0; x < C; x++) {
@@ -24054,6 +24056,56 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     }
     floorGap = R - bottom;
     built = active = true; touched = false; bC = C; bR = R;
+  }
+
+  // ---- "The equal case" ring, molded in sand under the title ----
+  // A ring that is one cosine wave around a dashed zero-line circle: one bump outside it on the right, one equal dip
+  // inside it on the left, with radial slope ticks between the wave and the zero line (warm brown on the bump side,
+  // teal on the dip side). The words around it are small labels on the page; the ring itself is sand.
+  let ring = null;   // { cx, cyUp (rows up from the floor), r0, a } in cells
+  function buildRing(C, R, titleBottom, narrow) {
+    const capRows = Math.ceil((narrow ? 112 : 118) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL), labRows = Math.ceil((narrow ? 18 : 22) / CELL);
+    const room = R - titleBottom - 4 - capRows - floorRows - labRows;
+    const Ro = Math.floor(Math.min(room / 2, C * (narrow ? 0.2 : 0.15)));
+    if (Ro < 12) { ring = null; return titleBottom; }   // too little room: title only
+    const r0 = Ro / 1.36, a = r0 * 0.36, cx = C / 2, cy = titleBottom + 4 + Ro;
+    const th = narrow ? 1.7 : 2.3;
+    tc.width = C; tc.height = R;
+    const pass = (col, draw) => {
+      tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, C, R);
+      tg.strokeStyle = '#fff'; tg.fillStyle = '#fff'; tg.lineCap = 'round'; tg.lineJoin = 'round';
+      draw(tg);
+      const d = tg.getImageData(0, 0, C, R).data, id = nextObjId++, mc = moldColor(col);
+      ids.add(id);
+      for (let i = 0, j = 3; i < C * R; i++, j += 4) if (d[j] > 110 && gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
+    };
+    const wave = t => r0 + a * Math.cos(t);   // bump at angle 0 (right), dip at pi (left)
+    // slope ticks first, so the ring and the zero line draw over their ends
+    const ticks = side => g => {
+      g.lineWidth = narrow ? 1.1 : 1.4;
+      for (let k = 0; k < 36; k++) {
+        const t = k / 36 * Math.PI * 2, c = Math.cos(t);
+        if ((side > 0) !== (c > 0) || Math.abs(a * c) < (narrow ? 3 : 4)) continue;
+        const r1 = r0 + Math.sign(c) * (narrow ? 1.6 : 2.4), r2 = wave(t) - Math.sign(c) * 1.2;
+        g.beginPath(); g.moveTo(cx + Math.cos(t) * r1, cy - Math.sin(t) * r1); g.lineTo(cx + Math.cos(t) * r2, cy - Math.sin(t) * r2); g.stroke();
+      }
+    };
+    pass('#b7794a', ticks(1));    // warm brown on the bump side
+    pass('#2dd4bf', ticks(-1));   // teal on the dip side
+    pass('#e2e8f0', g => {        // the dashed zero line (the average circle)
+      g.lineWidth = narrow ? 1.3 : 1.7;
+      const n = Math.max(12, Math.round(r0 * 0.45)) * 2;
+      for (let k = 0; k < n; k += 2) { g.beginPath(); g.arc(cx, cy, r0, k / n * Math.PI * 2, (k + 1) / n * Math.PI * 2); g.stroke(); }
+    });
+    pass('#a78bfa', g => {        // the ring: one cosine wave around the circle
+      g.lineWidth = th;
+      g.beginPath();
+      for (let k = 0; k <= 240; k++) { const t = k / 240 * Math.PI * 2, r = wave(t); const x = cx + Math.cos(t) * r, y = cy - Math.sin(t) * r; k ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.closePath(); g.stroke();
+    });
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    ring = { cx, cyUp: R - cy, r0, a, Ro };
+    return Math.ceil(cy + Ro + labRows);
   }
 
   function removeCells() {
@@ -24086,25 +24138,52 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       #sandWelcomeCap button:hover { border-color: #00d4ff; color: #fff; }
       html.bg-light #sandWelcomeCap { color: #334155; text-shadow: none; }
       html.bg-light #sandWelcomeCap button { background: rgba(255,255,255,.7); color: #1e293b; border-color: rgba(51,65,85,.35); }
-      @media (max-width: 700px) { #sandWelcomeCap { font-size: 13px; } }`;
+      #sandWelcomeCap .wr-cap { font-size: 13px; color: #e2e8f0; }
+      .sw-lab { position: absolute; z-index: 3; pointer-events: none; font: 600 12px/1.25 system-ui, -apple-system, "Segoe UI", sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,.7); max-width: 170px; }
+      .sw-lab[hidden] { display: none; }
+      .sw-zero { color: #cbd5e1; transform: translateX(-50%); text-align: center; max-width: none; white-space: nowrap; }
+      .sw-bump { color: #e0a274; }
+      .sw-dip { color: #5eead4; text-align: right; transform: translateX(-100%); }
+      html.bg-light .sw-lab { text-shadow: none; } html.bg-light .sw-zero { color: #334155; } html.bg-light .sw-bump { color: #8a4f22; } html.bg-light .sw-dip { color: #0f766e; }
+      @media (max-width: 700px) { #sandWelcomeCap { font-size: 12px; line-height: 1.35; } #sandWelcomeCap .wr-cap { font-size: 11px; } #sandWelcomeCap p { margin-bottom: 4px; } #sandWelcomeCap button { padding: 4px 10px; font-size: 11px; } .sw-lab { font-size: 10.5px; max-width: 92px; } }`;
     document.head.appendChild(st);
     cap = document.createElement('div');
     cap.id = 'sandWelcomeCap'; cap.hidden = true;
-    cap.innerHTML = '<p></p><button type="button" title="Remove the welcome and start with fresh sand">Clear welcome</button>';
-    cap.querySelector('p').textContent = WELCOME_LINE;
+    cap.innerHTML = '<p class="wr-cap"></p><p class="wl-line"></p><button type="button" title="Remove the welcome and start with fresh sand">Clear welcome</button>';
+    cap.querySelector('.wr-cap').textContent = WELCOME_RING_CAPTION;
+    cap.querySelector('.wl-line').textContent = WELCOME_LINE;
+    [['zero', 'Zero line (the average height)'], ['bump', 'One bump above the zero line'], ['dip', 'One dip below the zero line']].forEach(([k, t]) => {
+      const el = document.createElement('div'); el.className = 'sw-lab sw-' + k; el.textContent = t; el.hidden = true;
+      document.getElementById('canvas-container').appendChild(el); labs[k] = el;
+    });
     cap.querySelector('button').onclick = clearWelcome;
     document.getElementById('canvas-container').appendChild(cap);
     return cap;
   }
-  let lastTop = -1;
+  let lastTop = -1, lastKey = '';
+  const labs = {};
   function showCaption() {
     const on = active && mode === 'sand';
     if (!on && !cap) return;
     const c = caption();
     c.hidden = !on;
+    const ringOn = on && !!ring;
+    Object.values(labs).forEach(el => { el.hidden = !ringOn; });
+    c.querySelector('.wr-cap').hidden = !ring;
     if (!on) return;
     const t = Math.round(canvas.offsetTop + (gRows - floorGap) * CELL + 12);
     if (t !== lastTop) { c.style.top = t + 'px'; lastTop = t; }
+    if (ringOn) {   // the labels sit around the ring, which keeps its distance from the floor
+      const ox = canvas.offsetLeft, oy = canvas.offsetTop, cx = ring.cx * CELL, cy = (gRows - ring.cyUp) * CELL;
+      const key = [ox, oy, cx, cy].join(',');
+      if (key !== lastKey) {
+        lastKey = key;
+        const R0 = ring.r0 * CELL, Ro = ring.Ro * CELL, gap = 8;
+        labs.zero.style.left = (ox + cx) + 'px'; labs.zero.style.top = (oy + cy + Ro + 2) + 'px';
+        labs.bump.style.left = (ox + cx + (ring.r0 + ring.a) * CELL + gap) + 'px'; labs.bump.style.top = (oy + cy - 8) + 'px';
+        labs.dip.style.left = (ox + cx - R0 - gap) + 'px'; labs.dip.style.top = (oy + cy - 8) + 'px';
+      }
+    }
   }
 
   const baseUpdate = updateSand;
