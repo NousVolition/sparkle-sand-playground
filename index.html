@@ -22383,6 +22383,182 @@ loop();
   kind();
 })();
 </script>
+<script id="sandWelcome">
+// ========== WELCOME ON TAB 1 (SAND) ==========
+// On the first visit to Sand in a session the empty sandbox opens with the title molded in sand
+// (each word is a real stamp: lift it with Stamp, carve it, pour over it), two stars and a small dune.
+// "Clear welcome" (or Clear) removes it, and it stays away for the rest of the session.
+const WELCOME_TITLE = "Welcome to NousVolition's Physics Playground";
+const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. Pick any of the 32 entries from the menu above.';
+(function sandWelcome() {
+  const KEY = 'sparkle.welcome.off';
+  const off = () => { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } };
+  const ids = new Set(), duneCols = new Set();
+  let built = false, active = false, floorGap = 0, cap = null, touched = false, bC = 0, bR = 0, stable = 0, lastC = 0, lastR = 0;
+  const WORD_COLORS = ['#ff6b9d', '#00d4ff', '#c084fc', '#fbbf24', '#34d399', '#fb923c'];
+  const DUNE = ['#d9b77e', '#c9a26a', '#e3c48f'];
+  const tc = document.createElement('canvas'), tg = tc.getContext('2d', { willReadFrequently: true });
+  const FONT = n => `800 ${n}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+
+  function wrap(words, n, maxW) {
+    // split the words into n lines of roughly even width
+    tg.font = FONT(100);
+    const w = words.map(x => tg.measureText(x).width), sp = tg.measureText(' ').width;
+    const total = w.reduce((a, b) => a + b, 0) + sp * (words.length - 1);
+    const lines = []; let cur = [], cw = 0;
+    words.forEach((x, i) => {
+      const add = (cur.length ? sp : 0) + w[i];
+      if (cur.length && cw + add / 2 > total / n && lines.length < n - 1) { lines.push(cur); cur = []; cw = 0; }
+      cur.push(i); cw += (cur.length > 1 ? sp : 0) + w[i];
+    });
+    lines.push(cur);
+    const widest = Math.max(...lines.map(l => l.reduce((a, i, k) => a + w[i] + (k ? sp : 0), 0)));
+    return { lines, size: Math.floor(100 * maxW / widest), w, sp };
+  }
+
+  function build() {
+    const C = gCols, R = gRows, words = WELCOME_TITLE.split(/\s+/);
+    const narrow = C < 220;
+    const sx = narrow ? 0.74 : 1;   // narrow screens: letters a little narrower so they can be taller
+    const hBudget = narrow ? 0.56 : 0.42, maxLines = narrow ? 4 : 3;
+    // pick 1-3 lines, whichever gives the biggest letters inside 90% of the width and ~42% of the height
+    let best = null;
+    for (let n = 1; n <= Math.min(maxLines, words.length); n++) {
+      const t = wrap(words, n, C * (narrow ? 0.94 : 0.9) / sx);
+      t.size = Math.min(t.size, Math.floor(R * hBudget / (n * 1.18)), 46);
+      if (!best || t.size > best.size + 1) best = Object.assign(t, { n });
+    }
+    const fs = Math.max(9, best.size), lh = Math.round(fs * 1.18);
+    const blockH = best.n * lh, top = Math.round(R * (narrow ? 0.07 : 0.2));
+    tc.width = C; tc.height = R;
+    const k = fs / 100;
+    const place = [];
+    best.lines.forEach((l, li) => {
+      const lw = l.reduce((a, i, j) => a + best.w[i] * k + (j ? best.sp * k : 0), 0);
+      let x = (C / sx - lw) / 2;
+      l.forEach(i => { place.push({ i, x, y: top + li * lh + fs * 0.82, li }); x += (best.w[i] + best.sp) * k; });
+    });
+    let bottom = top + blockH;
+    place.forEach((p, n) => {
+      tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, C, R); tg.setTransform(sx, 0, 0, 1, 0, 0);
+      tg.font = FONT(fs); tg.fillStyle = '#fff'; tg.strokeStyle = '#fff'; tg.lineJoin = 'round';
+      tg.lineWidth = Math.max(1, fs * 0.06);
+      tg.fillText(words[p.i], p.x, p.y);
+      if (!narrow) tg.strokeText(words[p.i], p.x, p.y);
+      const d = tg.getImageData(0, 0, C, R).data;
+      const id = nextObjId++, mc = moldColor(WORD_COLORS[n % WORD_COLORS.length]);
+      ids.add(id);
+      for (let i = 0, j = 3; i < C * R; i++, j += 4) {
+        if (d[j] > 110 && gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
+      }
+    });
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    // two stars beside the title when there is room, otherwise one above it
+    const sn = Math.max(10, Math.min(26, Math.round(fs * 1.1)));
+    const firstW = sx * Math.max(...best.lines.map(l => l.reduce((a, i, j) => a + best.w[i] * k + (j ? best.sp * k : 0), 0)));
+    const spots = (C - firstW) / 2 > sn + 6
+      ? [[(C - firstW) / 2 - sn - 3, top + (blockH - sn) / 2, '#fbbf24'], [(C + firstW) / 2 + 3, top + (blockH - sn) / 2, '#fbbf24']]
+      : (top > sn + 4 ? [[(C - sn) / 2, top - sn - 3, '#fbbf24']] : []);
+    const m = moldMask('star', sn);
+    spots.forEach(([x0, y0, col]) => {
+      x0 = Math.round(x0); y0 = Math.round(y0);
+      const id = nextObjId++, mc = moldColor(col); ids.add(id);
+      for (let y = 0; y < sn; y++) for (let x = 0; x < sn; x++) {
+        if (!m[y * sn + x]) continue;
+        const gx = x0 + x, gy = y0 + y;
+        if (gx < 0 || gy < 0 || gx >= C || gy >= R) continue;
+        const i = gy * C + gx;
+        if (gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
+      }
+    });
+    // a low dune of loose sand along the floor
+    const peak = Math.max(4, Math.round(R * 0.05));
+    for (let x = 0; x < C; x++) {
+      const h = Math.round(peak * (0.45 + 0.3 * Math.sin(x / C * Math.PI * 2.2 + 0.6) + 0.25 * Math.sin(x / C * Math.PI * 5.3)));
+      for (let y = R - 1; y >= R - h && y >= 0; y--) {
+        const i = y * C + x;
+        if (gType[i] !== EMPTY) continue;
+        const c = grainColor(DUNE[(x * 7 + y * 3) % 3]);
+        duneCols.add(c); gType[i] = LOOSE; gColor[i] = c; gOwner[i] = 0;
+      }
+    }
+    floorGap = R - bottom;
+    built = active = true; touched = false; bC = C; bR = R;
+  }
+
+  function removeCells() {
+    if (gType) {
+      for (let i = 0; i < gType.length; i++) {
+        const t = gType[i];
+        if ((t === STAMP && ids.has(gOwner[i])) || (t === LOOSE && duneCols.has(gColor[i]))) { gType[i] = EMPTY; gOwner[i] = 0; }
+      }
+    }
+    if (lifted && ids.has(lifted.id)) lifted = null;
+    ids.clear(); duneCols.clear();
+  }
+  function clearWelcome() { removeCells(); markOff(); }
+  function markOff() {
+    active = false;
+    try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+    showCaption();
+  }
+
+  function caption() {
+    if (cap) return cap;
+    const st = document.createElement('style');
+    st.textContent = `
+      #sandWelcomeCap { position: absolute; left: 50%; transform: translateX(-50%); width: min(92%, 640px); text-align: center;
+        pointer-events: none; z-index: 3; font: 500 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #cbd5e1;
+        text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+      #sandWelcomeCap p { margin: 0 0 8px; }
+      #sandWelcomeCap button { pointer-events: auto; font: 600 12px system-ui, sans-serif; padding: 5px 12px; border-radius: 999px;
+        border: 1px solid rgba(148,163,184,.45); background: rgba(15,23,42,.55); color: #e2e8f0; cursor: pointer; }
+      #sandWelcomeCap button:hover { border-color: #00d4ff; color: #fff; }
+      html.bg-light #sandWelcomeCap { color: #334155; text-shadow: none; }
+      html.bg-light #sandWelcomeCap button { background: rgba(255,255,255,.7); color: #1e293b; border-color: rgba(51,65,85,.35); }
+      @media (max-width: 700px) { #sandWelcomeCap { font-size: 13px; } }`;
+    document.head.appendChild(st);
+    cap = document.createElement('div');
+    cap.id = 'sandWelcomeCap'; cap.hidden = true;
+    cap.innerHTML = '<p></p><button type="button" title="Remove the welcome and start with fresh sand">Clear welcome</button>';
+    cap.querySelector('p').textContent = WELCOME_LINE;
+    cap.querySelector('button').onclick = clearWelcome;
+    document.getElementById('canvas-container').appendChild(cap);
+    return cap;
+  }
+  let lastTop = -1;
+  function showCaption() {
+    const on = active && mode === 'sand';
+    if (!on && !cap) return;
+    const c = caption();
+    c.hidden = !on;
+    if (!on) return;
+    const t = Math.round(canvas.offsetTop + (gRows - floorGap) * CELL + 12);
+    if (t !== lastTop) { c.style.top = t + 'px'; lastTop = t; }
+  }
+
+  const baseUpdate = updateSand;
+  updateSand = function () {
+    baseUpdate.apply(this, arguments);
+    // wait until the sandbox size has settled (the side panel lays out on the first frames)
+    if (gCols !== lastC || gRows !== lastR) { lastC = gCols; lastR = gRows; stable = 0; } else stable++;
+    if (!built && !off() && gType && stable >= 8) {
+      let empty = true;
+      for (let i = 0; i < gType.length; i++) if (gType[i] !== EMPTY) { empty = false; break; }
+      if (empty && !flying.length) build(); else built = true;
+    }
+    // the window changed size before she touched it: lay the welcome out again for the new size
+    if (active && !touched && stable >= 8 && (gCols !== bC || gRows !== bR)) { removeCells(); build(); }
+    if (active) showCaption();
+  };
+  canvas.addEventListener('pointerdown', () => { if (active && mode === 'sand') touched = true; });
+  const baseControls = setControls;
+  setControls = function () { baseControls.apply(this, arguments); showCaption(); };
+  // the sandbox's own Clear button counts as clearing the welcome
+  document.addEventListener('click', e => { if (active && mode === 'sand' && e.target.closest && e.target.closest('#clearBtn')) markOff(); }, true);
+  window.sandWelcome = { clear: clearWelcome, isOn: () => active };
+})();
+</script>
 </body>
 </html>
 
