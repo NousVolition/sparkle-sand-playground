@@ -5495,9 +5495,10 @@ requestAnimationFrame(loop);
         <div class="hud-title" id="cubeTitle">3D Cube (n = 3)</div>
         <div class="hud-row"><span>Selected Vertices (m):</span><span class="hud-val" id="hudM">4</span></div>
         <div class="hud-row"><span>Internal Edges (dir / 2):</span><span class="hud-val" id="hudInternal" style="color:var(--good)">4</span></div>
-        <div class="hud-row"><span>Theoretical Max (m/2)log₂m:</span><span class="hud-val" id="hudMax">4.00</span></div>
+        <div class="hud-row"><span>Exact Maximum h(m):</span><span class="hud-val" id="hudMax">4</span></div>
+        <div class="hud-row"><span>Upper Bound (m/2)log₂m:</span><span class="hud-val" id="hudLogBound">4.00</span></div>
         <div class="hud-row"><span>Boundary Cut Edges:</span><span class="hud-val" id="hudBoundary" style="color:var(--warm)">4</span></div>
-        <div class="hud-row"><span>Subcube Status:</span><span class="hud-val" id="hudStatus" style="color:var(--good)">Exact Equality!</span></div>
+        <div class="hud-row"><span>Optimality:</span><span class="hud-val" id="hudStatus" style="color:var(--good)">Optimal (exact maximum)</span></div>
         <div style="margin-top:8px; font-size:0.76rem; color:var(--muted);">
           Click corners to toggle set <strong>s</strong> &bull; Drag to rotate
         </div>
@@ -5649,6 +5650,17 @@ document.getElementById('dimmerCube').addEventListener('input', e => {
   cubeCanvas.style.filter = `brightness(${e.target.value}%)`;
 });
 
+// The exact maximum is h(m) = sum of popcount(k) for 0 <= k < m.
+// It counts undirected edges; EdgeOptimal.lean's dir counts each edge twice:
+// https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/3e2226e2af6b356b6c1bf47ab931cbeedcc33f66/EdgeOptimal.lean
+function exactCubeMaximum(m) {
+  let maximum = 0;
+  for (let k = 0; k < m; k++) {
+    for (let bits = k; bits; bits >>>= 1) maximum += bits & 1;
+  }
+  return maximum;
+}
+
 function updateCubeHUD() {
   const m = selectedSet.size;
   const total = 1 << cubeDim;
@@ -5664,21 +5676,24 @@ function updateCubeHUD() {
       }
     }
   }
-  const maxBound = m > 0 ? (m / 2) * Math.log2(m) : 0;
+  const maximum = exactCubeMaximum(m);
+  const logBound = m > 0 ? (m / 2) * Math.log2(m) : 0;
   document.getElementById('hudM').textContent = m;
   document.getElementById('hudInternal').textContent = internal;
-  document.getElementById('hudMax').textContent = maxBound.toFixed(2);
+  document.getElementById('hudMax').textContent = maximum;
+  document.getElementById('hudLogBound').textContent = logBound.toFixed(2);
   document.getElementById('hudBoundary').textContent = boundary;
 
   const statusEl = document.getElementById('hudStatus');
   if (m === 0) {
-    statusEl.textContent = 'Empty Set';
+    statusEl.textContent = 'Empty set (optimal)';
     statusEl.style.color = 'var(--muted)';
-  } else if (Math.abs(internal - maxBound) < 1e-6) {
-    statusEl.textContent = 'Exact Subcube Equality!';
+  } else if (internal === maximum) {
+    statusEl.textContent = 'Optimal (exact maximum)';
     statusEl.style.color = 'var(--good)';
   } else {
-    statusEl.textContent = `Sub-optimal (${(maxBound - internal).toFixed(2)} below max)`;
+    const shortfall = maximum - internal;
+    statusEl.textContent = `Sub-optimal (${shortfall} ${shortfall === 1 ? 'edge' : 'edges'} short)`;
     statusEl.style.color = 'var(--warm)';
   }
 }
