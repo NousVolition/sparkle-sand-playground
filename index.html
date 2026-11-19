@@ -1706,6 +1706,11 @@ function ferroBoot() {
   .btn-action:hover {
     background: rgba(56, 189, 248, 0.28);
   }
+  .btn-action[aria-pressed="true"] { background: rgba(56, 189, 248, 0.45); border-color: #7dd3fc; color: #ffffff; }
+  .btn-action[hidden] { display: none; }
+  #flipBtn { padding: 7px 10px; }
+  #epsVal { flex: none; white-space: nowrap; }
+  #epsSlider { min-width: 60px; width: auto; flex: 1 1 auto; }
   .insight-banner {
     max-width: 1500px;
     margin: 0 auto 10px auto;
@@ -1797,6 +1802,7 @@ function ferroBoot() {
   <div style="display:flex; gap:8px;">
     <button class="btn-action" id="sweepBtn">&#9654; Glide &epsilon; &rarr; 0</button>
     <button class="btn-action" id="soundBtn">&#128263; Tone: Off</button>
+    <button class="btn-action" id="flipBtn" aria-pressed="false" title="Mirror the Alternating plot: big swings on the right, settling toward the left" hidden>&#8644; Flip</button>
   </div>
 </div>
 
@@ -1806,6 +1812,30 @@ function ferroBoot() {
   const rightCanvas = document.getElementById('rightCanvas');
   const lCtx = leftCanvas.getContext('2d');
   const rCtx = rightCanvas.getContext('2d');
+
+  // Flip (Alternating mode only): mirror the left plot so the big swings sit on the right.
+  // Text is drawn unmirrored at the mirrored spot, so labels stay readable. The choice is remembered.
+  const flipBtn = document.getElementById('flipBtn');
+  let flipOn = false;
+  try { flipOn = localStorage.getItem('sparkle.t11.flip') === '1'; } catch (e) {}
+  const showFlip = () => { flipBtn.setAttribute('aria-pressed', flipOn ? 'true' : 'false'); flipBtn.title = flipOn ? 'Flip is on: big swings on the right. Click to put them back on the left' : 'Mirror the Alternating plot: big swings on the right, settling toward the left'; };
+  showFlip();
+  flipBtn.addEventListener('click', () => {
+    flipOn = !flipOn; showFlip();
+    try { localStorage.setItem('sparkle.t11.flip', flipOn ? '1' : '0'); } catch (e) {}
+  });
+  const lFill = lCtx.fillText;
+  lCtx.fillText = function (txt, x, y, maxW) {
+    const T = this.getTransform();
+    if (T.a >= 0) return maxW === undefined ? lFill.call(this, txt, x, y) : lFill.call(this, txt, x, y, maxW);
+    const q = T.transformPoint(new DOMPoint(x, y));
+    const al = this.textAlign;
+    this.save();
+    this.setTransform(1, 0, 0, 1, 0, 0);
+    this.textAlign = (al === 'left' || al === 'start') ? 'right' : (al === 'right' || al === 'end') ? 'left' : al;
+    if (maxW === undefined) lFill.call(this, txt, q.x, q.y); else lFill.call(this, txt, q.x, q.y, maxW);
+    this.restore();
+  };
 
   const epsSlider = document.getElementById('epsSlider');
   const epsVal = document.getElementById('epsVal');
@@ -2365,7 +2395,12 @@ function ferroBoot() {
 
     if (mode === 'smoothing') drawSmoothingMode();
     else if (mode === 'casimir') drawCasimirMode();
-    else drawAlternatingMode();
+    else {
+      if (flipOn) lCtx.setTransform(-1, 0, 0, 1, leftCanvas.width, 0);   // mirror the left plot
+      drawAlternatingMode();
+      lCtx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    if (flipBtn.hidden !== (mode !== 'alternating')) flipBtn.hidden = (mode !== 'alternating');
 
     requestAnimationFrame(loop);
   }
