@@ -1,7 +1,7 @@
 // Proof notes for the active playground. Mathematical scope, not a browser certificate.
 (function () {
   'use strict';
-  const revision = 'c881c38ed38e582eca656752f660526b25ba7307';
+  const revision = '93bd83600728124ec12becfd3cdc4e23778da1d1';
   const base = `https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${revision}/`;
   const proof = (label, file, line) => ({ label, href: `${base}${file}#L${line}` });
   const cycle = proof('Cycle inequality', 'Wirtinger.lean', 168);
@@ -36,7 +36,7 @@
     horned: none('The horned-sphere, cork-twist and handle pictures are not formalized here. E8PlumbingBridge proves matrix arithmetic, not these topology claims.'),
     nonorient: none('The Möbius, Klein-bottle and projective-plane parametrizations and embedding claims have no matching theorem in this project.'),
     penteract: partial('The E8 mode uses the 112 integer and 128 even-parity sign patterns counted in Lean. Its simple-root Gram matrix matches the negative of the Lean matrix after relabeling. That correspondence was checked externally. E6, 5D unknotting, edge counts and projections remain outside the linked proofs.', [counts, determinant]),
-    leech: partial('Lean checks 1,104 + 97,152 + 98,304 = 196,560 using a hand-entered Golay weight table. It does not derive that table from this tab’s modulo-23 generator or prove the Leech lattice construction. The separately proved modulo-11 Golay generator differs; their coordinate correspondence remains unproved.', [proof('Leech count arithmetic', 'GolayLeechBridge.lean', 78), proof('Related Golay weight proof — different generator', 'GolayMatrixDistance.lean', 140)]),
+    leech: partial('Lean proves that this tab’s modulo-23 Golay recipe matches the proved code after a specified coordinate permutation. The existing lattice membership, minimum squared length 32, three-shape classification and 196,560 shortest-vector count transfer to those coordinates. A separate JavaScript replay checks the page’s generated vectors. Browser execution, projection and animation are not formalized; the lattice’s volume and symmetry group remain unproved here.', [proof('Golay generator correspondence', 'PlaygroundGolay.lean', 182), proof('Lattice membership correspondence', 'PlaygroundLeech.lean', 35), proof('Smallest squared length 32', 'PlaygroundLeech.lean', 57), proof('196,560 shortest vectors', 'PlaygroundLeech.lean', 104)]),
     pentlite: partial('The 112 + 128 enumeration matches the two finite counts in Lean. The lattice characterization, displayed rings, projection and 5D unknotting are not established by these count theorems.', [counts]),
     hopf: none('The Hopf map, stereographic projection and linking claims have no matching theorem in the reviewed project. The continuous tori here are not the finite grid of Torus.lean.'),
     bh2: none('The lensing, spinning-grid picture and ringdown model have no matching general-relativity theorem in this Lean project.'),
