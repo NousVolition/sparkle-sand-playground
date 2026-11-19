@@ -2201,9 +2201,21 @@ function ferroBoot() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const r = Math.exp(-eps * 0.45);
-    // enough terms for the zigzag to settle: stop once the next term (n+1)·r^n is under 0.005 (at least 24)
-    let maxTerms = 24;
-    while ((maxTerms + 1) * Math.pow(r, maxTerms) >= 0.005 && maxTerms < 2000) maxTerms++;
+    // Smooth span: Nc is the (real-valued) term count where the next term (n+1)·r^n reaches 0.004 (at least 24).
+    // It changes smoothly with r, so the x-axis never jumps while gliding; whole terms past the right edge are clipped.
+    const lnr = Math.log(r), TOL = 0.004;
+    let Nc = 24;
+    {
+      const g = n => Math.log(n + 1) + n * lnr - Math.log(TOL);   // falls past its peak; find where it crosses 0
+      let lo = Math.max(1, -1 / lnr - 1), hi = lo + 10;
+      if (g(lo) > 0) {
+        while (g(hi) > 0 && hi < 5000) hi *= 1.6;
+        for (let i = 0; i < 60; i++) { const m = 0.5 * (lo + hi); if (g(m) > 0) lo = m; else hi = m; }
+        Nc = Math.max(24, 0.5 * (lo + hi));
+      }
+    }
+    const lastFull = Math.floor(Nc);              // last whole term inside the span: its partial sum is the settled value
+    const maxTerms = lastFull;
     drawAlternatingMode.maxTerms = maxTerms;
 
     // LEFT: Oscillating partial sums of 1 - 2r + 3r^2 - 4r^3 ... settling at +1/4
@@ -2213,13 +2225,11 @@ function ferroBoot() {
     const pH = lh - padT - padB;
 
     const midY = padT + pH * 0.55;
-    // vertical scale: shrink when the early zigzag swings wide (weak fade), so the whole curve stays on screen
-    let swing = 0;
-    { let s = 0; for (let n = 1; n <= maxTerms; n++) { s += ((n % 2 === 1) ? 1 : -1) * n * Math.pow(r, n - 1); swing = Math.max(swing, Math.abs(s)); } }
-    const yScale = Math.min(pH * 0.16, (pH * 0.42) / Math.max(swing, 1e-9));
+    const yScale = pH * 0.16;                    // fixed for every r; big early swings are clipped at the plot edges
     const targetY = midY - 0.25 * yScale;
     const limitNow = 1 / ((1 + r) * (1 + r));
     const nowY = midY - limitNow * yScale;
+    const xOf = n => padL + ((n - 1) / Nc) * pW;   // term Nc+1 sits at the right edge
 
     // Zero line
     lCtx.strokeStyle = 'rgba(255,255,255,0.16)';
@@ -2259,38 +2269,59 @@ function ferroBoot() {
     lCtx.font = `${10 * dpr}px sans-serif`;
     lCtx.fillText('n = 1', padL, lh - 10 * dpr);
     lCtx.textAlign = 'right';
-    lCtx.fillText(`n = ${maxTerms} (partial sums of ${maxTerms} terms)`, lw - padR, lh - 10 * dpr);
+    lCtx.fillText(`n = ${lastFull} (partial sums of ${lastFull} terms)`, lw - padR, lh - 10 * dpr);
     lCtx.textAlign = 'left';
 
-    // Partial sums zigzag
+    // everything on the curve is clipped to the plot area
+    lCtx.save();
+    lCtx.beginPath();
+    lCtx.rect(padL, padT, pW, pH);
+    lCtx.clip();
+
+    // Partial sums zigzag (one term past the right edge, so the clipped end slides smoothly)
+    const nDraw = Math.ceil(Nc) + 1;
     let sum = 0;
     lCtx.strokeStyle = '#fbbf24';
-    lCtx.lineWidth = (maxTerms > 120 ? 1.4 : 2.4) * dpr;
+    const t = Math.max(0, Math.min(1, (Nc - 24) / 96));    // line thins smoothly as the span grows
+    lCtx.lineWidth = (2.4 - 1.0 * t) * dpr;
     lCtx.beginPath();
-    for (let n = 1; n <= maxTerms; n++) {
+    for (let n = 1; n <= nDraw; n++) {
       const sign = (n % 2 === 1) ? 1 : -1;
       sum += sign * n * Math.pow(r, n - 1);
-      const x = padL + ((n - 1) / (maxTerms - 1)) * pW;
+      const x = xOf(n);
       const y = midY - sum * yScale;
       if (n === 1) lCtx.moveTo(x, y);
       else lCtx.lineTo(x, y);
     }
     lCtx.stroke();
 
-    // Dots on partial sums (only when there is room for them; the last one always)
-    const roomy = pW / (maxTerms - 1) >= 5 * dpr;
+    // Dots: fade smoothly as their spacing shrinks; the dots at the end of the span stay visible,
+    // and the next one fades in at the right edge (no popping)
+    const spacing = pW / Nc;
+    const aSpace = Math.max(0, Math.min(1, (spacing - 2 * dpr) / (4 * dpr)));
+    const frame = { Nc, lastFull, spacing, aSpace, dots: 0, alphaSum: 0, endX: 0, endY: 0, nowY, targetY, yScale, lastSum: 0, r, alphas: [], sums: [] };
     sum = 0;
-    for (let n = 1; n <= maxTerms; n++) {
+    for (let n = 1; n <= nDraw; n++) {
       const sign = (n % 2 === 1) ? 1 : -1;
       sum += sign * n * Math.pow(r, n - 1);
-      if (!roomy && n !== maxTerms) continue;
-      const x = padL + ((n - 1) / (maxTerms - 1)) * pW;
-      const y = midY - sum * yScale;
+      const edge = Math.max(0, Math.min(1, Nc + 1 - n));          // fades in over the last step before the edge
+      const tail = Math.max(0, Math.min(1, 1 - (Nc - n) / 2));     // keeps the end dots visible however tight the spacing
+      const a = edge * Math.max(aSpace, tail);
+      if (n === lastFull) frame.lastSum = sum;
+      frame.alphas.push(a); frame.sums.push(sum);
+      if (a < 0.02) continue;
+      const x = xOf(n), y = midY - sum * yScale;
+      lCtx.globalAlpha = a;
       lCtx.fillStyle = (n % 2 === 1) ? '#34d399' : '#fb7185';
       lCtx.beginPath();
       lCtx.arc(x, y, 3.5 * dpr, 0, Math.PI * 2);
       lCtx.fill();
+      frame.dots++; frame.alphaSum += a;
+      if (n === lastFull) { frame.endX = x; frame.endY = y; }
     }
+    lCtx.globalAlpha = 1;
+    lCtx.restore();
+    drawAlternatingMode.frame = frame; window.__altFrame = frame;   // read-only numbers for checking the glide
 
     // RIGHT: Visual algebraic balance S - 4S = 1/4 => S = -1/12
     rCtx.clearRect(0, 0, rw, rh);
