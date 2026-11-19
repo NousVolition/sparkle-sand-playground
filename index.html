@@ -17,7 +17,7 @@ Third-party material is governed by its own terms.
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tension, Waves & Sparkle Sand</title>
+<title>Through My Eyes · NousVolition's Physics Playground</title>
 <style>
   :root {
     --bg: #0b0e14;
@@ -306,6 +306,7 @@ Third-party material is governed by its own terms.
   .pn-opt[aria-selected="true"] .pn-num { color: #000; }
   @media (min-width: 701px) { header h1 { font-size: 1.25rem; } }
   @media (max-width: 1100px) and (min-width: 701px) { header h1 { font-size: 1.05rem; } }
+  @media (max-width: 1259px) { header h1 .h1-sub { display: none; } }   /* narrower screens: just 'Through My Eyes' */
   /* phones: title with Sound and Linked on the first row, the menu with its arrows on a full-width second row */
   @media (max-width: 700px) {
     header { flex-wrap: wrap; row-gap: 8px; column-gap: 8px; padding: 8px 12px 16px; }
@@ -394,7 +395,7 @@ Third-party material is governed by its own terms.
 </head>
 <body>
 <header>
-  <h1>Tension, Waves & Sparkle Sand</h1>
+  <h1 title="Through My Eyes · NousVolition's Physics Playground">Through My Eyes<span class="h1-sub"> · NousVolition's Physics Playground</span></h1>
   <nav class="playnav" id="playNav" aria-label="Choose a playground">
     <button class="pn-arrow" id="playPrev" title="Previous playground" aria-label="Previous playground">&#8249;</button>
     <div class="pn-wrap">
@@ -24075,7 +24076,7 @@ loop();
 // On the first visit to Sand in a session the empty sandbox opens with the title molded in sand
 // (each word is a real stamp: lift it with Stamp, carve it, pour over it), two stars and a small dune.
 // "Clear welcome" (or Clear) removes it, and it stays away for the rest of the session.
-const WELCOME_TITLE = "Welcome to NousVolition's Physics Playground";
+const WELCOME_TITLE = "Through My Eyes\nNousVolition's Physics Playground";   // first line is the featured, larger one
 const WELCOME_RING_CAPTION = 'One bump and one dip around the ring. It costs exactly the floor. As much below the zero line as above, so the average is zero.';
 const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. Pick any of the 33 entries from the menu above.';
 (function sandWelcome() {
@@ -24105,45 +24106,57 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   }
 
   function build() {
-    const C = gCols, R = gRows, words = WELCOME_TITLE.split(/\s+/);
+    const C = gCols, R = gRows;
+    const parts = WELCOME_TITLE.split('\n').map(x => x.trim().split(/\s+/)), words = [].concat(...parts);
     const narrow = C < 220;
     const sx = narrow ? 0.74 : 1;   // narrow screens: letters a little narrower so they can be taller
-    const hBudget = narrow ? 0.34 : 0.27, maxLines = narrow ? 4 : 3;   // the title shares the screen with the ring below it
-    // pick 1-3 lines, whichever gives the biggest letters inside 90% of the width and ~42% of the height
+    const hBudget = narrow ? 0.38 : 0.32, maxLines = narrow ? 3 : 2;   // the title shares the screen with the ring below it
+    const maxW = C * (narrow ? 0.94 : 0.9) / sx, gap = narrow ? 2 : 3;
+    // featured top line on one line; the rest over 1-3 lines, sizes chosen so both fit the width and the height budget
+    const head = wrap(parts[0], 1, maxW * (narrow ? 1 : 0.84));   // leaves room for a star each side
     let best = null;
-    for (let n = 1; n <= Math.min(maxLines, words.length); n++) {
-      const t = wrap(words, n, C * (narrow ? 0.94 : 0.9) / sx);
-      t.size = Math.min(t.size, Math.floor(R * hBudget / (n * 1.18)), 46);
-      if (!best || t.size > best.size + 1) best = Object.assign(t, { n });
+    for (let n = 1; n <= Math.min(maxLines, (parts[1] || []).length || 1); n++) {
+      const t = parts[1] ? wrap(parts[1], n, maxW) : { lines: [], size: 0, w: [], sp: 0 };
+      let f0 = Math.min(head.size, 52), f1 = Math.min(t.size, 34, Math.floor(f0 * 0.76));   // the top line is clearly the larger one
+      const need = (f0 + n * f1) * 1.18 + gap, room = R * hBudget;
+      if (need > room) { const q = room / need; f0 = Math.floor(f0 * q); f1 = Math.floor(f1 * q); }
+      const score = f1 + f0 * 0.5;
+      if (!best || score > best.score + 0.5) best = { t, n, f0: Math.max(10, f0), f1: Math.max(8, f1), score };
     }
-    const fs = Math.max(9, best.size), lh = Math.round(fs * 1.18);
-    const blockH = best.n * lh, top = Math.round(R * (narrow ? 0.03 : 0.05));
+    const top = Math.round(R * (narrow ? 0.03 : 0.04));
     tc.width = C; tc.height = R;
-    const k = fs / 100;
-    const place = [];
-    best.lines.forEach((l, li) => {
-      const lw = l.reduce((a, i, j) => a + best.w[i] * k + (j ? best.sp * k : 0), 0);
-      let x = (C / sx - lw) / 2;
-      l.forEach(i => { place.push({ i, x, y: top + li * lh + fs * 0.82, li }); x += (best.w[i] + best.sp) * k; });
-    });
-    let bottom = top + blockH;
-    place.forEach((p, n) => {
-      tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, C, R); tg.setTransform(sx, 0, 0, 1, 0, 0);
-      tg.font = FONT(fs); tg.fillStyle = '#fff'; tg.strokeStyle = '#fff'; tg.lineJoin = 'round';
-      tg.lineWidth = Math.max(1, fs * 0.06);
-      tg.fillText(words[p.i], p.x, p.y);
-      if (!narrow) tg.strokeText(words[p.i], p.x, p.y);
-      const d = tg.getImageData(0, 0, C, R).data;
-      const id = nextObjId++, mc = moldColor(WORD_COLORS[n % WORD_COLORS.length]);
-      ids.add(id);
-      for (let i = 0, j = 3; i < C * R; i++, j += 4) {
-        if (d[j] > 110 && gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
-      }
+    // lines: [{ word indexes (into words), font size, baseline y, width }]
+    const L = [];
+    const lineW = (idx, w, sp, f) => idx.reduce((a, i, j) => a + w[i] * f / 100 + (j ? sp * f / 100 : 0), 0);
+    let y = top;
+    { const f = best.f0, lh = Math.round(f * 1.18); L.push({ idx: parts[0].map((_, i) => i), w: head.w, sp: head.sp, f, base: y + f * 0.82 }); y += lh + gap; }
+    const off = parts[0].length;
+    best.t.lines.forEach(l => { const f = best.f1, lh = Math.round(f * 1.18); L.push({ idx: l, w: best.t.w, sp: best.t.sp, f, base: y + f * 0.82, off }); y += lh; });
+    const fs = best.f0, blockH = Math.round(best.f0 * 1.18);   // stars sit beside the featured line
+    let bottom = y;
+    let n = 0;
+    L.forEach(line => {
+      let x = (C / sx - lineW(line.idx, line.w, line.sp, line.f)) / 2;
+      line.idx.forEach(i => {
+        const word = words[(line.off || 0) + i];
+        tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, C, R); tg.setTransform(sx, 0, 0, 1, 0, 0);
+        tg.font = FONT(line.f); tg.fillStyle = '#fff'; tg.strokeStyle = '#fff'; tg.lineJoin = 'round';
+        tg.lineWidth = Math.max(1, line.f * 0.06);
+        tg.fillText(word, x, line.base);
+        if (!narrow) tg.strokeText(word, x, line.base);
+        const d = tg.getImageData(0, 0, C, R).data;
+        const id = nextObjId++, mc = moldColor(WORD_COLORS[n++ % WORD_COLORS.length]);
+        ids.add(id);
+        for (let q = 0, j = 3; q < C * R; q++, j += 4) {
+          if (d[j] > 110 && gType[q] === EMPTY) { gType[q] = STAMP; gOwner[q] = id; gColor[q] = mc; }
+        }
+        x += (line.w[i] + line.sp) * line.f / 100;
+      });
     });
     tg.setTransform(1, 0, 0, 1, 0, 0);
     // two stars beside the title when there is room, otherwise one above it
     const sn = Math.max(10, Math.min(26, Math.round(fs * 1.1)));
-    const firstW = sx * Math.max(...best.lines.map(l => l.reduce((a, i, j) => a + best.w[i] * k + (j ? best.sp * k : 0), 0)));
+    const firstW = sx * lineW(L[0].idx, L[0].w, L[0].sp, L[0].f);
     const spots = (C - firstW) / 2 > sn + 6
       ? [[(C - firstW) / 2 - sn - 3, top + (blockH - sn) / 2, '#fbbf24'], [(C + firstW) / 2 + 3, top + (blockH - sn) / 2, '#fbbf24']]
       : (top > sn + 4 ? [[(C - sn) / 2, top - sn - 3, '#fbbf24']] : []);
@@ -24190,7 +24203,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     for (let i = 0; i < gType.length; i++) if (gType[i] === STAMP && gOwner[i] === zeroLine.id) gColor[i] = c;
   }
   function buildRing(C, R, titleBottom, narrow) {
-    const capRows = Math.ceil((narrow ? 112 : 118) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL), labRows = Math.ceil((narrow ? 18 : 22) / CELL);
+    const capRows = Math.ceil((narrow ? 112 : 142) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL), labRows = Math.ceil((narrow ? 18 : 22) / CELL);
     const room = R - titleBottom - 4 - capRows - floorRows - labRows;
     const Ro = Math.floor(Math.min(room / 2, C * (narrow ? 0.22 : 0.15)));
     if (Ro < 12) { ring = null; return titleBottom; }   // too little room: title only
