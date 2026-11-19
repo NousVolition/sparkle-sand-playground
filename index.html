@@ -1902,11 +1902,11 @@ function ferroBoot() {
     } else {
       // Alternating series 1 - 2 + 3 - 4 + 5 ... = 1 / (1 + r)^2 where r = e^(-eps)
       const r = Math.exp(-eps * 0.45);
-      const altSum = r / ((1 + r) * (1 + r));
+      const altSum = 1 / ((1 + r) * (1 + r));
       const scaled = -altSum / 3; // since (1+2+3+...) - 4(1+2+3+...) = -3 S = 1/4 => S = -1/12
       epsVal.textContent = `Damp r = ${r.toFixed(3)}`;
       statTotal.textContent = altSum.toFixed(4);
-      statGrowth.textContent = `Target: 1/4`;
+      statGrowth.textContent = `1/4 as r→1`;
       statOffset.textContent = (scaled < 0 ? '−' : '+') + Math.abs(scaled).toFixed(4);
     }
     updateTone();
@@ -2201,7 +2201,10 @@ function ferroBoot() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const r = Math.exp(-eps * 0.45);
-    const maxTerms = 24;
+    // enough terms for the zigzag to settle: stop once the next term (n+1)·r^n is under 0.005 (at least 24)
+    let maxTerms = 24;
+    while ((maxTerms + 1) * Math.pow(r, maxTerms) >= 0.005 && maxTerms < 2000) maxTerms++;
+    drawAlternatingMode.maxTerms = maxTerms;
 
     // LEFT: Oscillating partial sums of 1 - 2r + 3r^2 - 4r^3 ... settling at +1/4
     lCtx.clearRect(0, 0, lw, lh);
@@ -2210,7 +2213,13 @@ function ferroBoot() {
     const pH = lh - padT - padB;
 
     const midY = padT + pH * 0.55;
-    const targetY = midY - 0.25 * (pH * 0.16);
+    // vertical scale: shrink when the early zigzag swings wide (weak fade), so the whole curve stays on screen
+    let swing = 0;
+    { let s = 0; for (let n = 1; n <= maxTerms; n++) { s += ((n % 2 === 1) ? 1 : -1) * n * Math.pow(r, n - 1); swing = Math.max(swing, Math.abs(s)); } }
+    const yScale = Math.min(pH * 0.16, (pH * 0.42) / Math.max(swing, 1e-9));
+    const targetY = midY - 0.25 * yScale;
+    const limitNow = 1 / ((1 + r) * (1 + r));
+    const nowY = midY - limitNow * yScale;
 
     // Zero line
     lCtx.strokeStyle = 'rgba(255,255,255,0.16)';
@@ -2231,30 +2240,52 @@ function ferroBoot() {
     lCtx.restore();
     lCtx.fillStyle = '#7dd3fc';
     lCtx.font = `${11 * dpr}px monospace`;
-    lCtx.fillText('+1/4', 10 * dpr, targetY + 4 * dpr);
+    lCtx.textAlign = 'right';   // right end, where the zigzag has settled
+    lCtx.fillText('+1/4 (limit as r→1)', lw - padR - 4 * dpr, targetY + 14 * dpr);
+    lCtx.textAlign = 'left';
+    // where the curve settles at this r: 1/(1+r)²
+    lCtx.strokeStyle = 'rgba(251,191,36,0.75)';
+    lCtx.lineWidth = 1.2 * dpr;
+    lCtx.beginPath();
+    lCtx.moveTo(padL, nowY);
+    lCtx.lineTo(lw - padR, nowY);
+    lCtx.stroke();
+    lCtx.fillStyle = '#fbbf24';
+    lCtx.textAlign = 'right';
+    lCtx.fillText(`settles at 1/(1+r)² = ${limitNow.toFixed(4)}`, lw - padR - 4 * dpr, nowY - 6 * dpr);
+    lCtx.textAlign = 'left';
+    // x-axis: first and last term
+    lCtx.fillStyle = 'rgba(203,213,225,0.7)';
+    lCtx.font = `${10 * dpr}px sans-serif`;
+    lCtx.fillText('n = 1', padL, lh - 10 * dpr);
+    lCtx.textAlign = 'right';
+    lCtx.fillText(`n = ${maxTerms} (partial sums of ${maxTerms} terms)`, lw - padR, lh - 10 * dpr);
+    lCtx.textAlign = 'left';
 
     // Partial sums zigzag
     let sum = 0;
     lCtx.strokeStyle = '#fbbf24';
-    lCtx.lineWidth = 2.4 * dpr;
+    lCtx.lineWidth = (maxTerms > 120 ? 1.4 : 2.4) * dpr;
     lCtx.beginPath();
     for (let n = 1; n <= maxTerms; n++) {
       const sign = (n % 2 === 1) ? 1 : -1;
       sum += sign * n * Math.pow(r, n - 1);
       const x = padL + ((n - 1) / (maxTerms - 1)) * pW;
-      const y = midY - sum * (pH * 0.16);
+      const y = midY - sum * yScale;
       if (n === 1) lCtx.moveTo(x, y);
       else lCtx.lineTo(x, y);
     }
     lCtx.stroke();
 
-    // Dots on partial sums
+    // Dots on partial sums (only when there is room for them; the last one always)
+    const roomy = pW / (maxTerms - 1) >= 5 * dpr;
     sum = 0;
     for (let n = 1; n <= maxTerms; n++) {
       const sign = (n % 2 === 1) ? 1 : -1;
       sum += sign * n * Math.pow(r, n - 1);
+      if (!roomy && n !== maxTerms) continue;
       const x = padL + ((n - 1) / (maxTerms - 1)) * pW;
-      const y = midY - sum * (pH * 0.16);
+      const y = midY - sum * yScale;
       lCtx.fillStyle = (n % 2 === 1) ? '#34d399' : '#fb7185';
       lCtx.beginPath();
       lCtx.arc(x, y, 3.5 * dpr, 0, Math.PI * 2);
@@ -2263,12 +2294,12 @@ function ferroBoot() {
 
     // RIGHT: Visual algebraic balance S - 4S = 1/4 => S = -1/12
     rCtx.clearRect(0, 0, rw, rh);
-    const altVal = r / ((1 + r) * (1 + r));
+    const altVal = 1 / ((1 + r) * (1 + r));
     const sVal = -altVal / 3;
 
     const boxes = [
-      { label: 'Alternating Wave (1 − 2 + 3 − 4 + …)', val: altVal, exact: '+1/4 (+0.2500)', color: '#38bdf8', y: rh * 0.26 },
-      { label: 'Divide by −3  (since S − 4S = −3S)', val: sVal, exact: '−1/12 (−0.0833)', color: '#fb7185', y: rh * 0.68 }
+      { label: 'Alternating Wave (1 − 2 + 3 − 4 + …)', val: altVal, exact: '+1/4 as r→1', color: '#38bdf8', y: rh * 0.26 },
+      { label: 'Divide by −3  (since S − 4S = −3S)', val: sVal, exact: '−1/12 as r→1', color: '#fb7185', y: rh * 0.68 }
     ];
 
     boxes.forEach(b => {
