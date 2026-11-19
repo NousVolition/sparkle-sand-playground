@@ -24475,6 +24475,208 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   addPicker();
 })();
 </script>
+<script id="sandLetters">
+// ========== LETTERS TOOL (SAND) ==========
+// Type a word or a few lines, then tap or click the sandbox to mold it there, the same way the welcome title is made:
+// each word becomes its own stamp (lift it with Stamp, carve it, pour over it), in the picked material and color.
+// Styles: Rounded (like the welcome), Script (thin, handwritten), Blocky (carved). Colors: one color, a rainbow per letter,
+// or a smooth blend across the text. Shimmer: a soft band of light that sweeps across the letters, drawn cell by cell, so it stays sharp.
+(function sandLetters() {
+  const ST = { text: 'Hello!', style: 'rounded', colors: 'blend', size: 44, rot: 0, shimmer: true };
+  try { Object.assign(ST, JSON.parse(localStorage.getItem('sparkle.letters') || '{}')); } catch (e) {}
+  const save = () => { try { localStorage.setItem('sparkle.letters', JSON.stringify(ST)); } catch (e) {} };
+  const STYLES = {
+    rounded: { label: 'Rounded', font: n => `800 ${n}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`, stroke: 0.06 },
+    script: { label: 'Script', font: n => `italic 600 ${n}px "Brush Script MT", "Segoe Script", "Snell Roundhand", "URW Chancery L", "Z003", cursive`, stroke: 0.05 },
+    blocky: { label: 'Blocky', font: n => `900 ${n}px Impact, "Arial Black", "Haettenschweiler", "DejaVu Sans", sans-serif`, stroke: 0.02, carved: true }
+  };
+  TOOL_HINTS.letters = 'Letters: type in the box, then tap or click the sandbox to mold your words there.';
+  const tc = document.createElement('canvas'), tg = tc.getContext('2d', { willReadFrequently: true });
+  const shimmer = [];   // { cells: Int32Array, ids: Set, t0 }
+
+  const mix = (a, b, t) => { const A = hexRgb(a), B = hexRgb(b); return '#' + [0, 1, 2].map(k => Math.round(A[k] + (B[k] - A[k]) * t).toString(16).padStart(2, '0')).join(''); };
+  const tone = (c, k) => { const f = v => Math.max(0, Math.min(255, v * k | 0)); return ((c & 0xff000000) | (f((c >> 16) & 255) << 16) | (f((c >> 8) & 255) << 8) | f(c & 255)) >>> 0; };
+  const cellColor = hex => window.sandMat ? sandMat.stampColor(hex) : moldColor(hex);
+
+  function place(px, py) {
+    initSandGrid();
+    const text = (ST.text || '').replace(/\r/g, '').split('\n').map(l => l.trim()).filter((l, i, a) => l || i < a.length - 1).slice(0, 6);
+    if (!text.join('')) { hint.textContent = 'Letters: type something in the box first.'; hint.classList.remove('faded'); return; }
+    const sty = STYLES[ST.style] || STYLES.rounded, C = gCols, R = gRows;
+    const fs = Math.max(8, Math.round(ST.size / CELL)), lh = Math.round(fs * 1.15);
+    tg.font = sty.font(fs);
+    const widths = text.map(l => tg.measureText(l).width), W = Math.max(...widths), H = lh * text.length;
+    const ax = px / CELL, ay = py / CELL, a = ST.rot * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    // keep the whole block on the sandbox
+    const ex = (Math.abs(ca) * W + Math.abs(sa) * H) / 2, ey = (Math.abs(sa) * W + Math.abs(ca) * H) / 2;
+    const cx = Math.max(ex + 1, Math.min(C - ex - 1, ax)), cy = Math.max(ey + 1, Math.min(R - ey - 1, ay));
+    const bx0 = Math.max(0, Math.floor(cx - ex - 3)), by0 = Math.max(0, Math.floor(cy - ey - 3));
+    const bx1 = Math.min(C, Math.ceil(cx + ex + 3)), by1 = Math.min(R, Math.ceil(cy + ey + 3)), bw = bx1 - bx0, bh = by1 - by0;
+    if (bw <= 0 || bh <= 0) return;
+    tc.width = bw; tc.height = bh;
+    tg.font = sty.font(fs);   // (resizing the canvas resets its font)
+    // colors: one, a rainbow per letter, or a blend across the text
+    const start = Math.max(0, palette.indexOf(color));
+    const stops = [color, palette[(start + 2) % palette.length], palette[(start + 4) % palette.length]];
+    const useCol = !window.sandMat || sandMat.usesColor();
+    let letterN = 0;
+    const ids = new Set(), cells = [];
+    text.forEach((line, li) => {
+      const words = line.split(/(\s+)/);
+      let x = -W / 2 + (W - widths[li]) / 2;
+      const y = -H / 2 + li * lh + fs * 0.82;
+      words.forEach(word => {
+        if (!word) return;
+        if (/^\s+$/.test(word)) { x += tg.measureText(word).width; return; }
+        const id = nextObjId++; ids.add(id);
+        for (const ch of word) {
+          const w = tg.measureText(ch).width;
+          tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, bw, bh);
+          tg.setTransform(ca, sa, -sa, ca, cx - bx0, cy - by0);
+          tg.font = sty.font(fs); tg.fillStyle = '#fff'; tg.strokeStyle = '#fff'; tg.lineJoin = 'round';
+          tg.lineWidth = Math.max(0.8, fs * sty.stroke);
+          tg.fillText(ch, x, y); tg.strokeText(ch, x, y);
+          const d = tg.getImageData(0, 0, bw, bh).data;
+          const hexL = ST.colors === 'rainbow' ? palette[(start + letterN) % palette.length] : null;
+          for (let yy = 0; yy < bh; yy++) for (let xx = 0; xx < bw; xx++) {
+            if (d[(yy * bw + xx) * 4 + 3] <= 110) continue;
+            const gx = bx0 + xx, gy = by0 + yy, i = gy * C + gx;
+            if (gType[i] !== EMPTY && gType[i] !== LOOSE && !(gType[i] === STAMP && ids.has(gOwner[i]))) continue;
+            let hex = color;
+            if (useCol && hexL) hex = hexL;
+            else if (useCol && ST.colors === 'blend') {
+              const u = ((gx + 0.5 - cx) * ca + (gy + 0.5 - cy) * sa + W / 2) / Math.max(1, W);   // position along the text, 0..1
+              const t = Math.max(0, Math.min(1, u)) * 2;
+              hex = t < 1 ? mix(stops[0], stops[1], t) : mix(stops[1], stops[2], t - 1);
+            }
+            let c = cellColor(hex);
+            if (sty.carved) {   // carved: a pale cut edge, a deeper inside
+              const inside = (k, l) => { const ux = xx + k, uy = yy + l; return ux >= 0 && uy >= 0 && ux < bw && uy < bh && d[(uy * bw + ux) * 4 + 3] > 110; };
+              const edge = !inside(-1, 0) || !inside(0, -1), back = !inside(1, 0) || !inside(0, 1);
+              c = edge ? tone(c, 1.22) : back ? tone(c, 0.62) : tone(c, 0.86);
+            }
+            gType[i] = STAMP; gOwner[i] = id; gColor[i] = c;
+            cells.push(i);
+          }
+          x += w; letterN++;
+        }
+      });
+    });
+    tg.setTransform(1, 0, 0, 1, 0, 0);
+    if (ST.shimmer && cells.length) {
+      shimmer.push({ cells: Int32Array.from(cells), ids, t0: performance.now() });
+      while (shimmer.length > 12) shimmer.shift();
+    }
+    if (soundOn && typeof blip === 'function') blip('triangle', 640, 320, 0.15, 0.05);
+  }
+
+  // shimmer: a soft diagonal band of light, one sharp square per cell
+  function drawShimmer() {
+    if (!shimmer.length || mode !== 'sand' || !gType) return;
+    const now = performance.now();
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let s = shimmer.length - 1; s >= 0; s--) {
+      const S = shimmer[s], cells = S.cells;
+      let alive = 0, lo = 1e9, hi = -1e9;
+      if (!S.range) { for (let k = 0; k < cells.length; k++) { const i = cells[k], v = (i % gCols) + ((i / gCols) | 0); if (v < lo) lo = v; if (v > hi) hi = v; } S.range = [lo, hi]; S.C = gCols; }
+      if (S.C !== gCols) { shimmer.splice(s, 1); continue; }   // the sandbox changed size
+      const band = 14, span = S.range[1] - S.range[0] + band * 2, period = 2600 + span * 6;
+      const pos = S.range[0] - band + ((now - S.t0) % period) / period * (span + band * 4);
+      for (let k = 0; k < cells.length; k++) {
+        const i = cells[k];
+        if (gType[i] !== STAMP || !S.ids.has(gOwner[i])) continue;
+        alive++;
+        const x = i % gCols, y = (i / gCols) | 0, dd = x + y - pos;
+        if (dd < 0 || dd > band) continue;
+        const al = Math.sin(dd / band * Math.PI) * 0.32;
+        ctx.fillStyle = `rgba(255,250,235,${al.toFixed(3)})`;
+        ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      }
+      if (!alive) shimmer.splice(s, 1);   // all carved away or cleared
+    }
+    ctx.restore();
+  }
+  const baseDraw = drawSand;
+  drawSand = function () { baseDraw.apply(this, arguments); drawShimmer(); };
+  const baseClear = clearSand;
+  clearSand = function () { shimmer.length = 0; return baseClear.apply(this, arguments); };
+  document.addEventListener('click', e => { if (mode === 'sand' && e.target.closest && e.target.closest('#clearBtn')) shimmer.length = 0; }, true);
+
+  // tap or click the sandbox with the Letters tool
+  const baseDown = sandDown;
+  sandDown = function (p) {
+    if (tool !== 'letters') return baseDown.apply(this, arguments);
+    initSandGrid();
+    if (lifted) dropObject(p.x, p.y);
+    hint.classList.add('faded');
+    place(p.x, p.y);
+  };
+
+  // ----- the panel -----
+  function panel() {
+    if (mode !== 'sand' || document.getElementById('lettersBtn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'lettersBtn'; btn.dataset.tool = 'letters'; btn.textContent = 'Letters';
+    btn.title = 'Type words and mold them in sand';
+    btn.onclick = () => setTool('letters');
+    const ledge = document.getElementById('ledgeBtn');
+    ledge.parentNode.insertBefore(btn, ledge.nextSibling);
+    const box = document.createElement('div');
+    box.id = 'lettersBox';
+    box.innerHTML = `
+      <textarea id="lettersText" rows="2" maxlength="120" spellcheck="false" aria-label="Words to mold" placeholder="Type a word or a few lines"></textarea>
+      <div class="lt-row">
+        <label>Style <select id="lettersStyle">${Object.keys(STYLES).map(k => `<option value="${k}">${STYLES[k].label}</option>`).join('')}</select></label>
+        <label>Colors <select id="lettersColors"><option value="one">One color</option><option value="rainbow">Rainbow letters</option><option value="blend">Smooth blend</option></select></label>
+      </div>
+      <div class="lt-sliders">
+        <label>Size <input type="range" id="lettersSize" min="16" max="140" value="${ST.size}"></label>
+        <label>Turn <input type="range" id="lettersRot" min="-60" max="60" step="5" value="${ST.rot}"> <span id="lettersRotVal">${ST.rot}°</span></label>
+      </div>
+      <div class="lt-row">
+        <button id="lettersShimmer" class="${ST.shimmer ? 'active' : ''}" type="button">Shimmer: ${ST.shimmer ? 'On' : 'Off'}</button>
+        <button id="lettersMiddle" type="button" title="Mold the words in the middle of the sandbox">Place in middle</button>
+      </div>`;
+    btn.parentNode.insertBefore(box, document.getElementById('meltBtn'));
+    const q = id => document.getElementById(id);
+    q('lettersText').value = ST.text;
+    q('lettersStyle').value = ST.style; q('lettersColors').value = ST.colors;
+    q('lettersText').oninput = e => { ST.text = e.target.value; save(); };
+    q('lettersStyle').onchange = e => { ST.style = e.target.value; save(); };
+    q('lettersColors').onchange = e => { ST.colors = e.target.value; save(); };
+    q('lettersSize').oninput = e => { ST.size = +e.target.value; save(); };
+    q('lettersRot').oninput = e => { ST.rot = +e.target.value; q('lettersRotVal').textContent = ST.rot + '°'; save(); };
+    q('lettersShimmer').onclick = function () { ST.shimmer = !ST.shimmer; save(); this.textContent = 'Shimmer: ' + (ST.shimmer ? 'On' : 'Off'); this.classList.toggle('active', ST.shimmer); };
+    q('lettersMiddle').onclick = () => { setTool('letters'); place(width / 2, height * 0.42); };
+    showBox();
+  }
+  function showBox() { const b = document.getElementById('lettersBox'); if (b) b.hidden = tool !== 'letters'; }
+  const st = document.createElement('style');
+  st.textContent = `
+    #lettersBox { flex: 1 1 100%; display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--border, #263147); border-radius: 10px; background: rgba(255,255,255,0.03); }
+    #lettersBox[hidden] { display: none; }
+    #lettersBox textarea { width: 100%; resize: vertical; min-height: 44px; font: 600 15px/1.3 system-ui, sans-serif; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border, #263147); background: #0d121c; color: #e6e6f0; }
+    #lettersBox .lt-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #lettersBox label { display: flex; align-items: center; gap: 6px; }
+    #lettersBox select { max-width: 100%; }
+    @media (max-width: 700px) {
+      #lettersBox { gap: 6px; padding: 8px; }
+      #lettersBox textarea { min-height: 50px; font-size: 16px; }
+      #lettersBox .lt-sliders { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+      #lettersBox .lt-sliders label { flex: 1 1 140px; }
+      #lettersBox .lt-sliders input[type=range] { flex: 1 1 auto; min-width: 60px; width: auto; }
+    }
+    html.bg-light #lettersBox textarea { background: #fffdf8; color: #1e293b; }`;
+  document.head.appendChild(st);
+  const baseTool = setTool;
+  setTool = function () { baseTool.apply(this, arguments); showBox(); };
+  const baseControls = setControls;
+  setControls = function () { baseControls.apply(this, arguments); panel(); };
+  panel();
+  window.sandLetters = { place, state: ST };
+})();
+</script>
 </body>
 </html>
 
