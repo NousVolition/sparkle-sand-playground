@@ -17055,14 +17055,17 @@ draw();
       <div style="margin-top:8px">Steps ÷ spread: <span class="ratio" id="wRatio">–</span></div>
       <div class="sub">Always at least 1; exactly 1 is the equal case. "How far from equal" is (steps − spread) ÷ spread.</div>
       <div class="sub" style="margin-top:6px">In her Lean file, <b>wirtinger</b> puts the steps side on the right and <b>wirtinger_sharp</b> writes it on the left. Either way, the steps side is the one that can pull ahead; the spread side never can.</div>
+      <div class="sub" style="margin-top:8px">
+        <a id="unitDistancesLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L168" target="_blank" rel="noopener" aria-label="Lean proof of the ring inequality (opens in a new tab)">Lean proof of the ring inequality ↗</a> ·
+        <a id="unitDistancesLeanEquality" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L228" target="_blank" rel="noopener" aria-label="Lean proof of the cosine equality case (opens in a new tab)">Cosine equality case ↗</a>.
+        These proofs cover the cycle formula. The grid counts and browser calculations are separate.
+      </div>
     </div>
     <div class="card note">
       These two pull against each other. Your cosine wave needs the dots evenly spaced around the circle,
       and grid dots are only evenly spaced when there are 4 of them. So the only rings that make the two sides
       equal are the 4-dot ones, and those make the fewest lines. Lengths with more dots make more lines but
       sit further from equal. The gap between the sides scores how uneven the spacing is.
-      <div style="margin-top:8px">Checked step by step by a computer in Lean:
-        <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Wirtinger.lean" target="_blank" rel="noopener">CycleWirtinger.wirtinger</a></div>
       <div class="copy" style="margin-top:8px">Copyright © 2026 NousVolition. All rights reserved.</div>
     </div>
   </div>
@@ -17367,11 +17370,11 @@ draw();
     <div class="cap"><span style="color:#a78bfa">W(IoC)</span> and <span style="color:#fbbf24">W(quadgram score)</span>, log scale 1 to about 3,000; red dotted line is the settled threshold W = 150.</div>
     <div class="note">
       <b>Wirtinger roughness gauge.</b> Each window of the last n frames is centered and treated as a cycle (the last point wraps to the first).
-      R = Σ(f(j+1) − f(j))² / Σ f(j)² and λ₁ = 2 − 2cos(2π/n), so W = R / λ₁. The bound W ≥ 1 is the discrete Wirtinger inequality on ZMod n,
-      proved in Lean as <code>wirtinger</code>, with <code>wirtinger_sharp</code> showing cos(2πj/n) reaches it for n ≥ 3:
-      <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean" target="_blank" rel="noopener">NousVolition/discrete-gap-inequalities-lean</a> (Wirtinger.lean).
+      R = Σ(f(j+1) − f(j))² / Σ f(j)² and λ₁ = 2 − 2cos(2π/n), so W = R / λ₁. For a nonconstant window with n ≥ 3, W ≥ 1 follows from the discrete Wirtinger inequality on ZMod n.
+      <a id="cipherLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L168" target="_blank" rel="noopener" aria-label="Lean proof of the Wirtinger bound (opens in a new tab)">Lean proof of the bound ↗</a> ·
+      <a id="cipherLeanEquality" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L228" target="_blank" rel="noopener" aria-label="Lean proof of the cosine equality case (opens in a new tab)">Cosine equality case ↗</a> (cos(2πj/n), n ≥ 3).
       Every frame checks R ≥ λ₁ − 10⁻¹² in the console. W near 1 needs a window shaped like one smooth wave; a steady climb gives roughly W ≈ 0.3n because of the wrap,
-      and frame-to-frame noise gives about 2/λ₁ (≈ 730 for n = 120). The inequality only bounds how rough the curve is; it does not prove that the solver converges.
+      and frame-to-frame noise gives about 2/λ₁ (≈ 730 for n = 120). These Lean proofs concern real-valued cycles. The browser calculations, solver convergence and decoded text are outside their scope.
       <div id="selftest" style="margin-top:4px"></div>
     </div>
     </div>

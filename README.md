@@ -7,6 +7,10 @@ The path label in [Trilogy](https://nousvolition.github.io/sparkle-sand-playgrou
 
 The cycle card links to [Wirtinger.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L168), which proves the cycle inequality and its sharpness. The cube card links to [CubeCheeger.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/CubeCheeger.lean#L179) for the gap bound 2. The browser's floating-point updates are outside these proofs.
 
+## Unit Distances and Cipher Inspector
+
+[Unit Distances](https://nousvolition.github.io/sparkle-sand-playground/#unit-distances) and [Cipher Inspector](https://nousvolition.github.io/sparkle-sand-playground/#cipher) link to the [cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L168) and its [cosine equality case](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L228). These are the results behind the ring comparison and the roughness gauge. The links point to the audited proof revision; grid counts, browser calculations, solver convergence and decoded text are outside these proofs.
+
 ## Trilogy's cube maximum
 
 [Trilogy](https://nousvolition.github.io/sparkle-sand-playground/#trilogy) compares a selected set's internal edges with the exact maximum `h(m)`: the total number of 1 bits in the binary labels `0` through `m-1`. It shows the logarithmic upper bound `(m/2) log₂(m)` separately. For example, `{0,1,2}` has two internal edges, which is optimal; the upper bound of about `2.38` is not attainable.
