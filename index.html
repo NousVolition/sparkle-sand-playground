@@ -1453,8 +1453,9 @@ function ferroBoot() {
 
     // Background gradient
     const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, pal.bgTop);
-    bg.addColorStop(1, pal.bgBot);
+    const pick = typeof bgGlow === 'function';   // the playground's background choice (near-black keeps its own palette)
+    bg.addColorStop(0, pick ? bgGlow(pal.bgTop, 0) : pal.bgTop);
+    bg.addColorStop(1, pick ? bgGlow(pal.bgBot, 0.05) : pal.bgBot);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -16922,6 +16923,7 @@ draw();
   .note b { color: var(--text); }
   .stage { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 6px; }
   #grid { flex: 1; min-height: 0; }
+  .card.stage { background: var(--sp-bg, var(--panel)); }   /* follows the playground's background choice (set only for non-default swatches) */
   .gridnote { flex: none; font-size: 0.75rem; color: var(--muted); text-align: center; line-height: 1.4; }
   #grid { width: 100%; height: 100%; display: block; touch-action: manipulation; }
   #ring { width: 100%; aspect-ratio: 1; display: block; background: #0b0e14; border: 1px solid var(--border); border-radius: 10px; }
@@ -18437,7 +18439,7 @@ function updateSand() {
 }
 
 function drawSand() {
-  ctx.fillStyle = '#05070a';
+  ctx.fillStyle = bgFill('#05070a');
   ctx.fillRect(0, 0, width, height);
 
   if (guideLines) {
@@ -18720,7 +18722,7 @@ function updateBubbles() {
 }
 
 function drawBubbles() {
-  ctx.fillStyle = '#05070a';
+  ctx.fillStyle = bgFill('#05070a');
   ctx.fillRect(0, 0, width, height);
   
   const bubCols = tabColorList('bubbles');
@@ -18754,7 +18756,7 @@ function drawBubbles() {
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.strokeStyle = pageBg && pageBg.light ? 'rgba(30,40,60,0.45)' : 'rgba(255,255,255,0.4)';   // a dark rim on the light background
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.restore();
@@ -19134,10 +19136,10 @@ function updatePlate() {
 }
 
 function drawPlate() {
-  ctx.fillStyle = '#05070a';
+  ctx.fillStyle = bgFill('#05070a');
   ctx.fillRect(0, 0, width, height);
   const r = plateRect();
-  ctx.fillStyle = '#0b1018';
+  ctx.fillStyle = bgPanel('#0b1018');
   ctx.fillRect(r.x, r.y, r.w, r.h);
   ctx.strokeStyle = 'rgba(0,212,255,0.25)';
   ctx.lineWidth = 1;
@@ -19233,10 +19235,10 @@ function updateWaves() {
 }
 
 function drawWaves() {
-  ctx.fillStyle = '#05070a';
+  ctx.fillStyle = bgFill('#05070a');
   ctx.fillRect(0, 0, width, height);
   const r = waveRect();
-  ctx.fillStyle = '#0a0f17';
+  ctx.fillStyle = bgPanel('#0a0f17');
   ctx.fillRect(r.x, r.y, r.w, r.h);
   const waveCols = tabColorList('waves');
   ctx.strokeStyle = waveCols ? rgbStr(tabRGB('waves', 0), 0.22) : 'rgba(103,232,249,0.22)';
@@ -19387,9 +19389,9 @@ function updateLoop() {
 
 function drawLoop() {
   if (loopTrails) {
-    ctx.fillStyle = 'rgba(5,7,10,0.14)';
+    ctx.fillStyle = bgFade('rgba(5,7,10,0.14)', 0.14);
   } else {
-    ctx.fillStyle = '#05070a';
+    ctx.fillStyle = bgFill('#05070a');
   }
   ctx.fillRect(0, 0, width, height);
   const t = Date.now() * 0.001;
@@ -19625,7 +19627,7 @@ function updateSilk() {
 }
 
 function drawSilk() {
-  ctx.fillStyle = '#04060f';
+  ctx.fillStyle = bgFill('#04060f');
   ctx.fillRect(0, 0, width, height);
   if (!sX) silkInit();
   const cols = silkColors(), nc = cols.length;
@@ -20169,7 +20171,7 @@ function cryRepaint() {
 function drawCrystal() {
   if (!cS || cryInitW !== width || cryInitH !== height) cryInit();
   const g0 = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
-  g0.addColorStop(0, '#0d1b3a'); g0.addColorStop(1, '#03060f');
+  g0.addColorStop(0, bgGlow('#0d1b3a', 0.07)); g0.addColorStop(1, bgGlow('#03060f', -0.25));
   ctx.fillStyle = g0; ctx.fillRect(0, 0, width, height);
   // vapor: faint blue haze where the air is wetter
   if (cryFrame % 3 === 0 || !cryVaporPix[0]) {
@@ -20813,7 +20815,7 @@ function magBackground() {
   const g = magBg.getContext('2d');
   g.setTransform(d, 0, 0, d, 0, 0);
   const gr = g.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
-  gr.addColorStop(0, '#0b1224'); gr.addColorStop(1, '#04060c');
+  gr.addColorStop(0, bgShade('#0b1224', 0.06)); gr.addColorStop(1, bgShade('#04060c', -0.25));
   g.fillStyle = gr; g.fillRect(0, 0, width, height);
   g.strokeStyle = 'rgba(148,163,184,0.06)'; g.lineWidth = 1;
   g.beginPath();
@@ -21512,7 +21514,7 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
         while (!done && (n < 1 || performance.now() - t0 < 28)) { advance(); n++; }
         main.measure(field);
       }
-      ctx.fillStyle = '#07090e';
+      ctx.fillStyle = typeof bgPanel === 'function' ? bgPanel('#07090e', true) : '#07090e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawField(20, 40, 420);
       if (hotOn && main.theta) drawHeat(20, 40, 420);
@@ -21546,7 +21548,7 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
 })();
 // draw her 960x500 picture onto the page, scaled to fit and centered
 function drawStretch() {
-  ctx.fillStyle = '#07090e';
+  ctx.fillStyle = bgFill('#07090e');
   ctx.fillRect(0, 0, width, height);
   // keep clear of the hint box at the bottom
   const avail = Math.max(120, height - (hint.offsetHeight + 28));
@@ -21975,6 +21977,42 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+// ========== BACKGROUND CHOICE FOR TABS 1-10 ==========
+// The header swatches set --bg. With the default near-black every tab keeps its own exact colors;
+// with any other swatch the canvas fill reads --bg (inner panels a shade off it, so they still stand out).
+var pageBg = null;
+function readPageBg() {
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim().toLowerCase();
+  const m = /^#([0-9a-f]{6})$/.exec(v);
+  let nb = null;
+  if (m && v !== '#0b0e14') {
+    const n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    nb = { hex: v, r, g, b, light: (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6 };
+  }
+  if ((nb && nb.hex) === (pageBg && pageBg.hex)) return;
+  pageBg = nb;
+  if (typeof magBg !== 'undefined') magBg = null;   // the magnets background is cached: redraw it
+}
+function bgFill(orig) { return pageBg ? pageBg.hex : orig; }
+function bgFade(orig, a) { return pageBg ? `rgba(${pageBg.r},${pageBg.g},${pageBg.b},${a})` : orig; }
+// a shade of the chosen color: k > 0 lighter, k < 0 darker (on the light tone the two swap, so panels read as panels)
+function bgShade(orig, k) {
+  if (!pageBg) return orig;
+  const s = pageBg.light ? -Math.abs(k) * 0.6 : k;
+  const f = v => Math.round(s >= 0 ? v + (255 - v) * s : v * (1 + s));
+  return `rgb(${f(pageBg.r)},${f(pageBg.g)},${f(pageBg.b)})`;
+}
+// inner panels (plate, wave field, the stretch picture): a shade off the chosen color; on the light tone they stay dark
+// because the grains and lines drawn on them are light colors
+function bgPanel(orig, keepDarkOnLight) {
+  if (!pageBg || pageBg.light) return orig;
+  return keepDarkOnLight ? bgShade(orig, -0.3) : bgShade(orig, 0.045);
+}
+// glow-lit pictures (crystal, ferrofluid) only show on a dark ground, so on the light tone they keep their own dark fill
+function bgGlow(orig, k) { return !pageBg || pageBg.light ? orig : bgShade(orig, k); }
+new MutationObserver(readPageBg).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+readPageBg();
+
 // Mouse / Touch
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
@@ -22221,6 +22259,35 @@ loop();
       ':root{--sp-bg:' + cur.bg + '}html,body{background:var(--sp-bg)!important}[data-sp-bg]{background-color:var(--sp-bg)!important}' +
       (cur.light ? 'canvas{background-color:' + pageHex + '}' : '');
     frameText(f, d, w);
+    framePaint(f, w);
+  }
+  // Her canvases that clear each frame with a solid near-black fillRect over the whole canvas: on a dark swatch that
+  // one fill takes the chosen color (same opacity). Nothing else she draws is touched; near-black and cream leave it as is.
+  function framePaint(f, w) {
+    const P = w.CanvasRenderingContext2D && w.CanvasRenderingContext2D.prototype;
+    if (!P) return;
+    if (!P.__spFill) {
+      const orig = P.fillRect;
+      P.__spFill = orig;
+      P.fillRect = function (x, y, wd, ht) {
+        const sb = w.__spBg, fs = this.fillStyle;
+        if (sb && typeof fs === 'string') {
+          const c = fs[0] === '#' ? hexRgb(fs) : rgb(fs);
+          if (c && Math.max(c.r, c.g, c.b) <= 48) {
+            const T = this.getTransform(), cw = this.canvas.width, ch = this.canvas.height;
+            const xa = T.a * x + T.e, xb = T.a * (x + wd) + T.e, ya = T.d * y + T.f, yb = T.d * (y + ht) + T.f;
+            if (!T.b && !T.c && Math.min(xa, xb) <= 1 && Math.min(ya, yb) <= 1 && Math.max(xa, xb) >= cw - 1 && Math.max(ya, yb) >= ch - 1) {
+              this.fillStyle = c.a < 1 ? 'rgba(' + sb.r + ',' + sb.g + ',' + sb.b + ',' + c.a + ')' : sb.hex;
+              orig.call(this, x, y, wd, ht);
+              this.fillStyle = fs;
+              return;
+            }
+          }
+        }
+        return orig.call(this, x, y, wd, ht);
+      };
+    }
+    w.__spBg = (cur.id !== 'night' && !cur.light) ? Object.assign(hexRgb(cur.bg), { hex: cur.bg }) : null;
   }
   // light tone: darken text whose own backing is the page (so not inside a dark card), and undo it otherwise
   function frameText(f, d, w) {
