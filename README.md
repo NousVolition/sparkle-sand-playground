@@ -1,9 +1,11 @@
 # sparkle-sand-playground
 Interactive particle playground: kinetic sand, bubbles, sound plate, waves
 
-## Trilogy's six-point path gap
+## Trilogy's gap proofs
 
-The path label in [Trilogy](https://nousvolition.github.io/sparkle-sand-playground/#trilogy) reads `2 − √3 ≈ 0.268`, with a link to [PathSix.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/PathSix.lean#L70). The Lean proof establishes the bound, an equality case and the rounding. The browser's floating-point updates are outside that proof.
+The path label in [Trilogy](https://nousvolition.github.io/sparkle-sand-playground/#trilogy) reads `2 − √3 ≈ 0.268`, with a link to [PathSix.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/PathSix.lean#L70). The Lean proof establishes the bound, an equality case and the rounding.
+
+The cycle card links to [Wirtinger.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L168), which proves the cycle inequality and its sharpness. The cube card links to [CubeCheeger.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/CubeCheeger.lean#L179) for the gap bound 2. The browser's floating-point updates are outside these proofs.
 
 ## Trilogy's cube maximum
 
