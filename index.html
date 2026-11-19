@@ -22559,6 +22559,55 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   window.sandWelcome = { clear: clearWelcome, isOn: () => active };
 })();
 </script>
+<script id="premadeBubbles">
+// ========== PREMADE BUBBLES (TAB 3) ==========
+// Opening the Bubbles tab with nothing on screen fills it with a few bubbles of mixed sizes, spread out and
+// drifting a little. They are ordinary bubbles from blowBubble(): drag, merge, jiggle and Pop All work as before.
+(function premadeBubbles() {
+  function fill() {
+    if (mode !== 'bubbles' || bubbles.length || !width || !height) return;
+    const small = Math.min(width, height) < 520;
+    const n = small ? 6 : 8, scale = Math.max(0.55, Math.min(1, Math.min(width, height) / 620));
+    const sizes = [68, 58, 50, 44, 38, 34, 30, 28].slice(0, n).map(r => r * scale);
+    const placed = [];
+    // keep them out from under the hint along the bottom and the motion meter in the corner
+    const cr = canvas.getBoundingClientRect(), keepOut = [];
+    [document.getElementById('hint'), document.getElementById('waveGraphs'), document.getElementById('restBox')].forEach(el => {
+      if (!el || el.offsetParent === null) return;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) keepOut.push({ l: r.left - cr.left, t: r.top - cr.top, r: r.right - cr.left, b: r.bottom - cr.top });
+    });
+    const clash = (x, y, r) => keepOut.some(k => x + r > k.l - 24 && x - r < k.r + 24 && y + r > k.t - 24 && y - r < k.b + 24);
+    for (const r of sizes) {
+      let best = null, bestGap = -1e9;
+      for (let t = 0; t < 120; t++) {
+        const x = r + 8 + Math.random() * Math.max(1, width - 2 * r - 16);
+        const y = r + 8 + Math.random() * Math.max(1, height - 2 * r - 16);
+        // keep clear of the others (well past the merge distance) and pick the roomiest spot
+        let gap = Math.min(x - r, width - x - r, y - r, height - y - r) * 2;   // edges count a little, too
+        for (const o of placed) gap = Math.min(gap, Math.hypot(x - o.x, y - o.y) - r - o.r);
+        if (clash(x, y, r)) gap -= 1000;
+        if (gap > bestGap) { bestGap = gap; best = { x, y, r }; }
+      }
+      placed.push(best);
+    }
+    for (const p of placed) {
+      blowBubble(p.x, p.y);
+      const b = bubbles[bubbles.length - 1];
+      b.r = p.r;
+      b.vx = (Math.random() - 0.5) * 1.2;   // a gentle drift
+      b.vy = (Math.random() - 0.5) * 1.2;
+    }
+  }
+  const baseControls = setControls;
+  setControls = function () {
+    baseControls.apply(this, arguments);
+    // a short wait lets the layout settle first, so the spread matches the real canvas size
+    if (mode === 'bubbles') setTimeout(fill, 150);
+  };
+  if (mode === 'bubbles') setTimeout(fill, 150);
+})();
+</script>
 </body>
 </html>
 
