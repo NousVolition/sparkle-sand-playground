@@ -5444,10 +5444,15 @@ requestAnimationFrame(loop);
     padding: 12px 14px;
     border-bottom: 1px solid var(--panel-border);
     display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
     justify-content: space-between;
     align-items: center;
   }
   .mini-header h3 { font-size: 0.92rem; font-weight: 600; }
+  #gapLineBadge { white-space: nowrap; }
+  .proof-link { color: var(--accent); font-size: 0.74rem; text-underline-offset: 3px; }
+  .proof-link:hover, .proof-link:focus-visible { color: var(--text); }
   .badge {
     font-size: 0.74rem;
     padding: 3px 8px;
@@ -5541,7 +5546,8 @@ requestAnimationFrame(loop);
       <div class="mini-card">
         <div class="mini-header">
           <h3>1. Open Line (Poincaré)</h3>
-          <span class="badge" id="gapLineBadge">Gap &lambda;₂ = 0.268</span>
+          <span class="badge" id="gapLineBadge">Gap &lambda;₂ = 2 − √3 ≈ 0.268</span>
+          <a class="proof-link" id="pathLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/PathSix.lean#L70" target="_blank" rel="noopener" aria-label="Lean proof of the six-point path gap (opens in a new tab)">Lean proof ↗</a>
         </div>
         <canvas id="lineCanvas"></canvas>
         <div class="mini-footer">
