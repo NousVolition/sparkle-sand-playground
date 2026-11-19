@@ -5270,7 +5270,7 @@ requestAnimationFrame(loop);
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Spectral &amp; Isoperimetric Trilogy Visualizer</title>
+<title>Spectral &amp; Isoperimetric Trilogy Studio</title>
 <style>
   :root {
     --bg: #0f131a;
@@ -5282,215 +5282,93 @@ requestAnimationFrame(loop);
     --accent2: #c084fc;
     --warm: #f59e0b;
     --good: #34d399;
+    --bad: #f87171;
+    --path: #7dd3fc;
+    --cycle: #c084fc;
+    --cube: #34d399;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    min-height: 100vh; display: flex; flex-direction: column;
   }
   header {
-    background: var(--panel);
-    border-bottom: 1px solid var(--panel-border);
-    padding: 14px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    background: var(--panel); border-bottom: 1px solid var(--panel-border);
+    padding: 14px 20px; display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 12px;
   }
-  .title-block h1 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
-  .title-block p {
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-  .tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .title-block h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.01em; }
+  .title-block p { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
   .tab-btn {
-    background: #1f2735;
-    color: var(--muted);
-    border: 1px solid var(--panel-border);
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    background: #1f2735; color: var(--muted); border: 1px solid var(--panel-border);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
   }
   .tab-btn:hover { color: var(--text); border-color: #3e4d68; }
-  .tab-btn.active {
-    background: #253349;
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    gap: 14px;
-    max-width: 1280px;
-    width: 100%;
-    margin: 0 auto;
-  }
-  .view-section {
-    display: none;
-    flex-direction: column;
-    gap: 14px;
-    flex: 1;
-  }
+  .tab-btn.active { background: #253349; color: var(--accent); border-color: var(--accent); }
+  main { flex: 1; display: flex; flex-direction: column; padding: 16px; gap: 14px; max-width: 1280px; width: 100%; margin: 0 auto; }
+  .view-section { display: none; flex-direction: column; gap: 14px; flex: 1; }
   .view-section.active { display: flex; }
-  .canvas-card {
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    position: relative;
-    overflow: hidden;
-    flex: 1;
-    min-height: 440px;
-    display: flex;
-    flex-direction: column;
-  }
-  canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    flex: 1;
-    cursor: grab;
-  }
-  canvas:active { cursor: grabbing; }
-  .hud {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    background: rgba(15, 19, 26, 0.82);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--panel-border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 0.83rem;
-    line-height: 1.5;
-    pointer-events: none;
-    max-width: 310px;
-  }
-  .hud-title {
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 4px;
-    font-size: 0.88rem;
-  }
-  .hud-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-    color: var(--muted);
-  }
-  .hud-val {
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-    font-weight: 500;
-  }
+  canvas { width: 100%; display: block; }
+  .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; }
   .controls {
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    padding: 14px 18px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px;
+    padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
   }
-  .ctrl-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.84rem;
-    color: var(--muted);
-  }
-  .ctrl-group input[type="range"] {
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
+  .ctrl-group { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--muted); }
+  .ctrl-group input[type="range"] { accent-color: var(--accent); cursor: pointer; width: 110px; }
+  .ctrl-group b { color: var(--text); font-variant-numeric: tabular-nums; min-width: 1.6em; display: inline-block; }
   .btn {
-    background: #222b3a;
-    color: var(--text);
-    border: 1px solid var(--panel-border);
-    padding: 7px 12px;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    background: #222b3a; color: var(--text); border: 1px solid var(--panel-border);
+    padding: 7px 12px; border-radius: 8px; font-size: 0.82rem; cursor: pointer;
   }
   .btn:hover { background: #2c384c; border-color: #455675; }
-  .btn.primary {
-    background: rgba(125, 211, 252, 0.14);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .trilogy-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 14px;
-    flex: 1;
-  }
-  .mini-card {
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 360px;
-  }
-  .mini-header {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--panel-border);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 10px;
-    justify-content: space-between;
-    align-items: center;
-  }
+  .btn.primary { background: rgba(125, 211, 252, 0.14); border-color: var(--accent); color: var(--accent); }
+  .trilogy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+  .mini-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+  .mini-header { padding: 11px 14px; border-bottom: 1px solid var(--panel-border); display: flex; flex-wrap: wrap; gap: 6px 10px; justify-content: space-between; align-items: center; }
   .mini-header h3 { font-size: 0.92rem; font-weight: 600; }
-  #gapLineBadge { white-space: nowrap; }
-  .proof-link { color: var(--accent); font-size: 0.74rem; text-underline-offset: 3px; }
-  .proof-link:hover, .proof-link:focus-visible { color: var(--text); }
-  .badge {
-    font-size: 0.74rem;
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: rgba(125, 211, 252, 0.12);
-    color: var(--accent);
-    border: 1px solid rgba(125, 211, 252, 0.3);
-  }
-  .mini-footer {
-    padding: 10px 14px;
-    border-top: 1px solid var(--panel-border);
-    font-size: 0.8rem;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-  }
-  .insight-banner {
-    background: rgba(192, 132, 252, 0.08);
-    border: 1px solid rgba(192, 132, 252, 0.25);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    color: #dcd6f7;
-  }
+  .badge { font-size: 0.74rem; padding: 3px 8px; border-radius: 999px; background: rgba(125, 211, 252, 0.12); color: var(--accent); border: 1px solid rgba(125, 211, 252, 0.3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .lean-line { padding: 7px 14px; font-size: 0.75rem; color: var(--muted); border-bottom: 1px solid var(--panel-border); line-height: 1.45; min-height: 3.1em; }
+  .lean-line a, .note a, details.proved-panel a { color: var(--accent); text-underline-offset: 3px; }
+  .mini-canvas { height: 230px; }
+  .mini-footer { padding: 9px 14px; border-top: 1px solid var(--panel-border); font-size: 0.79rem; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; font-variant-numeric: tabular-nums; }
+  .mini-footer strong { color: var(--text); font-weight: 600; }
+  .insight-banner { background: rgba(192, 132, 252, 0.08); border: 1px solid rgba(192, 132, 252, 0.25); border-radius: 10px; padding: 12px 16px; font-size: 0.85rem; line-height: 1.55; color: #dcd6f7; }
+  .note { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .ok { color: var(--good); } .bad { color: var(--bad); }
+  .chart-card { padding: 10px 14px 12px; }
+  .chart-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+  .legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+  .ratio-row { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.84rem; color: var(--muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .ratio-row strong { color: var(--text); }
+  .split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr); gap: 14px; }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+  .canvas-card { position: relative; overflow: hidden; min-height: 420px; }
+  #cubeCanvas { height: 440px; cursor: pointer; }
+  .side { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; font-size: 0.84rem; }
+  .side h3 { font-size: 0.92rem; color: var(--accent); margin-bottom: 4px; }
+  .kv { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+  .kv span:last-child { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .meter { height: 12px; background: #222b3a; border-radius: 6px; position: relative; overflow: hidden; margin: 4px 0 2px; }
+  .meter > div { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 6px; }
+  .meter .floor { background: rgba(245, 158, 11, 0.85); width: 2px; border-radius: 0; z-index: 2; }
+  .status { font-weight: 600; }
+  #gridCanvas { height: 400px; }
+  #healRings { height: 230px; }
+  #healChart, #decayChart { height: 260px; }
+  details.proved-panel { padding: 10px 16px 12px; user-select: text; }
+  details.proved-panel summary { cursor: pointer; color: var(--warm); font-weight: 700; font-size: 0.9rem; }
+  details.proved-panel .proved-lead { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.55; }
+  details.proved-panel .proved-group { margin: 12px 0 4px; color: var(--accent); font-weight: 700; font-size: 0.82rem; }
+  details.proved-panel ul { padding: 0 0 0 1.2em; font-size: 0.8rem; line-height: 1.55; }
+  details.proved-panel li { margin-bottom: 4px; }
+  details.proved-panel code { font-size: 0.76rem; color: var(--text); }
+  .check-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; font-size: 0.82rem; }
+  #check-out { margin-top: 6px; font-size: 0.76rem; line-height: 1.5; }
+  .check-pass { color: var(--good); } .check-fail { color: var(--bad); }
 </style>
 </head>
 <body>
@@ -5498,575 +5376,849 @@ requestAnimationFrame(loop);
 <header>
   <div class="title-block">
     <h1>Spectral &amp; Isoperimetric Trilogy Studio</h1>
-    <p>1D Path (Poincaré) &bull; 1D Cycle (Wirtinger) &bull; nD Hypercube (Edge-Isoperimetric)</p>
+    <p>Path (Poincaré) &bull; Cycle (Wirtinger) &bull; Hypercube of any dimension (edge-isoperimetric) &bull; Grid of two rings &bull; Healing against a steady push</p>
   </div>
   <div class="tabs">
-    <button class="tab-btn active" data-tab="cube">1. 3D/4D Hypercube Explorer</button>
-    <button class="tab-btn" data-tab="trilogy">2. Unified Trilogy Comparison</button>
+    <button class="tab-btn active" data-tab="trilogy">1. Cheeger's Bridge</button>
+    <button class="tab-btn" data-tab="cube">2. Cube edge boundary</button>
+    <button class="tab-btn" data-tab="grid">3. Grid of two rings</button>
+    <button class="tab-btn" data-tab="heal">4. Heal against a push</button>
   </div>
 </header>
 
 <main>
-  <!-- TAB 1: 3D/4D HYPERCUBE EXPLORER -->
-  <section id="tab-cube" class="view-section active">
-    <div class="canvas-card">
-      <canvas id="cubeCanvas"></canvas>
-      <div class="hud">
-        <div class="hud-title" id="cubeTitle">3D Cube (n = 3)</div>
-        <div class="hud-row"><span>Selected Vertices (m):</span><span class="hud-val" id="hudM">4</span></div>
-        <div class="hud-row"><span>Internal Edges (dir / 2):</span><span class="hud-val" id="hudInternal" style="color:var(--good)">4</span></div>
-        <div class="hud-row"><span>Exact Maximum h(m):</span><span class="hud-val" id="hudMax">4</span></div>
-        <div class="hud-row"><span>Upper Bound (m/2)log₂m:</span><span class="hud-val" id="hudLogBound">4.00</span></div>
-        <div class="hud-row"><span>Boundary Cut Edges:</span><span class="hud-val" id="hudBoundary" style="color:var(--warm)">4</span></div>
-        <div class="hud-row"><span>Optimality:</span><span class="hud-val" id="hudStatus" style="color:var(--good)">Optimal (exact maximum)</span></div>
-        <div style="margin-top:8px; font-size:0.76rem; color:var(--muted);">
-          Click corners to toggle set <strong>s</strong> &bull; Drag to rotate
-        </div>
-      </div>
+  <details class="card proved-panel" id="proved-panel">
+    <summary>What is proved here</summary>
+    <p class="proved-lead">This panel separates four kinds of statement: facts a computer has checked in Lean, facts proved in published mathematics but not in Lean, numbers this page recomputes itself, and pictures that are only for display. All Lean files are in <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean" target="_blank" rel="noopener">NousVolition/discrete-gap-inequalities-lean</a>.</p>
+
+    <div class="proved-group">Proved in Lean (checked step by step by a computer)</div>
+    <ul>
+      <li><b>Six-point path.</b> For six values with sum zero, (2 − √3) times their sum of squares is at most the sum of squared steps, and the coefficient 2 − √3 cannot be raised (<code>PathSix.poincare</code>, <code>PathSix.sharp</code>, equality case <code>mode_equality</code>). Lean also proves 0.2675 &lt; 2 − √3 &lt; 0.2685, so the display 0.268 is correct to three decimals, and that 0.268 itself is slightly too large to use as a guaranteed floor (<code>rounded_value_not_valid_bound</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/PathSix.lean" target="_blank" rel="noopener">PathSix.lean</a></li>
+      <li><b>Path of any length.</b> For n points with sum zero, 2 · (sum of squares) ≤ n(n − 1) · (sum of squared steps) (<code>DiscretePoincare.poincare</code>). This guarantees a floor of 2/(n(n − 1)) for the gap. It is true for every n but weaker than the exact gap. <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Poincare.lean" target="_blank" rel="noopener">Poincare.lean</a></li>
+      <li><b>Cycle of any length.</b> For values on a ring of n points with sum zero, (2 − 2cos(2π/n)) times the sum of squares is at most the sum of squared steps (<code>wirtinger</code>), and for n ≥ 3 the wave cos(2πj/n) gives equality (<code>wirtinger_sharp</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Wirtinger.lean" target="_blank" rel="noopener">Wirtinger.lean</a></li>
+      <li><b>Ring heat steps.</b> One step u<sub>j</sub> + t(u<sub>j+1</sub> − 2u<sub>j</sub> + u<sub>j−1</sub>) keeps the average, and for 0 ≤ t ≤ 1/4 it keeps at most the fraction (1 − t · gap)<sup>2</sup> of the squared distance from the average; the slowest wave keeps exactly that fraction; repeated steps tend to the average. 2 − 2cos(2π/n) = 4sin²(π/n) is also proved there (<code>gap_eq_four_sin_sq</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/RingDecay.lean" target="_blank" rel="noopener">RingDecay.lean</a></li>
+      <li><b>Cube gap.</b> On the n-dimensional cube, 2 · spread ≤ 2<sup>n</sup> · energy for every function (<code>CubeCheeger.gap</code>), which for sum-zero values is a gap of at least 2 in every dimension (<code>Bridges.cube_poincare</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/CubeCheeger.lean" target="_blank" rel="noopener">CubeCheeger.lean</a>, <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Bridges.lean" target="_blank" rel="noopener">Bridges.lean</a></li>
+      <li><b>Cheeger on the cube.</b> Any set of at most half the corners has at least as many edges leaving it as it has corners (<code>CubeCheeger.cheeger</code>), and the half cube with first coordinate on meets this exactly (<code>half_exact</code>). The same statement is rederived from the gap alone in <code>Unify.cube_cheeger_by_gap</code>, through <code>patch_from_gap</code>. <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Unify.lean" target="_blank" rel="noopener">Unify.lean</a></li>
+      <li><b>Best sets on the cube.</b> A set of m corners spans at most h(m) edges, where h(m) is the total number of 1 bits in 0, 1, …, m − 1; the first m corners in binary order reach h(m) (<code>max_dir_eq</code>, <code>dir_bin</code>, <code>dir_le_dir_bin</code>). Lean counts each edge twice (<code>dir</code> = 2 · edges). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/EdgeOptimal.lean" target="_blank" rel="noopener">EdgeOptimal.lean</a></li>
+      <li><b>Logarithmic bound.</b> The edges inside a set of m corners number at most (m/2)·log₂m (<code>edges_le</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Isoperimetric.lean" target="_blank" rel="noopener">Isoperimetric.lean</a></li>
+      <li><b>Grid of two rings.</b> On an m × n grid that wraps both ways, values with sum zero satisfy min(gap m, gap n) · (sum of squares) ≤ energy (<code>grid_gap</code>), with equality for a single wave (<code>grid_gap_sharp</code>, <code>rowWave_sharp</code>, <code>colWave_sharp</code>). One heat step f − τ · lap f keeps the sum, and for 0 ≤ τ ≤ 1/4 keeps at most the fraction 1 − 2τ(1 − 4τ) · min(gap m, gap n) of the squared distance from the average (<code>heatStep_decay_mean</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Torus.lean" target="_blank" rel="noopener">Torus.lean</a></li>
+      <li><b>Healing against a steady push.</b> A store that gains a steady positive input u and lets go at rate r ≥ 0 follows x<sub>0</sub> + ut when r = 0 and u/r + (x<sub>0</sub> − u/r)e<sup>−rt</sup> when r &gt; 0, and it stays bounded for all time exactly when r &gt; 0 (<code>finite_iff_gap</code>, <code>breathe_deriv</code>, <code>keep_unbounded</code>). <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Gap.lean" target="_blank" rel="noopener">Gap.lean</a></li>
+      <li><b>Two points through one wall.</b> Two sides joined at rate k keep their average and their difference fades as e<sup>−2kt</sup> (<code>difference_fades</code>, <code>average_fixed</code>). With k = 1 this is the two-point path, whose gap is 2. <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/WallPush.lean" target="_blank" rel="noopener">WallPush.lean</a></li>
+    </ul>
+
+    <div class="proved-group">Proved in the literature, not in Lean</div>
+    <ul>
+      <li>The exact gap of the path with n points is 2 − 2cos(π/n), with slowest shape cos(π(i + ½)/n). Lean proves this only for n = 6.</li>
+      <li>The cube of dimension n has heat rates 0, 2, 4, …, 2n, so its gap is exactly 2. Lean proves the floor 2; this page checks that 2 is reached.</li>
+      <li>For heat flow that never stops (continuous time), the squared distance from the average is at most e<sup>−2λ₂t</sup> times its start, where λ₂ is the gap.</li>
+      <li>Cheeger's inequality links the gap to the smallest boundary per corner on any graph. The cube case used on this page is the one proved in Lean above.</li>
+      <li>Harper's vertex theorem, proved in full in <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/HarperSquash.lean" target="_blank" rel="noopener">HarperSquash.lean</a>, is the neighboring result about corners rather than edges. This page does not use it.</li>
+    </ul>
+
+    <div class="proved-group">Checked by this page</div>
+    <p class="note">Press <b>Run checks</b> to recompute each item in your browser and see pass or fail.</p>
+    <ul>
+      <li>The exact gaps of paths (n = 2 to 16), cycles (n = 3 to 16), cubes (dimensions 1 to 5) and grids, found by a full eigenvalue computation and compared with the formulas.</li>
+      <li>The inequalities above on hundreds of random inputs, and their equality cases.</li>
+      <li>Every set of corners of the 1- to 4-dimensional cubes: the most inside edges are h(m), the first m corners in binary order reach it, the smallest boundary is n·m − 2h(m), and Cheeger's floor holds.</li>
+      <li>The live numbers on all four tabs match the formulas, and the measured curves stay at or below the proved limits.</li>
+    </ul>
+
+    <div class="proved-group">Illustrative only</div>
+    <ul>
+      <li>Colors, the spin of the cube, and the drawing of cubes above three dimensions (a flat shadow of the true shape).</li>
+      <li>The animation uses many small time steps in ordinary computer arithmetic. It is not a Lean proof that the browser computes correctly.</li>
+      <li>Using a shape's gap as the heal rate in tab 4 is exact for the pushes shown there, but Lean's <code>finite_iff_gap</code> is stated for a single store, not for a whole shape.</li>
+    </ul>
+    <div class="check-row">
+      <button type="button" class="btn primary" id="run-checks-btn">Run checks</button>
+      <span id="check-summary"></span>
+    </div>
+    <div id="check-out"></div>
+  </details>
+
+  <!-- TAB 1 -->
+  <section id="tab-trilogy" class="view-section active">
+    <div class="insight-banner">
+      <strong>Cheeger's Bridge:</strong> each shape starts uneven and evens out as every point trades value with its neighbors. The <strong>gap</strong> λ₂ is the slowest rate at which unevenness can fade: the squared distance from the average left after time t is at most e<sup>−2λ₂t</sup> of the start. The <strong>open path</strong> has two loose ends and the smallest gap. Joining the ends into a <strong>cycle</strong> gives every point two neighbors and two routes to every other point, which raises the gap (for six points from 0.268 to 1, about 3.73 times). The <strong>cube</strong> keeps a gap of 2 in every dimension, while the path and cycle gaps shrink roughly like 1/n² as they grow.
     </div>
 
     <div class="controls">
-      <div class="ctrl-group">
-        <span>Dimension (n):</span>
-        <button class="btn" id="dim2Btn">2D Square</button>
-        <button class="btn primary" id="dim3Btn">3D Cube</button>
-        <button class="btn" id="dim4Btn">4D Tesseract</button>
-      </div>
-      <div class="ctrl-group">
-        <span>Presets:</span>
-        <button class="btn" id="presetSubcube">Optimal Subcube</button>
-        <button class="btn" id="presetScattered">Scattered Set</button>
-        <button class="btn" id="presetHalf">Half-Cube Cut</button>
-        <button class="btn" id="presetClear">Clear All</button>
-      </div>
-      <div class="ctrl-group">
-        <label><input type="checkbox" id="autoRotateCube" checked /> Gentle Spin</label>
-      </div>
-      <div class="ctrl-group">
-        <span>Brightness:</span>
-        <input type="range" id="dimmerCube" min="55" max="100" value="92" />
-      </div>
-    </div>
-  </section>
-
-  <!-- TAB 2: UNIFIED TRILOGY COMPARISON -->
-  <section id="tab-trilogy" class="view-section">
-    <div class="insight-banner">
-      <strong>Cheeger's Bridge:</strong> Watch how a wave disturbance relaxes across all three shapes simultaneously. The <strong>Open Line</strong> has loose ends and relaxes slowest; the <strong>Closed Cycle</strong> doubles the paths around the ring; the <strong>Hypercube</strong> weaves multi-dimensional shortcuts that equalize tension almost immediately.
+      <div class="ctrl-group"><span>Path points</span><input type="range" id="nPath" min="2" max="16" value="6" /><b id="nPathVal">6</b></div>
+      <div class="ctrl-group"><span>Cycle points</span><input type="range" id="nCycle" min="3" max="16" value="6" /><b id="nCycleVal">6</b></div>
+      <div class="ctrl-group"><span>Cube dimension</span><input type="range" id="dCube" min="1" max="6" value="3" /><b id="dCubeVal">3</b></div>
     </div>
 
     <div class="trilogy-grid">
       <div class="mini-card">
-        <div class="mini-header">
-          <h3>1. Open Line (Poincaré)</h3>
-          <span class="badge" id="gapLineBadge">Gap &lambda;₂ = 2 − √3 ≈ 0.268</span>
-          <a class="proof-link" id="pathLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/PathSix.lean#L70" target="_blank" rel="noopener" aria-label="Lean proof of the six-point path gap (opens in a new tab)">Lean proof ↗</a>
-        </div>
-        <canvas id="lineCanvas"></canvas>
+        <div class="mini-header"><h3>1. Open path (Poincaré)</h3><span class="badge" id="gapLineBadge">Gap λ₂ = 2 − √3 ≈ 0.268</span></div>
+        <div class="lean-line" id="leanPath"></div>
+        <canvas id="lineCanvas" class="mini-canvas"></canvas>
         <div class="mini-footer">
-          <span>Tension Energy: <strong id="enLine" style="color:var(--text)">0.00</strong></span>
-          <span>Slowest Relaxation</span>
+          <span>Tension energy: <strong id="enLine">0.000</strong></span>
+          <span>Unevenness left: <strong id="leftLine">100%</strong></span>
+          <span>Proved limit e<sup>−2λ₂t</sup>: <strong id="limLine">100%</strong></span>
+          <span>Halving time: <strong id="halfLine">–</strong></span>
         </div>
       </div>
-
       <div class="mini-card">
-        <div class="mini-header">
-          <h3>2. Closed Cycle (Wirtinger)</h3>
-          <span class="badge" id="gapCycleBadge">Gap 4sin²(&pi;/n) = 1.000</span>
-          <a class="proof-link" id="cycleLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/Wirtinger.lean#L168" target="_blank" rel="noopener" aria-label="Lean proof of the cycle gap (opens in a new tab)">Lean proof ↗</a>
-        </div>
-        <canvas id="cycleCanvas"></canvas>
+        <div class="mini-header"><h3>2. Closed cycle (Wirtinger)</h3><span class="badge" id="gapCycleBadge">Gap 4sin²(π/n) = 1.000</span></div>
+        <div class="lean-line" id="leanCycle"></div>
+        <canvas id="cycleCanvas" class="mini-canvas"></canvas>
         <div class="mini-footer">
-          <span>Tension Energy: <strong id="enCycle" style="color:var(--text)">0.00</strong></span>
-          <span>4&times; Faster on 6-Ring</span>
+          <span>Tension energy: <strong id="enCycle">0.000</strong></span>
+          <span>Unevenness left: <strong id="leftCycle">100%</strong></span>
+          <span>Proved limit e<sup>−2λ₂t</sup>: <strong id="limCycle">100%</strong></span>
+          <span>Halving time: <strong id="halfCycle">–</strong></span>
         </div>
       </div>
-
       <div class="mini-card">
-        <div class="mini-header">
-          <h3>3. 3D Hypercube (Isoperimetric)</h3>
-          <span class="badge">Gap &lambda;₂ = 2.000</span>
-          <a class="proof-link" id="cubeLeanProof" href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/fbcad67fcec4fb48bbcb924e520d55aefc7d04c0/CubeCheeger.lean#L179" target="_blank" rel="noopener" aria-label="Lean proof of the cube gap (opens in a new tab)">Lean proof ↗</a>
-        </div>
-        <canvas id="triCubeCanvas"></canvas>
+        <div class="mini-header"><h3 id="cubeCardTitle">3. Cube, dimension 3 (isoperimetric)</h3><span class="badge" id="gapCubeBadge">Gap λ₂ = 2.000</span></div>
+        <div class="lean-line" id="leanCube"></div>
+        <canvas id="triCubeCanvas" class="mini-canvas"></canvas>
         <div class="mini-footer">
-          <span>Tension Energy: <strong id="enCube" style="color:var(--text)">0.00</strong></span>
-          <span>Fastest Multi-D Mixing</span>
+          <span>Tension energy: <strong id="enCube">0.000</strong></span>
+          <span>Unevenness left: <strong id="leftCube">100%</strong></span>
+          <span>Proved limit e<sup>−2λ₂t</sup>: <strong id="limCube">100%</strong></span>
+          <span>Halving time: <strong id="halfCube">–</strong></span>
         </div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <h3>Unevenness left over time (log scale)</h3>
+      <canvas id="decayChart"></canvas>
+      <div class="legend">
+        <span><i style="background:var(--path)"></i>path, measured</span>
+        <span><i style="background:var(--cycle)"></i>cycle, measured</span>
+        <span><i style="background:var(--cube)"></i>cube, measured</span>
+        <span>Dashed lines: the proved limit e<sup>−2λ₂t</sup> for each shape. A measured curve may run below its dashed line, never above it.</span>
+      </div>
+      <div class="ratio-row">
+        <span>Time t = <strong id="simTime">0.00</strong></span>
+        <span>Cycle evens out <strong id="ratioCP">3.73×</strong> as fast as the path</span>
+        <span>Cube evens out <strong id="ratioQP">7.46×</strong> as fast as the path</span>
+        <span>Measured curves within their limits: <strong id="withinAll" class="ok">yes</strong></span>
       </div>
     </div>
 
     <div class="controls">
-      <button class="btn primary" id="pulseTrilogyBtn">Inject Wave Pulse Across All Three</button>
-      <button class="btn" id="stepPulseBtn">Concentrated Corner Spike</button>
-      <div class="ctrl-group">
-        <span>Diffusion Speed:</span>
-        <input type="range" id="diffSpeed" min="1" max="10" value="4" />
+      <button class="btn primary" id="pulseTrilogyBtn">Start from the slowest wave</button>
+      <button class="btn" id="stepPulseBtn">Concentrated corner spike</button>
+      <button class="btn" id="randomTrilogyBtn">Random start</button>
+      <div class="ctrl-group"><span>Diffusion speed</span><input type="range" id="diffSpeed" min="1" max="10" value="4" /></div>
+      <div class="ctrl-group"><label><input type="checkbox" id="pauseTrilogy" /> Freeze flow</label></div>
+    </div>
+    <p class="note">Tension energy is the sum, over all edges, of the squared difference between the two ends. It reaches 0 only when every point holds the same value, which is where the flow always ends. Unevenness is the sum of squared distances from the average, shown as a share of its starting amount. The slowest wave falls exactly along its dashed line; a spike or a random start falls faster at first, because its faster parts fade early. The three shapes have different numbers of points, so compare rates, not raw energies.</p>
+  </section>
+
+  <!-- TAB 2 -->
+  <section id="tab-cube" class="view-section">
+    <div class="split">
+      <div class="card canvas-card"><canvas id="cubeCanvas"></canvas></div>
+      <div class="card side">
+        <h3 id="cubeTitle">Cube, dimension 3 (8 corners, 12 edges)</h3>
+        <div class="kv"><span>Corners chosen, m</span><span id="hudM">4</span></div>
+        <div class="kv"><span>Edges inside the set</span><span id="hudInternal">4</span></div>
+        <div class="kv"><span>Most possible inside, h(m)</span><span id="hudMax">4</span></div>
+        <div class="kv"><span>Upper bound (m/2)·log₂m</span><span id="hudLogBound">4.00</span></div>
+        <div style="margin-top:6px" class="kv"><span>Edges leaving the set (boundary)</span><span id="hudBoundary" style="color:var(--warm)">4</span></div>
+        <div class="kv"><span>Smallest possible boundary, n·m − 2h(m)</span><span id="hudMinB">4</span></div>
+        <div class="kv"><span>Cheeger floor, min(m, 2ⁿ − m)</span><span id="hudCheeger">4</span></div>
+        <div class="meter" id="bMeter"><div id="bMeterFill" style="background:var(--warm)"></div><div class="floor" id="bMeterMin"></div></div>
+        <div class="note">Bar: this set's boundary. Orange tick: the smallest boundary any set of this size can have.</div>
+        <div class="kv"><span>Verdict</span><span id="hudStatus" class="status ok">Best possible</span></div>
+        <div class="note" style="margin-top:6px">Click corners to add or remove them; drag to turn the cube. Green edges lie inside the set, dashed orange edges leave it. Every corner has n edges, so boundary = n·m − 2·(inside edges): spanning the most edges inside is the same as leaving the fewest.</div>
+        <div class="note">Lean: <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/EdgeOptimal.lean" target="_blank" rel="noopener">EdgeOptimal.lean</a> proves h(m) is the most and that the first m corners in binary order reach it. <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/CubeCheeger.lean" target="_blank" rel="noopener">CubeCheeger.lean</a> proves the Cheeger floor for sets of at most half the corners; for bigger sets the page applies it to the leftover corners, which share the same boundary.</div>
       </div>
-      <div class="ctrl-group">
-        <label><input type="checkbox" id="pauseTrilogy" /> Freeze Flow</label>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group"><span>Dimension</span>
+        <button class="btn" id="dim2Btn">2</button><button class="btn primary" id="dim3Btn">3</button><button class="btn" id="dim4Btn">4</button><button class="btn" id="dim5Btn">5</button>
       </div>
+      <div class="ctrl-group"><span>Set size m</span><input type="range" id="setSize" min="0" max="8" value="4" /><b id="setSizeVal">4</b></div>
+      <button class="btn primary" id="presetBest">Show the best set</button>
+      <button class="btn" id="presetRandom">Random set of this size</button>
+      <button class="btn" id="presetHalf">Half cube (first coordinate on)</button>
+      <button class="btn" id="presetScattered">Even corners</button>
+      <button class="btn" id="presetClear">Clear all</button>
+      <div class="ctrl-group"><label><input type="checkbox" id="autoRotateCube" checked /> Gentle spin</label></div>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section id="tab-grid" class="view-section">
+    <div class="insight-banner"><strong>Grid of two rings:</strong> an m × n grid whose rows and columns both wrap around, so each point has four neighbors. Lean proves its gap is the smaller of the two ring gaps, min(gap m, gap n), so the longer ring sets the pace. Each press of a heat step replaces every value by itself minus τ times (4 × itself − its four neighbors).</div>
+    <div class="split">
+      <div class="card canvas-card" style="min-height:400px"><canvas id="gridCanvas"></canvas></div>
+      <div class="card side">
+        <h3>Live numbers</h3>
+        <div class="kv"><span>gap m = 4sin²(π/m)</span><span id="gGapM">–</span></div>
+        <div class="kv"><span>gap n = 4sin²(π/n)</span><span id="gGapN">–</span></div>
+        <div class="kv"><span>Grid floor min(gap m, gap n)</span><span id="gFloor">–</span></div>
+        <div class="kv"><span>This state: energy ÷ unevenness</span><span id="gRatio">–</span></div>
+        <div class="kv"><span>Floor holds (grid_gap)</span><span id="gFloorOk" class="ok">yes</span></div>
+        <div style="margin-top:6px" class="kv"><span>Heat steps taken</span><span id="gSteps">0</span></div>
+        <div class="kv"><span>Last step: unevenness kept</span><span id="gKept">–</span></div>
+        <div class="kv"><span>Proved most kept, 1 − 2τ(1 − 4τ)·floor</span><span id="gBound">–</span></div>
+        <div class="kv"><span>Step within the proved limit</span><span id="gStepOk" class="ok">–</span></div>
+        <div class="kv"><span>Unevenness left of start</span><span id="gLeft">100%</span></div>
+        <div class="note" style="margin-top:6px">Unevenness is the sum of squared distances from the average; energy is the sum of squared differences along every edge. The slowest wave sits exactly on the floor, and stays there as it fades. The proved step limit is strongest at τ = 1/8, where it reads 1 − floor/8 (<code>heatStep_decay_eighth</code>); at τ = 1/4 it guarantees nothing.</div>
+        <div class="note">Lean: <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Torus.lean" target="_blank" rel="noopener">Torus.lean</a> (<code>grid_gap</code>, <code>grid_gap_sharp</code>, <code>heatStep_decay_mean</code>).</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group"><span>Rows m</span><input type="range" id="gridM" min="2" max="16" value="8" /><b id="gridMVal">8</b></div>
+      <div class="ctrl-group"><span>Columns n</span><input type="range" id="gridN" min="2" max="16" value="12" /><b id="gridNVal">12</b></div>
+      <div class="ctrl-group"><span>Step size τ</span><input type="range" id="gridTau" min="1" max="25" value="12" /><b id="gridTauVal">0.12</b></div>
+      <button class="btn primary" id="gridWave">Slowest wave</button>
+      <button class="btn" id="gridSpike">Spike</button>
+      <button class="btn" id="gridRandom">Random</button>
+      <button class="btn" id="gridStep">One heat step</button>
+      <div class="ctrl-group"><label><input type="checkbox" id="gridRun" checked /> Keep stepping</label></div>
+    </div>
+  </section>
+
+  <!-- TAB 4 -->
+  <section id="tab-heal" class="view-section">
+    <div class="insight-banner"><strong>Heal against a push:</strong> two rings of n points receive the same steady push of strength u. On the left ring the push has the shape of the slowest wave, which the ring heals at rate λ₂ = gap n, so the wave's height levels off at u/λ₂. On the right ring the push is the same at every point. Nothing can even out a flat rise, so its heal rate is 0 and the level climbs as x<sub>0</sub> + ut without end. This is <code>finite_iff_gap</code>: a steady push stays bounded exactly when the heal rate is above zero.</div>
+    <div class="card chart-card">
+      <h3>The two rings now</h3>
+      <canvas id="healRings"></canvas>
+    </div>
+    <div class="split">
+      <div class="card chart-card">
+        <h3>Height over time: measured dots against the Lean formulas</h3>
+        <canvas id="healChart"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--cycle)"></i>wave-shaped push: u/r + (x<sub>0</sub> − u/r)e<sup>−rt</sup> with r = λ₂</span>
+          <span><i style="background:var(--warm)"></i>flat push: x<sub>0</sub> + ut (r = 0)</span>
+          <span>Dashed: the level u/λ₂</span>
+        </div>
+      </div>
+      <div class="card side">
+        <h3>Live numbers</h3>
+        <div class="kv"><span>Heal rate r = λ₂ = gap n</span><span id="hRate">–</span></div>
+        <div class="kv"><span>Level it settles at, u/r</span><span id="hLevel">–</span></div>
+        <div class="kv"><span>Time t</span><span id="hTime">0.00</span></div>
+        <div style="margin-top:6px" class="kv"><span>Wave height, measured</span><span id="hWaveMeas">–</span></div>
+        <div class="kv"><span>Wave height, formula</span><span id="hWaveForm">–</span></div>
+        <div class="kv"><span>Flat level, measured</span><span id="hFlatMeas">–</span></div>
+        <div class="kv"><span>Flat level, formula x<sub>0</sub> + ut</span><span id="hFlatForm">–</span></div>
+        <div class="kv"><span>Largest gap between ring and formula</span><span id="hErr">–</span></div>
+        <div class="note" style="margin-top:6px">The rings are run point by point with small time steps; the formulas come straight from <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/Gap.lean" target="_blank" rel="noopener">Gap.lean</a> (<code>keep</code>, <code>breathe</code>, <code>store</code>). Wave height means the ring's amount of the shape cos(2πj/n).</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group"><span>Ring points n</span><input type="range" id="hN" min="3" max="24" value="8" /><b id="hNVal">8</b></div>
+      <div class="ctrl-group"><span>Push u</span><input type="range" id="hU" min="1" max="20" value="5" /><b id="hUVal">0.5</b></div>
+      <div class="ctrl-group"><span>Start x<sub>0</sub></span><input type="range" id="hX0" min="-20" max="40" value="0" /><b id="hX0Val">0.0</b></div>
+      <div class="ctrl-group"><span>Speed</span><input type="range" id="hSpeed" min="1" max="10" value="5" /></div>
+      <button class="btn primary" id="hRestart">Restart</button>
+      <div class="ctrl-group"><label><input type="checkbox" id="hPause" /> Freeze</label></div>
     </div>
   </section>
 </main>
-
 <script>
-// --- TAB NAVIGATION ---
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
+'use strict';
+// ---------- shared math ----------
+const LEAN = 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/main/';
+const leanLink = (file, label) => `<a href="${LEAN}${file}" target="_blank" rel="noopener">${label || file}</a>`;
+const gapPath = n => 2 - 2 * Math.cos(Math.PI / n);          // literature; Lean for n = 6 (PathSix)
+const gapRing = n => 2 - 2 * Math.cos(2 * Math.PI / n);      // RingDecay.gap / Wirtinger
+const gapCube = d => 2;                                      // floor in CubeCheeger / Bridges
+const leanPathFloor = n => 2 / (n * (n - 1));                // DiscretePoincare.poincare
+const popcount = v => { let c = 0; while (v) { c += v & 1; v >>>= 1; } return c; };
+function hOf(m) { let s = 0; for (let k = 0; k < m; k++) s += popcount(k); return s; } // EdgeOptimal.h
 
-// ==========================================
-// TAB 1: 3D/4D HYPERCUBE EXPLORER
-// ==========================================
-const cubeCanvas = document.getElementById('cubeCanvas');
-const cCtx = cubeCanvas.getContext('2d');
+function pathEdges(n) { const e = []; for (let i = 0; i < n - 1; i++) e.push([i, i + 1]); return e; }
+function cycleEdges(n) { const e = []; for (let i = 0; i < n; i++) e.push([i, (i + 1) % n]); return e; }
+function cubeEdges(d) {
+  const e = [], N = 1 << d;
+  for (let i = 0; i < N; i++) for (let b = 0; b < d; b++) { const j = i ^ (1 << b); if (i < j) e.push([i, j]); }
+  return e;
+}
+function laplacianMatrix(N, edges) {
+  const L = Array.from({ length: N }, () => new Array(N).fill(0));
+  for (const [i, j] of edges) { L[i][i] += 1; L[j][j] += 1; L[i][j] -= 1; L[j][i] -= 1; }
+  return L;
+}
+function lapApply(u, edges) {
+  const out = new Array(u.length).fill(0);
+  for (const [i, j] of edges) { const d = u[i] - u[j]; out[i] += d; out[j] -= d; }
+  return out;
+}
+const tension = (u, edges) => edges.reduce((s, [i, j]) => s + (u[i] - u[j]) ** 2, 0);
+const mean = u => u.reduce((a, b) => a + b, 0) / u.length;
+const spreadFromMean = u => { const m = mean(u); return u.reduce((s, x) => s + (x - m) ** 2, 0); };
 
-let cubeDim = 3;
-let selectedSet = new Set([0, 1, 2, 3]);
-let rotX = 0.45, rotY = 0.65, rotW = 0.35;
-let isDragging = false, dragMoved = false, lastMX = 0, lastMY = 0;
-let projectedNodes = [];
-
-function initCubePreset(type) {
-  selectedSet.clear();
-  const total = 1 << cubeDim;
-  if (type === 'subcube') {
-    const subSize = 1 << (cubeDim - 1);
-    for (let i = 0; i < subSize; i++) selectedSet.add(i);
-  } else if (type === 'scattered') {
-    for (let i = 0; i < total; i++) {
-      let bits = 0, v = i;
-      while (v) { bits += v & 1; v >>= 1; }
-      if (bits % 2 === 0) selectedSet.add(i);
+// Jacobi eigenvalues of a symmetric matrix (used by Run checks).
+function eigSym(A) {
+  const n = A.length, a = A.map(r => r.slice());
+  for (let sweep = 0; sweep < 100; sweep++) {
+    let off = 0;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) off += a[p][q] * a[p][q];
+    if (off < 1e-24) break;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) {
+      if (Math.abs(a[p][q]) < 1e-300) continue;
+      const theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
+      const t = Math.sign(theta || 1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+      const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+      for (let k = 0; k < n; k++) { const akp = a[k][p], akq = a[k][q]; a[k][p] = c * akp - s * akq; a[k][q] = s * akp + c * akq; }
+      for (let k = 0; k < n; k++) { const apk = a[p][k], aqk = a[q][k]; a[p][k] = c * apk - s * aqk; a[q][k] = s * apk + c * aqk; }
     }
-  } else if (type === 'half') {
-    for (let i = 0; i < total / 2; i++) selectedSet.add(i);
   }
+  return a.map((r, i) => r[i]).sort((x, y) => x - y);
+}
+const secondEig = L => eigSym(L)[1];
+
+function setupCanvas(c) {
+  const dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
+  const W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round(r.height));
+  if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  return { ctx, W, H };
+}
+function valToColor(v) {
+  const c = Math.max(-1, Math.min(1, v));
+  if (c >= 0) return `rgb(${Math.round(125 + 120 * c)}, ${Math.round(211 - 50 * c)}, ${Math.round(252 - 180 * c)})`;
+  const a = -c; return `rgb(${Math.round(125 - 60 * a)}, ${Math.round(211 - 90 * a)}, 252)`;
+}
+const pct = x => (x >= 0.1 ? (100 * x).toFixed(1) : (100 * x).toPrecision(2)) + '%';
+const fmtTime = x => isFinite(x) ? x.toFixed(2) : '–';
+
+// Clean cube drawing: orthographic projection, one 3D direction per coordinate.
+function cubeAxes(d) {
+  if (d <= 3) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]].slice(0, d);
+  const ax = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  for (let k = 3; k < d; k++) { const a = (2 * Math.PI * (k - 3)) / (d - 3) + 0.6; ax.push([0.55 * Math.cos(a), 0.55 * Math.sin(a), 0.55]); }
+  return ax;
+}
+function projectCube(d, idx, yaw, pitch) {
+  const ax = cubeAxes(d); let x = 0, y = 0, z = 0;
+  for (let b = 0; b < d; b++) { const s = ((idx >> b) & 1) ? 0.5 : -0.5; x += s * ax[b][0]; y += s * ax[b][1]; z += s * ax[b][2]; }
+  const cy = Math.cos(yaw), sy = Math.sin(yaw); [x, z] = [x * cy + z * sy, -x * sy + z * cy];
+  const cp = Math.cos(pitch), sp = Math.sin(pitch); [y, z] = [y * cp - z * sp, y * sp + z * cp];
+  return { x, y: -y, z };
+}
+
+// ---------- tabs ----------
+let activeTab = 'trilogy';
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active'); activeTab = btn.dataset.tab;
+  document.getElementById('tab-' + activeTab).classList.add('active');
+}));
+
+// ==========================================================
+// TAB 1: CHEEGER'S BRIDGE
+// ==========================================================
+const tri = { t: 0, mode: 'wave', shapes: {}, hist: [], within: true, holdUntil: 0 };
+const T_MAX = 8;
+function slowestWave(kind, size) {
+  if (kind === 'path') return Array.from({ length: size }, (_, i) => Math.cos(Math.PI * (i + 0.5) / size));
+  if (kind === 'cycle') return Array.from({ length: size }, (_, i) => Math.cos(2 * Math.PI * i / size));
+  return Array.from({ length: size }, (_, i) => (i & 1) ? 1 : -1);
+}
+function buildShape(kind, n) {
+  const size = kind === 'cube' ? (1 << n) : n;
+  const edges = kind === 'path' ? pathEdges(n) : kind === 'cycle' ? cycleEdges(n) : cubeEdges(n);
+  const gap = kind === 'path' ? gapPath(n) : kind === 'cycle' ? gapRing(n) : gapCube(n);
+  return { kind, n, size, edges, gap, u: new Array(size).fill(0), s0: 1 };
+}
+function startShape(sh, mode) {
+  let u;
+  if (mode === 'wave') u = slowestWave(sh.kind, sh.size);
+  else if (mode === 'spike') u = Array.from({ length: sh.size }, (_, i) => (i === 0 ? 1 : 0));
+  else u = Array.from({ length: sh.size }, () => Math.random() * 2 - 1);
+  const m = mean(u); u = u.map(x => x - m);
+  const peak = Math.max(...u.map(Math.abs)) || 1; u = u.map(x => x / peak);
+  sh.u = u; sh.s0 = spreadFromMean(u);
+}
+function rebuildTrilogy() {
+  const nP = +document.getElementById('nPath').value, nC = +document.getElementById('nCycle').value, dQ = +document.getElementById('dCube').value;
+  document.getElementById('nPathVal').textContent = nP;
+  document.getElementById('nCycleVal').textContent = nC;
+  document.getElementById('dCubeVal').textContent = dQ;
+  tri.shapes = { path: buildShape('path', nP), cycle: buildShape('cycle', nC), cube: buildShape('cube', dQ) };
+  updateTrilogyLabels();
+  restartTrilogy(tri.mode);
+}
+function restartTrilogy(mode) {
+  tri.mode = mode; tri.t = 0; tri.hist = [{ t: 0, path: 1, cycle: 1, cube: 1 }]; tri.within = true; tri.holdUntil = 0;
+  for (const k of ['path', 'cycle', 'cube']) startShape(tri.shapes[k], mode);
+}
+function pathBadgeText(n) {
+  return n === 6 ? 'Gap λ₂ = 2 − √3 ≈ 0.268' : `Gap λ₂ = 2 − 2cos(π/${n}) = ${gapPath(n).toFixed(3)}`;
+}
+function cycleBadgeText(n) { return `Gap 4sin²(π/${n}) = ${gapRing(n).toFixed(3)}`; }
+function updateTrilogyLabels() {
+  const { path, cycle, cube } = tri.shapes;
+  document.getElementById('gapLineBadge').textContent = pathBadgeText(path.n);
+  document.getElementById('gapCycleBadge').textContent = cycleBadgeText(cycle.n);
+  document.getElementById('gapCubeBadge').textContent = `Gap λ₂ = ${gapCube(cube.n).toFixed(3)}`;
+  document.getElementById('cubeCardTitle').textContent = `3. Cube, dimension ${cube.n} (isoperimetric)`;
+  let lp;
+  if (path.n === 6) lp = `Proved in Lean for six points: the gap is exactly 2 − √3, and no larger number works (${leanLink('PathSix.lean')}).`;
+  else lp = `Lean proves a floor of 2/(n(n − 1)) = ${leanPathFloor(path.n).toFixed(3)} for every n (${leanLink('Poincare.lean')}). The exact value shown is from the literature and checked by this page; Lean has it exactly for n = 6.`;
+  if (path.n === 2) lp += ` Two points: ${leanLink('WallPush.lean')} proves the difference fades as e<sup>−2t</sup>.`;
+  document.getElementById('leanPath').innerHTML = lp;
+  document.getElementById('leanCycle').innerHTML = `Proved in Lean for every n: no sum-zero ring values beat this gap, and the wave cos(2πj/n) meets it exactly (${leanLink('Wirtinger.lean')}, ${leanLink('RingDecay.lean')}).`;
+  document.getElementById('leanCube').innerHTML = `Lean proves the gap is at least 2 in every dimension (${leanLink('CubeCheeger.lean')}, ${leanLink('Bridges.lean')}). That it equals 2 is checked by this page.`;
+  for (const [k, id] of [['path', 'halfLine'], ['cycle', 'halfCycle'], ['cube', 'halfCube']])
+    document.getElementById(id).textContent = fmtTime(Math.log(2) / (2 * tri.shapes[k].gap));
+  document.getElementById('ratioCP').textContent = (cycle.gap / path.gap).toFixed(2) + '×';
+  document.getElementById('ratioQP').textContent = (cube.gap / path.gap).toFixed(2) + '×';
+}
+['nPath', 'nCycle', 'dCube'].forEach(id => document.getElementById(id).addEventListener('input', rebuildTrilogy));
+document.getElementById('pulseTrilogyBtn').onclick = () => restartTrilogy('wave');
+document.getElementById('stepPulseBtn').onclick = () => restartTrilogy('spike');
+document.getElementById('randomTrilogyBtn').onclick = () => restartTrilogy('random');
+
+function heatAdvance(sh, T) {
+  // forward steps u <- u - dt * L u, dt <= 0.005 (dt * largest rate <= 0.06, so each rate fades no slower than e^{-gap dt})
+  const steps = Math.max(1, Math.ceil(T / 0.005)), dt = T / steps;
+  for (let s = 0; s < steps; s++) { const L = lapApply(sh.u, sh.edges); for (let i = 0; i < sh.size; i++) sh.u[i] -= dt * L[i]; }
+}
+function stepTrilogy(now) {
+  if (document.getElementById('pauseTrilogy').checked) return;
+  if (tri.t >= T_MAX) {
+    if (!tri.holdUntil) tri.holdUntil = now + 1500;
+    if (now >= tri.holdUntil) restartTrilogy(tri.mode);
+    return;
+  }
+  const T = Number(document.getElementById('diffSpeed').value) * 0.006;
+  for (const k of ['path', 'cycle', 'cube']) heatAdvance(tri.shapes[k], T);
+  tri.t += T;
+  const rec = { t: tri.t };
+  for (const k of ['path', 'cycle', 'cube']) {
+    const sh = tri.shapes[k], frac = spreadFromMean(sh.u) / sh.s0, lim = Math.exp(-2 * sh.gap * tri.t);
+    rec[k] = frac; if (frac > lim * (1 + 1e-9) + 1e-15) tri.within = false;
+  }
+  tri.hist.push(rec);
+}
+function drawTrilogy() {
+  const { path, cycle, cube } = tri.shapes;
+  // path
+  let { ctx, W, H } = setupCanvas(document.getElementById('lineCanvas'));
+  const amp = Math.min(70, H * 0.3);
+  ctx.strokeStyle = 'rgba(147,161,184,0.18)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(30, H / 2); ctx.lineTo(W - 30, H / 2); ctx.stroke(); ctx.setLineDash([]);
+  const px = i => path.n === 1 ? W / 2 : 34 + (i / (path.n - 1)) * (W - 68);
+  ctx.strokeStyle = 'rgba(147,161,184,0.45)'; ctx.lineWidth = 2; ctx.beginPath();
+  path.u.forEach((v, i) => { const y = H / 2 - v * amp; i ? ctx.lineTo(px(i), y) : ctx.moveTo(px(i), y); }); ctx.stroke();
+  path.u.forEach((v, i) => { ctx.beginPath(); ctx.arc(px(i), H / 2 - v * amp, path.n > 10 ? 6 : 8.5, 0, 2 * Math.PI); ctx.fillStyle = valToColor(v); ctx.fill(); });
+  document.getElementById('enLine').textContent = tension(path.u, path.edges).toFixed(3);
+  // cycle
+  ({ ctx, W, H } = setupCanvas(document.getElementById('cycleCanvas')));
+  const rad = Math.min(W, H) * 0.3;
+  const cpt = i => { const a = (i / cycle.n) * 2 * Math.PI - Math.PI / 2, r = rad + cycle.u[i] * rad * 0.35; return [W / 2 + Math.cos(a) * r, H / 2 + Math.sin(a) * r]; };
+  ctx.strokeStyle = 'rgba(147,161,184,0.18)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(W / 2, H / 2, rad, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(147,161,184,0.45)'; ctx.lineWidth = 2; ctx.beginPath();
+  for (let i = 0; i <= cycle.n; i++) { const [x, y] = cpt(i % cycle.n); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+  for (let i = 0; i < cycle.n; i++) { const [x, y] = cpt(i); ctx.beginPath(); ctx.arc(x, y, cycle.n > 10 ? 6 : 8.5, 0, 2 * Math.PI); ctx.fillStyle = valToColor(cycle.u[i]); ctx.fill(); }
+  document.getElementById('enCycle').textContent = tension(cycle.u, cycle.edges).toFixed(3);
+  // cube
+  ({ ctx, W, H } = setupCanvas(document.getElementById('triCubeCanvas')));
+  const yaw = 0.55 + performance.now() * 0.00025, pitch = 0.5;
+  const sc = Math.min(W, H) * (cube.n <= 3 ? 0.42 : 0.3);
+  const pts = []; for (let i = 0; i < cube.size; i++) { const p = projectCube(cube.n, i, yaw, pitch); pts.push({ x: W / 2 + p.x * sc, y: H / 2 + p.y * sc, z: p.z, v: cube.u[i] }); }
+  ctx.strokeStyle = 'rgba(147,161,184,0.35)'; ctx.lineWidth = 1.4;
+  for (const [i, j] of cube.edges) { ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke(); }
+  [...pts].sort((a, b) => a.z - b.z).forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, cube.n >= 5 ? 4.5 : 8, 0, 2 * Math.PI); ctx.fillStyle = valToColor(p.v); ctx.fill(); });
+  document.getElementById('enCube').textContent = tension(cube.u, cube.edges).toFixed(3);
+  // readouts
+  for (const [k, l, m] of [['path', 'leftLine', 'limLine'], ['cycle', 'leftCycle', 'limCycle'], ['cube', 'leftCube', 'limCube']]) {
+    const sh = tri.shapes[k];
+    document.getElementById(l).textContent = pct(spreadFromMean(sh.u) / sh.s0);
+    document.getElementById(m).textContent = pct(Math.exp(-2 * sh.gap * tri.t));
+  }
+  document.getElementById('simTime').textContent = tri.t.toFixed(2);
+  const w = document.getElementById('withinAll'); w.textContent = tri.within ? 'yes' : 'no'; w.className = tri.within ? 'ok' : 'bad';
+  drawDecayChart();
+}
+function drawDecayChart() {
+  const { ctx, W, H } = setupCanvas(document.getElementById('decayChart'));
+  const L = 58, R = W - 12, T = 10, B = H - 26, yMin = -6;
+  const X = t => L + (t / T_MAX) * (R - L), Y = f => T + (Math.max(yMin, Math.log10(Math.max(f, 1e-12))) / yMin) * (B - T);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = '#93a1b8'; ctx.strokeStyle = 'rgba(147,161,184,0.15)'; ctx.lineWidth = 1;
+  for (let e = 0; e >= yMin; e--) { ctx.beginPath(); ctx.moveTo(L, Y(10 ** e)); ctx.lineTo(R, Y(10 ** e)); ctx.stroke(); ctx.fillText(['100%', '10%', '1%', '0.1%', '0.01%', '0.001%', '0.0001%'][-e], 2, Y(10 ** e) + 4); }
+  for (let t = 0; t <= T_MAX; t += 2) { ctx.textAlign = t === 0 ? 'left' : t === T_MAX ? 'right' : 'center'; ctx.fillText('t = ' + t, X(t), H - 8); } ctx.textAlign = 'left';
+  const colors = { path: '#7dd3fc', cycle: '#c084fc', cube: '#34d399' };
+  for (const k of ['path', 'cycle', 'cube']) {
+    const g = tri.shapes[k].gap;
+    ctx.strokeStyle = colors[k]; ctx.globalAlpha = 0.55; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let i = 0; i <= 80; i++) { const t = (i / 80) * T_MAX; i ? ctx.lineTo(X(t), Y(Math.exp(-2 * g * t))) : ctx.moveTo(X(t), Y(1)); }
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.lineWidth = 2.4; ctx.beginPath();
+    tri.hist.forEach((h, i) => { i ? ctx.lineTo(X(h.t), Y(h[k])) : ctx.moveTo(X(h.t), Y(h[k])); }); ctx.stroke();
+  }
+}
+
+// ==========================================================
+// TAB 2: CUBE EDGE BOUNDARY
+// ==========================================================
+const cubeCanvas = document.getElementById('cubeCanvas');
+let cubeDim = 3, selectedSet = new Set([0, 1, 2, 3]);
+let rotYaw = 0.65, rotPitch = 0.45, isDragging = false, dragMoved = false, lastMX = 0, lastMY = 0, projectedNodes = [];
+function cubeStats(dim, set) {
+  const N = 1 << dim; let internal = 0, boundary = 0;
+  for (let u = 0; u < N; u++) for (let b = 0; b < dim; b++) { const v = u ^ (1 << b); if (u < v) { const a = set.has(u), c = set.has(v); if (a && c) internal++; else if (a !== c) boundary++; } }
+  const m = set.size, h = hOf(m);
+  return { m, internal, boundary, h, minB: dim * m - 2 * h, cheeger: Math.min(m, N - m), logBound: m > 0 ? (m / 2) * Math.log2(m) : 0 };
+}
+function bestSet(dim, m) { const s = new Set(); for (let i = 0; i < m; i++) s.add(i); return s; } // EdgeOptimal.bin: val < m
+function setPreset(type) {
+  const N = 1 << cubeDim, m = +document.getElementById('setSize').value;
+  if (type === 'best') selectedSet = bestSet(cubeDim, m);
+  else if (type === 'random') { const all = [...Array(N).keys()]; for (let i = N - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; } selectedSet = new Set(all.slice(0, m)); }
+  else if (type === 'half') { selectedSet = new Set(); for (let i = 0; i < N; i++) if (i & 1) selectedSet.add(i); } // CubeCheeger.half: coordinate 0 on
+  else if (type === 'even') { selectedSet = new Set(); for (let i = 0; i < N; i++) if (popcount(i) % 2 === 0) selectedSet.add(i); }
+  else selectedSet = new Set();
   updateCubeHUD();
 }
-
 function setDimension(n) {
   cubeDim = n;
-  document.getElementById('dim2Btn').classList.toggle('primary', n === 2);
-  document.getElementById('dim3Btn').classList.toggle('primary', n === 3);
-  document.getElementById('dim4Btn').classList.toggle('primary', n === 4);
-  const names = { 2: '2D Square (n = 2)', 3: '3D Cube (n = 3)', 4: '4D Tesseract (n = 4)' };
-  document.getElementById('cubeTitle').textContent = names[n];
-  initCubePreset('subcube');
+  for (const d of [2, 3, 4, 5]) document.getElementById(`dim${d}Btn`).classList.toggle('primary', d === n);
+  const N = 1 << n, sz = document.getElementById('setSize');
+  sz.max = N; sz.value = N / 2;
+  setPreset('best');
 }
-
-document.getElementById('dim2Btn').onclick = () => setDimension(2);
-document.getElementById('dim3Btn').onclick = () => setDimension(3);
-document.getElementById('dim4Btn').onclick = () => setDimension(4);
-document.getElementById('presetSubcube').onclick = () => initCubePreset('subcube');
-document.getElementById('presetScattered').onclick = () => initCubePreset('scattered');
-document.getElementById('presetHalf').onclick = () => initCubePreset('half');
-document.getElementById('presetClear').onclick = () => initCubePreset('clear');
-
-document.getElementById('dimmerCube').addEventListener('input', e => {
-  cubeCanvas.style.filter = `brightness(${e.target.value}%)`;
-});
-
-// The exact maximum is h(m) = sum of popcount(k) for 0 <= k < m.
-// It counts undirected edges; EdgeOptimal.lean's dir counts each edge twice:
-// https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/3e2226e2af6b356b6c1bf47ab931cbeedcc33f66/EdgeOptimal.lean
-function exactCubeMaximum(m) {
-  let maximum = 0;
-  for (let k = 0; k < m; k++) {
-    for (let bits = k; bits; bits >>>= 1) maximum += bits & 1;
-  }
-  return maximum;
-}
-
 function updateCubeHUD() {
-  const m = selectedSet.size;
-  const total = 1 << cubeDim;
-  let internal = 0, boundary = 0;
-  for (let u = 0; u < total; u++) {
-    for (let b = 0; b < cubeDim; b++) {
-      const v = u ^ (1 << b);
-      if (u < v) {
-        const uIn = selectedSet.has(u);
-        const vIn = selectedSet.has(v);
-        if (uIn && vIn) internal++;
-        else if (uIn !== vIn) boundary++;
-      }
-    }
-  }
-  const maximum = exactCubeMaximum(m);
-  const logBound = m > 0 ? (m / 2) * Math.log2(m) : 0;
-  document.getElementById('hudM').textContent = m;
-  document.getElementById('hudInternal').textContent = internal;
-  document.getElementById('hudMax').textContent = maximum;
-  document.getElementById('hudLogBound').textContent = logBound.toFixed(2);
-  document.getElementById('hudBoundary').textContent = boundary;
-
-  const statusEl = document.getElementById('hudStatus');
-  if (m === 0) {
-    statusEl.textContent = 'Empty set (optimal)';
-    statusEl.style.color = 'var(--muted)';
-  } else if (internal === maximum) {
-    statusEl.textContent = 'Optimal (exact maximum)';
-    statusEl.style.color = 'var(--good)';
-  } else {
-    const shortfall = maximum - internal;
-    statusEl.textContent = `Sub-optimal (${shortfall} ${shortfall === 1 ? 'edge' : 'edges'} short)`;
-    statusEl.style.color = 'var(--warm)';
-  }
+  const s = cubeStats(cubeDim, selectedSet), N = 1 << cubeDim;
+  document.getElementById('cubeTitle').textContent = `Cube, dimension ${cubeDim} (${N} corners, ${cubeDim * N / 2} edges)`;
+  document.getElementById('setSize').value = s.m; document.getElementById('setSizeVal').textContent = s.m;
+  document.getElementById('hudM').textContent = s.m;
+  document.getElementById('hudInternal').textContent = s.internal;
+  document.getElementById('hudMax').textContent = s.h;
+  document.getElementById('hudLogBound').textContent = s.logBound.toFixed(2);
+  document.getElementById('hudBoundary').textContent = s.boundary;
+  document.getElementById('hudMinB').textContent = s.minB;
+  document.getElementById('hudCheeger').textContent = s.cheeger;
+  const full = Math.max(1, cubeDim * N / 2);
+  document.getElementById('bMeterFill').style.width = (100 * s.boundary / full) + '%';
+  document.getElementById('bMeterMin').style.left = `calc(${100 * s.minB / full}% - 1px)`;
+  const st = document.getElementById('hudStatus');
+  if (s.internal === s.h) { st.textContent = s.m === 0 ? 'Empty set' : 'Best possible for this size'; st.className = 'status ok'; }
+  else { const k = s.boundary - s.minB; st.textContent = `${k} more boundary edge${k === 1 ? '' : 's'} than the best`; st.className = 'status'; st.style.color = 'var(--warm)'; return; }
+  st.style.color = '';
 }
-
-function projectVertex(idx) {
-  const coords = [];
-  for (let d = 0; d < 4; d++) {
-    coords.push(d < cubeDim ? ((idx >> d) & 1 ? 1 : -1) : 0);
-  }
-  let [x, y, z, w] = coords;
-
-  if (cubeDim === 4) {
-    const cw = Math.cos(rotW), sw = Math.sin(rotW);
-    const nx = x * cw - w * sw;
-    const nw = x * sw + w * cw;
-    x = nx; w = nw;
-    const dist4 = 2.8;
-    const factor4 = dist4 / (dist4 - w);
-    x *= factor4; y *= factor4; z *= factor4;
-  }
-
-  if (cubeDim >= 3) {
-    const cy = Math.cos(rotY), sy = Math.sin(rotY);
-    const nx = x * cy - z * sy;
-    const nz = x * sy + z * cy;
-    x = nx; z = nz;
-
-    const cx = Math.cos(rotX), sx = Math.sin(rotX);
-    const ny = y * cx - z * sx;
-    const nz2 = y * sx + z * cx;
-    y = ny; z = nz2;
-  } else {
-    const c2 = Math.cos(rotY * 0.4), s2 = Math.sin(rotY * 0.4);
-    const nx = x * c2 - y * s2;
-    const ny = x * s2 + y * c2;
-    x = nx; y = ny;
-  }
-
-  const W = cubeCanvas.width, H = cubeCanvas.height;
-  const scale = Math.min(W, H) * (cubeDim === 4 ? 0.16 : 0.21);
-  const persp = cubeDim >= 3 ? 4.2 / (4.2 - z) : 1;
-  return {
-    px: W / 2 + x * scale * persp,
-    py: H / 2 + y * scale * persp,
-    depth: z
-  };
-}
+[2, 3, 4, 5].forEach(d => document.getElementById(`dim${d}Btn`).onclick = () => setDimension(d));
+document.getElementById('presetBest').onclick = () => setPreset('best');
+document.getElementById('presetRandom').onclick = () => setPreset('random');
+document.getElementById('presetHalf').onclick = () => setPreset('half');
+document.getElementById('presetScattered').onclick = () => setPreset('even');
+document.getElementById('presetClear').onclick = () => setPreset('clear');
+document.getElementById('setSize').addEventListener('input', e => { document.getElementById('setSizeVal').textContent = e.target.value; setPreset('best'); });
 
 function drawCubeScene() {
-  const rect = cubeCanvas.getBoundingClientRect();
-  if (cubeCanvas.width !== rect.width || cubeCanvas.height !== rect.height) {
-    cubeCanvas.width = rect.width;
-    cubeCanvas.height = rect.height;
-  }
-  const W = cubeCanvas.width, H = cubeCanvas.height;
-  cCtx.clearRect(0, 0, W, H);
-
-  if (document.getElementById('autoRotateCube').checked && !isDragging) {
-    rotY += 0.0045;
-    if (cubeDim === 4) rotW += 0.003;
-  }
-
-  const total = 1 << cubeDim;
+  const { ctx, W, H } = setupCanvas(cubeCanvas);
+  if (document.getElementById('autoRotateCube').checked && !isDragging) rotYaw += 0.004;
+  const N = 1 << cubeDim, sc = Math.min(W, H) * (cubeDim <= 3 ? 0.5 : 0.36);
   projectedNodes = [];
-  for (let i = 0; i < total; i++) {
-    projectedNodes.push({ idx: i, ...projectVertex(i) });
+  for (let i = 0; i < N; i++) { const p = projectCube(cubeDim, i, rotYaw, rotPitch); projectedNodes.push({ idx: i, px: W / 2 + p.x * sc, py: H / 2 + p.y * sc, depth: p.z }); }
+  for (let u = 0; u < N; u++) for (let b = 0; b < cubeDim; b++) {
+    const v = u ^ (1 << b); if (u >= v) continue;
+    const p1 = projectedNodes[u], p2 = projectedNodes[v], a = selectedSet.has(u), c = selectedSet.has(v);
+    ctx.beginPath(); ctx.moveTo(p1.px, p1.py); ctx.lineTo(p2.px, p2.py);
+    if (a && c) { ctx.strokeStyle = '#34d399'; ctx.lineWidth = 3.2; }
+    else if (a !== c) { ctx.strokeStyle = 'rgba(245,158,11,0.8)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
+    else { ctx.strokeStyle = 'rgba(147,161,184,0.2)'; ctx.lineWidth = 1.2; }
+    ctx.stroke(); ctx.setLineDash([]);
   }
-
-  // Draw edges
-  for (let u = 0; u < total; u++) {
-    for (let b = 0; b < cubeDim; b++) {
-      const v = u ^ (1 << b);
-      if (u < v) {
-        const p1 = projectedNodes[u], p2 = projectedNodes[v];
-        const uIn = selectedSet.has(u), vIn = selectedSet.has(v);
-        cCtx.beginPath();
-        cCtx.moveTo(p1.px, p1.py);
-        cCtx.lineTo(p2.px, p2.py);
-        if (uIn && vIn) {
-          cCtx.strokeStyle = '#34d399';
-          cCtx.lineWidth = 3.2;
-        } else if (uIn !== vIn) {
-          cCtx.strokeStyle = 'rgba(245, 158, 11, 0.72)';
-          cCtx.lineWidth = 2.0;
-          cCtx.setLineDash([5, 5]);
-        } else {
-          cCtx.strokeStyle = 'rgba(147, 161, 184, 0.18)';
-          cCtx.lineWidth = 1.2;
-        }
-        cCtx.stroke();
-        cCtx.setLineDash([]);
-      }
-    }
+  for (const node of [...projectedNodes].sort((a, b) => a.depth - b.depth)) {
+    const sel = selectedSet.has(node.idx), r = cubeDim >= 5 ? (sel ? 7 : 5) : (sel ? 11 : 7);
+    ctx.beginPath(); ctx.arc(node.px, node.py, r, 0, 2 * Math.PI);
+    ctx.fillStyle = sel ? '#34d399' : '#242f42'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = sel ? '#ecfdf5' : '#536582'; ctx.stroke();
+    if (cubeDim <= 4) { ctx.fillStyle = sel ? '#e6ecf5' : '#7b8ba6'; ctx.font = '11px monospace'; ctx.fillText(node.idx.toString(2).padStart(cubeDim, '0'), node.px + 13, node.py + 4); }
   }
-
-  // Draw nodes sorted by depth
-  const sorted = [...projectedNodes].sort((a, b) => a.depth - b.depth);
-  for (const node of sorted) {
-    const isSel = selectedSet.has(node.idx);
-    cCtx.beginPath();
-    cCtx.arc(node.px, node.py, isSel ? 11 : 7, 0, Math.PI * 2);
-    cCtx.fillStyle = isSel ? '#34d399' : '#242f42';
-    cCtx.fill();
-    cCtx.lineWidth = 2;
-    cCtx.strokeStyle = isSel ? '#ecfdf5' : '#536582';
-    cCtx.stroke();
-
-    const label = node.idx.toString(2).padStart(cubeDim, '0');
-    cCtx.fillStyle = isSel ? '#e6ecf5' : '#7b8ba6';
-    cCtx.font = '11px monospace';
-    cCtx.fillText(label, node.px + 13, node.py + 4);
-  }
-
-  requestAnimationFrame(drawCubeScene);
 }
-
-cubeCanvas.addEventListener('mousedown', e => {
-  isDragging = true; dragMoved = false;
-  lastMX = e.clientX; lastMY = e.clientY;
-});
+cubeCanvas.addEventListener('mousedown', e => { isDragging = true; dragMoved = false; lastMX = e.clientX; lastMY = e.clientY; });
 window.addEventListener('mousemove', e => {
   if (!isDragging) return;
   const dx = e.clientX - lastMX, dy = e.clientY - lastMY;
   if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
-  rotY += dx * 0.008;
-  rotX += dy * 0.008;
-  lastMX = e.clientX; lastMY = e.clientY;
+  rotYaw += dx * 0.008; rotPitch = Math.max(-1.4, Math.min(1.4, rotPitch + dy * 0.008)); lastMX = e.clientX; lastMY = e.clientY;
 });
 window.addEventListener('mouseup', e => {
   if (isDragging && !dragMoved) {
-    const rect = cubeCanvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    let closest = null, bestDist = 24;
-    for (const node of projectedNodes) {
-      const d = Math.hypot(node.px - mx, node.py - my);
-      if (d < bestDist) { bestDist = d; closest = node.idx; }
-    }
-    if (closest !== null) {
-      if (selectedSet.has(closest)) selectedSet.delete(closest);
-      else selectedSet.add(closest);
-      updateCubeHUD();
-    }
+    const r = cubeCanvas.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    let best = null, bd = 22;
+    for (const n of projectedNodes) { const d = Math.hypot(n.px - mx, n.py - my); if (d < bd) { bd = d; best = n.idx; } }
+    if (best !== null) { selectedSet.has(best) ? selectedSet.delete(best) : selectedSet.add(best); updateCubeHUD(); }
   }
   isDragging = false;
 });
 
-initCubePreset('subcube');
-drawCubeScene();
-
-
-// ==========================================
-// TAB 2: UNIFIED TRILOGY COMPARISON
-// ==========================================
-const lineCanvas = document.getElementById('lineCanvas');
-const cycleCanvas = document.getElementById('cycleCanvas');
-const triCubeCanvas = document.getElementById('triCubeCanvas');
-const lCtx = lineCanvas.getContext('2d');
-const cyCtx = cycleCanvas.getContext('2d');
-const tcCtx = triCubeCanvas.getContext('2d');
-
-const N_1D = 6;
-let uLine = new Array(N_1D).fill(0);
-let uCycle = new Array(N_1D).fill(0);
-let uCube = new Array(8).fill(0);
-let triRot = 0.5;
-
-function injectWave(mode) {
-  if (mode === 'wave') {
-    for (let i = 0; i < N_1D; i++) {
-      uLine[i] = Math.cos((Math.PI * i) / (N_1D - 1));
-      uCycle[i] = Math.cos((2 * Math.PI * i) / N_1D);
-    }
-    for (let i = 0; i < 8; i++) {
-      uCube[i] = (i & 1) ? 1 : -1;
-    }
-  } else {
-    uLine = [1.8, -0.36, -0.36, -0.36, -0.36, -0.36];
-    uCycle = [1.8, -0.36, -0.36, -0.36, -0.36, -0.36];
-    uCube = [2.1, -0.3, -0.3, -0.3, -0.3, -0.3, -0.3, -0.3];
+// ==========================================================
+// TAB 3: GRID OF TWO RINGS (Torus.lean)
+// ==========================================================
+const grid = { m: 8, n: 12, f: [], steps: 0, s0: 1, kept: null };
+const gIdx = (i, j) => ((i + grid.m) % grid.m) * grid.n + ((j + grid.n) % grid.n);
+function gridLap(f, m, n) { // Torus.lap: 4 f p - four neighbors, with wrap
+  const out = new Array(m * n);
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) {
+    const p = i * n + j;
+    out[p] = 4 * f[p] - f[((i + 1) % m) * n + j] - f[((i - 1 + m) % m) * n + j] - f[i * n + (j + 1) % n] - f[i * n + (j - 1 + n) % n];
   }
+  return out;
+}
+function gridEnergy(f, m, n) { // Torus.energy
+  let e = 0;
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) { const p = i * n + j; e += (f[((i + 1) % m) * n + j] - f[p]) ** 2 + (f[i * n + (j + 1) % n] - f[p]) ** 2; }
+  return e;
+}
+const gridHeatStep = (f, tau, m, n) => { const L = gridLap(f, m, n); return f.map((x, p) => x - tau * L[p]); };
+const gridFloor = (m, n) => Math.min(gapRing(m), gapRing(n));
+const gridTau = () => +document.getElementById('gridTau').value / 100;
+const gridBoundFactor = (tau, m, n) => 1 - 2 * tau * (1 - 4 * tau) * gridFloor(m, n);
+function gridStart(mode) {
+  grid.m = +document.getElementById('gridM').value; grid.n = +document.getElementById('gridN').value;
+  document.getElementById('gridMVal').textContent = grid.m; document.getElementById('gridNVal').textContent = grid.n;
+  const { m, n } = grid; let f;
+  if (mode === 'wave') f = Array.from({ length: m * n }, (_, p) => gapRing(m) <= gapRing(n) ? Math.cos(2 * Math.PI * Math.floor(p / n) / m) : Math.cos(2 * Math.PI * (p % n) / n));
+  else if (mode === 'spike') f = Array.from({ length: m * n }, (_, p) => (p === 0 ? 1 : 0));
+  else f = Array.from({ length: m * n }, () => Math.random() * 2 - 1);
+  const mu = mean(f); f = f.map(x => x - mu); const pk = Math.max(...f.map(Math.abs)) || 1;
+  grid.f = f.map(x => x / pk); grid.steps = 0; grid.s0 = spreadFromMean(grid.f); grid.kept = null; grid.mode = mode; grid.stepOk = true;
+}
+function gridDoStep() {
+  const before = spreadFromMean(grid.f), tau = gridTau();
+  grid.f = gridHeatStep(grid.f, tau, grid.m, grid.n); grid.steps++;
+  const after = spreadFromMean(grid.f);
+  grid.kept = before > 1e-300 ? after / before : null;
+  if (grid.kept !== null && before > 1e-20 && grid.kept > gridBoundFactor(tau, grid.m, grid.n) + 1e-9) grid.stepOk = false;
+  if (after < 1e-12 * grid.s0) gridStart(grid.mode);
+}
+['gridM', 'gridN'].forEach(id => document.getElementById(id).addEventListener('input', () => gridStart(grid.mode || 'wave')));
+document.getElementById('gridTau').addEventListener('input', e => { document.getElementById('gridTauVal').textContent = (e.target.value / 100).toFixed(2); grid.stepOk = true; });
+document.getElementById('gridWave').onclick = () => gridStart('wave');
+document.getElementById('gridSpike').onclick = () => gridStart('spike');
+document.getElementById('gridRandom').onclick = () => gridStart('random');
+document.getElementById('gridStep').onclick = () => gridDoStep();
+let gridLastStep = 0;
+function drawGrid(now) {
+  if (document.getElementById('gridRun').checked && now - gridLastStep > 110) { gridLastStep = now; gridDoStep(); }
+  const { ctx, W, H } = setupCanvas(document.getElementById('gridCanvas'));
+  const { m, n, f } = grid, cell = Math.min((W - 40) / n, (H - 40) / m), ox = (W - cell * n) / 2, oy = (H - cell * m) / 2;
+  const pk = Math.max(1e-12, ...f.map(Math.abs));
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) { ctx.fillStyle = valToColor(f[i * n + j] / pk); ctx.fillRect(ox + j * cell + 1, oy + i * cell + 1, cell - 2, cell - 2); }
+  ctx.fillStyle = '#93a1b8'; ctx.font = '11px sans-serif';
+  ctx.fillText('rows wrap top to bottom, columns wrap left to right; colors scaled to the current peak ' + pk.toPrecision(3), ox, oy + cell * m + 16);
+  const fl = gridFloor(m, n), sp = spreadFromMean(f), ratio = sp > 1e-300 ? gridEnergy(f, m, n) / sp : NaN;
+  document.getElementById('gGapM').textContent = gapRing(m).toFixed(4);
+  document.getElementById('gGapN').textContent = gapRing(n).toFixed(4);
+  document.getElementById('gFloor').textContent = fl.toFixed(4);
+  document.getElementById('gRatio').textContent = isFinite(ratio) ? ratio.toFixed(4) : '–';
+  const ok = !isFinite(ratio) || ratio >= fl - 1e-9; const fe = document.getElementById('gFloorOk'); fe.textContent = ok ? 'yes' : 'no'; fe.className = ok ? 'ok' : 'bad';
+  document.getElementById('gSteps').textContent = grid.steps;
+  document.getElementById('gKept').textContent = grid.kept === null ? '–' : grid.kept.toFixed(4);
+  document.getElementById('gBound').textContent = gridBoundFactor(gridTau(), m, n).toFixed(4);
+  const so = document.getElementById('gStepOk'); so.textContent = grid.steps === 0 ? '–' : grid.stepOk ? 'yes' : 'no'; so.className = grid.stepOk ? 'ok' : 'bad';
+  document.getElementById('gLeft').textContent = pct(sp / grid.s0);
 }
 
-document.getElementById('pulseTrilogyBtn').onclick = () => injectWave('wave');
-document.getElementById('stepPulseBtn').onclick = () => injectWave('spike');
-
-function stepTrilogy() {
-  if (document.getElementById('pauseTrilogy').checked) return;
-  const dt = Number(document.getElementById('diffSpeed').value) * 0.004;
-
-  // 1. Line Laplacian (Neumann boundary)
-  const nextLine = [...uLine];
-  for (let i = 0; i < N_1D; i++) {
-    let lap = 0;
-    if (i > 0) lap += uLine[i - 1] - uLine[i];
-    if (i < N_1D - 1) lap += uLine[i + 1] - uLine[i];
-    nextLine[i] += dt * lap;
+// ==========================================================
+// TAB 4: HEAL AGAINST A PUSH (Gap.lean)
+// ==========================================================
+const keep = (u, x0, t) => x0 + u * t;                                   // HugGap.keep
+const breathe = (r, u, x0, t) => u / r + (x0 - u / r) * Math.exp(-r * t); // HugGap.breathe
+const store = (r, u, x0, t) => r === 0 ? keep(u, x0, t) : breathe(r, u, x0, t); // HugGap.store
+const heal = { n: 8, u: 0.5, x0: 0, t: 0, wave: [], flat: [], hist: [], err: 0, holdUntil: 0 };
+const H_TMAX = 24;
+function ringRHS(v, push, n) { // dv/dt = -(ring Laplacian) v + push
+  const out = new Array(n);
+  for (let j = 0; j < n; j++) out[j] = v[(j + 1) % n] - 2 * v[j] + v[(j - 1 + n) % n] + push[j];
+  return out;
+}
+function rk4(v, push, n, dt) {
+  const add = (a, b, s) => a.map((x, i) => x + s * b[i]);
+  const k1 = ringRHS(v, push, n), k2 = ringRHS(add(v, k1, dt / 2), push, n), k3 = ringRHS(add(v, k2, dt / 2), push, n), k4 = ringRHS(add(v, k3, dt), push, n);
+  return v.map((x, i) => x + dt / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+}
+const ringWave = n => Array.from({ length: n }, (_, j) => Math.cos(2 * Math.PI * j / n));
+function waveHeight(v) { const w = ringWave(v.length); let a = 0, b = 0; for (let j = 0; j < v.length; j++) { a += v[j] * w[j]; b += w[j] * w[j]; } return a / b; }
+function healStart() {
+  heal.n = +document.getElementById('hN').value; heal.u = +document.getElementById('hU').value / 10; heal.x0 = +document.getElementById('hX0').value / 10;
+  document.getElementById('hNVal').textContent = heal.n; document.getElementById('hUVal').textContent = heal.u.toFixed(1); document.getElementById('hX0Val').textContent = heal.x0.toFixed(1);
+  const w = ringWave(heal.n);
+  heal.wave = w.map(x => heal.x0 * x); heal.flat = new Array(heal.n).fill(heal.x0);
+  heal.t = 0; heal.err = 0; heal.holdUntil = 0; heal.hist = [{ t: 0, a: waveHeight(heal.wave), b: mean(heal.flat) }];
+}
+function healAdvance(T) {
+  const n = heal.n, w = ringWave(n), pushW = w.map(x => heal.u * x), pushF = new Array(n).fill(heal.u);
+  const steps = Math.max(1, Math.ceil(T / 0.02)), dt = T / steps;
+  for (let s = 0; s < steps; s++) { heal.wave = rk4(heal.wave, pushW, n, dt); heal.flat = rk4(heal.flat, pushF, n, dt); }
+  heal.t += T;
+  const r = gapRing(n), a = waveHeight(heal.wave), b = mean(heal.flat);
+  heal.err = Math.max(heal.err, Math.abs(a - store(r, heal.u, heal.x0, heal.t)), Math.abs(b - store(0, heal.u, heal.x0, heal.t)));
+  heal.hist.push({ t: heal.t, a, b });
+}
+['hN', 'hU', 'hX0'].forEach(id => document.getElementById(id).addEventListener('input', healStart));
+document.getElementById('hRestart').onclick = healStart;
+function drawHeal(now) {
+  if (!document.getElementById('hPause').checked) {
+    if (heal.t >= H_TMAX) { if (!heal.holdUntil) heal.holdUntil = now + 1500; if (now >= heal.holdUntil) healStart(); }
+    else healAdvance(+document.getElementById('hSpeed').value * 0.012);
   }
-  uLine = nextLine;
-
-  // 2. Cycle Laplacian (Periodic)
-  const nextCycle = [...uCycle];
-  for (let i = 0; i < N_1D; i++) {
-    const prev = uCycle[(i - 1 + N_1D) % N_1D];
-    const next = uCycle[(i + 1) % N_1D];
-    nextCycle[i] += dt * ((prev - uCycle[i]) + (next - uCycle[i]));
-  }
-  uCycle = nextCycle;
-
-  // 3. 3D Cube Laplacian
-  const nextCube = [...uCube];
-  for (let i = 0; i < 8; i++) {
-    let lap = 0;
-    for (let b = 0; b < 3; b++) {
-      lap += uCube[i ^ (1 << b)] - uCube[i];
+  const r = gapRing(heal.n), lvl = heal.u / r;
+  // rings
+  let { ctx, W, H } = setupCanvas(document.getElementById('healRings'));
+  const drawRing = (cx, v, title, valueAsHeight, scale) => {
+    const rad = Math.min(W / 4, H / 2) * 0.55;
+    ctx.fillStyle = '#93a1b8'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(title, cx, 16); ctx.textAlign = 'left';
+    ctx.strokeStyle = 'rgba(147,161,184,0.25)'; ctx.beginPath(); ctx.arc(cx, H / 2 + 8, rad, 0, 2 * Math.PI); ctx.stroke();
+    for (let j = 0; j < heal.n; j++) {
+      const ang = (j / heal.n) * 2 * Math.PI - Math.PI / 2, x = cx + Math.cos(ang) * rad, y = H / 2 + 8 + Math.sin(ang) * rad;
+      const s = v[j] / scale, size = 4 + 13 * Math.min(1, Math.abs(s));
+      ctx.beginPath(); ctx.arc(x, y, size, 0, 2 * Math.PI); ctx.fillStyle = valToColor(s); ctx.fill();
     }
-    nextCube[i] += dt * lap;
-  }
-  uCube = nextCube;
-  triRot += 0.008;
+    ctx.fillStyle = '#e6ecf5'; ctx.textAlign = 'center'; ctx.font = '13px sans-serif'; ctx.fillText(valueAsHeight, cx, H / 2 + 12); ctx.textAlign = 'left';
+  };
+  drawRing(W * 0.27, heal.wave, 'Wave-shaped push (heal rate λ₂)', 'height ' + waveHeight(heal.wave).toFixed(3), Math.max(0.05, lvl, Math.abs(heal.x0)));
+  drawRing(W * 0.73, heal.flat, 'Flat push (heal rate 0)', 'level ' + mean(heal.flat).toFixed(3), Math.max(0.05, Math.abs(heal.x0) + heal.u * H_TMAX));
+  // chart
+  ({ ctx, W, H } = setupCanvas(document.getElementById('healChart')));
+  const L = 46, R = W - 12, T = 10, B = H - 26;
+  const yHi = Math.max(lvl, keep(heal.u, heal.x0, H_TMAX), heal.x0) * 1.08, yLo = Math.min(0, heal.x0, lvl) - 0.05 * yHi;
+  const X = t => L + (t / H_TMAX) * (R - L), Y = v => B - ((v - yLo) / (yHi - yLo)) * (B - T);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = '#93a1b8'; ctx.strokeStyle = 'rgba(147,161,184,0.15)';
+  for (let k = 0; k <= 4; k++) { const v = yLo + (k / 4) * (yHi - yLo); ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke(); ctx.fillText(v.toFixed(1), 4, Y(v) + 4); }
+  for (let t = 0; t <= H_TMAX; t += 6) { ctx.textAlign = t === 0 ? 'left' : t === H_TMAX ? 'right' : 'center'; ctx.fillText('t = ' + t, X(t), H - 8); } ctx.textAlign = 'left';
+  ctx.setLineDash([6, 5]); ctx.strokeStyle = 'rgba(192,132,252,0.7)'; ctx.beginPath(); ctx.moveTo(L, Y(lvl)); ctx.lineTo(R, Y(lvl)); ctx.stroke(); ctx.setLineDash([]);
+  const curve = (fn, col) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i <= 120; i++) { const t = (i / 120) * H_TMAX; i ? ctx.lineTo(X(t), Y(fn(t))) : ctx.moveTo(X(t), Y(fn(t))); } ctx.stroke(); };
+  curve(t => store(r, heal.u, heal.x0, t), 'rgba(192,132,252,0.55)');
+  curve(t => store(0, heal.u, heal.x0, t), 'rgba(245,158,11,0.55)');
+  heal.hist.forEach((h, i) => { if (i % 6) return; ctx.fillStyle = '#c084fc'; ctx.beginPath(); ctx.arc(X(h.t), Y(h.a), 2.6, 0, 2 * Math.PI); ctx.fill(); ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(X(h.t), Y(h.b), 2.6, 0, 2 * Math.PI); ctx.fill(); });
+  document.getElementById('hRate').textContent = r.toFixed(4);
+  document.getElementById('hLevel').textContent = lvl.toFixed(4);
+  document.getElementById('hTime').textContent = heal.t.toFixed(2);
+  document.getElementById('hWaveMeas').textContent = waveHeight(heal.wave).toFixed(4);
+  document.getElementById('hWaveForm').textContent = store(r, heal.u, heal.x0, heal.t).toFixed(4);
+  document.getElementById('hFlatMeas').textContent = mean(heal.flat).toFixed(4);
+  document.getElementById('hFlatForm').textContent = store(0, heal.u, heal.x0, heal.t).toFixed(4);
+  document.getElementById('hErr').textContent = heal.err.toExponential(1);
 }
 
-function valToColor(v) {
-  const clamp = Math.max(-1, Math.min(1, v));
-  if (clamp >= 0) {
-    return `rgb(${Math.round(125 + 120 * clamp)}, ${Math.round(211 - 50 * clamp)}, ${Math.round(252 - 180 * clamp)})`;
-  } else {
-    const a = -clamp;
-    return `rgb(${Math.round(125 - 60 * a)}, ${Math.round(211 - 90 * a)}, ${Math.round(252)})`;
+// ==========================================================
+// RUN CHECKS
+// ==========================================================
+function randMeanZero(N) { const f = Array.from({ length: N }, () => Math.random() * 2 - 1); const m = mean(f); return f.map(x => x - m); }
+const sumSq = f => f.reduce((s, x) => s + x * x, 0);
+function runPageChecks() {
+  const results = [], check = (name, ok, detail) => results.push({ name, ok: !!ok, detail });
+  const close = (a, b, tol = 1e-9) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Math.abs(b));
+  // 1 path gaps
+  let worst = 0, floorsOk = true;
+  for (let n = 2; n <= 16; n++) { const e = secondEig(laplacianMatrix(n, pathEdges(n))); worst = Math.max(worst, Math.abs(e - gapPath(n))); if (e < leanPathFloor(n) - 1e-12) floorsOk = false; }
+  check('Path gap equals 2 − 2cos(π/n) for n = 2 to 16', worst < 1e-9, `largest difference ${worst.toExponential(1)}`);
+  check('Lean path floor 2/(n(n − 1)) never exceeds the true gap (Poincare.lean)', floorsOk, 'n = 2 to 16');
+  const g6 = secondEig(laplacianMatrix(6, pathEdges(6)));
+  check('Six-point path gap is 2 − √3 and rounds to 0.268 (PathSix.lean)', close(g6, 2 - Math.sqrt(3)) && g6 > 0.2675 && g6 < 0.2685 && g6.toFixed(3) === '0.268' && g6 < 0.268, `computed ${g6.toFixed(10)}`);
+  const s3 = Math.sqrt(3), mode = [1, s3 - 1, 2 - s3, s3 - 2, 1 - s3, -1];
+  check('PathSix equality shape: sum 0 and steps = (2 − √3) · squares', close(mode.reduce((a, b) => a + b, 0), 0, 1e-12) && close(tension(mode, pathEdges(6)), (2 - s3) * sumSq(mode)), 'mode_equality');
+  // 2 cycle gaps
+  worst = 0; for (let n = 3; n <= 16; n++) { const e = secondEig(laplacianMatrix(n, cycleEdges(n))); worst = Math.max(worst, Math.abs(e - gapRing(n)), Math.abs(gapRing(n) - 4 * Math.sin(Math.PI / n) ** 2)); }
+  check('Cycle gap equals 2 − 2cos(2π/n) = 4sin²(π/n) for n = 3 to 16', worst < 1e-9, `largest difference ${worst.toExponential(1)}`);
+  let wOk = true; for (let k = 0; k < 300; k++) { const n = 3 + (k % 20), f = randMeanZero(n); if (gapRing(n) * sumSq(f) > tension(f, cycleEdges(n)) + 1e-9) wOk = false; }
+  check('Wirtinger inequality on 300 random ring inputs (wirtinger)', wOk, 'n = 3 to 22');
+  let shOk = true; for (let n = 3; n <= 24; n++) { const w = ringWave(n); if (!close(tension(w, cycleEdges(n)), gapRing(n) * sumSq(w), 1e-9) || Math.abs(w.reduce((a, b) => a + b, 0)) > 1e-9) shOk = false; }
+  check('The wave cos(2πj/n) meets the cycle gap exactly (wirtinger_sharp)', shOk, 'n = 3 to 24');
+  let rdOk = true; for (let k = 0; k < 200; k++) { const n = 3 + (k % 15), t = Math.random() / 4, u = Array.from({ length: n }, () => Math.random() * 2 - 1); const next = u.map((x, j) => x + t * (u[(j + 1) % n] - 2 * x + u[(j - 1 + n) % n])); if (!close(mean(next), mean(u), 1e-9) || spreadFromMean(next) > (1 - t * gapRing(n)) ** 2 * spreadFromMean(u) + 1e-9) rdOk = false; }
+  check('Ring heat step keeps the average and obeys (1 − t·gap)² for t ≤ 1/4 (RingDecay)', rdOk, '200 random cases');
+  // 3 cube
+  worst = 0; for (let d = 1; d <= 5; d++) { const ev = eigSym(laplacianMatrix(1 << d, cubeEdges(d))); worst = Math.max(worst, Math.abs(ev[1] - 2)); for (let i = 0; i < ev.length; i++) worst = Math.max(worst, Math.abs(ev[i] - 2 * Math.round(ev[i] / 2))); }
+  check('Cube gap is exactly 2 in dimensions 1 to 5, with all rates even', worst < 1e-8, `largest difference ${worst.toExponential(1)}`);
+  let cpOk = true; for (let k = 0; k < 100; k++) { const d = 1 + (k % 6), f = randMeanZero(1 << d); if (2 * sumSq(f) > tension(f, cubeEdges(d)) + 1e-9) cpOk = false; }
+  check('Cube floor 2 · squares ≤ edge energy on 100 random inputs (Bridges.cube_poincare)', cpOk, 'Lean counts each edge twice, so its form reads 4 · squares ≤ energy');
+  // 4 edge-optimal and Cheeger, exhaustive
+  let eoOk = true, chOk = true, logOk = true, halfOk = true, cnt = 0;
+  for (let d = 1; d <= 4; d++) {
+    const N = 1 << d, edges = cubeEdges(d), best = new Array(N + 1).fill(-1);
+    for (let mask = 0; mask < (1 << N); mask++) {
+      let inside = 0, bd = 0; for (const [i, j] of edges) { const a = (mask >> i) & 1, b = (mask >> j) & 1; if (a && b) inside++; else if (a !== b) bd++; }
+      const m = popcount(mask); best[m] = Math.max(best[m], inside); cnt++;
+      if (bd !== d * m - 2 * inside) eoOk = false;
+      if (bd < Math.min(m, N - m)) chOk = false;
+      if (m > 0 && inside > (m / 2) * Math.log2(m) + 1e-9) logOk = false;
+    }
+    for (let m = 0; m <= N; m++) { const s = bestSet(d, m), st = cubeStats(d, s); if (best[m] !== hOf(m) || st.internal !== hOf(m) || st.boundary !== d * m - 2 * hOf(m)) eoOk = false; }
+    const half = new Set(); for (let i = 0; i < N; i++) if (i & 1) half.add(i);
+    const hs = cubeStats(d, half); if (hs.m !== N / 2 || hs.boundary !== N / 2) halfOk = false;
   }
+  check('Most inside edges is h(m), reached by the first m corners (EdgeOptimal)', eoOk, `${cnt} sets in dimensions 1 to 4`);
+  check('Cheeger floor: boundary ≥ min(m, 2ⁿ − m) for every set (CubeCheeger.cheeger)', chOk, `${cnt} sets`);
+  check('Half cube with first coordinate on has boundary equal to its size (half_exact)', halfOk, 'dimensions 1 to 4');
+  check('Inside edges ≤ (m/2)·log₂m for every set (Isoperimetric.edges_le)', logOk, `${cnt} sets`);
+  // 5 grid
+  worst = 0;
+  for (const [m, n] of [[2, 2], [2, 5], [3, 4], [4, 4], [5, 7], [6, 3]]) {
+    const A = Array.from({ length: m * n }, () => new Array(m * n).fill(0));
+    for (let p = 0; p < m * n; p++) { const e = new Array(m * n).fill(0); e[p] = 1; const L = gridLap(e, m, n); for (let q = 0; q < m * n; q++) A[q][p] = L[q]; }
+    worst = Math.max(worst, Math.abs(secondEig(A) - gridFloor(m, n)));
+  }
+  check('Grid gap equals min(gap m, gap n) for six sizes (grid_gap, grid_gap_sharp)', worst < 1e-8, `largest difference ${worst.toExponential(1)}`);
+  let ggOk = true, gsOk = true;
+  for (let k = 0; k < 150; k++) {
+    const m = 2 + (k % 6), n = 2 + ((k * 7) % 9), f = randMeanZero(m * n), tau = Math.random() / 4;
+    if (gridFloor(m, n) * sumSq(f) > gridEnergy(f, m, n) + 1e-9) ggOk = false;
+    const nx = gridHeatStep(f, tau, m, n);
+    if (Math.abs(nx.reduce((a, b) => a + b, 0)) > 1e-9 || sumSq(nx) > gridBoundFactor(tau, m, n) * sumSq(f) + 1e-9) gsOk = false;
+  }
+  check('Grid floor holds on 150 random inputs (grid_gap)', ggOk, '');
+  check('Grid heat step keeps the sum and obeys 1 − 2τ(1 − 4τ)·floor (heatStep_decay)', gsOk, '150 random cases, τ ≤ 1/4');
+  // 6 store
+  const u = 0.7, x0 = -0.4;
+  let kOk = true; for (const M of [10, 1e3, 1e6]) { const t = (M - x0) / u + 1; if (!(keep(u, x0, t) > M)) kOk = false; }
+  check('With heal rate 0 the store passes any level (keep_unbounded)', kOk, 'levels 10, 1000, 1 000 000');
+  let bOk = true; for (const r of [0.05, 0.3, 1, 4]) for (let t = 0; t <= 200; t += 0.5) { if (Math.abs(breathe(r, u, x0, t) - u / r) > Math.abs(x0 - u / r) + 1e-12) bOk = false; const h = 1e-5, dnum = (breathe(r, u, x0, t + h) - breathe(r, u, x0, t - h)) / (2 * h); if (t > 0 && Math.abs(dnum - (u - r * breathe(r, u, x0, t))) > 1e-6) bOk = false; }
+  check('With heal rate r > 0 the store stays within |x₀ − u/r| of u/r and changes at u − r·store (breathe_levels, breathe_deriv)', bOk, 'r = 0.05, 0.3, 1, 4');
+  let ringErr = 0; for (const n of [3, 6, 11]) {
+    const w = ringWave(n); let a = w.map(x => x0 * x), b = new Array(n).fill(x0); const pw = w.map(x => u * x), pf = new Array(n).fill(u);
+    for (let s = 1; s <= 500; s++) { a = rk4(a, pw, n, 0.02); b = rk4(b, pf, n, 0.02); }
+    ringErr = Math.max(ringErr, Math.abs(waveHeight(a) - breathe(gapRing(n), u, x0, 10)), Math.abs(mean(b) - keep(u, x0, 10)));
+  }
+  check('Pushed rings follow the Lean store formulas with r = gap n and r = 0', ringErr < 1e-6, `largest difference ${ringErr.toExponential(1)} at t = 10`);
+  // 7 live displays
+  const { path, cycle, cube } = tri.shapes;
+  check('Tab 1 badges match the formulas for the chosen sizes', document.getElementById('gapLineBadge').textContent === pathBadgeText(path.n) && document.getElementById('gapCycleBadge').textContent === cycleBadgeText(cycle.n) && document.getElementById('gapCubeBadge').textContent === 'Gap λ₂ = 2.000', `path ${path.n}, cycle ${cycle.n}, cube ${cube.n}`);
+  check('Tab 1 speed ratios equal the ratio of gaps', document.getElementById('ratioCP').textContent === (cycle.gap / path.gap).toFixed(2) + '×' && document.getElementById('ratioQP').textContent === (cube.gap / path.gap).toFixed(2) + '×', `${(cycle.gap / path.gap).toFixed(4)} and ${(cube.gap / path.gap).toFixed(4)}`);
+  // fresh run of the Tab 1 flow from each start, checked against e^{-2 gap t}
+  let flowOk = true, waveExact = 0;
+  for (const mode of ['wave', 'spike', 'random']) for (const [kind, n] of [['path', 6], ['path', 11], ['cycle', 6], ['cycle', 13], ['cube', 3], ['cube', 5]]) {
+    const sh = buildShape(kind, n); startShape(sh, mode); let t = 0;
+    for (let k = 0; k < 150; k++) { heatAdvance(sh, 0.04); t += 0.04; const fr = spreadFromMean(sh.u) / sh.s0, lim = Math.exp(-2 * sh.gap * t); if (fr > lim * (1 + 1e-9)) flowOk = false; if (mode === 'wave') waveExact = Math.max(waveExact, Math.abs(-Math.log(fr) / t - 2 * sh.gap) / (2 * sh.gap)); }
+  }
+  check('Heat flow from wave, spike and random starts never rises above e^(−2λ₂t)', flowOk, '6 shapes, t up to 6');
+  check('Slowest-wave starts fall at rate 2λ₂ (small-step error under 1%)', waveExact < 0.01, `largest relative difference ${(100 * waveExact).toFixed(2)}%`);
+  const sel = cubeStats(cubeDim, selectedSet);
+  check('Tab 2 readouts match a fresh count of the chosen set', +document.getElementById('hudBoundary').textContent === sel.boundary && +document.getElementById('hudMinB').textContent === cubeDim * sel.m - 2 * hOf(sel.m) && +document.getElementById('hudMax').textContent === hOf(sel.m), `m = ${sel.m}, boundary ${sel.boundary}`);
+  const gr = gridEnergy(grid.f, grid.m, grid.n) / spreadFromMean(grid.f);
+  check('Tab 3 state sits at or above the grid floor', !(gr < gridFloor(grid.m, grid.n) - 1e-9), `${grid.m} × ${grid.n}: ${isFinite(gr) ? gr.toFixed(4) : 'flat'} ≥ ${gridFloor(grid.m, grid.n).toFixed(4)}`);
+  check('Tab 4 rings agree with the store formulas so far', heal.err < 1e-6, `largest difference ${heal.err.toExponential(1)}`);
+
+  const pass = results.filter(r => r.ok).length;
+  const sum = document.getElementById('check-summary');
+  sum.textContent = `${pass}/${results.length} passed`; sum.className = pass === results.length ? 'check-pass' : 'check-fail';
+  document.getElementById('check-out').innerHTML = results.map(r => `<div class="${r.ok ? 'check-pass' : 'check-fail'}">${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? ` <span style="color:var(--muted)">(${r.detail})</span>` : ''}</div>`).join('');
+  window.__checkResults = results;
+  return results;
 }
+document.getElementById('run-checks-btn').addEventListener('click', runPageChecks);
 
-function renderTrilogy() {
-  stepTrilogy();
-
-  // Resize helper
-  [lineCanvas, cycleCanvas, triCubeCanvas].forEach(c => {
-    const r = c.getBoundingClientRect();
-    if (r.width > 0 && (c.width !== r.width || c.height !== r.height)) {
-      c.width = r.width; c.height = r.height;
-    }
-  });
-
-  // 1. Draw Line
-  let W = lineCanvas.width, H = lineCanvas.height;
-  lCtx.clearRect(0, 0, W, H);
-  let enLine = 0;
-  for (let i = 0; i < N_1D - 1; i++) enLine += (uLine[i + 1] - uLine[i]) ** 2;
-  document.getElementById('enLine').textContent = enLine.toFixed(3);
-
-  lCtx.strokeStyle = 'rgba(147,161,184,0.3)';
-  lCtx.lineWidth = 2;
-  lCtx.beginPath();
-  for (let i = 0; i < N_1D; i++) {
-    const x = 40 + (i / (N_1D - 1)) * (W - 80);
-    const y = H / 2 - uLine[i] * 55;
-    if (i === 0) lCtx.moveTo(x, y); else lCtx.lineTo(x, y);
-  }
-  lCtx.stroke();
-  for (let i = 0; i < N_1D; i++) {
-    const x = 40 + (i / (N_1D - 1)) * (W - 80);
-    const y = H / 2 - uLine[i] * 55;
-    lCtx.beginPath();
-    lCtx.arc(x, y, 9, 0, Math.PI * 2);
-    lCtx.fillStyle = valToColor(uLine[i]);
-    lCtx.fill();
-  }
-
-  // 2. Draw Cycle
-  W = cycleCanvas.width; H = cycleCanvas.height;
-  cyCtx.clearRect(0, 0, W, H);
-  let enCycle = 0;
-  for (let i = 0; i < N_1D; i++) enCycle += (uCycle[(i + 1) % N_1D] - uCycle[i]) ** 2;
-  document.getElementById('enCycle').textContent = enCycle.toFixed(3);
-
-  const rad = Math.min(W, H) * 0.3;
-  cyCtx.strokeStyle = 'rgba(147,161,184,0.3)';
-  cyCtx.lineWidth = 2;
-  cyCtx.beginPath();
-  for (let i = 0; i <= N_1D; i++) {
-    const idx = i % N_1D;
-    const ang = (idx / N_1D) * Math.PI * 2 - Math.PI / 2;
-    const r = rad + uCycle[idx] * 26;
-    const x = W / 2 + Math.cos(ang) * r;
-    const y = H / 2 + Math.sin(ang) * r;
-    if (i === 0) cyCtx.moveTo(x, y); else cyCtx.lineTo(x, y);
-  }
-  cyCtx.stroke();
-  for (let i = 0; i < N_1D; i++) {
-    const ang = (i / N_1D) * Math.PI * 2 - Math.PI / 2;
-    const r = rad + uCycle[i] * 26;
-    const x = W / 2 + Math.cos(ang) * r;
-    const y = H / 2 + Math.sin(ang) * r;
-    cyCtx.beginPath();
-    cyCtx.arc(x, y, 9, 0, Math.PI * 2);
-    cyCtx.fillStyle = valToColor(uCycle[i]);
-    cyCtx.fill();
-  }
-
-  // 3. Draw 3D Cube
-  W = triCubeCanvas.width; H = triCubeCanvas.height;
-  tcCtx.clearRect(0, 0, W, H);
-  let enCube = 0;
-  for (let i = 0; i < 8; i++) {
-    for (let b = 0; b < 3; b++) {
-      const j = i ^ (1 << b);
-      if (i < j) enCube += (uCube[j] - uCube[i]) ** 2;
-    }
-  }
-  document.getElementById('enCube').textContent = enCube.toFixed(3);
-
-  const pts = [];
-  const sc = Math.min(W, H) * 0.22;
-  for (let i = 0; i < 8; i++) {
-    let x = (i & 1) ? 1 : -1;
-    let y = (i & 2) ? 1 : -1;
-    let z = (i & 4) ? 1 : -1;
-    const cy = Math.cos(triRot), sy = Math.sin(triRot);
-    const nx = x * cy - z * sy, nz = x * sy + z * cy;
-    x = nx; z = nz;
-    const cx = Math.cos(0.45), sx = Math.sin(0.45);
-    const ny = y * cx - z * sx, nz2 = y * sx + z * cx;
-    y = ny; z = nz2;
-    const p = 3.8 / (3.8 - z);
-    pts.push({ px: W / 2 + x * sc * p, py: H / 2 + y * sc * p, val: uCube[i] });
-  }
-  tcCtx.strokeStyle = 'rgba(147,161,184,0.28)';
-  tcCtx.lineWidth = 1.6;
-  for (let i = 0; i < 8; i++) {
-    for (let b = 0; b < 3; b++) {
-      const j = i ^ (1 << b);
-      if (i < j) {
-        tcCtx.beginPath();
-        tcCtx.moveTo(pts[i].px, pts[i].py);
-        tcCtx.lineTo(pts[j].px, pts[j].py);
-        tcCtx.stroke();
-      }
-    }
-  }
-  for (const pt of pts) {
-    tcCtx.beginPath();
-    tcCtx.arc(pt.px, pt.py, 8.5, 0, Math.PI * 2);
-    tcCtx.fillStyle = valToColor(pt.val);
-    tcCtx.fill();
-  }
-
-  requestAnimationFrame(renderTrilogy);
+// ---------- start ----------
+rebuildTrilogy();
+setDimension(3);
+gridStart('wave');
+healStart();
+function frame(now) {
+  if (activeTab === 'trilogy') { stepTrilogy(now); drawTrilogy(); }
+  else if (activeTab === 'cube') drawCubeScene();
+  else if (activeTab === 'grid') drawGrid(now);
+  else if (activeTab === 'heal') drawHeal(now);
+  requestAnimationFrame(frame);
 }
-
-injectWave('wave');
-renderTrilogy();
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>
