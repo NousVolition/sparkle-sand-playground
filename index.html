@@ -18900,11 +18900,19 @@ const palette = [
 ];
 
 function resize() {
-  width = canvas.width = canvas.offsetWidth * devicePixelRatio;
-  height = canvas.height = canvas.offsetHeight * devicePixelRatio;
-  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-  width /= devicePixelRatio;
-  height /= devicePixelRatio;
+  // the canvas covers a whole number of screen pixels and starts on a screen pixel, so at any zoom or display scaling
+  // (1.25, 1.5, ...) each drawn pixel lands on exactly one screen pixel: no resampling, no soft edges
+  const d = devicePixelRatio, r = canvas.parentElement.getBoundingClientRect();
+  const ox = Math.ceil(r.left * d - 1e-6) / d - r.left, oy = Math.ceil(r.top * d - 1e-6) / d - r.top;
+  // the largest size whose css length the layout can hold exactly (it keeps lengths in 1/64 px)
+  const fit = n => { for (let k = n; k > n - 64 && k > 1; k--) if (Math.abs(k * 64 / d - Math.round(k * 64 / d)) < 1e-6) return k; return Math.max(1, n); };
+  const dw = fit(Math.floor((r.width - ox) * d + 1e-6)), dh = fit(Math.floor((r.height - oy) * d + 1e-6));
+  canvas.style.transform = ox || oy ? `translate(${ox}px, ${oy}px)` : '';   // a transform is not rounded to 1/64 px like left/top
+  canvas.style.width = dw / d + 'px'; canvas.style.height = dh / d + 'px';
+  canvas.width = dw; canvas.height = dh;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  width = dw / d;
+  height = dh / d;
 }
 window.addEventListener('resize', resize);
 resize();
@@ -24565,6 +24573,37 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   setControls = function () { baseControls.apply(this, arguments); showCaption(); };
   // the sandbox's own Clear button counts as clearing the welcome
   document.addEventListener('click', e => { if (active && mode === 'sand' && e.target.closest && e.target.closest('#clearBtn')) markOff(); }, true);
+  // The welcome is frozen sand: its title, stars and ring are molded grains that never fall, slump or settle, and they
+  // always keep their own crisp edge. Melt (blend touching shapes, fill the seams between them) is remembered from
+  // earlier visits; it must not run the welcome's letters into each other, so welcome cells are drawn the Layered way
+  // and no seam is filled within reach of them. The sandbox still melts everything else.
+  const owns = i => gType[i] === STAMP && ids.has(gOwner[i]);
+  const mp0 = mattePixel;
+  mattePixel = function (T, O, Col, PH, F, C, R, x, y, melt) {
+    if (melt && active && T === gType && ids.size && T[y * C + x] === STAMP && ids.has(O[y * C + x])) return mp0(T, O, Col, PH, NOFILL, C, R, x, y, false);
+    return mp0(T, O, Col, PH, F, C, R, x, y, melt);
+  };
+  const sf0 = seamFill;
+  seamFill = function (T, O, C, R, x, y) {
+    if (active && T === gType && ids.size) {
+      const k = SEAM_REACH;
+      for (let yy = Math.max(0, y - k); yy <= Math.min(R - 1, y + k); yy++)
+        for (let xx = Math.max(0, x - k), j = yy * C + xx; xx <= Math.min(C - 1, x + k); xx++, j++) if (owns(j)) return false;
+    }
+    return sf0(T, O, C, R, x, y);
+  };
+  // the sand runs on a fixed clock: 60 steps a second whatever the screen's refresh rate (60, 120, 144 Hz) or a slow
+  // frame, at most 4 steps to catch up, so nothing runs faster or slumps further on a fast display
+  const STEP = 1000 / 60, stepSand = updateSand;
+  let acc = 0, lastT = 0;
+  updateSand = function () {
+    const now = performance.now();
+    if (!lastT || now - lastT > 250) { lastT = now; acc = STEP; }   // first frame, or back from a pause or another tab
+    acc += now - lastT; lastT = now;
+    let n = 0;
+    while (acc >= STEP && n < 4) { stepSand.apply(this, arguments); acc -= STEP; n++; }
+    if (n === 4) acc = 0;
+  };
   window.sandWelcome = { clear: clearWelcome, isOn: () => active };
 })();
 </script>
