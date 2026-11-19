@@ -2,7 +2,7 @@
   "status": "PASS",
   "scope": "External source/computation comparison; no new Lean theorem and no interactive browser test",
   "proof_revision": "93bd83600728124ec12becfd3cdc4e23778da1d1",
-  "html_sha256": "b73b8336af9e5949542cfb0f3af98dfc9d99e30c883ad213c398183a7bfeb0fe",
+  "html_sha256": "412a49fcfca10064ef32fb9fbf60fcc9c5dde72065ae75bff3eddff135b06f9c",
   "coverage_js_sha256": "77e41bb807f899d5a83ec4caa16d18f543c60ba5fb8f2ec731d588d5aaa5aeab",
   "node_version": "v24.22.1",
   "tabs_checked": 33,
