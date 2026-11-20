@@ -1,19 +1,22 @@
 // Keep the published tab-by-tab record aligned with the visible proof notes.
 'use strict';
 const fs = require('node:fs'), path = require('node:path');
-const root = path.resolve(__dirname, '..'), {revision, pages} = require('../proof-coverage.js');
+const root = path.resolve(__dirname, '..'), {revision, lightCaptureRevision, pages} = require('../proof-coverage.js');
 const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
 const tabs = [...html.slice(0,html.indexOf('<div class="controls"')).matchAll(/<button class="tab(?: active)?" data-mode="([^"]+)"[^>]*>(.*?)<\/button>/g)];
 const base = 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/' + revision + '/';
+const count = status => Object.values(pages).filter(page => page.status === status).length;
 const intro = `# Playground tabs and Lean proofs
 
-All 33 tabs were compared with the definitions and theorem statements in [discrete-gap-inequalities-lean at ${revision.slice(0,7)}](${base}README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
+The table covers all ${tabs.length} tabs. The original review compared the playground with [discrete-gap-inequalities-lean at ${revision.slice(0,7)}](${base}README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
 
-Ten tabs have matching mathematical results with limits, three have a related theorem that covers only part of their calculation, one has a related result that is not a proof of that tab, and 19 have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
+${count('Some results proved; limits below')} tabs have matching mathematical results with limits. ${count('Related theorem; limited match')} have a related theorem for part of their calculation, ${count('Related, not a proof of this tab')} has a related result only, and ${count('No matching proof in this library')} have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
 
 ## What was checked
 
 The cited Lean revision includes the [three-E₈ construction](${base}docs/three-e8.md), the [Golay correspondence](${base}docs/playground-golay.md) and the existing [basis and volume proof](${base}LeechBasis.lean) from commit 14518ce. The complete local axiom audit passes with 743 declarations, 0 nonstandard and 0 missing; see the [verification record](${base}docs/three-e8-verification.json) for compilation and artifact reuse. The [GitHub build for the new proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44653527254) records the separate CI result. The audit accepts only propext, Classical.choice and Quot.sound. The later [comment wording check](${base}docs/lean-comment-verification-2026-11-20.json) compares all 49 Lean files and confirms that no formal code changed. Its [source-hash record](${base}docs/three-e8-verification-2026-11-20-comments.json) identifies the reused audit. The previous 711-, 682- and 559-declaration audits remain historical evidence.
+
+The [light bounce and capture proofs](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${lightCaptureRevision}/LightBounceAndCapture.lean) cover the super-black grain on tab 34 and the capture rules at a fixed horizon on tabs 16, 27 and 28. The light model uses 0.00035 as its chosen upper bound on the reflected share. The [GitHub build and full axiom audit](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44715071656/job/136216245803) passed with 1,009 declarations, 0 nonstandard and 0 missing.
 
 The source comparison reads the actual JavaScript enumerations, smoothing code and simple-root arrays and checks them against the cited Lean definitions. The [saved results](lean-coverage-check.json) record the source hashes, theorem lines, selectors and numerical tolerances. Those checks are external computations. The Leech code correspondence has a separate Lean proof for the formal recipe; JavaScript semantics and floating-point execution are not formalized. The remaining tabs were reviewed by their displayed claims, source models and the proof library's module scopes. They were not all numerically simulated. The Leech update starts from playground revision [692e5ad](https://github.com/NousVolition/sparkle-sand-playground/commit/692e5ad30d767984704ff7d79cedcc57e9374603), preserving the later Ocean replacement.
 
@@ -38,7 +41,7 @@ node scripts/check-proof-notes-ui.cjs
 
 The comparison uses Node's standard libraries, does not start a browser or solver trajectory, and prints JSON. An optional second argument selects a downloaded index.html. Rebuild Lean separately with lake build and run the axiom checker as specified by that repository's workflow. The three-E₈ update adds 32 Lean theorems and reuses the existing volume proof. Run node ../discrete-gap-inequalities-lean/scripts/check_three_e8.cjs . for the integer construction replay, and node tests/leech-three-e8.cjs for the interaction checks with DOM/canvas stand-ins. The attempted visual preview was stopped by the computer-use tool because it could not verify the local browser address; that attempt is not claimed as a completed visual review. The proof repository's node scripts/check_playground_golay.cjs also replays its archived Leech source without needing a playground checkout.
 
-The proof-menu check exercises all 33 selections, safe external links, an unknown-tab fallback and closing behavior with DOM stand-ins. It is not a rendered browser test. Regenerate the record after changing a note with node scripts/write-proof-coverage.cjs.
+The proof-menu check exercises all ${tabs.length} selections, safe external links, an unknown-tab fallback and closing behavior with DOM stand-ins. It is not a rendered browser test. Regenerate the record after changing a note with node scripts/write-proof-coverage.cjs.
 
 ## Tab-by-tab comparison
 `;
