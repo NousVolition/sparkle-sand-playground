@@ -12,6 +12,7 @@
     "published proof links",
     "cloud default and return",
     "seven layer counts from all raw vectors on selection, Next and Previous",
+    "four signed layers link to separate Lean theorems",
     "empty slots at both signs of 24",
     "unit perpendicular projection and horizontal scale",
     "layers for a filtered selection and an empty shift"
@@ -65,7 +66,7 @@
     "scope": "Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."
   },
   "source_sha256": {
-    "leech-three-e8.js": "7688896bc49ba2fdf91695077226d80dc925aa92730fb340af38a4a6d14f37e9",
+    "leech-three-e8.js": "e665f36d40f48963befd2190150109be662cd43d9e4045140cd8c0b806a052b8",
     "leech-three-e8.css": "b0510b8c4f0f7d006b577c5b20769323cea8e037c23f212b553fcc48d1e1dbe2",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
