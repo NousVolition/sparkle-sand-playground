@@ -25768,6 +25768,76 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   if (typeof stcCanvas !== 'undefined') attach(stcCanvas.getContext('2d'), () => mode === 'stretch');
 })();
 </script>
+<script id="sandHomeClear">
+// A small Clear on the sandbox itself, so it stays in reach on the home screen even when
+// the side tools are folded away. It does the same job as the Clear in the tool bar:
+// it clears the welcome, the hidden sand under it, and any sand you have poured.
+(function () {
+  const css = document.createElement('style');
+  css.textContent = `
+    #sandHomeClear { position: absolute; right: 12px; z-index: 4; font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif;
+      padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(148,163,184,.55); background: rgba(28,34,48,.9);
+      color: #e6edf3; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+    #sandHomeClear:hover, #sandHomeClear:focus-visible { border-color: #00d4ff; color: #fff; }
+    #sandHomeClear[hidden] { display: none !important; }
+    html.bg-light #sandHomeClear { background: rgba(255,255,255,.88); color: #1e293b; border-color: rgba(51,65,85,.35);
+      box-shadow: 0 1px 3px rgba(15,23,42,.2); }
+    @media (max-width: 700px) { #sandHomeClear { right: 10px; padding: 4px 11px; font-size: 11px; } }`;
+  document.head.appendChild(css);
+
+  const btn = document.createElement('button');
+  btn.id = 'sandHomeClear';
+  btn.type = 'button';
+  btn.textContent = 'Clear';
+  btn.title = 'Clear everything on the canvas';
+  btn.hidden = true;
+  const box = document.getElementById('canvas-container');
+  if (!box) return;
+  box.appendChild(btn);
+
+  btn.addEventListener('click', () => {
+    const bar = document.getElementById('clearBtn');
+    if (bar) { bar.click(); return; }
+    if (typeof clearSand === 'function') clearSand();
+    if (window.sandWelcome) sandWelcome.clear();
+  });
+
+  function place() {
+    if (btn.hidden) return;
+    const cap = document.getElementById('sandWelcomeCap');
+    const capBtn = cap && !cap.hidden && cap.querySelector('button');
+    const boxR = box.getBoundingClientRect();
+    if (capBtn) {
+      const r = capBtn.getBoundingClientRect();
+      btn.style.top = Math.max(0, Math.round(r.top - boxR.top)) + 'px';
+      btn.style.bottom = 'auto';
+      return;
+    }
+    btn.style.top = 'auto';
+    const hint = document.getElementById('hint');
+    const hs = hint && getComputedStyle(hint);
+    if (hint && hs.display !== 'none' && hs.visibility !== 'hidden' && hint.getClientRects().length) {
+      const hr = hint.getBoundingClientRect();
+      btn.style.bottom = Math.max(12, Math.round(boxR.bottom - hr.top + 8)) + 'px';
+    } else {
+      btn.style.bottom = '12px';
+    }
+  }
+
+  function show() {
+    const on = typeof mode === 'string' && mode === 'sand';
+    btn.hidden = !on;
+    if (on) place();
+  }
+
+  const sc = setControls;
+  setControls = function () { sc.apply(this, arguments); show(); };
+  show();
+  window.addEventListener('resize', place);
+  if (window.ResizeObserver) new ResizeObserver(place).observe(box);
+  new MutationObserver(place).observe(box, { attributes: true, subtree: true, childList: true, attributeFilter: ['hidden', 'style', 'class'] });
+})();
+</script>
 </body>
 </html>
 
