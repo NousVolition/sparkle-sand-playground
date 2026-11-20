@@ -9,11 +9,64 @@
     "return to full shell",
     "projection rotation handler",
     "23-fold mode and return",
-    "published proof links"
+    "published proof links",
+    "cloud default and return",
+    "seven layer counts from all raw vectors on selection, Next and Previous",
+    "empty slots at both signs of 24",
+    "unit perpendicular projection and horizontal scale",
+    "layers for a filtered selection and an empty shift"
   ],
+  "layers": {
+    "dot_product_and_count": [
+      [
+        -32,
+        1
+      ],
+      [
+        -24,
+        0
+      ],
+      [
+        -16,
+        4600
+      ],
+      [
+        -8,
+        47104
+      ],
+      [
+        0,
+        93150
+      ],
+      [
+        8,
+        47104
+      ],
+      [
+        16,
+        4600
+      ],
+      [
+        24,
+        0
+      ],
+      [
+        32,
+        1
+      ]
+    ],
+    "selected_vector_numbers": [
+      98257,
+      98258,
+      98257,
+      5,
+      98257
+    ],
+    "scope": "Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."
+  },
   "source_sha256": {
-    "leech-three-e8.js": "e07fd07d2c28377aaa57fe29efb76670262976969459209697a27cc252ca8eb5",
-    "leech-three-e8.css": "17015b6734338b71e808b496316f270c0bbaebed9f7a4922d392fc6ca0ba4953",
+    "leech-three-e8.js": "7688896bc49ba2fdf91695077226d80dc925aa92730fb340af38a4a6d14f37e9",
+    "leech-three-e8.css": "b0510b8c4f0f7d006b577c5b20769323cea8e037c23f212b553fcc48d1e1dbe2",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
   "scope": "DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test."

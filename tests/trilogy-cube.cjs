@@ -15,7 +15,7 @@ new vm.Script(script, {filename: 'Trilogy script'}); // Parse the entire embedde
 
 // Use the actual markup IDs and HUD implementation, with text-only DOM stand-ins.
 const elements = new Map();
-for (const [, id, initial] of template.matchAll(/id="(hud[^"]+)"[^>]*>([^<]*)</g)) {
+for (const [, id, initial] of template.matchAll(/id="(hud[^"]+|cubeTitle|setSize|setSizeVal|bMeterFill|bMeterMin)"[^>]*>([^<]*)</g)) {
   let text = initial;
   elements.set(id, {
     style: {},
@@ -23,12 +23,21 @@ for (const [, id, initial] of template.matchAll(/id="(hud[^"]+)"[^>]*>([^<]*)</g
     set textContent(value) { text = String(value); }
   });
 }
-assert.match(template, /Exact Maximum h\(m\):/);
-assert.match(template, /Upper Bound \(m\/2\)log₂m:/);
-assert.match(template, /Optimality:/);
-const start = script.indexOf('function exactCubeMaximum(');
-const end = script.indexOf('function projectVertex(', start);
-assert(start >= 0 && end > start, 'Locate the exact maximum and HUD functions');
+assert.match(template, /Most possible inside, h\(m\)/);
+assert.match(template, /Upper bound \(m\/2\)·log₂m/);
+assert.match(template, /Verdict/);
+function between(startText, endText) {
+  const start = script.indexOf(startText);
+  const end = script.indexOf(endText, start);
+  assert(start >= 0 && end > start, 'Locate ' + startText);
+  return script.slice(start, end);
+}
+const functions = [
+  between('const popcount =', '\n'),
+  between('function hOf(', '\n'),
+  between('function cubeStats(', 'function bestSet('),
+  between('function updateCubeHUD(', '[2, 3, 4, 5].forEach')
+];
 const context = vm.createContext({
   cubeDim: 3,
   selectedSet: new Set(),
@@ -37,8 +46,8 @@ const context = vm.createContext({
     return elements.get(id);
   }}
 });
-const {exactCubeMaximum, updateCubeHUD} = new vm.Script(
-  `${script.slice(start, end)}\n({exactCubeMaximum, updateCubeHUD});`
+const {hOf, updateCubeHUD} = new vm.Script(
+  `${functions.join("\n")}\n({hOf, updateCubeHUD});`
 ).runInContext(context, {timeout: 5000});
 const read = id => elements.get(id).textContent;
 
@@ -67,7 +76,7 @@ for (const dimension of [2, 3, 4]) {
     sets.push({selected, internal, boundary});
   }
   for (let m = 0; m <= vertices.length; m++) {
-    assert.equal(exactCubeMaximum(m), maxima[m], `Exact maximum: dimension=${dimension}, m=${m}`);
+    assert.equal(hOf(m), maxima[m], `Exact maximum: dimension=${dimension}, m=${m}`);
   }
   let optimalSets = 0;
   for (const {selected, internal, boundary} of sets) {
@@ -81,10 +90,13 @@ for (const dimension of [2, 3, 4]) {
     assert.equal(read('hudLogBound'), (m ? (m / 2) * Math.log2(m) : 0).toFixed(2));
     if (shortfall === 0) {
       optimalSets++;
-      assert.equal(read('hudStatus'), m ? 'Optimal (exact maximum)' : 'Empty set (optimal)');
-      assert.equal(elements.get('hudStatus').style.color, m ? 'var(--good)' : 'var(--muted)');
+      assert.equal(read('hudStatus'), m ? 'Best possible for this size' : 'Empty set');
+      assert.equal(elements.get('hudStatus').className, 'status ok');
+      assert.equal(elements.get('hudStatus').style.color, '');
     } else {
-      assert.equal(read('hudStatus'), `Sub-optimal (${shortfall} ${shortfall === 1 ? 'edge' : 'edges'} short)`);
+      const extraBoundary = boundary - (dimension * m - 2 * maximum);
+      assert.equal(extraBoundary, 2 * shortfall);
+      assert.equal(read('hudStatus'), extraBoundary + ' more boundary edges than the best');
       assert.equal(elements.get('hudStatus').style.color, 'var(--warm)');
     }
   }
@@ -98,7 +110,7 @@ updateCubeHUD();
 assert.equal(read('hudInternal'), '2');
 assert.equal(read('hudMax'), '2');
 assert.equal(read('hudLogBound'), '2.38');
-assert.equal(read('hudStatus'), 'Optimal (exact maximum)');
+assert.equal(read('hudStatus'), 'Best possible for this size');
 console.log(JSON.stringify({
   status: 'PASS',
   subsets_checked: results.reduce((sum, row) => sum + row.subsets_checked, 0),
