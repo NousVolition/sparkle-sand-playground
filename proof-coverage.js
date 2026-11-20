@@ -3,10 +3,12 @@
   'use strict';
   const revision = '8d520965e87e391ae4ce31bb5ee398733e8781bf';
   const addedRevision = '53ecf1d4dc11a97871c9512b58020d926a85304c';
+  const symmetryRevision = 'a0498c80c24b1e14925e25233afc93b235429e7b';
   const base = `https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${revision}/`;
   const addedBase = `https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${addedRevision}/`;
   const proof = (label, file, line) => ({ label, href: `${base}${file}#L${line}` });
   const added = (label, file, line) => ({ label, href: `${addedBase}${file}#L${line}` });
+  const symmetry = (label, file, line) => ({ label, href: `https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${symmetryRevision}/${file}#L${line}` });
   const cycle = proof('Cycle inequality', 'Wirtinger.lean', 168);
   const equality = proof('Cosine equality case', 'Wirtinger.lean', 228);
   const decay = proof('Ring smoothing step', 'RingDecay.lean', 191);
@@ -40,7 +42,7 @@
     horned: none('The horned-sphere, cork-twist and handle pictures are not formalized here. E8PlumbingBridge proves matrix arithmetic, not these topology claims.'),
     nonorient: none('The Möbius, Klein-bottle and projective-plane parametrizations and embedding claims have no matching theorem in this project.'),
     penteract: partial('The E8 mode uses the 112 integer and 128 even-parity sign patterns counted in Lean. Its simple-root Gram matrix matches the negative of the Lean matrix after relabeling. That correspondence was checked externally. E6, 5D unknotting, edge counts and projections remain outside the linked proofs.', [counts, determinant]),
-    leech: partial('Lean proves the Golay generator correspondence, lattice membership, minimum squared length 32, classification and 196,560 count. It now also proves that three orthogonal scaled E₈ blocks with twelve glue vectors give the same infinite lattice, with 4,096 distinct binary glue cosets. The construction reuses the existing basis, determinant 8^12 and evenness proofs. The integer JavaScript replay is separate evidence; browser execution, projection, animation and the symmetry group remain outside Lean.', [proof('Three E₈ blocks give the Leech lattice', 'LeechThreeE8.lean', 85), proof('Unique glue label for every lattice vector', 'LeechThreeE8Cosets.lean', 118), proof('4,096 gluing labels', 'LeechThreeE8Cosets.lean', 131), proof('E₈ Gram matrix and plumbing connection', 'LeechThreeE8.lean', 42), proof('Reuse the basis and volume proof', 'LeechThreeE8.lean', 122), proof('196,560 vectors in the construction', 'LeechThreeE8.lean', 135), proof('Playground coordinate correspondence', 'LeechThreeE8.lean', 116), proof('Golay generator correspondence', 'PlaygroundGolay.lean', 182), proof('Unimodularity after rescaling', 'LeechBasis.lean', 415)]),
+    leech: partial('Lean proves the Golay generator correspondence, lattice membership, minimum squared length 32, classification and 196,560 count. It now also proves that three orthogonal scaled E₈ blocks with twelve glue vectors give the same infinite lattice, with 4,096 distinct binary glue cosets. The construction reuses the existing basis, determinant 8^12 and evenness proofs. For the Leech lattice with the origin fixed, the full symmetry group has order 8,315,553,613,086,720,000, with explicit generators, proved in Lean. The integer JavaScript replay checks the generated vectors. Browser execution, projection and animation remain outside Lean.', [symmetry('Order of the full symmetry group', 'ConwayOrder.lean', 29), symmetry('Explicit generators', 'ConwayGenerators.lean', 21), proof('Three E₈ blocks give the Leech lattice', 'LeechThreeE8.lean', 85), proof('Unique glue label for every lattice vector', 'LeechThreeE8Cosets.lean', 118), proof('4,096 gluing labels', 'LeechThreeE8Cosets.lean', 131), proof('E₈ Gram matrix and plumbing connection', 'LeechThreeE8.lean', 42), proof('Reuse the basis and volume proof', 'LeechThreeE8.lean', 122), proof('196,560 vectors in the construction', 'LeechThreeE8.lean', 135), proof('Playground coordinate correspondence', 'LeechThreeE8.lean', 116), proof('Golay generator correspondence', 'PlaygroundGolay.lean', 182), proof('Unimodularity after rescaling', 'LeechBasis.lean', 415)]),
     pentlite: partial('The 112 + 128 enumeration matches the two finite counts in Lean. The lattice characterization, displayed rings, projection and 5D unknotting are not established by these count theorems.', [counts]),
     hopf: none('The Hopf map, stereographic projection and linking claims have no matching theorem in the reviewed project. The continuous tori here are not the finite grid of Torus.lean.'),
     bh2: none('The lensing, spinning-grid picture and ringdown model have no matching general-relativity theorem in this Lean project.'),
@@ -51,7 +53,7 @@
     'unit-distances': partial('The centered direction coordinates fit the cycle inequality. The cosine equality theorem is general: it does not prove the tab’s claim that only four-direction grid rings attain equality. Grid pair counts and floating-point calculations are also outside these proofs.', [cycle, equality]),
     cipher: partial('The roughness bound applies to centered, nonconstant real windows with n ≥ 3. Flat windows have an undefined ratio. Solver convergence, the stall threshold, intended plaintext and generated key certificates are outside this library’s cycle proofs.', [cycle, equality])
   };
-  const data = { revision, addedRevision, pages };
+  const data = { revision, addedRevision, symmetryRevision, pages };
   // Also used by the source-comparison script, without starting a browser.
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
   if (typeof document === 'undefined') return;
