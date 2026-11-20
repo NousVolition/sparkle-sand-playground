@@ -24570,32 +24570,30 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const parts = WELCOME_TITLE.split('\n').map(x => x.trim().split(/\s+/)), words = [].concat(...parts);
     const narrow = C < 220;
     const sx = narrow ? 0.74 : 1;   // narrow screens: letters a little narrower so they can be taller
-    const hBudget = narrow ? 0.38 : 0.32, maxLines = narrow ? 3 : 2;   // the title sits in the middle of the ring, so it still leaves room around the letters
+    const hBudget = narrow ? 0.38 : 0.32, maxLines = narrow ? 3 : 2;   // the title stays above the wheel and still leaves room around the letters
     const maxW = C * (narrow ? 0.94 : 0.9) / sx, gap = narrow ? 2 : 3;
     // featured top line on one line; the rest over 1-3 lines, sizes chosen so both fit the width and the height budget
+    const plan = ringPlan(C, R, narrow);
     const head = wrap(parts[0], 1, maxW * (narrow ? 1 : 0.84));   // leaves room for a star each side
     let best = null;
     for (let n = 1; n <= Math.min(maxLines, (parts[1] || []).length || 1); n++) {
       const t = parts[1] ? wrap(parts[1], n, maxW) : { lines: [], size: 0, w: [], sp: 0 };
       let f0 = Math.min(head.size, 52), f1 = Math.min(t.size, 34, Math.floor(f0 * 0.76));   // the top line is clearly the larger one
-      const need = (f0 + n * f1) * 1.18 + gap, room = R * hBudget;
+      const need = (f0 + n * f1) * 1.18 + gap, room = Math.min(R * hBudget, Math.max(8, Math.floor(plan.wheelTop - 6 - plan.top)));
       if (need > room) { const q = room / need; f0 = Math.floor(f0 * q); f1 = Math.floor(f1 * q); }
       const score = f1 + f0 * 0.5;
       if (!best || score > best.score + 0.5) best = { t, n, f0: Math.max(10, f0), f1: Math.max(8, f1), score };
     }
-    const plan = ringPlan(C, R, narrow);
-    const top = plan.top;
+    const top = plan.top, peak = plan.peak;
     tc.width = C; tc.height = R;
     // lines: [{ word indexes (into words), font size, baseline y, width }]
     const L = [];
     const lineW = (idx, w, sp, f) => idx.reduce((a, i, j) => a + w[i] * f / 100 + (j ? sp * f / 100 : 0), 0);
     const lh0 = Math.round(best.f0 * 1.18), lh1 = Math.round(best.f1 * 1.18);
     const blockH = lh0 + (best.t.lines.length ? gap + best.t.lines.length * lh1 : 0);
-    // sit the title in the middle of the ring (or at the top if the ring will not fit)
-    const peak = Math.max(4, Math.round(R * 0.05));
-    let titleTop = plan.Ro >= 12 ? Math.round(plan.cy - blockH / 2) : top;
-    const titleMax = Math.min(plan.availBot, R - peak - 3) - blockH;
-    titleTop = Math.max(top, Math.min(titleTop, titleMax));
+    // the title stays above the wheel, a little down from the top so it is not tight against the header
+    let titleTop = top;
+    if (titleTop + blockH + 4 > plan.wheelTop) titleTop = Math.max(plan.minTop, plan.wheelTop - blockH - 4);
     let y = titleTop;
     { const f = best.f0, lh = lh0; L.push({ idx: parts[0].map((_, i) => i), w: head.w, sp: head.sp, f, base: y + f * 0.82 }); y += lh + gap; }
     const off = parts[0].length;
@@ -24623,7 +24621,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       });
     });
     tg.setTransform(1, 0, 0, 1, 0, 0);
-    // two stars beside the title when there is room, otherwise one above it (kept clear of the ring when they can be)
+    // two stars beside the title when there is room and they miss the wheel; one above only if there is room above the title; otherwise no star
     const sn = Math.max(10, Math.min(26, Math.round(fs * 1.1)));
     const firstW = sx * lineW(L[0].idx, L[0].w, L[0].sp, L[0].f);
     const sideOk = (C - firstW) / 2 > sn + 6;
@@ -24633,7 +24631,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       : [];
     const starHitsRing = (x0, y0) => plan.Ro >= 12 && Math.hypot(x0 + sn / 2 - plan.cx, y0 + sn / 2 - plan.cy) < plan.Ro + sn * 0.55;
     const spots = (sideOk && sideSpots.every(([x0, y0]) => !starHitsRing(x0, y0))) ? sideSpots
-      : (titleTop > sn + 4 ? [[(C - sn) / 2, titleTop - sn - 3, '#fbbf24']] : sideSpots);
+      : (titleTop > sn + 4 ? [[(C - sn) / 2, titleTop - sn - 3, '#fbbf24']] : []);
     const m = moldMask('star', sn);
     spots.forEach(([x0, y0, col]) => {
       x0 = Math.round(x0); y0 = Math.round(y0);
@@ -24664,11 +24662,12 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     slimeArm(C, R);
   }
 
-  // ---- "The equal case" ring, molded in sand, with the title in the middle ----
+  // ---- "The equal case" ring, molded in sand, as a centerpiece on the small guide circle ----
   // A ring that is one cosine wave around a dashed zero-line circle: one bump outside it on the right, one equal dip
   // inside it on the left, with radial slope ticks between the wave and the zero line (warm brown on the bump side,
-  // teal on the dip side). The title sits in the middle of the ring, and the ring (the wave and the zero-line circle)
-  // is drawn over the letters. The words around it are small labels on the page; the ring itself is sand.
+  // teal on the dip side). The wheel sits on the small innermost guide circle in the middle of the canvas, and the
+  // title stays above it, a little down from the top so it is not tight against the header. The words around it are
+  // small labels on the page; the ring itself is sand.
   let ring = null;   // { cx, cyUp (rows up from the floor), r0, a } in cells
   let zeroLine = null;
   // on the light (stone) background the welcome's sand takes deeper versions of the same colors, so it reads well
@@ -24697,18 +24696,23 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   function ringPlan(C, R, narrow) {
     const capRows = Math.ceil((WELCOME_QUIET ? 40 : narrow ? 112 : 142) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL),
       labRows = Math.ceil((WELCOME_QUIET ? 4 : narrow ? 18 : 22) / CELL);
-    const top = Math.round(R * (narrow ? 0.03 : 0.04));
+    const minTop = Math.round(R * (narrow ? 0.03 : 0.04));   // the old tight top
+    const top = minTop + 8;   // a little breathing room under the header, not tight against the canvas edge
     const availBot = R - capRows - floorRows - labRows;
-    const Ro = Math.floor(Math.min(Math.max(0, availBot - top) / 2, C * (narrow ? 0.22 : 0.15)));
-    return { capRows, floorRows, labRows, top, availBot, Ro, cx: C / 2, cy: (top + availBot) / 2 };
+    const peak = Math.max(4, Math.round(R * 0.05));
+    // same center and radius as the small innermost guide circle in drawSand (r = 50, at the canvas midpoint)
+    const cx = (typeof width === 'number' && width > 0) ? width / (2 * CELL) : C / 2;
+    const cy = (typeof height === 'number' && height > 0) ? height / (2 * CELL) : R / 2;
+    const r0 = 50 / CELL, a = r0 * (narrow ? 0.22 : 0.2), thW = narrow ? 0.8 : 1.05;
+    const Ro = r0 + a + thW + 1;
+    return { capRows, floorRows, labRows, minTop, top, availBot, peak, Ro, cx, cy, r0, a, thW, wheelTop: cy - Ro };
   }
   function buildRing(C, R, narrow, plan) {
-    const { capRows, floorRows, labRows, Ro, cx, cy } = plan;
+    const { capRows, floorRows, labRows, Ro, cx, cy, r0, a } = plan;
     if (Ro < 12) { ring = null; return plan.top; }   // too little room: title only
     // wave amplitude about a fifth of the radius; every cell is placed by its distance to the curve, so the wave, the
     // dashed zero line and the ticks come out as clean strokes with no stray specks
-    const r0 = Ro / (narrow ? 1.22 : 1.2), a = r0 * (narrow ? 0.22 : 0.2);
-    const under = new Set(ids);   // title and star cells the ring may cover, so the circle's sand sits on top
+    const under = new Set(ids);
     const wave = t => r0 + a * Math.cos(t);   // bump at angle 0 (right), dip at pi (left)
     const thW = narrow ? 0.8 : 1.05;          // half-width of the wave line, in cells
     const thZ = narrow ? 0.75 : 0.9;           // half-width of the zero line
