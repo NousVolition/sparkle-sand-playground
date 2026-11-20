@@ -25144,18 +25144,20 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
 </script>
 <script id="sandMaterials">
 // ========== SAND MATERIALS ==========
-// A Material picker in the Sand panel: Sand, Sprinkles, Rocks, Clay, Snow, Glitter. Every grain keeps its material in the
+// A Material picker in the Sand panel: Sand, Sprinkles, Rocks, Clay, Snow, Glitter, Sticky beads, Lava. Every grain keeps its material in the
 // spare top byte of its packed color, so materials mix freely in one scene and travel with the grain wherever it goes.
 // Each has its own look, size, colors, pile angle and stickiness. Stamps and molds take the picked material too.
 (function sandMaterials() {
-  const SAND = 0, SPRINKLES = 1, ROCKS = 2, CLAY = 3, SNOW = 4, GLITTER = 5;
+  const SAND = 0, SPRINKLES = 1, ROCKS = 2, CLAY = 3, SNOW = 4, GLITTER = 5, BEADS = 6, LAVA = 7;
   const LIST = [
     [SAND, 'sand', 'Sand', 'Fine grains in your color, with a little sparkle.'],
     [SPRINKLES, 'sprinkles', 'Sprinkles', 'Little colored rods that bounce once when they land.'],
     [ROCKS, 'rocks', 'Rocks', 'Big gray-brown pebbles: they roll and stack steeply, and never stick.'],
     [CLAY, 'clay', 'Clay', 'Soft and sticky: it stays where you put it and holds molded shapes best.'],
     [SNOW, 'snow', 'Snow', 'Light flakes that drift down and pile into soft, low drifts.'],
-    [GLITTER, 'glitter', 'Glitter', 'The old sparkle: shiny round grains that twinkle.']
+    [GLITTER, 'glitter', 'Glitter', 'The old sparkle: shiny round grains that twinkle.'],
+    [BEADS, 'beads', 'Sticky beads', 'Tiny round beads that cling into clumps and little chains, and can hang from a ledge.'],
+    [LAVA, 'lava', 'Lava', 'Glowing molten rock that flows slowly and cools into dark rock.']
   ];
   const byKey = {}; LIST.forEach(m => { byKey[m[1]] = m[0]; });
   let mat = (() => { try { return byKey[localStorage.getItem('sparkle.sand.mat')] || SAND; } catch (e) { return SAND; } })();
@@ -25167,6 +25169,12 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   const SPRINKLE_COLS = ['#ff4d8d', '#ffd23f', '#3ee0ff', '#7dff6a', '#b388ff', '#ff8a3d', '#ffffff', '#ff5e5e'];
   const ROCK_COLS = ['#8a8178', '#6f665d', '#9b8f80', '#5c5650', '#a39a8e', '#7a6a58', '#857a6c'];
   const SNOW_COLS = ['#f6f9ff', '#eaf1fb', '#dfe9f7', '#ffffff'];
+  const BEAD_COLS = ['#f2f0ea', '#f4c3d2', '#7eb8d4', '#f0b44c', '#d4576a', '#5b7cbf', '#3aa38a', '#c9a0dc', '#2e3340', '#e8e2c4'];
+  let gHeat = null, beadSupp = null, beadQ = null, lavaN = 0;
+  function ensureHeat() {
+    if (!gType) return;
+    if (!gHeat || gHeat.length !== gType.length) gHeat = new Uint8Array(gType.length);
+  }
 
   function colorFor(m, hex, stamp) {
     const k = 0.9 + Math.random() * 0.16;
@@ -25182,7 +25190,18 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       const f = v => Math.min(255, (v + (L - v) * 0.18) * kk | 0);
       return pack(f(r), f(g), f(b), m);
     }
+    if (m === BEADS) { const [r, g, b] = rgb(rnd(BEAD_COLS)); return pack(r, g, b, m); }
+    if (m === LAVA) return lavaColor(220 + ((Math.random() * 36) | 0), (Math.random() * 1024) | 0);
     return null;
+  }
+  function lavaColor(heat, ph) {
+    const u = Math.max(0, Math.min(1, heat / 255)), j = 1 + (((ph >> 2) & 7) - 3.5) * 0.02;
+    let r, g, b;
+    if (u > 0.65) { const t = (u - 0.65) / 0.35; r = 255; g = 92 + t * 128; b = 18 + t * 48; }
+    else if (u > 0.28) { const t = (u - 0.28) / 0.37; r = 188 + t * 67; g = 36 + t * 56; b = 14 + t * 4; }
+    else { const t = u / 0.28; r = 78 + t * 110; g = 42 + t * 8; b = 32; }
+    const clip = v => Math.max(0, Math.min(255, v * j | 0));
+    return pack(clip(r), clip(g), clip(b), LAVA);
   }
 
   // ----- pouring -----
@@ -25194,6 +25213,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     basePourSand.apply(this, arguments);
     if (mat === ROCKS) for (let k = flying.length - 1; k >= n0; k--) if (Math.random() < 0.7) flying.splice(k, 1);   // fewer, bigger pieces
     if (mat === SNOW) for (let k = n0; k < flying.length; k++) { flying[k].vy *= 0.4; flying[k].vx *= 1.5; }
+    if (mat === LAVA) for (let k = n0; k < flying.length; k++) { flying[k].vy *= 0.45; flying[k].vx *= 0.6; flying[k].heat = 230 + ((Math.random() * 25) | 0); }
   };
 
   // ----- landing -----
@@ -25207,7 +25227,14 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const i = cy * gCols + cx, m = matOf(p.c);
     gType[i] = LOOSE;
     gColor[i] = p.c;
-    gSticky[i] = m === ROCKS || m === CLAY ? 1 : m === SNOW ? (Math.random() < cling * 0.25 ? 1 : 0) : (Math.random() < cling ? 1 : 0);
+    gSticky[i] = m === ROCKS || m === CLAY || m === BEADS ? 1 : m === SNOW ? (Math.random() < cling * 0.25 ? 1 : 0) : (Math.random() < cling ? 1 : 0);
+    if (m === LAVA) {
+      ensureHeat();
+      const h = p.heat != null ? p.heat : 230;
+      gHeat[i] = h;
+      gColor[i] = lavaColor(h, gPhase[i]);
+      gSticky[i] = 0;
+    }
   };
 
   // ----- grains in the air -----
@@ -25216,9 +25243,21 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const keep = [];
     for (const p of flying) {
       const m = matOf(p.c);
-      const G = m === SNOW ? 0.07 : m === ROCKS ? 0.32 : 0.25, maxV = m === SNOW ? 2 : 9;
+      const G = m === SNOW ? 0.07 : m === ROCKS ? 0.32 : m === LAVA ? 0.14 : 0.25;
+      const maxV = m === SNOW ? 2 : m === LAVA ? 3.2 : 9;
       p.vy = Math.min(p.vy + G, maxV);
-      if (m === SNOW) { p.vx += (Math.random() - 0.5) * 0.18; p.vx *= 0.97; } else p.vx *= 0.985;
+      if (m === SNOW) { p.vx += (Math.random() - 0.5) * 0.18; p.vx *= 0.97; } else p.vx *= m === LAVA ? 0.94 : 0.985;
+      if (m === BEADS) {
+        const bx = (p.x / CELL) | 0, by = Math.floor(p.y / CELL);
+        let ax = 0, ay = 0, an = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const xx = bx + dx, yy = by + dy;
+          if (xx < 0 || xx >= gCols || yy < 0 || yy >= gRows) continue;
+          const j = yy * gCols + xx, t = gType[j];
+          if (t === LEDGE || t === STAMP || (t === LOOSE && matOf(gColor[j]) === BEADS)) { ax += dx; ay += dy; an++; }
+        }
+        if (an) { p.vx += Math.sign(ax) * 0.08; p.vy *= 0.92; }
+      }
       const steps = Math.max(1, Math.ceil(Math.max(Math.abs(p.vx), Math.abs(p.vy)) / (CELL * 0.8)));
       let landed = false;
       for (let s = 0; s < steps; s++) {
@@ -25240,6 +25279,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         keep.push(p); continue;
       }
       if (landed && m === ROCKS && !p.b && Math.abs(p.vx) < 0.6) { p.b = 1; p.vx = (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random()); p.vy = -0.6; keep.push(p); continue; }   // a short roll
+      if (landed && m === BEADS && (p.vy > 2.8 || Math.hypot(p.vx, p.vy) > 3.2)) shakeBeads(p.x, p.y, 3, 0.45 + (1 - cling) * 0.35);
       if (landed) settleGrain(p); else keep.push(p);
     }
     flying = keep;
@@ -25249,9 +25289,11 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   updateGrid = function () {
     const C = gCols, R = gRows, T = gType, S = gSticky, Col = gColor;
     const flip = sandFrame & 1;
+    ensureHeat();
+    markBeadSupport(C, R, T, Col);
     // clay holds on to molds and ledges beside it
     const stuck = (j, ok) => ok && (T[j] === STAMP || T[j] === LEDGE);
-    const move = (i, j) => { T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; T[i] = EMPTY; };
+    const move = (i, j) => { T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; if (gHeat) gHeat[j] = gHeat[i]; T[i] = EMPTY; if (gHeat) gHeat[i] = 0; };
     for (let y = R - 2; y >= 0; y--) {
       const row = y * C, below = row + C;
       for (let k = 0; k < C; k++) {
@@ -25259,6 +25301,24 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         const i = row + x;
         if (T[i] !== LOOSE) continue;
         const m = matOf(Col[i]);
+        if (m === BEADS) {
+          if (beadSupp[i]) continue;   // held by a neighbor, a ledge, or the pile under it
+          if (T[below + x] === EMPTY) {
+            if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) {
+              flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i] });
+              T[i] = EMPTY;
+            } else move(i, below + x);
+          } else {
+            const dl = x > 0 && T[below + x - 1] === EMPTY && T[i - 1] === EMPTY;
+            const dr = x < C - 1 && T[below + x + 1] === EMPTY && T[i + 1] === EMPTY;
+            if (dl || dr) {
+              const dir = dl && dr ? (Math.random() < 0.5 ? -1 : 1) : (dl ? -1 : 1);
+              move(i, below + x + dir);
+            }
+          }
+          continue;
+        }
+        if (m === LAVA) { stepLava(i, x, y, C, R, T, Col, S, move); continue; }
         if (T[below + x] === EMPTY) {
           // clay sticks to whatever it touches at the sides
           if (m === CLAY && (stuck(i - 1, x > 0) || stuck(i + 1, x < C - 1))) continue;
@@ -25287,6 +25347,14 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         move(i, below + x + dir);
       }
     }
+    // the floor row never falls, but lava sitting on it still cools into rock
+    if (R > 0) {
+      const y = R - 1;
+      for (let k = 0; k < C; k++) {
+        const x = flip ? k : C - 1 - k, i = y * C + x;
+        if (T[i] === LOOSE && matOf(Col[i]) === LAVA) stepLava(i, x, y, C, R, T, Col, S, move);
+      }
+    }
   };
 
   // ----- stamps and molds in the picked material -----
@@ -25298,8 +25366,12 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     return c === null ? baseMold(hex) : c;
   };
   function recolor(id, m) {
-    if (m !== SPRINKLES && m !== ROCKS && m !== SNOW && m !== GLITTER) return;
-    for (let i = 0; i < gType.length; i++) if (gOwner[i] === id && gType[i] === STAMP) gColor[i] = colorFor(m, color, true);
+    if (m !== SPRINKLES && m !== ROCKS && m !== SNOW && m !== GLITTER && m !== BEADS && m !== LAVA) return;
+    if (m === LAVA) ensureHeat();
+    for (let i = 0; i < gType.length; i++) if (gOwner[i] === id && (gType[i] === STAMP || gType[i] === LOOSE)) {
+      gColor[i] = colorFor(m, color, true);
+      if (m === LAVA) gHeat[i] = Math.max(gHeat[i], 220);
+    }
   }
   const baseStamp = stampMold;
   stampMold = function () {
@@ -25315,16 +25387,17 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   const baseCommit = commitFallingMold;
   commitFallingMold = function (F) {
     const m = matOf(F.mc);
-    if (m === CLAY) F.impact = 0;                       // clay lands without crumbling
+    if (m === CLAY || m === BEADS) F.impact = 0;         // clay and sticky beads land without crumbling
     else if (m === ROCKS) F.impact = Math.min(3, (F.impact || 0) * 2 + 1);   // rock molds shed pieces
+    else if (m === LAVA) F.impact = Math.min(3, (F.impact || 0) + 2);        // a lava mold slumps into a pool
     const keepMat = mat; mat = m;   // crumbs that fall off are the mold's own material
     try { baseCommit.apply(this, arguments); } finally { mat = keepMat; }
     recolor(F.id, m);
   };
 
   // ----- drawing -----
-  const SHAPED = { [SPRINKLES]: 1, [ROCKS]: 1, [SNOW]: 1, [GLITTER]: 1 };
-  function drawGrain(c, m, col, x, y, ph) {
+  const SHAPED = { [SPRINKLES]: 1, [ROCKS]: 1, [SNOW]: 1, [GLITTER]: 1, [BEADS]: 1, [LAVA]: 1 };
+  function drawGrain(c, m, col, x, y, ph, heat) {
     const r = col & 255, g = (col >> 8) & 255, b = (col >> 16) & 255;
     if (m === SPRINKLES) {
       const a = ((ph >> 2) & 7) * Math.PI / 8, L = 2.6, dx = Math.cos(a) * L, dy = Math.sin(a) * L;
@@ -25362,6 +25435,28 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       c.beginPath(); c.arc(x + 0.5, y + 0.6, 1.2, 0, Math.PI * 2); c.fill();
       return;
     }
+    if (m === BEADS) {
+      const R0 = 2.12 + ((ph >> 3) & 3) * 0.16;
+      c.fillStyle = `rgb(${r},${g},${b})`;
+      c.beginPath(); c.arc(x, y, R0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(0,0,0,0.28)';
+      c.beginPath(); c.ellipse(x + R0 * 0.22, y + R0 * 0.28, R0 * 0.68, R0 * 0.62, 0.4, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.78)';
+      c.beginPath(); c.arc(x - R0 * 0.34, y - R0 * 0.4, R0 * 0.3, 0, Math.PI * 2); c.fill();
+      c.lineWidth = 0.45; c.strokeStyle = 'rgba(20,24,32,0.4)';
+      c.beginPath(); c.arc(x, y, R0, 0, Math.PI * 2); c.stroke();
+      return;
+    }
+    if (m === LAVA) {
+      const u = (heat != null ? heat : 200) / 255, rad = 2.55 + u * 0.2;
+      c.fillStyle = `rgb(${r},${g},${b})`;
+      c.beginPath(); c.arc(x, y, rad, 0, Math.PI * 2); c.fill();
+      if (u > 0.2) {
+        c.fillStyle = `rgba(255,${200 + (u * 40 | 0)},${80 + (u * 80 | 0)},${(0.28 + u * 0.35).toFixed(3)})`;
+        c.beginPath(); c.arc(x - 0.25, y - 0.3, rad * 0.45, 0, Math.PI * 2); c.fill();
+      }
+      return;
+    }
     // glitter: the round shiny grain sprite
     const idx = grainSprite(col), atlas = sandAtlas(), dw = SPR_CSS * (0.86 + ((ph >> 8) & 3) * 0.08);
     c.drawImage(atlas, (idx % SPR_COLS) * SPR_PX, ((idx / SPR_COLS) | 0) * SPR_PX, SPR_PX, SPR_PX, x - dw / 2, y - dw / 2, dw, dw);
@@ -25372,13 +25467,15 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     drawCell(c, i, col) {
       const m = matOf(col);
       if (!SHAPED[m]) return;
-      drawGrain(c, m, col, grainX(i, LOOSE), grainY(i, LOOSE), gPhase[i]);
+      const x = m === LAVA ? (i % gCols + 0.5) * CELL : grainX(i, LOOSE);
+      const y = m === LAVA ? (((i / gCols) | 0) + 0.5) * CELL : grainY(i, LOOSE);
+      drawGrain(c, m, col, x, y, gPhase[i], gHeat ? gHeat[i] : 0);
     },
     drawFlying(c, p) {
       const m = matOf(p.c);
       if (!SHAPED[m] || m === GLITTER) return false;
       if (p.ph === undefined) p.ph = (Math.random() * 1024) | 0;
-      drawGrain(c, m, p.c, p.x, p.y, p.ph);
+      drawGrain(c, m, p.c, p.x, p.y, p.ph, p.heat);
       return true;
     },
     glint(t, ph, col, n) {
@@ -25386,6 +25483,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       if (m === GLITTER) return (t === LOOSE || t === STAMP) && (ph & 1) === 0 && n < 600;
       if (m === SAND) return t === LOOSE && (ph & 3) === 0 && n < 90;
       if (m === SNOW) return t === LOOSE && (ph & 15) === 0 && n < 120;
+      if (m === BEADS) return t === LOOSE && (ph & 7) === 0 && n < 80;
       return false;
     },
     clayTile(px, Col, C, R, xs, ys, xe, ye) {
@@ -25409,10 +25507,200 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     usesColor() { return mat === SAND || mat === CLAY || mat === GLITTER; },
     get material() { return LIST.find(m => m[0] === mat)[1]; },
     set material(k) { if (byKey[k] !== undefined) setMat(byKey[k]); },
-    test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER }
+    test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER, BEADS, LAVA,
+      heatStats() {
+        ensureHeat();
+        let n=0,min=255,max=0,sum=0, bottom=0;
+        const ids={};
+        for (let i=0;i<gType.length;i++) {
+          if (gType[i]!==LOOSE) continue;
+          const m=matOf(gColor[i]); ids[m]=(ids[m]||0)+1;
+          if (m===LAVA) { n++; const h=gHeat[i]; sum+=h; if(h<min)min=h; if(h>max)max=h; if(((i/gCols)|0)===gRows-1) bottom++; }
+        }
+        return {n,min:n?min:null,max:n?max:null,avg:n?Math.round(sum/n):null,bottom,ids,frame:sandFrame,heatLen:gHeat&&gHeat.length,typeLen:gType.length};
+      }
+    }
   };
   // the shaped grains are drawn on the tile layer: redraw it all once
   if (typeof prevT !== 'undefined' && prevT) prevT.fill(255);
+
+  // ----- sticky beads: who is still held by the pile, a neighbor, or a ledge -----
+  function markBeadSupport(C, R, T, Col) {
+    const n = C * R;
+    if (!beadSupp || beadSupp.length !== n) { beadSupp = new Uint8Array(n); beadQ = new Int32Array(n); }
+    else beadSupp.fill(0);
+    let qt = 0;
+    const isBead = i => T[i] === LOOSE && matOf(Col[i]) === BEADS;
+    const solid = (x, y) => {
+      if (y >= R) return true;
+      if (x < 0 || x >= C || y < 0) return false;
+      const t = T[y * C + x];
+      if (t === LEDGE || t === STAMP) return true;
+      return t === LOOSE && matOf(Col[y * C + x]) !== BEADS;
+    };
+    for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+      const i = y * C + x;
+      if (!isBead(i)) continue;
+      if (solid(x, y + 1) || solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1)
+          || solid(x - 1, y + 1) || solid(x + 1, y + 1) || solid(x - 1, y - 1) || solid(x + 1, y - 1)) {
+        beadSupp[i] = 1; beadQ[qt++] = i;
+      }
+    }
+    let qh = 0;
+    while (qh < qt) {
+      const i = beadQ[qh++], x = i % C, y = (i / C) | 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || xx >= C || yy < 0 || yy >= R) continue;
+        const j = yy * C + xx;
+        if (!beadSupp[j] && isBead(j)) { beadSupp[j] = 1; beadQ[qt++] = j; }
+      }
+    }
+  }
+  function shakeBeads(px, py, rad, chance) {
+    if (!gType) return;
+    const cx = px / CELL, cy = py / CELL;
+    for (let gy = Math.floor(cy - rad); gy <= Math.ceil(cy + rad); gy++) {
+      if (gy < 0 || gy >= gRows) continue;
+      for (let gx = Math.floor(cx - rad); gx <= Math.ceil(cx + rad); gx++) {
+        if (gx < 0 || gx >= gCols) continue;
+        const i = gy * gCols + gx;
+        if (gType[i] !== LOOSE || matOf(gColor[i]) !== BEADS) continue;
+        if (Math.random() > chance) continue;
+        if (flying.length >= MAX_FLYING * 2) return;
+        flying.push({
+          x: (gx + 0.5) * CELL, y: (gy + 0.5) * CELL,
+          vx: (gx - cx) * (0.6 + Math.random()), vy: (gy - cy) * 0.5 - 0.8 - Math.random(),
+          c: gColor[i]
+        });
+        gType[i] = EMPTY; gOwner[i] = 0;
+      }
+    }
+  }
+  function stepLava(i, x, y, C, R, T, Col, S, move) {
+    const below = i + C;
+    let h = gHeat[i];
+    let hotN = 0, covered = false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || xx >= C || yy < 0 || yy >= R) continue;
+      const j = yy * C + xx;
+      if (T[j] === LOOSE && matOf(Col[j]) === LAVA) {
+        hotN++;
+        if (dy < 0) covered = true;
+      }
+    }
+    // edges and the open top of a pool cool first; a buried core stays molten longer
+    const pace = !covered || hotN <= 3 ? 2 : hotN >= 7 ? 5 : 3;
+    if ((sandFrame % pace) === (i % pace)) {
+      h = Math.max(0, h - 1); gHeat[i] = h;
+    }
+    Col[i] = lavaColor(h, gPhase[i]);
+    if (h <= 0) {
+      // cools into the same Rocks material already in the picker
+      const c = colorFor(ROCKS, '#000');
+      Col[i] = c; S[i] = 1; gHeat[i] = 0;
+      return;
+    }
+    if (y >= R - 1) return;   // the floor row can cool, but it has nowhere to flow
+    if (h < 28 && Math.random() > 0.08) return;   // a thickening crust barely moves
+    if (T[below] === EMPTY) {
+      if (Math.random() < 0.82) {
+        if (y + 2 < R && T[below + C] === EMPTY && flying.length < MAX_FLYING * 2) {
+          flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: (Math.random() - 0.5) * 0.3, vy: 0.6, c: Col[i], heat: h });
+          T[i] = EMPTY; gHeat[i] = 0;
+        } else move(i, below);
+      }
+      return;
+    }
+    const dl = x > 0 && T[i - 1] === EMPTY, dr = x < C - 1 && T[i + 1] === EMPTY;
+    const belowL = x > 0 && T[below - 1] === EMPTY, belowR = x < C - 1 && T[below + 1] === EMPTY;
+    if (Math.random() < 0.22) {
+      const canL = dl && belowL, canR = dr && belowR;
+      if (canL || canR) {
+        const dir = canL && canR ? (Math.random() < 0.5 ? -1 : 1) : (canL ? -1 : 1);
+        move(i, below + dir);
+        return;
+      }
+    }
+    if (Math.random() < 0.08) {
+      const canL = dl && !belowL, canR = dr && !belowR;   // slow spread across a flat
+      if (canL || canR) {
+        const dir = canL && canR ? (Math.random() < 0.5 ? -1 : 1) : (canL ? -1 : 1);
+        move(i, i + dir);
+      }
+    }
+  }
+
+  // keep a heat map when the sandbox is resized or cleared, and shake nearby beads when you carve
+  const baseInit = initSandGrid;
+  initSandGrid = function () {
+    const oc = gCols, or = gRows, oh = gHeat;
+    baseInit.apply(this, arguments);
+    if (!gType) return;
+    if (!gHeat || gHeat.length !== gType.length) {
+      const h = new Uint8Array(gType.length);
+      if (oh && oc && or) {
+        const dy = gRows - or;
+        for (let y = 0; y < or; y++) {
+          const ny = y + dy;
+          if (ny < 0 || ny >= gRows) continue;
+          for (let x = 0; x < Math.min(oc, gCols); x++) h[ny * gCols + x] = oh[y * oc + x];
+        }
+      }
+      gHeat = h;
+    }
+  };
+  const baseClear = clearSand;
+  clearSand = function () {
+    baseClear.apply(this, arguments);
+    if (gHeat) gHeat.fill(0);
+  };
+  const baseCarve = carveAt;
+  carveAt = function (px, py) {
+    baseCarve.apply(this, arguments);
+    shakeBeads(px, py, (8 + size * 4) / CELL, 0.2 + (1 - cling) * 0.4);
+  };
+
+  // a soft, slow glow over hot lava only: it breathes at well under 3 times a second, and never as a full-screen flash
+  let glowBuf = null, glowCtx = null, glowImg = null, glowPix = null;
+  const baseDraw = drawSand;
+  drawSand = function () {
+    baseDraw.apply(this, arguments);
+    if (!gType || mode !== 'sand') return;
+    const C = gCols, R = gRows, T = gType, Col = gColor;
+    let n = 0;
+    for (let i = 0, L = T.length; i < L; i++) if (T[i] === LOOSE && matOf(Col[i]) === LAVA && gHeat && gHeat[i] > 20) n++;
+    lavaN = n;
+    if (!n) return;
+    if (!glowBuf || glowBuf.width !== C || glowBuf.height !== R) {
+      glowBuf = document.createElement('canvas'); glowBuf.width = C; glowBuf.height = R;
+      glowCtx = glowBuf.getContext('2d'); glowImg = glowCtx.createImageData(C, R); glowPix = new Uint32Array(glowImg.data.buffer);
+    } else glowPix.fill(0);
+    const now = performance.now();
+    // 0.65 turns a second: a gentle pulse, each grain slightly out of step with its neighbors
+    for (let y = 0, i = 0; y < R; y++) for (let x = 0; x < C; x++, i++) {
+      if (T[i] !== LOOSE || matOf(Col[i]) !== LAVA) continue;
+      const h = gHeat[i];
+      if (h <= 20) continue;
+      const u = h / 255;
+      const pulse = 0.72 + 0.28 * Math.sin(now * 0.00408 + (gPhase[i] & 1023) * 0.012);
+      const a = (28 + u * 52) * pulse | 0;
+      const rr = 255, gg = 140 + (u * 70 | 0), bb = 36;
+      glowPix[i] = ((a << 24) | (bb << 16) | (gg << 8) | rr) >>> 0;
+    }
+    glowCtx.putImageData(glowImg, 0, 0);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.55;
+    ctx.drawImage(glowBuf, 0, 0, C, R, 0, 0, C * CELL, R * CELL);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.restore();
+  };
 
   // ----- the picker -----
   function setMat(m) {
