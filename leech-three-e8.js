@@ -42,7 +42,7 @@
   const rootVectors=roots(), plane8=plane(8), colors=['#92e2c7','#8caef1','#edaccb'];
   const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
   function mount({vecs,shellOf,N}) {
-    const proof='https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/';
+    const proof='https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/';
     const nav=document.createElement('nav');nav.className='e8-nav';nav.setAttribute('aria-label','Leech views');
     nav.innerHTML='<span class="e8-brand">THE LEECH LATTICE</span><div class="e8-modes"><button id="e8Mode" aria-pressed="true">Three E₈</button><button id="e8Original" aria-pressed="false">23-fold view</button></div>';
     const page=document.createElement('main');page.className='e8-page';page.id='e8Construction';

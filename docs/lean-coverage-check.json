@@ -1,9 +1,9 @@
 {
   "status": "PASS",
   "scope": "External source/computation comparison; no new Lean theorem and no interactive browser test",
-  "proof_revision": "9c7a22abd740c3e614a7e585511c0a903e4af391",
+  "proof_revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf",
   "html_sha256": "4acf7ed96016509016228a381487bf39e2c4b1db6047a666f99748b14a7b1ca3",
-  "coverage_js_sha256": "9bde3197cee0e8c8d9d00713419e441a46ae2390d2c0de5f49c4b835e195d30c",
+  "coverage_js_sha256": "85b1adaa020e43a49896cef9eebec22826533f837fdfef5a9a7c82f83869efe5",
   "node_version": "v24.22.3",
   "tabs_checked": 33,
   "status_counts": {
@@ -678,7 +678,7 @@
     "CubeCheeger.lean": "c7dee65161ca232c5ca51dbcb4c1c594dcfe4f2714b0e94f24047fb9768d9509",
     "EdgeOptimal.lean": "5ea6d3c18261dfd4e5dd0a68e559edd4c1109fd08b4315e71c3fe026216a6048",
     "E8PlumbingBridge.lean": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
-    "LeechThreeE8.lean": "a900919cbf41768192413358474c47ee4b4dbb304067e3312d62a5ecba871c4f",
+    "LeechThreeE8.lean": "c9cc5c450bdb5ee6a9318b7727dd302fc08fa20fa88ed2438be7437982f26b64",
     "LeechThreeE8Cosets.lean": "e6953a4a33af94d372e8d9e03c9bba1e18fc8b300568e26ac12c4f0025ca7411",
     "PlaygroundGolay.lean": "8400f102e7c5f1827f354e0e41f6956753acdc09c6f9b568d2f4f7cf24564b0f",
     "LeechBasis.lean": "4ac835d05fe50ee2a5f098b279f669a8db2731187a47804467291c4557f8ec84",

@@ -1,12 +1,12 @@
 # Playground tabs and Lean proofs
 
-All 33 tabs were compared with the definitions and theorem statements in [discrete-gap-inequalities-lean at 9c7a22a](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
+All 33 tabs were compared with the definitions and theorem statements in [discrete-gap-inequalities-lean at 8d52096](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
 
 Nine tabs have matching mathematical results with limits, three have a related theorem that covers only part of their calculation, and 21 have no matching proof in this library. The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
 
 ## What was checked
 
-The cited Lean revision includes the [three-E₈ construction](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/docs/three-e8.md), the [Golay correspondence](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/docs/playground-golay.md) and the existing [basis and volume proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechBasis.lean) from commit 14518ce. The complete local axiom audit passes with 743 declarations, 0 nonstandard and 0 missing; see the [verification record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/docs/three-e8-verification.json) for compilation and artifact reuse. The [GitHub build for the new proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44653527254) records the separate CI result. The audit accepts only propext, Classical.choice and Quot.sound. The previous 711-, 682- and 559-declaration audits remain historical evidence.
+The cited Lean revision includes the [three-E₈ construction](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/docs/three-e8.md), the [Golay correspondence](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/docs/playground-golay.md) and the existing [basis and volume proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechBasis.lean) from commit 14518ce. The complete local axiom audit passes with 743 declarations, 0 nonstandard and 0 missing; see the [verification record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/docs/three-e8-verification.json) for compilation and artifact reuse. The [GitHub build for the new proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44653527254) records the separate CI result. The audit accepts only propext, Classical.choice and Quot.sound. The later [comment wording check](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/docs/lean-comment-verification-2026-11-20.json) compares all 49 Lean files and confirms that no formal code changed. Its [source-hash record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/docs/three-e8-verification-2026-11-20-comments.json) identifies the reused audit. The previous 711-, 682- and 559-declaration audits remain historical evidence.
 
 The source comparison reads the actual JavaScript enumerations, smoothing code and simple-root arrays and checks them against the cited Lean definitions. The [saved results](lean-coverage-check.json) record the source hashes, theorem lines, selectors and numerical tolerances. Those checks are external computations. The Leech code correspondence has a separate Lean proof for the formal recipe; JavaScript semantics and floating-point execution are not formalized. The remaining tabs were reviewed by their displayed claims, source models and the proof library's module scopes. They were not all numerically simulated. The Leech update starts from playground revision [692e5ad](https://github.com/NousVolition/sparkle-sand-playground/commit/692e5ad30d767984704ff7d79cedcc57e9374603), preserving the later Ocean replacement.
 
@@ -24,7 +24,7 @@ Use this playground checkout and a separate checkout of the pinned proof revisio
 
 ```sh
 git clone https://github.com/NousVolition/discrete-gap-inequalities-lean.git ../discrete-gap-inequalities-lean
-git -C ../discrete-gap-inequalities-lean checkout 9c7a22abd740c3e614a7e585511c0a903e4af391
+git -C ../discrete-gap-inequalities-lean checkout 8d520965e87e391ae4ce31bb5ee398733e8781bf
 node scripts/check-proof-coverage.cjs ../discrete-gap-inequalities-lean
 node scripts/check-proof-notes-ui.cjs
 ```
@@ -113,7 +113,7 @@ No proof link added.
 
 **Related theorem; limited match.** Only the isolated radius-smoothing pass matches RingDecay: t = subAlpha / 2 must be at most 1/4. This covers surface tension up to 0.875; the 0.88 and 0.90 slider settings exceed that theorem’s bound. Magnetic forces, area rescaling, swirl motion and the measured decay rate are outside the proof.
 
-[Ring smoothing step](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/RingDecay.lean#L191)
+[Ring smoothing step](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L191)
 
 <a id="sum"></a>
 
@@ -129,7 +129,7 @@ No proof link added.
 
 **Related theorem; limited match.** The first bar has height 2 sin(π/n); its square is the proved cycle gap. This does not prove the sum of all bars, the −1/12 limit or the Casimir model.
 
-[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L168) · [Gap = 4 sin²(π/n)](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/RingDecay.lean#L41)
+[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [Gap = 4 sin²(π/n)](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L41)
 
 <a id="zeros"></a>
 
@@ -145,7 +145,7 @@ No proof link added.
 
 **Related theorem; limited match.** The centered displacement on the closed ring has the cycle energy bound; the open line has the general path bound. The tab evolves a damped second-order oscillator, not heat flow. Its motion, damping and recurrence times are outside these proofs.
 
-[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L168) · [General path inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Poincare.lean#L69)
+[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [General path inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Poincare.lean#L69)
 
 <a id="trilogy"></a>
 
@@ -153,7 +153,7 @@ No proof link added.
 
 **Some results proved; limits below.** Lean proves the six-point path gap and rounding, cycle gap, cube gap and maximum internal-edge count. The cycle update also matches RingDecay with t = 0.004 × speed (0.004 to 0.04). The real-number theorems do not certify floating-point trajectories.
 
-[Six-point path gap](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/PathSix.lean#L70) · [Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L168) · [Cube gap](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/CubeCheeger.lean#L179) · [Cube internal-edge maximum](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/EdgeOptimal.lean#L230) · [Ring smoothing step](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/RingDecay.lean#L191)
+[Six-point path gap](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/PathSix.lean#L70) · [Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [Cube gap](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/CubeCheeger.lean#L179) · [Cube internal-edge maximum](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/EdgeOptimal.lean#L230) · [Ring smoothing step](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L191)
 
 <a id="blackhole"></a>
 
@@ -217,7 +217,7 @@ No proof link added.
 
 **Some results proved; limits below.** The E8 mode uses the 112 integer and 128 even-parity sign patterns counted in Lean. Its simple-root Gram matrix matches the negative of the Lean matrix after relabeling. That correspondence was checked externally. E6, 5D unknotting, edge counts and projections remain outside the linked proofs.
 
-[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L79)
+[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L79)
 
 <a id="leech"></a>
 
@@ -225,7 +225,7 @@ No proof link added.
 
 **Some results proved; limits below.** Lean proves the Golay generator correspondence, lattice membership, minimum squared length 32, classification and 196,560 count. It now also proves that three orthogonal scaled E₈ blocks with twelve glue vectors give the same infinite lattice, with 4,096 distinct binary glue cosets. The construction reuses the existing basis, determinant 8^12 and evenness proofs. The integer JavaScript replay is separate evidence; browser execution, projection, animation and the symmetry group remain outside Lean.
 
-[Three E₈ blocks give the Leech lattice](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8.lean#L85) · [Unique glue label for every lattice vector](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8Cosets.lean#L118) · [4,096 gluing labels](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8Cosets.lean#L131) · [E₈ Gram matrix and plumbing connection](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8.lean#L42) · [Reuse the basis and volume proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8.lean#L122) · [196,560 vectors in the construction](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8.lean#L135) · [Playground coordinate correspondence](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechThreeE8.lean#L116) · [Golay generator correspondence](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/PlaygroundGolay.lean#L182) · [Unimodularity after rescaling](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/LeechBasis.lean#L415)
+[Three E₈ blocks give the Leech lattice](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8.lean#L85) · [Unique glue label for every lattice vector](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8Cosets.lean#L118) · [4,096 gluing labels](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8Cosets.lean#L131) · [E₈ Gram matrix and plumbing connection](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8.lean#L42) · [Reuse the basis and volume proof](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8.lean#L122) · [196,560 vectors in the construction](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8.lean#L135) · [Playground coordinate correspondence](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechThreeE8.lean#L116) · [Golay generator correspondence](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/PlaygroundGolay.lean#L182) · [Unimodularity after rescaling](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/LeechBasis.lean#L415)
 
 <a id="pentlite"></a>
 
@@ -233,7 +233,7 @@ No proof link added.
 
 **Some results proved; limits below.** The 112 + 128 enumeration matches the two finite counts in Lean. The lattice characterization, displayed rings, projection and 5D unknotting are not established by these count theorems.
 
-[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L188)
+[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L188)
 
 <a id="hopf"></a>
 
@@ -265,7 +265,7 @@ No proof link added.
 
 **Some results proved; limits below.** The plumbing tree has the same vertex labels as the Lean matrix, and the 112 + 128 enumeration matches its count statements. Lean proves the determinant and counts only. Hamming-to-E8 correspondence, lattice packing, the morph and the exotic-sphere topology are not proved there.
 
-[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L79)
+[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L79)
 
 <a id="e8insp"></a>
 
@@ -273,7 +273,7 @@ No proof link added.
 
 **Some results proved; limits below.** For all eight simple roots, the tab’s Gram matrix is the negative of the Lean matrix after relabeling; this finite correspondence was checked externally. Lean also proves the 112 + 128 counts. Root-subset determinants, the Hamming lift, neighbor graph and boundary topology are outside these proofs.
 
-[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L79)
+[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L79)
 
 <a id="e8studio2"></a>
 
@@ -281,7 +281,7 @@ No proof link added.
 
 **Some results proved; limits below.** The plumbing graph and simple-root Gram matrix match the Lean matrix after relabeling and the stated sign change. The finite correspondence was checked externally. Lean proves the determinant and 112 + 128 counts, not the Coxeter projection, morph, signature argument or exotic-sphere classification.
 
-[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/E8PlumbingBridge.lean#L79)
+[112 + 128 = 240 count](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L188) · [E8 matrix determinant](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/E8PlumbingBridge.lean#L79)
 
 <a id="unit-distances"></a>
 
@@ -289,7 +289,7 @@ No proof link added.
 
 **Some results proved; limits below.** The centered direction coordinates fit the cycle inequality. The cosine equality theorem is general: it does not prove the tab’s claim that only four-direction grid rings attain equality. Grid pair counts and floating-point calculations are also outside these proofs.
 
-[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L168) · [Cosine equality case](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L228)
+[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [Cosine equality case](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L228)
 
 <a id="cipher"></a>
 
@@ -297,4 +297,4 @@ No proof link added.
 
 **Some results proved; limits below.** The roughness bound applies to centered, nonconstant real windows with n ≥ 3. Flat windows have an undefined ratio. Solver convergence, the stall threshold, intended plaintext and generated key certificates are outside this library’s cycle proofs.
 
-[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L168) · [Cosine equality case](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/9c7a22abd740c3e614a7e585511c0a903e4af391/Wirtinger.lean#L228)
+[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [Cosine equality case](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L228)

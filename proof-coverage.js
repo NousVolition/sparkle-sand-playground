@@ -1,7 +1,7 @@
 // Proof notes for the active playground. Mathematical scope, not a browser certificate.
 (function () {
   'use strict';
-  const revision = '9c7a22abd740c3e614a7e585511c0a903e4af391';
+  const revision = '8d520965e87e391ae4ce31bb5ee398733e8781bf';
   const base = `https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${revision}/`;
   const proof = (label, file, line) => ({ label, href: `${base}${file}#L${line}` });
   const cycle = proof('Cycle inequality', 'Wirtinger.lean', 168);
