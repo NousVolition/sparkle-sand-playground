@@ -33,12 +33,13 @@ assert.equal($('e8LayersMode').getAttribute('aria-pressed'), 'false');
 const expectedLayers = [[-32,1],[-24,0],[-16,4600],[-8,47104],[0,93150],[8,47104],[16,4600],[24,0],[32,1]];
 const proofNote = page.html.match(/<p[^>]*id="e8LayerProofs"[^>]*>(.*?)<\/p>/)[1];
 const signedLinks = [...proofNote.matchAll(/<a href="([^"]+)"[^>]*>([−+]\d+)<\/a>/g)];
-assert.deepEqual(signedLinks.map(m => m[2]), ['−8', '+8', '−16', '+16']);
-assert.equal(new Set(signedLinks.map(m => m[1])).size, 4);
+assert.deepEqual(signedLinks.map(m => m[2]), ['−8', '+8', '−16', '+16', '+32', '−32']);
+assert.equal(new Set(signedLinks.map(m => m[1])).size, signedLinks.length);
 for (const [, href] of signedLinks) {
   assert.match(href, /^https:\/\/github\.com\/NousVolition\/discrete-gap-inequalities-lean\/blob\/[a-f0-9]{40}\/LeechLayers\.lean#L\d+$/);
 }
 const sampledSelections = [];
+const endpoints = [];
 let measuredLayers;
 function selectedIndex() {
   return Number($('e8VectorNumber').textContent.split('/')[0].replaceAll(',', '').trim()) - 1;
@@ -46,12 +47,21 @@ function selectedIndex() {
 function verifyLayers() {
   const selected = selectedIndex(), s = generated.vecs.subarray(24 * selected, 24 * (selected + 1));
   const counts = new Map();
+  let positive, negative;
   for (let i = 0; i < generated.N; i++) {
     let product = 0;
     for (let j = 0; j < 24; j++) product += s[j] * generated.vecs[24 * i + j];
     counts.set(product, (counts.get(product) || 0) + 1);
+    if (product === 32) {
+      assert.equal(i, selected);
+      positive = i + 1;
+    } else if (product === -32) {
+      for (let j = 0; j < 24; j++) assert.equal(generated.vecs[24 * i + j] + s[j], 0);
+      negative = i + 1;
+    }
   }
   assert.deepEqual(expectedLayers.map(([k]) => [k, counts.get(k) || 0]), expectedLayers);
+  endpoints.push({selected: selected + 1, plus_32: positive, minus_32: negative});
   assert.equal(counts.size, 7);
   const rows = [...$('e8LayerCounts').html.matchAll(/<dt>([^<]+)<\/dt><dd>([\d,]+)( · empty)?<\/dd>/g)]
     .map(([,k,n,empty]) => { assert.equal(Boolean(empty), Number(n) === 0); return [Number(k.replace('−','-')), Number(n.replaceAll(',',''))]; });
@@ -88,6 +98,6 @@ $('e8Original').onclick();assert(!sandbox.__leechThreeE8Active);assert(page.hidd
 $('e8Mode').onclick();assert(sandbox.__leechThreeE8Active);assert(!page.hidden);
 for(const a of page.querySelectorAll('a')){assert.match(a.attrs.href,/\/blob\/[0-9a-f]{40}\//);assert.equal(a.attrs.target,'_blank');assert.equal(a.attrs.rel,'noopener noreferrer');}
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
-console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','four signed layers link to separate Lean theorems','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
- layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
+console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','proof links at +8, −8, +16, −16, +32 and −32','+32 contains the selected vector and −32 contains its negative','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
+ layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,endpoints,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
  source_sha256:Object.fromEntries(['leech-three-e8.js','leech-three-e8.css','leech-three-e8-data.js'].map(p=>[p,sha(read(p))])),scope:'DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test.'},null,2));
