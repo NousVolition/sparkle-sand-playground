@@ -24546,6 +24546,43 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   const DUNE = ['#d9b77e', '#c9a26a', '#e3c48f'];
   const tc = document.createElement('canvas'), tg = tc.getContext('2d', { willReadFrequently: true });
   const FONT = n => `800 ${n}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+  const FONT_FALLBACK = n => `800 ${n}px Arial, "Segoe UI", system-ui, sans-serif`;
+
+  // paint one welcome word into the sand grid; a finer canvas and a second font are used if the first pass leaves no grains
+  function stampWord(word, x, base, f, sx, stroke, id, mc, C, R, scale) {
+    const paint = fontFn => {
+      const W = Math.max(1, C * scale), H = Math.max(1, R * scale);
+      if (tc.width !== W || tc.height !== H) { tc.width = W; tc.height = H; }
+      else { tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, W, H); }
+      tg.setTransform(sx * scale, 0, 0, scale, 0, 0);
+      tg.font = fontFn(f); tg.fillStyle = '#fff'; tg.strokeStyle = '#fff'; tg.lineJoin = 'round';
+      tg.lineWidth = Math.max(1, f * 0.06);
+      tg.fillText(word, x, base);
+      if (stroke) tg.strokeText(word, x, base);
+      const d = tg.getImageData(0, 0, W, H).data;
+      let n = 0;
+      for (let cy = 0, q = 0; cy < R; cy++) {
+        for (let cx = 0; cx < C; cx++, q++) {
+          if (gType[q] !== EMPTY) continue;
+          let v = 0;
+          const x0 = cx * scale, y0 = cy * scale;
+          for (let yy = 0; yy < scale; yy++) {
+            let j = ((y0 + yy) * W + x0) * 4;
+            for (let xx = 0; xx < scale; xx++, j += 4) {
+              const p = d[j] > d[j + 1] ? d[j] : d[j + 1];
+              const m = p > d[j + 2] ? p : d[j + 2];
+              const a = m > d[j + 3] ? m : d[j + 3];
+              if (a > v) v = a;
+            }
+          }
+          if (v > 80) { gType[q] = STAMP; gOwner[q] = id; gColor[q] = mc; n++; }
+        }
+      }
+      return n;
+    };
+    if (paint(FONT) > 0) return;
+    paint(FONT_FALLBACK);
+  }
 
   function wrap(words, n, maxW) {
     // split the words into n lines of roughly even width
@@ -24585,7 +24622,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       if (!best || score > best.score + 0.5) best = { t, n, f0: Math.max(10, f0), f1: Math.max(8, f1), score };
     }
     const top = plan.top, peak = plan.peak;
-    tc.width = C; tc.height = R;
+    const stampScale = 4;   // paint letters on a finer grid so they still stamp if a font is faint or a screen uses a high DPI
     // lines: [{ word indexes (into words), font size, baseline y, width }]
     const L = [];
     const lineW = (idx, w, sp, f) => idx.reduce((a, i, j) => a + w[i] * f / 100 + (j ? sp * f / 100 : 0), 0);
@@ -24605,18 +24642,10 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       let x = (C / sx - lineW(line.idx, line.w, line.sp, line.f)) / 2;
       line.idx.forEach(i => {
         const word = words[(line.off || 0) + i];
-        tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, C, R); tg.setTransform(sx, 0, 0, 1, 0, 0);
-        tg.font = FONT(line.f); tg.fillStyle = '#fff'; tg.strokeStyle = '#fff'; tg.lineJoin = 'round';
-        tg.lineWidth = Math.max(1, line.f * 0.06);
-        tg.fillText(word, x, line.base);
-        if (!narrow) tg.strokeText(word, x, line.base);
-        const d = tg.getImageData(0, 0, C, R).data;
         const id = nextObjId++, mc = inkColor(id, WORD_COLORS[n++ % WORD_COLORS.length]);
         ids.add(id);
         slimeAdd({ kind: 'word', id, word, x, base: line.base, f: line.f, sx, stroke: !narrow, narrow, top: line === L[0], hex: WORD_COLORS[(n - 1) % WORD_COLORS.length] });
-        for (let q = 0, j = 3; q < C * R; q++, j += 4) {
-          if (d[j] > 110 && gType[q] === EMPTY) { gType[q] = STAMP; gOwner[q] = id; gColor[q] = mc; }
-        }
+        stampWord(word, x, line.base, line.f, sx, !narrow, id, mc, C, R, stampScale);
         x += (line.w[i] + line.sp) * line.f / 100;
       });
     });
@@ -24922,7 +24951,8 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       if (gType[i] !== STAMP) continue;
       const s = byId.get(gOwner[i]); if (s) { s.xs.push(x); s.ups.push(R - y); }
     }
-    slime.shapes = [...byId.values()].filter(s => s.xs.length);
+    // keep title words and stars on the slime layer even if a letter left no sand grains (so the title still shows)
+    slime.shapes = [...byId.values()].filter(s => s.xs.length || s.o.kind === 'word' || s.o.kind === 'star');
     slime.shapes.forEach(s => { s.base = foreign(s); });
     slime.hid = new Set(slime.shapes.map(s => s.o.id));
     slime.key = ''; slime.failed = false;
