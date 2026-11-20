@@ -24564,7 +24564,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const parts = WELCOME_TITLE.split('\n').map(x => x.trim().split(/\s+/)), words = [].concat(...parts);
     const narrow = C < 220;
     const sx = narrow ? 0.74 : 1;   // narrow screens: letters a little narrower so they can be taller
-    const hBudget = narrow ? 0.38 : 0.32, maxLines = narrow ? 3 : 2;   // the title shares the screen with the ring below it
+    const hBudget = narrow ? 0.38 : 0.32, maxLines = narrow ? 3 : 2;   // the title sits in the middle of the ring, so it still leaves room around the letters
     const maxW = C * (narrow ? 0.94 : 0.9) / sx, gap = narrow ? 2 : 3;
     // featured top line on one line; the rest over 1-3 lines, sizes chosen so both fit the width and the height budget
     const head = wrap(parts[0], 1, maxW * (narrow ? 1 : 0.84));   // leaves room for a star each side
@@ -24577,16 +24577,24 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       const score = f1 + f0 * 0.5;
       if (!best || score > best.score + 0.5) best = { t, n, f0: Math.max(10, f0), f1: Math.max(8, f1), score };
     }
-    const top = Math.round(R * (narrow ? 0.03 : 0.04));
+    const plan = ringPlan(C, R, narrow);
+    const top = plan.top;
     tc.width = C; tc.height = R;
     // lines: [{ word indexes (into words), font size, baseline y, width }]
     const L = [];
     const lineW = (idx, w, sp, f) => idx.reduce((a, i, j) => a + w[i] * f / 100 + (j ? sp * f / 100 : 0), 0);
-    let y = top;
-    { const f = best.f0, lh = Math.round(f * 1.18); L.push({ idx: parts[0].map((_, i) => i), w: head.w, sp: head.sp, f, base: y + f * 0.82 }); y += lh + gap; }
+    const lh0 = Math.round(best.f0 * 1.18), lh1 = Math.round(best.f1 * 1.18);
+    const blockH = lh0 + (best.t.lines.length ? gap + best.t.lines.length * lh1 : 0);
+    // sit the title in the middle of the ring (or at the top if the ring will not fit)
+    const peak = Math.max(4, Math.round(R * 0.05));
+    let titleTop = plan.Ro >= 12 ? Math.round(plan.cy - blockH / 2) : top;
+    const titleMax = Math.min(plan.availBot, R - peak - 3) - blockH;
+    titleTop = Math.max(top, Math.min(titleTop, titleMax));
+    let y = titleTop;
+    { const f = best.f0, lh = lh0; L.push({ idx: parts[0].map((_, i) => i), w: head.w, sp: head.sp, f, base: y + f * 0.82 }); y += lh + gap; }
     const off = parts[0].length;
-    best.t.lines.forEach(l => { const f = best.f1, lh = Math.round(f * 1.18); L.push({ idx: l, w: best.t.w, sp: best.t.sp, f, base: y + f * 0.82, off }); y += lh; });
-    const fs = best.f0, blockH = Math.round(best.f0 * 1.18);   // stars sit beside the featured line
+    best.t.lines.forEach(l => { const f = best.f1, lh = lh1; L.push({ idx: l, w: best.t.w, sp: best.t.sp, f, base: y + f * 0.82, off }); y += lh; });
+    const fs = best.f0, firstH = lh0;   // stars sit beside the featured line
     let bottom = y;
     let n = 0;
     L.forEach(line => {
@@ -24609,12 +24617,17 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       });
     });
     tg.setTransform(1, 0, 0, 1, 0, 0);
-    // two stars beside the title when there is room, otherwise one above it
+    // two stars beside the title when there is room, otherwise one above it (kept clear of the ring when they can be)
     const sn = Math.max(10, Math.min(26, Math.round(fs * 1.1)));
     const firstW = sx * lineW(L[0].idx, L[0].w, L[0].sp, L[0].f);
-    const spots = (C - firstW) / 2 > sn + 6
-      ? [[(C - firstW) / 2 - sn - 3, top + (blockH - sn) / 2, '#fbbf24'], [(C + firstW) / 2 + 3, top + (blockH - sn) / 2, '#fbbf24']]
-      : (top > sn + 4 ? [[(C - sn) / 2, top - sn - 3, '#fbbf24']] : []);
+    const sideOk = (C - firstW) / 2 > sn + 6;
+    const sideY = titleTop + (firstH - sn) / 2;
+    const sideSpots = sideOk
+      ? [[(C - firstW) / 2 - sn - 3, sideY, '#fbbf24'], [(C + firstW) / 2 + 3, sideY, '#fbbf24']]
+      : [];
+    const starHitsRing = (x0, y0) => plan.Ro >= 12 && Math.hypot(x0 + sn / 2 - plan.cx, y0 + sn / 2 - plan.cy) < plan.Ro + sn * 0.55;
+    const spots = (sideOk && sideSpots.every(([x0, y0]) => !starHitsRing(x0, y0))) ? sideSpots
+      : (titleTop > sn + 4 ? [[(C - sn) / 2, titleTop - sn - 3, '#fbbf24']] : sideSpots);
     const m = moldMask('star', sn);
     spots.forEach(([x0, y0, col]) => {
       x0 = Math.round(x0); y0 = Math.round(y0);
@@ -24628,9 +24641,9 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         if (gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = id; gColor[i] = mc; }
       }
     });
-    bottom = buildRing(C, R, bottom, narrow);
+    bottom = buildRing(C, R, narrow, plan);
+    if (bottom < titleTop + blockH + 2) bottom = titleTop + blockH + 2;
     // a low dune of loose sand along the floor
-    const peak = Math.max(4, Math.round(R * 0.05));
     for (let x = 0; x < C; x++) {
       const h = Math.round(peak * (0.45 + 0.3 * Math.sin(x / C * Math.PI * 2.2 + 0.6) + 0.25 * Math.sin(x / C * Math.PI * 5.3)));
       for (let y = R - 1; y >= R - h && y >= 0; y--) {
@@ -24645,10 +24658,11 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     slimeArm(C, R);
   }
 
-  // ---- "The equal case" ring, molded in sand under the title ----
+  // ---- "The equal case" ring, molded in sand, with the title in the middle ----
   // A ring that is one cosine wave around a dashed zero-line circle: one bump outside it on the right, one equal dip
   // inside it on the left, with radial slope ticks between the wave and the zero line (warm brown on the bump side,
-  // teal on the dip side). The words around it are small labels on the page; the ring itself is sand.
+  // teal on the dip side). The title sits in the middle of the ring, and the ring (the wave and the zero-line circle)
+  // is drawn over the letters. The words around it are small labels on the page; the ring itself is sand.
   let ring = null;   // { cx, cyUp (rows up from the floor), r0, a } in cells
   let zeroLine = null;
   // on the light (stone) background the welcome's sand takes deeper versions of the same colors, so it reads well
@@ -24674,15 +24688,21 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const c = l ? zeroLine.lite : zeroLine.dark;
     for (let i = 0; i < gType.length; i++) if (gType[i] === STAMP && gOwner[i] === zeroLine.id) gColor[i] = c;
   }
-  function buildRing(C, R, titleBottom, narrow) {
+  function ringPlan(C, R, narrow) {
     const capRows = Math.ceil((WELCOME_QUIET ? 40 : narrow ? 112 : 142) / CELL), floorRows = Math.ceil((narrow ? 52 : 64) / CELL),
       labRows = Math.ceil((WELCOME_QUIET ? 4 : narrow ? 18 : 22) / CELL);
-    const room = R - titleBottom - 4 - capRows - floorRows - labRows;
-    const Ro = Math.floor(Math.min(room / 2, C * (narrow ? 0.22 : 0.15)));
-    if (Ro < 12) { ring = null; return titleBottom; }   // too little room: title only
+    const top = Math.round(R * (narrow ? 0.03 : 0.04));
+    const availBot = R - capRows - floorRows - labRows;
+    const Ro = Math.floor(Math.min(Math.max(0, availBot - top) / 2, C * (narrow ? 0.22 : 0.15)));
+    return { capRows, floorRows, labRows, top, availBot, Ro, cx: C / 2, cy: (top + availBot) / 2 };
+  }
+  function buildRing(C, R, narrow, plan) {
+    const { capRows, floorRows, labRows, Ro, cx, cy } = plan;
+    if (Ro < 12) { ring = null; return plan.top; }   // too little room: title only
     // wave amplitude about a fifth of the radius; every cell is placed by its distance to the curve, so the wave, the
     // dashed zero line and the ticks come out as clean strokes with no stray specks
-    const r0 = Ro / (narrow ? 1.22 : 1.2), a = r0 * (narrow ? 0.22 : 0.2), cx = C / 2, cy = titleBottom + 4 + Ro;
+    const r0 = Ro / (narrow ? 1.22 : 1.2), a = r0 * (narrow ? 0.22 : 0.2);
+    const under = new Set(ids);   // title and star cells the ring may cover, so the circle's sand sits on top
     const wave = t => r0 + a * Math.cos(t);   // bump at angle 0 (right), dip at pi (left)
     const thW = narrow ? 0.8 : 1.05;          // half-width of the wave line, in cells
     const thZ = narrow ? 0.75 : 0.9;           // half-width of the zero line
@@ -24699,7 +24719,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const y0 = Math.max(0, Math.floor(cy - Ro - 2)), y1 = Math.min(R - 1, Math.ceil(cy + Ro + 2));
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const i = y * C + x;
-      if (gType[i] !== EMPTY) continue;
+      if (gType[i] !== EMPTY && !(gType[i] === STAMP && under.has(gOwner[i]))) continue;
       const dx = x + 0.5 - cx, dy = cy - (y + 0.5), rho = Math.hypot(dx, dy);
       let t = Math.atan2(dy, dx); if (t < 0) t += Math.PI * 2;
       const w = wave(t);
@@ -24718,7 +24738,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         const r = r1 + sg * s, x = Math.floor(cx + ux * r), y = Math.floor(cy + uy * r);
         if (x < 0 || y < 0 || x >= C || y >= R) continue;
         const i = y * C + x;
-        if (gType[i] === EMPTY) { gType[i] = STAMP; gOwner[i] = o.id; gColor[i] = o.mc; }
+        if (gType[i] === EMPTY || (gType[i] === STAMP && under.has(gOwner[i]))) { gType[i] = STAMP; gOwner[i] = o.id; gColor[i] = o.mc; }
       }
     }
     ring = { cx, cyUp: R - cy, r0, a, Ro };
