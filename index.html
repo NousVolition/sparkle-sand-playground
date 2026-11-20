@@ -25082,6 +25082,9 @@ loop();
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     cell = 4;
+    // Tall canvases: a slightly larger grain keeps a pour visible without a large flash area.
+    // Tab 34 visible pours — Copyright © 2026 NousVolition. All rights reserved.
+    if (h > 560) cell = 5;
     const nc = Math.max(8, Math.floor(w / cell)), nr = Math.max(8, Math.floor(h / cell));
     if (nc !== cols || nr !== rows) {
       const ot = type, ok = kind, op = pix, oh = heat, of = flag, ol = link, orr = rest, oc = cols, orw = rows;
@@ -25475,7 +25478,8 @@ loop();
     if (!running) return;
     resize();
     if (pointer.down) {
-      if (tool === 'pour') pourAt(pointer.x, pointer.y);
+      // Heat, poke and magnet still do their own work, but they also pour so a drag always adds the chosen grains.
+      if (tool === 'pour' || tool === 'heat' || tool === 'poke' || tool === 'magnet') pourAt(pointer.x, pointer.y);
       if (tool === 'heat') heatAt(pointer.x, pointer.y, 3 + size);
       if (tool === 'poke' && (frame % 2 === 0)) crumbleAt(pointer.x, pointer.y, 3 + size);
       const flick = Math.hypot(pointer.x - pointer.px, pointer.y - pointer.py);
@@ -25523,6 +25527,7 @@ loop();
     const allow = allowedColors(m);
     if (allow.indexOf(color) < 0) color = allow[0];
     if (m.patterns.indexOf(pattern) < 0) pattern = m.patterns[0];
+    tool = 'pour';
     store('key', m.key); store('color', color); store('pattern', pattern);
     writeNote();
     fillControls();

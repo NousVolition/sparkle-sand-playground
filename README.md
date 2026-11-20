@@ -1,6 +1,10 @@
 # sparkle-sand-playground
 Interactive particle playground: kinetic sand, bubbles, sound plate, waves
 
+## Leech browser checks
+
+The [saved browser checks](docs/browser-checks/leech-2026-11-20/README.md) record Cloud as the default, the seven layer counts, both empty slots, and Next/Previous at revision `f01f401`. One visual check by this Codex chat and Claude's independently reported check have separate records. They describe the page and its controls; Lean proof results are recorded separately below.
+
 ## Lean proofs across the playground
 
 The **Lean proofs** menu follows the selected tab. The [33-tab comparison](docs/lean-coverage.md) checks the tab's formulas, matrices and constructions against the Lean statements and their hypotheses. It distinguishes matching results, limited connections and pages with no matching proof in the reviewed library. The [reproducible checks](scripts/check-proof-coverage.cjs) and [saved output](docs/lean-coverage-check.json) record the external comparisons; they are separate from Lean's proof checking.
