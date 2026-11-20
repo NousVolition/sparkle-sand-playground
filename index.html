@@ -12733,7 +12733,13 @@ window.__travelerPoint = travelerPoint;
     <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/b9318754a0aab99b9aab3d5edaeb41649472f932/docs/playground-golay.md" target="_blank" rel="noopener noreferrer">Evidence and checks</a>.<br>
     <b>Volume:</b> in Lean's coordinates, the basis determinant is 8<sup>12</sup>, and the lattice is even and unimodular after the standard rescaling.
     <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/b9318754a0aab99b9aab3d5edaeb41649472f932/LeechBasis.lean#L379" target="_blank" rel="noopener noreferrer">Basis and volume proof</a>. No separate volume-transfer theorem is claimed for this page's coordinates.<br>
-    The page's generated vectors pass a separate JavaScript check. The projection and animation are not Lean-verified; the symmetry group remains unproved.<br><br>
+    <b>Symmetry — partial:</b> three Lean milestones are published:
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/a7496e33945dd0236a41ea5829605a4044cd6ae5/MathieuGroup.lean#L52" target="_blank" rel="noopener noreferrer">1. Code reorderings</a> ·
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/a7496e33945dd0236a41ea5829605a4044cd6ae5/MathieuGroup.lean#L147" target="_blank" rel="noopener noreferrer">2. Reordering-group size: 244,823,040</a> ·
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/a7496e33945dd0236a41ea5829605a4044cd6ae5/LeechSextet.lean#L135" target="_blank" rel="noopener noreferrer">3. A symmetry moving the axes</a>.<br>
+    The GitHub build and full axiom audit passed for 830 declarations. Reaching every vector of squared length 64 and the full group size are outside this release.
+    <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/a7496e33945dd0236a41ea5829605a4044cd6ae5/docs/leech-symmetry.md" target="_blank" rel="noopener noreferrer">Proof scope and audit evidence</a>.<br>
+    The page's generated vectors pass a separate JavaScript check. The projection and animation are not Lean-verified.<br><br>
     <b>Why 23-fold:</b> shifting coordinates 0…22 around a circle is a symmetry of this code, so the picture repeats 23 times around the centre. The Leech lattice has no roots, so it has no Coxeter plane; this 23-fold view is a real symmetry instead.<br><br>
     <b>History:</b> Leech found the lattice in 1965 via the Golay code (1949). The Three E₈ view shows an explicit gluing of three scaled copies of E₈, proved to give this same lattice.
   </div>
