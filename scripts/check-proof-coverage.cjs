@@ -232,7 +232,7 @@ const catalogSource = between(materialSource, '  const SMOOTH_T = ', '  const by
 const catalog = run(catalogSource + '\nCATALOG');
 const grain = catalog[1];
 assert.equal(grain.key, 'super-black-grain');
-assert.equal(grain.name, 'Super-black grain');
+assert.equal(grain.name, 'Super Black Grain');
 assert.equal(catalog[4].key, 'ferro');
 assert(coverage.pages['more-materials'].links.some(link => link.href === grain.leanHref));
 

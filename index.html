@@ -24846,7 +24846,8 @@ loop();
     },
     {
       key: 'super-black-grain',
-      name: 'Super-black grain',
+      // Super Black Grain display name — Copyright © 2026 NousVolition. All rights reserved.
+      name: 'Super Black Grain',
       also: '',
       blurb: 'These grains look almost black and darken the grains next to them.',
       lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean also proves that each color channel is at most 17 out of 255.',
@@ -25008,7 +25009,8 @@ loop();
   function load(k, d) { try { return localStorage.getItem('sparkle.moremat.' + k) || d; } catch (e) { return d; } }
 
   function bootState() {
-    const k = load('key', 'aerogel');
+    let k = load('key', 'aerogel');
+    if (k === 'vantablack') k = 'super-black-grain';   // old saves keep working; the live key is unchanged
     mat = Object.hasOwn(byKey, k) ? byKey[k] : null;
     if (!mat) {
       // The renamed grain was saved with its color and pattern.
