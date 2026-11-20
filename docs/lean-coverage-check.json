@@ -5,8 +5,8 @@
   "proof_added_revision": "53ecf1d4dc11a97871c9512b58020d926a85304c",
   "proof_symmetry_revision": "a0498c80c24b1e14925e25233afc93b235429e7b",
   "proof_light_capture_revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d",
-  "html_sha256": "d5bfd03d055298455e9a35ff598911de7448af766918f94bfad2e2d8bd9b7476",
-  "coverage_js_sha256": "ca5fafa7ffe90800fb02693062fb7a9ecbf976ecf8371363383402d2043c415c",
+  "html_sha256": "132459b179a0e793387a278da0257de3bc166d5e150b38a24ab7b6e00f0d572d",
+  "coverage_js_sha256": "b7a76e65bb36420ee2b72947c0013de08286a66ab928fbfefa06d04122e6ceff",
   "node_version": "v24.22.3",
   "tabs_checked": 34,
   "status_counts": {
@@ -258,7 +258,7 @@
     }
   ],
   "axiom_declarations": 1009,
-  "inline_scripts_syntax_checked": 40,
+  "inline_scripts_syntax_checked": 41,
   "e8_enumerations": {
     "penteract": {
       "integer": 112,
@@ -826,12 +826,12 @@
     "more-materials": {
       "start": "(function moreMaterials() {",
       "end": "\n})();",
-      "sha256": "da8dc7b5208ec8e481c7c353f6fb0875348d15c327b0b3c4bf8a1e9b9b73cc16"
+      "sha256": "e38cc0094a761cfc7a1c03a73f7a8d4104cf9d3a8992ad568ddb94b0d34118b4"
     },
     "more-materials.catalog": {
       "start": "  const SMOOTH_T = ",
       "end": "  const byKey = ",
-      "sha256": "7f5b2fed749035a42591c2c38b6130cfead3c5c8b20a2402d560554db8160a50"
+      "sha256": "5a824725f9aedfb62f382c6d4543feed993cab096b3debfbca204daebdbea995"
     },
     "more-materials.shade": {
       "start": "  function hexRgb(",
