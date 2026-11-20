@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "checks": [
+    "initial construction mode",
+    "12 glue switches",
+    "720 shortest vectors in base coset",
+    "previous/next selection",
+    "empty coset state",
+    "return to full shell",
+    "projection rotation handler",
+    "23-fold mode and return",
+    "published proof links"
+  ],
+  "source_sha256": {
+    "leech-three-e8.js": "de4fb8840ef74fc316c6730c9661c46c2318b685fd895145261374df52b20850",
+    "leech-three-e8.css": "17015b6734338b71e808b496316f270c0bbaebed9f7a4922d392fc6ca0ba4953",
+    "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
+  },
+  "scope": "DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test."
+}
