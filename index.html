@@ -7045,6 +7045,10 @@ requestAnimationFrame(frame);
   canvas.chart { width: 100%; height: 190px; display: block; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; }
   .chart-key { font-size: 11px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
   .sw { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; border-radius: 2px; }
+  .rtab { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 6px 0; font-variant-numeric: tabular-nums; }
+  .rtab th, .rtab td { border-bottom: 1px solid var(--border); padding: 3px 4px; text-align: right; color: #e2e8f0; }
+  .rtab th { color: #94a3b8; font-weight: 600; }
+  .rtab td:first-child, .rtab th:first-child { text-align: left; }
   .ok { color: var(--ok); }
   .bad { color: var(--bad); }
   #proved .proved-group { margin: 12px 0 4px; color: var(--accent); font-weight: 700; font-size: 12.5px; }
@@ -7093,7 +7097,7 @@ requestAnimationFrame(frame);
 
   <div class="hud-card" id="hud-top-left">
     <h2>
-      <span id="eventTitle">2026 El Niño (CPC, Nov 12, 2026)</span>
+      <span id="eventTitle">2026 El Niño (CPC weekly, Nov 11, 2026)</span>
       <span style="font-size:11px;color:var(--accent);" id="modeShort">STD</span>
     </h2>
     <div style="color:var(--muted);line-height:1.4;margin-bottom:6px;" id="eventDesc"></div>
@@ -7124,7 +7128,11 @@ requestAnimationFrame(frame);
     <div class="dtabs">
       <button class="dtab active" data-pane="store">1. Heat store</button>
       <button class="dtab" data-pane="cycle">2. Recharge cycle</button>
-      <button class="dtab" data-pane="proved">3. What is proved here</button>
+      <button class="dtab" data-pane="split">3. Slow swing and fast weather</button>
+      <button class="dtab" data-pane="ratio">4. When a ratio breaks</button>
+      <button class="dtab" data-pane="ring">5. Two waves on a ring</button>
+      <button class="dtab" data-pane="rates">6. Read the hidden rates</button>
+      <button class="dtab" data-pane="proved">7. What is proved here</button>
     </div>
     <div class="dbody">
       <section class="dpane active" id="pane-store">
@@ -7170,6 +7178,139 @@ requestAnimationFrame(frame);
         <p class="note">This is the linear model with no weather noise and no seasons. The real ocean is irregular, with events every 2 to 7 years. When the cycle runs on the globe, the page sets the Niño 3.4 box mean to 7.5·T °C and keeps the shapes of the pattern as drawn.</p>
       </section>
 
+      <section class="dpane" id="pane-split">
+        <h4>Slow swing and fast weather in the real Niño 3.4 record</h4>
+        <p>The data are the monthly Niño 3.4 sea surface temperature anomalies from NOAA's Climate Prediction Center, January 1982 to October 2026 (OISST.v2.1, 1991–2020 base period). A fixed copy is built into this page; see the source line below.</p>
+        <p><b>How the record is split.</b> The slow part is a centered running mean over w months. The fast part is what is left: anomaly minus slow part, so the two always add back to the record exactly. In the first and last (w − 1)/2 months the mean uses only the months that exist, so those values may change as new months arrive. This is a plain filter, not a physical law; a different filter would give somewhat different parts.</p>
+        <div class="dctl"><label>Running-mean window w <span id="vWin">7 months</span></label><input type="range" id="sWin" min="5" max="13" step="2" value="7"></div>
+        <div class="btn-row" style="margin:6px 0"><span style="font-size:11.5px;color:var(--muted);align-self:center">Measure P and Q over:</span><button id="spanAll" class="active">Whole record</button><button id="span12">Last 12 months</button></div>
+        <canvas class="chart" id="splitChart"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#64748b"></i>monthly anomaly (data)</span><span><i class="sw" style="background:#f97316"></i>slow part</span><span><i class="sw" style="background:#38bdf8"></i>fast part</span></div>
+        <div class="kv"><span>October 2026: anomaly, slow, fast</span><span id="sLatest">–</span></div>
+        <div class="kv"><span>P, mean square of the slow part</span><span id="sP">–</span></div>
+        <div class="kv"><span>Q, mean square of the fast part</span><span id="sQ">–</span></div>
+        <div class="kv"><span>Fast share Q/(P + Q)</span><span id="sShare">–</span></div>
+        <div class="kv"><span>Month-to-month carry-over ρ, slow and fast</span><span id="sRho">–</span></div>
+        <div class="kv"><span>Fitted rates ls = −ln ρ(slow), lr = −ln ρ(fast)</span><span id="sFit">–</span></div>
+        <h4>The two-wave model from TwoWaveGapBridge.lean</h4>
+        <p>In the model a slow wave and a fast wave fade freely: their squared sizes are P·e<sup>−2·ls·t</sup> and Q·e<sup>−2·lr·t</sup>, with ls &lt; lr. The gap is g = 2(lr − ls). The readout is g times the fast share:</p>
+        <div class="eq">A(t) = g·Q(t)/(P(t) + Q(t)) = g·Q/(P·e<sup>g·t</sup> + Q)</div>
+        <p>Lean proves this closed form (<code>ordinary_reduced</code>), that A stays strictly between 0 and g (<code>ordinary_between</code>), that A solves dA/dt = A² − g·A (<code>ordinary_solves</code>), and that A tends to 0 (<code>ordinary_fades</code>). The closed form gives the bound A(t) ≤ (g·Q/P)·e<sup>−g·t</sup> for t ≥ 0, so the fast share shrinks at least at the gap rate. In Lean this rate bound is proved only when e<sup>g·t</sup> is a rational number, with g and the starting readout rational as well: <code>GapMirror.below_fades</code> proves it over the rationals, and <code>GapMirrorBridge.rational_step_at_time</code> with <code>TwoWaveGapBridge.ordinary_motion</code> carries it to the real two-wave flow at those times. For all other real times the bound is checked by this page, not proved. Lean also proves that A equals 2·((ls·P + lr·Q)/(P + Q) − ls) (<code>cost_ratio_map</code>).</p>
+        <div class="btn-row" style="margin:6px 0"><button id="fitBtn" class="active">Use fitted ls and lr</button></div>
+        <div class="dctl"><label>Slow rate ls <span id="vLs1">–</span></label><input type="range" id="sLs1" min="0" max="0.2" step="0.001" value="0.03"></div>
+        <div class="dctl"><label>Fast rate lr <span id="vLr1">–</span></label><input type="range" id="sLr1" min="0.05" max="2.5" step="0.005" value="0.87"></div>
+        <canvas class="chart" id="fadeChart"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#f97316"></i>fast share from the formula</span><span><i class="sw" style="background:#4ade80"></i>step-by-step solution of dA/dt = A² − g·A (dots)</span><span><i class="sw" style="background:#94a3b8"></i>(Q/P)·e<sup>−g·t</sup></span></div>
+        <div class="kv"><span>Gap g = 2(lr − ls)</span><span id="mGap">–</span></div>
+        <div class="kv"><span>Readout at the start, A(0) = g·Q/(P + Q)</span><span id="mA0">–</span></div>
+        <div class="kv"><span>Same, from 2·((ls·P + lr·Q)/(P + Q) − ls)</span><span id="mA0c">–</span></div>
+        <div class="kv"><span>Fast share after 1 month, formula</span><span id="mS6">–</span></div>
+        <div class="kv"><span>Fast share after 1 month, step by step</span><span id="mS6n">–</span></div>
+        <div class="kv"><span>Lean statements in force</span><span id="mLean">–</span></div>
+        <p class="note"><b>What is data and what is model.</b> The record, the two parts, P, Q and the carry-over ρ come from the data. The rates read from ρ treat each part as if it forgot itself at a steady rate, which is an estimate and depends on w. The fade curve is the Lean model: it shows what would happen if no new weather or wind push arrived. The real ocean is pushed all the time, so its fast part does not die out; Lean proves the model, not the ocean.</p>
+        <p class="note">Source: <a href="https://www.cpc.ncep.noaa.gov/data/indices/sstoi.indices" target="_blank" rel="noopener">sstoi.indices</a> (column NINO3.4 ANOM), listed by CPC as monthly OISST.v2.1 Niño indices with the 1991–2020 base period. Read on Nov 19, 2026; the file was last changed on Nov 3, 2026. These are single-month values, not the 3-month ONI, so they run higher than the ONI at the peak.</p>
+      </section>
+
+      <section class="dpane" id="pane-ratio">
+        <h4>When a ratio breaks</h4>
+        <p>Take the same two fading sizes, P·e<sup>−2·ls·t</sup> and Q·e<sup>−2·lr·t</sup>, and change the sum underneath the readout into a difference. This is the signed readout from TwoWaveGapBridge.lean:</p>
+        <div class="eq">S(t) = g·Q(t)/(Q(t) − P(t)) = g·Q/(Q − P·e<sup>g·t</sup>)</div>
+        <p>When Q &gt; P, the difference shrinks to zero at the pole time</p>
+        <div class="eq">T = log(Q/P)/g</div>
+        <p>and S grows without bound as t approaches T from below (<code>signed_blows_up</code>). T is exactly the moment the two sizes are equal (<code>energies_equal_iff</code>), it equals the blow-up time of the gap equation started at S(0) (<code>pole_eq_blowTime</code>), and at that moment the ordinary readout is exactly g/2 (<code>ordinary_at_pole</code>). A pole in the future happens exactly when P &lt; Q (<code>future_pole_iff</code>); when Q &lt; P the difference never reaches zero for t ≥ 0 (<code>no_future_pole</code>). Away from the pole, S solves the same equation dS/dt = S² − g·S as the ordinary readout (<code>signed_solves_regular</code>).</p>
+        <div class="dctl"><label>Slow size P <span id="vP2">–</span></label><input type="range" id="sP2" min="0.5" max="20" step="0.5" value="4"></div>
+        <div class="dctl"><label>Fast size Q <span id="vQ2">–</span></label><input type="range" id="sQ2" min="0.5" max="20" step="0.5" value="16"></div>
+        <div class="dctl"><label>Slow rate ls <span id="vLs2">–</span></label><input type="range" id="sLs2" min="0" max="2" step="0.05" value="0.25"></div>
+        <div class="dctl"><label>Fast rate lr <span id="vLr2">–</span></label><input type="range" id="sLr2" min="0" max="4" step="0.05" value="1"></div>
+        <div class="btn-row" style="margin:6px 0"><button id="leanEx2">Lean example: ls = 0, lr = 4, P = 4, Q = 16</button></div>
+        <canvas class="chart" id="ratioChart" style="height:240px"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#f97316"></i>slow size P(t)</span><span><i class="sw" style="background:#38bdf8"></i>fast size Q(t)</span><span><i class="sw" style="background:#f87171"></i>signed readout S(t)</span><span><i class="sw" style="background:#4ade80"></i>ordinary readout A(t)</span><span><i class="sw" style="background:#e2e8f0"></i>pole time T</span></div>
+        <div class="kv"><span>Gap g = 2(lr − ls)</span><span id="rGap">–</span></div>
+        <div class="kv"><span>Pole in the future?</span><span id="rFuture">–</span></div>
+        <div class="kv"><span>Pole time log(Q/P)/g</span><span id="rPole">–</span></div>
+        <div class="kv"><span>Blow-up time log(S₀/(S₀ − g))/g, from S₀ = S(0)</span><span id="rBlow">–</span></div>
+        <div class="kv"><span>Sizes P(T) and Q(T) at the pole time</span><span id="rEq">–</span></div>
+        <div class="kv"><span>Ordinary readout at T, and g/2</span><span id="rHalf">–</span></div>
+        <div class="kv"><span>Signed readout at 0.999·T</span><span id="rNear">–</span></div>
+        <div class="kv"><span>Lean statements in force</span><span id="rLean">–</span></div>
+        <h4>The link to the relative index</h4>
+        <p>The relative index starts from a difference: the Niño 3.4 anomaly minus the mean anomaly over the whole tropics, 20°S–20°N. In 2023–24 the whole tropics were unusually warm as well, which is why the relative value was much smaller than the plain one. A ratio with that difference underneath would break in the same way as S: as the box and the tropics came level, it would grow without bound and then flip sign.</p>
+        <p>The official index does not do that. Following L'Heureux et al. (2024, <i>J. Climate</i> 37, 1197–1211), CPC computes</p>
+        <div class="eq">RONI = (ONI − tropical mean) × σ<sub>ONI</sub> / σ<sub>(ONI − tropical mean)</sub></div>
+        <p>The difference sits on top. The division is by σ, the spread of that difference over many years, worked out once for each calendar month or season. It is a fixed positive number, not the difference at the moment, so the RONI stays finite even when the box and the tropics are equal; it is then simply 0. The factor only restores the spread of the plain index.</p>
+        <p class="note">This link is illustrative. The Lean statements are about the two fading sizes above. Neither the ONI nor the RONI is a signed readout, and nothing here is a statement about the ocean.</p>
+      </section>
+
+      <section class="dpane" id="pane-ring">
+        <h4>Two waves on a ring</h4>
+        <p class="note"><b>This tab is a model.</b> The dots form a closed ring, so heat can travel around it. The equatorial Pacific is closed by land at both ends and its waves reflect at the shores, so it is not a ring. The tab shows exactly what TwoWaveDiscreteGapBridge.lean proves about the ring, and nothing about the ocean.</p>
+        <p>N dots hold a slow wave cos(2π·ks·j/N) with size a and a fast wave cos(2π·kr·j/N) with size b. On the ring these are exact waves of the heat step with rates ls = 2 − 2cos(2π·ks/N) and lr = 2 − 2cos(2π·kr/N). Each press of Step applies the repository's heat step to every dot:</p>
+        <div class="eq">u<sub>j</sub> ← u<sub>j</sub> + τ·(u<sub>j+1</sub> − 2u<sub>j</sub> + u<sub>j−1</sub>)</div>
+        <p>Lean proves that one step multiplies the two waves by cs = 1 − τ·ls and cr = 1 − τ·lr (<code>heat_step_mix</code>, <code>iterate_heat_mix</code>), so their squared sizes gain cs² and cr² per step. The exact step factor and clock are</p>
+        <div class="eq">r = cs²/cr² &nbsp;&nbsp; clock = log(r)/g &nbsp;&nbsp; after k steps: k·log(r)/g</div>
+        <p>and after k steps the readout 2·(cost/size − ls) of the actual dots equals g·Q/(P·r<sup>k</sup> + Q), the continuous two-wave readout read at time k·clock (<code>iterate_readout</code>, <code>ordinary_sample</code>, <code>iterate_motion</code>). This clock need not equal the heat time k·τ.</p>
+        <div class="dctl"><label>Dots N <span id="vN3">–</span></label><input type="range" id="sN3" min="4" max="24" step="1" value="12"></div>
+        <div class="dctl"><label>Slow wave number ks <span id="vKs3">–</span></label><input type="range" id="sKs3" min="0" max="12" step="1" value="1"></div>
+        <div class="dctl"><label>Fast wave number kr <span id="vKr3">–</span></label><input type="range" id="sKr3" min="0" max="12" step="1" value="3"></div>
+        <div class="dctl"><label>Fast size b (slow size a = 1) <span id="vAB3">–</span></label><input type="range" id="sB3" min="0.2" max="3" step="0.1" value="1.5"></div>
+        <div class="dctl"><label>Heat step τ <span id="vTau3">–</span></label><input type="range" id="sTau3" min="0.01" max="0.24" step="0.005" value="0.1"></div>
+        <div class="btn-row" style="margin:6px 0">
+          <button id="stepBtn3" class="active">Step</button>
+          <button id="runBtn3">▶ Run</button>
+          <button id="resetBtn3">⟲ Reset</button>
+          <button id="hitBtn3">Lean: N = 4, τ = 1/8</button>
+          <button id="skipBtn3">Lean: N = 4, τ = 3/16</button>
+        </div>
+        <canvas class="chart" id="ringChart" style="height:220px"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#f97316"></i>dots after k steps</span><span><i class="sw" style="background:#64748b"></i>starting pattern</span><span><i class="sw" style="background:#4ade80"></i>readout of the dots (right)</span><span><i class="sw" style="background:#38bdf8"></i>Lean formula (right)</span></div>
+        <div class="kv"><span>Rates ls and lr</span><span id="gL">–</span></div>
+        <div class="kv"><span>Multipliers cs and cr</span><span id="gC">–</span></div>
+        <div class="kv"><span>Step factor r = cs²/cr²</span><span id="gR">–</span></div>
+        <div class="kv"><span>Clock log(r)/g, and heat time τ</span><span id="gClock">–</span></div>
+        <div class="kv"><span>Steps taken k, sample clock k·log(r)/g</span><span id="gK">–</span></div>
+        <div class="kv"><span>Readout of the dots, 2·(cost/size − ls)</span><span id="gRead">–</span></div>
+        <div class="kv"><span>Lean formula g·Q/(P·r<sup>k</sup> + Q)</span><span id="gForm">–</span></div>
+        <div class="kv"><span>Signed denominator Q·cr<sup>2k</sup> − P·cs<sup>2k</sup></span><span id="gDen">–</span></div>
+        <div class="kv"><span>Lean statements in force</span><span id="gLean">–</span></div>
+        <p class="note">The two Lean buttons are the worked cases in the file. With N = 4, the flat and alternating waves, a = 1, b = 2: at τ = 1/8 the factor is 4, the clock is log 4/8, and the first step lands exactly on the signed pole with readout 4 (<code>concrete_clock</code>, <code>concrete_hits_pole</code>). At τ = 3/16 the factor is 16, the signed readout goes from 32/3 to −8/3, and the pole falls between steps 0 and 1, so no step lands on it (<code>concrete_skips_pole</code>).</p>
+      </section>
+
+      <section class="dpane" id="pane-rates">
+        <h4>Read the hidden rates from the record</h4>
+        <p class="note"><b>This tab is a model.</b> The record is one time series from one box of ocean. It is not a ring of points, and nothing here says the Pacific is a ring. The ring rates below are proved in Lean; the record's rates are fitted, with their uncertainty; the comparison between them is a test of the model, not a proof about the ocean.</p>
+        <h4>Step 1. Fit two fading waves to the whole record</h4>
+        <p>Each month's anomaly is predicted from the two months before it by least squares over the whole record (538 months, mean removed first):</p>
+        <div class="eq">x<sub>t</sub> ≈ a₁·x<sub>t−1</sub> + a₂·x<sub>t−2</sub></div>
+        <p>This is the step-by-step form of exactly two fading waves. The roots r₁ and r₂ of z² = a₁·z + a₂ are the two waves' monthly multipliers, and their fade rates are ls = −ln r₁ and lr = −ln r₂ per month. This replaces the one-lag shortcut of tab 3. The uncertainty comes from a residual bootstrap: the page rebuilds the record 500 times from the fitted waves and reshuffled leftovers, refits each copy, and reports the spread (fixed random seed, so the numbers repeat).</p>
+        <div class="kv"><span>Fitted a₁, a₂</span><span id="hA">–</span></div>
+        <div class="kv"><span>Monthly multipliers r₁, r₂</span><span id="hR">–</span></div>
+        <div class="kv"><span>Slow rate ls, per month</span><span id="hLs">–</span></div>
+        <div class="kv"><span>Fast rate lr, per month</span><span id="hLr">–</span></div>
+        <div class="kv"><span>Ratio lr/ls</span><span id="hRatio">–</span></div>
+        <div class="kv"><span>Bootstrap copies with two real fading waves</span><span id="hReal">–</span></div>
+        <div class="kv"><span>One-lag shortcut for comparison, −ln ρ(1)</span><span id="hShort">–</span></div>
+        <canvas class="chart" id="acfChart"></canvas>
+        <div class="chart-key"><span><i class="sw" style="background:#94a3b8"></i>measured memory of the record, lags 0 to 36 months (dots)</span><span><i class="sw" style="background:#f97316"></i>memory implied by the two-wave fit</span></div>
+        <div class="kv"><span>Weights c₁, c₂ in the fitted memory c₁·r₁<sup>k</sup> + c₂·r₂<sup>k</sup></span><span id="hC">–</span></div>
+        <div class="kv"><span>Fit against measured memory, root mean square, lags 1–12 and 1–36</span><span id="hRms">–</span></div>
+        <div class="kv"><span>Deepest measured dip, and the fit there</span><span id="hDip">–</span></div>
+        <p class="note">Two pure fading waves can only fall toward zero. The measured memory dips below zero near two years, which is the warm-to-cool turn of the El Niño swing. The two-wave model cannot produce that dip, and the page shows the misfit rather than hiding it. The fast wave enters the memory curve with a negative weight c₂, which rounds the top of the curve over the first few months; this weight is a correlation, not one of the positive sizes P and Q of the Lean model.</p>
+
+        <h4>Step 2. The ring's proved rates for 0 to 4 crests</h4>
+        <p>On a ring of n points, the wave with k crests, cos(2π·k·j/n), is only scaled by the heat step: one step multiplies it by 1 − τ·μ<sub>k</sub> with</p>
+        <div class="eq">μ<sub>k</sub> = 2 − 2cos(2π·k/n) = 4·sin²(π·k/n)</div>
+        <p>(<code>fourier_heatStep</code> in <a id="lnkRD1" target="_blank" rel="noopener">RingDecay.lean</a>; <code>gap_eq_four_sin_sq</code> for k = 1). The flat wave, k = 0, never fades, because the heat step keeps the mean (<code>mean_heatStep</code>). The one-crest rate is the smallest nonzero one (<code>gap_le_mu</code>) and is sharp (<code>wirtinger</code>, <code>wirtinger_sharp</code> in <a id="lnkWI1" target="_blank" rel="noopener">Wirtinger.lean</a>). The two-wave ring files use exactly these waves (tab 5).</p>
+        <div class="dctl"><label>Ring size n <span id="vRn">–</span></label><input type="range" id="sRn" min="5" max="120" step="1" value="24"></div>
+
+        <h4>Step 3. Read the hidden constant and test the other crest counts</h4>
+        <p>If one ring with a hidden heat constant D produced the record's fading, the slow wave would be the one-crest wave, so D = ls/μ₁. The ring would then predict the k-crest rate D·μ<sub>k</sub>. The record has one more measured rate, the fast rate lr, so the test asks which crest count it fits. The match number is lr ÷ (D·μ<sub>k</sub>); 1.00 is a perfect match.</p>
+        <div style="overflow-x:auto"><table class="rtab" id="rateTable"></table></div>
+        <div class="kv"><span>Hidden constant D = ls/μ₁</span><span id="hD">–</span></div>
+        <div class="kv"><span>Crest count that would fit lr exactly</span><span id="hKfit">–</span></div>
+        <p id="hVerdict" style="font-weight:600"></p>
+        <p class="note">"Simulated ring" is measured on this page: 20 actual heat steps with τ = 0.1 on n dots, then the fade per step is read back from the dots. It matches the proof, as it must. It is a check of the page's ring, not a measurement of the ocean. The record's rates are fitted by the page; they are not proved, and the choice of a two-wave fit is the page's own.</p>
+      </section>
+
       <section class="dpane" id="pane-proved">
         <div id="proved">
           <p class="note">This panel separates four kinds of statement: facts a computer has checked in Lean, facts from published science, numbers this page recomputes itself, and pictures that are only for display. The Lean files are in <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean" target="_blank" rel="noopener">NousVolition/discrete-gap-inequalities-lean</a>.</p>
@@ -7181,6 +7322,13 @@ requestAnimationFrame(frame);
             <li><b>Levelling.</b> For r ≥ 0 and t ≥ 0 the store is never farther from u/r than it started (<code>breathe_levels</code>), with any sign of u.</li>
             <li><b>Push ended, push continuing.</b> With u = 0 the store fades as x₀·e<sup>−r·t</sup> (<code>input_ended</code>); started at u/r it stays there (<code>steady_input_stays</code>).</li>
             <li><b>Where it applies on this page.</b> Each of these is stated for one store with a fixed push. Here it is applied to h with the winds held fixed (tab 1). It is not a statement about the coupled ocean and atmosphere.</li>
+            <li><b>Two fading waves.</b> With squared sizes P·e<sup>−2·ls·t</sup> and Q·e<sup>−2·lr·t</sup>, ls &lt; lr, P, Q &gt; 0 and gap g = 2(lr − ls), the ordinary readout A = g·Q/(P + Q) along the flow equals g·Q/(P·e<sup>g·t</sup> + Q) (<code>ordinary_reduced</code>), lies strictly between 0 and g (<code>ordinary_between</code>), solves dA/dt = A² − g·A (<code>ordinary_solves</code>) and tends to 0 (<code>ordinary_fades</code>). It also equals 2·((ls·P + lr·Q)/(P + Q) − ls) (<code>cost_ratio_map</code>). <a id="lnkTW1" target="_blank" rel="noopener">TwoWaveGapBridge.lean</a></li>
+            <li><b>The signed readout and its pole.</b> S = g·Q/(Q − P) along the same flow. The two sizes are equal at exactly one time, T = log(Q/P)/g (<code>energies_equal_iff</code>). A pole at some t &gt; 0 exists exactly when P &lt; Q (<code>future_pole_iff</code>); for Q &lt; P the difference is never 0 for t ≥ 0 (<code>no_future_pole</code>). For P &lt; Q, T equals the blow-up time of the gap equation started at S(0) (<code>pole_eq_blowTime</code>), S grows without bound as t approaches T from below (<code>signed_blows_up</code>), and the ordinary readout at T is g/2 (<code>ordinary_at_pole</code>). Where the difference is not 0, S solves dS/dt = S² − g·S (<code>signed_solves_regular</code>), and S = g·A/(2A − g) (<code>mirror_at_time</code>). The file states that S is not an ordinary cost-over-size readout.</li>
+            <li><b>The continuous ring.</b> On a ring of dots, cost = −(f · heat f) (<code>cost_eq_neg_dot_heat</code>). For two exact waves at right angles, the size, the cost and the readout 2·(cost/size − ls) of the moving pattern are the two-wave formulas (<code>flow_size</code>, <code>flow_cost</code>, <code>ring_readout</code>), every dot follows the heat equation (<code>continuous_heat</code>), and every dot stays finite and continuous at all times, including the pole time of S (<code>ring_regular</code>, <code>ring_signed_event</code>). <a id="lnkTW2" target="_blank" rel="noopener">TwoWaveGapBridge.lean</a></li>
+            <li><b>The actual heat step on the ring.</b> One step of the repository's heat step multiplies the two waves by cs = 1 − τ·ls and cr = 1 − τ·lr (<code>heat_step_mix</code>, <code>iterate_heat_mix</code>). The step factor is r = cs²/cr² = (cs/cr)² (<code>factor_square</code>); for 0 &lt; τ and cr &gt; 0 it is above 1 and the clock log(r)/g is positive (<code>factor_gt_one</code>, <code>clock_pos</code>), with e<sup>g·k·clock</sup> = r<sup>k</sup> (<code>sample_clock_factor</code>). After k steps the readout of the dots is g·Q/(P·r<sup>k</sup> + Q), the continuous readout at time k·clock (<code>iterate_readout</code>, <code>ordinary_sample</code>, <code>iterate_motion</code>), and one step moves it by g·A/(r·g − (r − 1)·A) (<code>heat_step_readout</code>). The signed denominator is 0 at step k exactly when P·r<sup>k</sup> = Q (<code>pole_at_sample_iff</code>). Worked cases: <code>concrete_clock</code>, <code>concrete_hits_pole</code>, <code>concrete_skips_pole</code>. <a id="lnkTWD1" target="_blank" rel="noopener">TwoWaveDiscreteGapBridge.lean</a></li>
+            <li><b>The fade-rate bound.</b> Along the two-wave flow, A(t) ≤ (g·Q/P)·e<sup>−g·t</sup> for t ≥ 0. Lean proves this rate bound only when e<sup>g·t</sup> is a rational number, with g and the starting readout rational as well: <code>GapMirror.below_fades</code> proves it over the rationals (<a id="lnkGM1" target="_blank" rel="noopener">GapMirror.lean</a>), and <code>GapMirrorBridge.rational_step_at_time</code> (<a id="lnkGMB1" target="_blank" rel="noopener">GapMirrorBridge.lean</a>) with <code>TwoWaveGapBridge.ordinary_motion</code> carries it to the real flow at those times. The bound for all real times is checked by this page, not proved; Lean proves only that A tends to 0 (<code>ordinary_fades</code>).</li>
+            <li><b>Ring fade rates by crest count (tab 6).</b> On a ring of n points the heat step multiplies the k-crest part by 1 − τ·μ<sub>k</sub> with μ<sub>k</sub> = 2 − 2cos(2πk/n) (<code>fourier_heatStep</code>), μ₁ = 4sin²(π/n) (<code>gap_eq_four_sin_sq</code>), μ₁ is the smallest nonzero rate (<code>gap_le_mu</code>), the one-crest wave is scaled exactly (<code>heatStep_wave</code>), and the mean never changes (<code>mean_heatStep</code>) (<a id="lnkRD2" target="_blank" rel="noopener">RingDecay.lean</a>). For mean-zero patterns 4sin²(π/n)·size ≤ cost, with equality for the one-crest wave (<code>wirtinger</code>, <code>wirtinger_sharp</code>, <a id="lnkWI2" target="_blank" rel="noopener">Wirtinger.lean</a>).</li>
+            <li><b>Where the two-wave results apply.</b> Tabs 3 to 6 apply them to the two-wave model and the ring. They are not statements about the ocean, about the Niño 3.4 record, or about the ONI or RONI. The clock k·log(r)/g need not equal the heat time k·τ (<a id="lnkTWD2" target="_blank" rel="noopener">TwoWaveDiscreteGapBridge.lean</a>).</li>
           </ul>
 
           <div class="proved-group">From the published science, not in Lean</div>
@@ -7191,8 +7339,10 @@ requestAnimationFrame(frame);
             <li><b>Heat content leads.</b> The equatorial warm-water volume rises before El Niño and falls during it (Wyrtki 1985, <i>J. Geophys. Res.</i> 90, 7129–7132; Meinen and McPhaden 2000, <i>J. Climate</i> 13, 3551–3559).</li>
             <li><b>Kelvin waves.</b> First-mode equatorial Kelvin waves travel east at about 2.5 to 3 m/s, so they cross the Pacific in about 2 to 3 months; Rossby waves travel west at about a third of that speed.</li>
             <li><b>Period.</b> El Niño and La Niña recur irregularly every 2 to 7 years (McPhaden, Zebiak and Glantz 2006, <i>Science</i> 314, 1740–1745).</li>
-            <li><b>The indices.</b> The Niño 3.4 box is 5°N–5°S, 170°W–120°W. The Oceanic Niño Index (ONI) is the 3-month running mean of the sea surface temperature anomaly in that box. The Relative Oceanic Niño Index (RONI) subtracts the mean anomaly over the tropics, 20°N–20°S, and rescales the result so its spread matches the ONI (L'Heureux et al. 2024, <i>J. Climate</i> 37). NOAA's Climate Prediction Center now uses the RONI for official monitoring, with El Niño at +0.5 °C or more and La Niña at −0.5 °C or less, using the 1991–2020 base period. Past episodes are those where the threshold holds for at least five overlapping 3-month seasons.</li>
-            <li><b>Observed values.</b> The ONI and RONI peaks shown for each preset are from the Climate Prediction Center files <a href="https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt" target="_blank" rel="noopener">oni.ascii.txt</a> and <a href="https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt" target="_blank" rel="noopener">RONI.ascii.txt</a>, read on Nov 19, 2026. The 2026 weekly value of +2.5 °C is from the <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.html" target="_blank" rel="noopener">ENSO Diagnostic Discussion of Nov 12, 2026</a>. Recent values may still be revised.</li>
+            <li><b>The indices.</b> The Niño 3.4 box is 5°N–5°S, 170°W–120°W. The Oceanic Niño Index (ONI) is the 3-month running mean of the sea surface temperature anomaly in that box. The Relative Oceanic Niño Index (RONI) subtracts the mean anomaly over the tropics, 20°N–20°S, and rescales the result so its spread matches the ONI: RONI = (ONI − tropical mean) × σ<sub>ONI</sub>/σ<sub>(ONI − tropical mean)</sub>, with the ratio of spreads worked out separately for each calendar month or season (L'Heureux et al. 2024, <i>J. Climate</i> 37, 1197–1211). NOAA's Climate Prediction Center now uses the RONI for official monitoring, with El Niño at +0.5 °C or more and La Niña at −0.5 °C or less, using the 1991–2020 base period. Past episodes are those where the threshold holds for at least five overlapping 3-month seasons.</li>
+            <li><b>Observed values.</b> The ONI and RONI peaks shown for each preset are from the Climate Prediction Center files <a href="https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt" target="_blank" rel="noopener">oni.ascii.txt</a> and <a href="https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt" target="_blank" rel="noopener">RONI.ascii.txt</a>, read on Nov 19, 2026. The 2026 preset uses the weekly Niño 3.4 value of +3.2 °C for the week of Nov 11, 2026, from the Climate Prediction Center file <a href="https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for" target="_blank" rel="noopener">wksst9120.for</a> (OISST.v2.1, 1991–2020 base period), read on Nov 19, 2026; the weeks from Oct 7 to Nov 11 lie between +3.2 and +3.4 °C, and the monthly file gives +3.25 °C for October. Recent values may still be revised.</li>
+            <li><b>A different number in the written discussion.</b> The <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.html" target="_blank" rel="noopener">ENSO Diagnostic Discussion of Nov 12, 2026</a> gives +2.5 °C in Niño-3.4, +3.6 °C in Niño-3 and +4.4 °C in Niño-1+2. The weekly file for the week of Nov 11 gives +3.2, +4.3 and +5.4 °C, so the written values are 0.7 to 1.0 °C lower in every region. CPC does not state the reason. The page follows the weekly file.</li>
+            <li><b>Monthly Niño 3.4 record (tab 3).</b> Column NINO3.4 ANOM of the Climate Prediction Center file <a href="https://www.cpc.ncep.noaa.gov/data/indices/sstoi.indices" target="_blank" rel="noopener">sstoi.indices</a> (OISST.v2.1, 1991–2020 base period), January 1982 to October 2026, read on Nov 19, 2026 (file last changed Nov 3, 2026). The page carries a fixed copy.</li>
           </ul>
 
           <div class="proved-group">Checked by this page</div>
@@ -7203,6 +7353,11 @@ requestAnimationFrame(frame);
             <li>Jin's critical coupling 2/3, the period at that coupling, the period seen in a step-by-step run, and that it lies within 2 to 7 years.</li>
             <li>The Niño 3.4 box, the box mean and the tropical mean shown on the globe, the ±0.5 °C label, and that each preset's box mean equals its observed value.</li>
             <li>The color key, and the direction of the wave arrows for warm and cool waves.</li>
+            <li>Tab 3: the built-in record against the CPC file, that the slow and fast parts add back to the record, the shown P, Q, share, carry-over and fitted rates, and each two-wave formula against a step-by-step solution.</li>
+            <li>Tab 4: the pole time, the equal sizes at the pole, g/2 at the pole, the blow-up as t nears the pole, no future pole when Q &lt; P, and the equation away from the pole.</li>
+            <li>Tab 6: the least-squares two-wave fit to the record, its bootstrap ranges, the ring rates μ<sub>k</sub> against 20 actual heat steps, the Wirtinger bound on random patterns, the rate table, and the fade-rate bound at real and rational times.</li>
+            <li>The 2026 preset against the CPC weekly values.</li>
+            <li>Tab 5: the ring waves, 30 actual heat steps against the Lean step formulas, size, cost and readout of the dots, the step factor and clock, and the three worked cases from the Lean file.</li>
           </ul>
 
           <div class="proved-group">Illustrative only</div>
@@ -7211,7 +7366,10 @@ requestAnimationFrame(frame);
             <li>The box mean on the globe is a single moment of the drawn pattern, not a 3-month mean, so it stands in for the index rather than being it.</li>
             <li>The relative value on the globe is box mean minus tropical mean without the RONI rescaling, so it is smaller than the official RONI.</li>
             <li>The animation speed has no physical meaning.</li>
-            <li><b>Not used here.</b> The ring results (<code>wirtinger</code>, RingDecay, <code>grid_gap</code>) describe smoothing around a closed loop. The equatorial Pacific is closed by land at both ends, and its waves reflect at the shores rather than going around, so a ring does not fit this ocean and the page does not claim one.</li>
+            <li><b>The ring is a model only.</b> The ring results (<code>wirtinger</code>, RingDecay, <code>grid_gap</code>, and the ring parts of the two-wave files) describe smoothing around a closed loop. The equatorial Pacific is closed by land at both ends, and its waves reflect at the shores rather than going around, so a ring does not fit this ocean. Tab 5 shows the ring as a model and claims nothing about the Pacific.</li>
+            <li>The slow and fast parts in tab 3 depend on the chosen running-mean window; the rates read from the month-to-month carry-over are estimates, and the fade curve is the model with no new push, not a forecast.</li>
+            <li><b>Fitted, not proved.</b> The slow and fast rates in tab 6 come from a least-squares two-wave fit to the record, and their ranges from a bootstrap. The choice of a two-wave fit is the page's own; it misses the record's dip below zero near two years. Reading a hidden ring constant from the slow rate and testing the fast rate against crest counts is a model test, not a statement that the Pacific is a ring.</li>
+            <li>The link between the signed readout and the relative index in tab 4 is an illustration of why a ratio over a difference breaks. The RONI is not such a ratio.</li>
           </ul>
           <div class="check-row">
             <button type="button" class="active" id="run-checks-btn">Run checks</button>
@@ -7284,9 +7442,9 @@ const presets = {
   '2023': { title: '2023–24 El Niño', bg: 0.75, phase: 0.55, target: 1.99,
     desc: 'Strong by the traditional index but only moderate by the relative index, because the whole tropical ocean was unusually warm.',
     obs: 'Observed peak: ONI +1.99 °C (Nov–Jan 2023–24) and RONI +1.42 °C (Oct–Dec 2023).' },
-  '2026': { title: '2026 El Niño (CPC, Nov 12, 2026)', bg: 0.85, phase: 0.6, target: 2.5,
+  '2026': { title: '2026 El Niño (CPC weekly, Nov 11, 2026)', bg: 0.85, phase: 0.6, target: 3.2,
     desc: 'Strengthening El Niño on a warm tropical background; CPC expects a strong to very strong event through Jan–Mar 2027.',
-    obs: 'Observed: weekly Niño 3.4 +2.5 °C (CPC, Nov 12, 2026); latest ONI +2.46 °C and RONI +1.97 °C (Aug–Oct 2026).' },
+    obs: 'Observed: weekly Niño 3.4 +3.2 °C (CPC weekly file, week of Nov 11, 2026); latest ONI +2.46 °C and RONI +1.97 °C (Aug–Oct 2026). CPC\u2019s written discussion of Nov 12 gives +2.5 °C, lower in every region, for a reason it does not state.' },
   'lanina': { title: '1988–89 La Niña', bg: -0.1, phase: 0.5, target: -1.85,
     desc: 'Strong La Niña: stronger trade winds raise the thermocline in the east and bring cooler water to the surface.',
     obs: 'Observed peak: ONI −1.85 °C (Nov–Jan 1988–89) and RONI −1.95 °C (Oct–Dec 1988).' }
@@ -7604,7 +7762,7 @@ function resize() {
   canvas.width = stage.clientWidth;
   canvas.height = stage.clientHeight;
 }
-window.addEventListener('resize', () => { resize(); drawStoreChart(); drawCycleChart(); });
+window.addEventListener('resize', () => { resize(); drawStoreChart(); drawCycleChart(); drawTwoWaveCharts(); });
 resize();
 
 let dragging = false, lastX = 0, lastY = 0;
@@ -7683,12 +7841,12 @@ function toggleDrawer() {
   const d = document.getElementById('drawer');
   d.classList.toggle('open');
   document.getElementById('drawerBtn').classList.toggle('active', d.classList.contains('open'));
-  drawStoreChart(); drawCycleChart();
+  drawStoreChart(); drawCycleChart(); drawTwoWaveCharts();
 }
 document.querySelectorAll('.dtab').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.dtab').forEach(x => x.classList.toggle('active', x === b));
   document.querySelectorAll('.dpane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + b.dataset.pane));
-  drawStoreChart(); drawCycleChart();
+  drawStoreChart(); drawCycleChart(); drawTwoWaveCharts();
 }));
 
 document.getElementById('sliderAmp').addEventListener('input', e => {
@@ -7868,7 +8026,7 @@ function prepChart(id) {
   return { g, w, h };
 }
 function axes(g, w, h, pad, xmax, ymin, ymax, xlab, ylab) {
-  g.strokeStyle = 'rgba(148,178,224,0.25)'; g.lineWidth = 1;
+  g.strokeStyle = 'rgba(148,178,224,0.55)'; g.lineWidth = 1;
   g.beginPath(); g.moveTo(pad.l, pad.t); g.lineTo(pad.l, h - pad.b); g.lineTo(w - pad.r, h - pad.b); g.stroke();
   const y0 = pad.t + (ymax - 0) / (ymax - ymin) * (h - pad.t - pad.b);
   if (ymin < 0 && ymax > 0) { g.setLineDash([2, 3]); g.beginPath(); g.moveTo(pad.l, y0); g.lineTo(w - pad.r, y0); g.stroke(); g.setLineDash([]); }
@@ -7914,6 +8072,573 @@ function drawCycleChart() {
     g.stroke();
   }
 }
+// Niño 3.4 monthly SST anomaly (°C), OISST.v2.1, 1991–2020 base period, Jan 1982 to Oct 2026.
+// Fixed copy of column 10 (NINO3.4 ANOM) of https://www.cpc.ncep.noaa.gov/data/indices/sstoi.indices,
+// read on Nov 19, 2026 (file last modified Nov 3, 2026).
+const NINO34 = { start: [1982, 1], count: 538, sumHundredths: -1636, anom: [0.08,-0.20,-0.14,0.02,0.49,0.65,0.27,0.86,1.24,1.73,1.68,2.21,2.13,1.81,1.22,0.68,0.68,0.45,-0.33,-0.44,-0.38,-1.02,-1.29,-1.16,-0.96,-0.16,-0.52,-0.54,-0.69,-1.03,-0.68,-0.54,-0.41,-0.75,-1.30,-1.48,-1.30,-0.92,-0.89,-1.10,-1.08,-1.08,-0.80,-0.63,-0.77,-0.74,-0.59,-0.59,-0.72,-0.78,-0.60,-0.52,-0.56,-0.33,-0.04,0.19,0.40,0.51,0.54,0.82,0.94,0.82,0.89,0.45,0.32,0.72,1.04,1.20,1.32,0.97,0.85,0.77,0.67,0.22,0.06,-0.55,-1.32,-1.70,-1.73,-1.43,-0.93,-2.01,-2.22,-2.01,-2.00,-1.48,-1.44,-1.32,-0.89,-0.67,-0.57,-0.72,-0.51,-0.55,-0.62,-0.20,-0.11,0.01,-0.18,-0.06,0.04,-0.26,-0.03,0.09,-0.03,0.18,-0.09,0.22,0.33,0.14,-0.08,0.08,0.25,0.39,0.47,0.60,0.31,0.64,0.89,1.50,1.67,1.55,1.16,1.00,0.91,0.42,0.15,-0.08,-0.16,-0.50,-0.18,0.14,0.16,0.34,0.23,0.32,0.65,0.15,0.22,-0.04,0.24,0.19,0.08,0.10,0.02,-0.08,0.15,0.08,0.12,0.13,-0.01,0.40,0.28,0.60,0.91,1.15,0.75,0.64,0.30,0.07,-0.21,-0.36,-0.21,-0.57,-0.66,-0.94,-1.01,-0.91,-0.83,-0.77,-0.66,-0.49,-0.51,-0.48,-0.37,-0.31,-0.35,-0.55,-0.43,-0.60,-0.61,-0.39,-0.36,-0.11,0.40,0.81,1.27,1.68,1.84,1.96,2.11,2.10,2.03,1.74,1.18,0.50,0.45,-0.75,-1.15,-1.20,-1.03,-1.34,-1.31,-1.73,-1.58,-1.10,-0.89,-0.99,-0.92,-1.08,-1.03,-1.22,-1.03,-1.19,-1.63,-1.65,-1.77,-1.52,-1.13,-0.90,-0.97,-0.70,-0.73,-0.51,-0.52,-0.71,-0.90,-1.05,-0.76,-0.56,-0.37,-0.56,-0.46,-0.16,-0.11,-0.09,-0.19,-0.25,-0.48,-0.53,-0.20,0.03,-0.06,0.03,0.19,0.60,0.58,0.66,0.85,1.02,1.20,1.30,0.88,0.65,0.50,-0.14,-0.60,-0.34,0.04,0.04,0.18,0.42,0.21,0.34,0.22,0.16,-0.18,-0.04,0.07,-0.00,0.47,0.61,0.67,0.64,0.59,0.63,0.61,0.24,0.27,0.13,0.22,0.20,0.08,0.06,-0.12,-0.07,-0.54,-0.80,-0.93,-0.67,-0.66,-0.28,-0.06,0.08,-0.01,0.33,0.53,0.65,0.85,1.10,0.75,0.11,-0.08,-0.10,-0.43,-0.14,-0.41,-0.58,-0.86,-1.19,-1.42,-1.18,-1.59,-1.49,-0.94,-0.85,-0.69,-0.64,-0.27,-0.07,-0.24,-0.20,-0.35,-0.82,-0.80,-0.60,-0.62,-0.16,0.18,0.42,0.53,0.69,0.71,0.92,1.43,1.68,1.53,1.19,1.11,0.59,-0.11,-0.55,-0.92,-1.21,-1.31,-1.41,-1.44,-1.21,-1.48,-1.19,-0.83,-0.76,-0.39,-0.31,-0.19,-0.42,-0.67,-0.71,-0.98,-0.99,-0.65,-0.55,-0.44,-0.51,-0.19,0.24,0.27,0.68,0.44,0.36,0.50,-0.47,-0.48,-0.48,-0.22,0.11,-0.30,-0.34,-0.26,-0.47,0.05,-0.15,-0.09,-0.18,-0.49,-0.85,-0.34,0.18,0.45,0.47,-0.03,-0.01,0.31,0.43,0.75,0.63,0.51,0.75,0.44,0.82,0.83,1.02,1.26,1.65,1.79,2.21,2.72,2.39,2.47,2.23,1.61,0.98,0.27,0.02,-0.42,-0.49,-0.43,-0.70,-0.64,-0.33,-0.26,0.10,0.21,0.36,0.42,0.39,0.28,-0.06,-0.32,-0.37,-0.91,-0.93,-0.70,-0.67,-0.73,-0.49,-0.11,0.15,0.22,0.28,0.33,0.86,0.86,0.90,0.67,0.71,0.97,0.72,0.75,0.60,0.42,0.15,-0.01,0.52,0.46,0.44,0.52,0.35,0.46,0.41,-0.21,-0.27,-0.14,-0.52,-0.64,-1.13,-1.23,-0.99,-0.90,-0.87,-0.55,-0.57,-0.32,-0.04,-0.19,-0.28,-0.27,-0.77,-0.85,-1.05,-0.83,-0.71,-0.89,-0.95,-1.05,-0.68,-0.62,-0.98,-0.93,-0.85,-0.93,-0.84,-0.69,-0.44,-0.01,0.19,0.47,0.88,1.07,1.30,1.53,1.59,1.90,1.99,1.78,1.53,1.24,0.81,0.31,0.24,0.21,-0.07,-0.15,-0.28,-0.14,-0.62,-0.71,-0.35,0.10,-0.16,-0.04,0.04,-0.06,-0.33,-0.44,-0.48,-0.68,-0.61,-0.54,-0.20,0.03,0.47,0.94,1.55,2.03,2.52,2.84,3.25] };
+// Weekly Niño 3.4 SST anomaly (°C), OISST.v2.1, 1991–2020 base period, weeks centered Oct 7 to Nov 11, 2026.
+// Fixed copy from https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for, read on Nov 19, 2026 (file last modified Nov 18, 2026).
+const NINO34_WEEKLY = { weeks: ['07OCT2026', '14OCT2026', '21OCT2026', '28OCT2026', '04NOV2026', '11NOV2026'], anom: [3.2, 3.2, 3.3, 3.4, 3.3, 3.2] };
+// ---------------- Two-wave tabs: TwoWaveGapBridge.lean and TwoWaveDiscreteGapBridge.lean ----------------
+['lnkTW1', 'lnkTW2'].forEach(id => { const e = document.getElementById(id); if (e) e.href = LEAN + 'TwoWaveGapBridge.lean'; });
+['lnkTWD1', 'lnkTWD2'].forEach(id => { const e = document.getElementById(id); if (e) e.href = LEAN + 'TwoWaveDiscreteGapBridge.lean'; });
+
+// Definitions copied from the Lean files, one line each.
+const TW = {
+  gap: (ls, lr) => 2 * (lr - ls),
+  energy: (l, E, t) => E * Math.exp(-2 * l * t),
+  ordinary: (g, P, Q) => g * Q / (P + Q),
+  signed: (g, P, Q) => g * Q / (Q - P),
+  ordinaryFlow: (ls, lr, P, Q, t) => TW.ordinary(TW.gap(ls, lr), TW.energy(ls, P, t), TW.energy(lr, Q, t)),
+  signedFlow: (ls, lr, P, Q, t) => TW.signed(TW.gap(ls, lr), TW.energy(ls, P, t), TW.energy(lr, Q, t)),
+  poleTime: (ls, lr, P, Q) => Math.log(Q / P) / TW.gap(ls, lr),
+  blowTime: (g, A) => Math.log(A / (A - g)) / g,          // GapMirrorCalculus.blowTime
+  bump: (g, A, t) => g / (1 - (1 - g / A) * Math.exp(g * t)), // GapMirrorCalculus.bump
+  pair: (g, A) => g * A / (2 * A - g),                     // GapMirrorCalculus (signed from ordinary)
+  realStep: (g, r, A) => g * A / (r * g - (r - 1) * A),     // GapMirrorBridge.realStep
+  multiplier: (tau, l) => 1 - tau * l,
+  factor: (ls, lr, tau) => TW.multiplier(tau, ls) ** 2 / TW.multiplier(tau, lr) ** 2,
+  clock: (ls, lr, tau) => Math.log(TW.factor(ls, lr, tau)) / TW.gap(ls, lr),
+  sampleEnergy: (tau, l, E, k) => (TW.multiplier(tau, l) ** 2) ** k * E,
+  ordinaryAt: (ls, lr, tau, P, Q, k) => TW.ordinary(TW.gap(ls, lr), TW.sampleEnergy(tau, ls, P, k), TW.sampleEnergy(tau, lr, Q, k)),
+  signedAt: (ls, lr, tau, P, Q, k) => TW.signed(TW.gap(ls, lr), TW.sampleEnergy(tau, ls, P, k), TW.sampleEnergy(tau, lr, Q, k)),
+};
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthName = i => { const m = NINO34.start[1] - 1 + i; return MONTHS[m % 12] + ' ' + (NINO34.start[0] + Math.floor(m / 12)); };
+const sgn = (v, d) => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d);
+const num = (v, d) => (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+// Step-by-step solution of dA/dt = A² − g·A (RK4)
+function gapODE(g, A0, tEnd, n) {
+  const h = tEnd / n, f = A => A * A - g * A; let A = A0; const out = [A];
+  for (let i = 0; i < n; i++) { const k1 = f(A), k2 = f(A + h / 2 * k1), k3 = f(A + h / 2 * k2), k4 = f(A + h * k3); A += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4); out.push(A); }
+  return out;
+}
+
+// ---- Tab 3: slow swing and fast weather ----
+function splitRecord(w) {
+  const a = NINO34.anom, h = (w - 1) / 2;
+  const slow = a.map((_, i) => { let s = 0, n = 0; for (let j = Math.max(0, i - h); j <= Math.min(a.length - 1, i + h); j++) { s += a[j]; n++; } return s / n; });
+  return { slow, fast: a.map((v, i) => v - slow[i]) };
+}
+function lag1(x) {
+  const m = x.reduce((p, c) => p + c, 0) / x.length; let n = 0, d = 0;
+  for (let i = 0; i < x.length; i++) { d += (x[i] - m) ** 2; if (i) n += (x[i] - m) * (x[i - 1] - m); }
+  return n / d;
+}
+const meanSq = x => x.reduce((p, c) => p + c * c, 0) / x.length;
+const sp = { w: 7, span: 'all', fitted: true, ls: 0.03, lr: 0.87 };
+function splitStats() {
+  const { slow, fast } = splitRecord(sp.w);
+  const from = sp.span === 'all' ? 0 : slow.length - 12;
+  const P = meanSq(slow.slice(from)), Q = meanSq(fast.slice(from));
+  const rs = lag1(slow), rf = lag1(fast);
+  return { slow, fast, P, Q, rs, rf, fitLs: -Math.log(rs), fitLr: rf > 0 ? -Math.log(rf) : NaN };
+}
+function fadeNumbers(st) {
+  const g = TW.gap(sp.ls, sp.lr), A0 = TW.ordinary(g, st.P, st.Q);
+  const ode = gapODE(g, A0, 1, 2000);
+  return { g, A0, A0c: 2 * ((sp.ls * st.P + sp.lr * st.Q) / (st.P + st.Q) - sp.ls), s6: TW.ordinaryFlow(sp.ls, sp.lr, st.P, st.Q, 1) / g, s6n: ode[ode.length - 1] / g };
+}
+function updateSplit() {
+  const st = splitStats();
+  if (sp.fitted && isFinite(st.fitLr)) { sp.ls = st.fitLs; sp.lr = st.fitLr; document.getElementById('sLs1').value = sp.ls; document.getElementById('sLr1').value = sp.lr; }
+  document.getElementById('fitBtn').classList.toggle('active', sp.fitted);
+  document.getElementById('vWin').textContent = sp.w + ' months';
+  document.getElementById('vLs1').textContent = sp.ls.toFixed(4) + ' per month';
+  document.getElementById('vLr1').textContent = sp.lr.toFixed(4) + ' per month';
+  document.getElementById('spanAll').classList.toggle('active', sp.span === 'all');
+  document.getElementById('span12').classList.toggle('active', sp.span !== 'all');
+  const L = NINO34.anom.length - 1;
+  document.getElementById('sLatest').textContent = `${sgn(NINO34.anom[L], 2)}, ${sgn(st.slow[L], 2)}, ${sgn(st.fast[L], 2)} °C`;
+  document.getElementById('sP').textContent = st.P.toFixed(4) + ' °C²';
+  document.getElementById('sQ').textContent = st.Q.toFixed(4) + ' °C²';
+  document.getElementById('sShare').textContent = (100 * st.Q / (st.P + st.Q)).toFixed(2) + ' %';
+  document.getElementById('sRho').textContent = `${num(st.rs, 4)}, ${num(st.rf, 4)}`;
+  document.getElementById('sFit').textContent = isFinite(st.fitLr) ? `${st.fitLs.toFixed(4)}, ${st.fitLr.toFixed(4)} per month` : 'fast ρ ≤ 0: no rate';
+  const m = fadeNumbers(st), ok = sp.ls < sp.lr;
+  document.getElementById('mGap').textContent = m.g.toFixed(4) + ' per month';
+  document.getElementById('mA0').textContent = m.A0.toFixed(5);
+  document.getElementById('mA0c').textContent = m.A0c.toFixed(5);
+  document.getElementById('mS6').textContent = (100 * m.s6).toFixed(4) + ' %';
+  document.getElementById('mS6n').textContent = (100 * m.s6n).toFixed(4) + ' %';
+  const le = document.getElementById('mLean');
+  le.textContent = ok ? 'ls < lr, P, Q > 0: ordinary_between, ordinary_solves, ordinary_fades' : 'ls ≥ lr: outside the Lean statements, which need ls < lr';
+  le.className = ok ? 'ok' : 'bad';
+  drawSplitChart(st); drawFadeChart(st, m);
+}
+function drawSplitChart(st) {
+  const C = prepChart('splitChart'); if (!C) return;
+  const { g, w, h } = C, pad = { l: 22, r: 6, t: 8, b: 16 }, a = NINO34.anom, n = a.length;
+  const ymin = Math.floor(Math.min(...a)), ymax = Math.ceil(Math.max(...a));
+  const X = i => pad.l + i / (n - 1) * (w - pad.l - pad.r), Y = v => pad.t + (ymax - v) / (ymax - ymin) * (h - pad.t - pad.b);
+  axes(g, w, h, pad, n, ymin, ymax, '', '°C');
+  g.fillStyle = '#94a3b8'; g.font = '10px system-ui, sans-serif';
+  for (let yr = 1990; yr <= 2020; yr += 10) { const i = (yr - NINO34.start[0]) * 12; g.fillText(String(yr), X(i) - 10, h - 4); }
+  const line = (arr, col, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); arr.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.stroke(); };
+  line(a, '#64748b', 1); line(st.fast, '#38bdf8', 1); line(st.slow, '#f97316', 1.8);
+}
+function drawFadeChart(st, m) {
+  const C = prepChart('fadeChart'); if (!C) return;
+  const { g, w, h } = C, pad = { l: 26, r: 8, t: 8, b: 16 };
+  if (!(m.g > 0)) { g.fillStyle = '#f87171'; g.font = '12px system-ui'; g.fillText('Needs ls < lr', 40, 40); return; }
+  const tMax = Math.min(60, Math.max(3, 5 / m.g)), share0 = 100 * m.A0 / m.g;
+  const ymax = Math.max(1, Math.ceil(share0 * 1.15)), ymin = 0;
+  const X = t => pad.l + t / tMax * (w - pad.l - pad.r), Y = v => pad.t + (ymax - v) / (ymax - ymin) * (h - pad.t - pad.b);
+  axes(g, w, h, pad, tMax, ymin, ymax, `months (to ${tMax.toFixed(1)})`, 'fast share %');
+  g.save(); g.beginPath(); g.rect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b); g.clip();
+  g.strokeStyle = '#94a3b8'; g.setLineDash([4, 4]); g.lineWidth = 1.2; g.beginPath();
+  for (let i = 0; i <= 200; i++) { const t = tMax * i / 200, v = 100 * st.Q / st.P * Math.exp(-m.g * t); i ? g.lineTo(X(t), Y(v)) : g.moveTo(X(t), Y(v)); } g.stroke(); g.setLineDash([]);
+  g.strokeStyle = '#f97316'; g.lineWidth = 2.2; g.beginPath();
+  for (let i = 0; i <= 200; i++) { const t = tMax * i / 200, v = 100 * TW.ordinaryFlow(sp.ls, sp.lr, st.P, st.Q, t) / m.g; i ? g.lineTo(X(t), Y(v)) : g.moveTo(X(t), Y(v)); } g.stroke();
+  const ode = gapODE(m.g, m.A0, tMax, 1200); g.fillStyle = '#4ade80';
+  for (let i = 0; i <= 1200; i += 100) { g.beginPath(); g.arc(X(tMax * i / 1200), Y(100 * ode[i] / m.g), 2.6, 0, 2 * Math.PI); g.fill(); }
+  g.restore();
+}
+document.getElementById('sWin').addEventListener('input', e => { sp.w = parseInt(e.target.value, 10); updateSplit(); });
+document.getElementById('spanAll').addEventListener('click', () => { sp.span = 'all'; updateSplit(); });
+document.getElementById('span12').addEventListener('click', () => { sp.span = '12'; updateSplit(); });
+document.getElementById('fitBtn').addEventListener('click', () => { sp.fitted = true; updateSplit(); });
+document.getElementById('sLs1').addEventListener('input', e => { sp.fitted = false; sp.ls = parseFloat(e.target.value); updateSplit(); });
+document.getElementById('sLr1').addEventListener('input', e => { sp.fitted = false; sp.lr = parseFloat(e.target.value); updateSplit(); });
+
+// ---- Tab 4: when a ratio breaks ----
+const rt = { P: 4, Q: 16, ls: 0.25, lr: 1 };
+function ratioNumbers() {
+  const { P, Q, ls, lr } = rt, g = TW.gap(ls, lr), T = TW.poleTime(ls, lr, P, Q), S0 = TW.signed(g, P, Q);
+  return { g, T, S0, future: P < Q, blow: P < Q ? TW.blowTime(g, S0) : NaN, PT: TW.energy(ls, P, T), QT: TW.energy(lr, Q, T), AT: TW.ordinaryFlow(ls, lr, P, Q, T), near: T > 0 ? TW.signedFlow(ls, lr, P, Q, 0.999 * T) : NaN };
+}
+function updateRatio() {
+  ['P', 'Q'].forEach(k => document.getElementById('v' + k + '2').textContent = rt[k].toFixed(1));
+  document.getElementById('vLs2').textContent = rt.ls.toFixed(2);
+  document.getElementById('vLr2').textContent = rt.lr.toFixed(2);
+  const r = ratioNumbers(), ok = rt.ls < rt.lr, set = (id, t) => document.getElementById(id).textContent = t;
+  set('rGap', num(r.g, 4));
+  if (!ok) { ['rFuture', 'rPole', 'rBlow', 'rEq', 'rHalf', 'rNear'].forEach(id => set(id, '–')); }
+  else {
+    set('rFuture', r.future ? 'yes, since P < Q' : (rt.P === rt.Q ? 'no, the sizes are equal at t = 0' : 'no, since Q < P'));
+    set('rPole', num(r.T, 4) + (r.T < 0 ? ' (in the past)' : ''));
+    set('rBlow', r.future ? num(r.blow, 4) : '– (needs P < Q)');
+    set('rEq', `${r.PT.toFixed(4)} and ${r.QT.toFixed(4)}`);
+    set('rHalf', `${r.AT.toFixed(4)} and ${(r.g / 2).toFixed(4)}`);
+    set('rNear', r.T > 0 ? num(r.near, 1) : 'no pole ahead');
+  }
+  const le = document.getElementById('rLean');
+  le.textContent = !ok ? 'ls ≥ lr: outside the Lean statements' : r.future ? 'P < Q: signed_blows_up, pole_eq_blowTime, energies_equal_iff' : 'Q ≤ P: no pole for t > 0 (future_pole_iff' + (rt.Q < rt.P ? ', no_future_pole)' : ')');
+  le.className = ok ? 'ok' : 'bad';
+  drawRatioChart(r);
+}
+function drawRatioChart(r) {
+  const C = prepChart('ratioChart'); if (!C) return;
+  const { g, w, h } = C;
+  if (!(r.g > 0)) { g.fillStyle = '#f87171'; g.font = '12px system-ui'; g.fillText('Needs ls < lr', 40, 40); return; }
+  const tMax = r.T > 0 ? 2 * r.T : Math.min(20, 3 / r.g), split = Math.round(h * 0.42);
+  // top: sizes
+  const p1 = { l: 30, r: 8, t: 8, b: h - split + 4 }, Emax = Math.ceil(Math.max(rt.P, rt.Q));
+  const X = t => p1.l + t / tMax * (w - p1.l - p1.r), Y1 = v => p1.t + (Emax - v) / Emax * (split - 4 - p1.t);
+  axes(g, w, split + 4, { l: 30, r: 8, t: 8, b: 8 }, tMax, 0, Emax, '', 'sizes');
+  const curve = (f, col, Y, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); let pen = false, prevD = null;
+    for (let i = 0; i <= 400; i++) { const t = tMax * i / 400, v = f(t); const d = TW.energy(rt.lr, rt.Q, t) - TW.energy(rt.ls, rt.P, t);
+      if (!isFinite(v) || (prevD !== null && Math.sign(d) !== Math.sign(prevD) && col === '#f87171')) pen = false;
+      prevD = d; if (!isFinite(v)) continue; const p = [X(t), Y(v)]; pen ? g.lineTo(...p) : g.moveTo(...p); pen = true; } g.stroke(); };
+  curve(t => TW.energy(rt.ls, rt.P, t), '#f97316', Y1, 2); curve(t => TW.energy(rt.lr, rt.Q, t), '#38bdf8', Y1, 2);
+  // bottom: readouts
+  const p2 = { l: 30, r: 8, t: split + 14, b: 16 }, ymin = -2 * r.g, ymax = 4 * r.g;
+  const Y2 = v => p2.t + (ymax - v) / (ymax - ymin) * (h - p2.t - p2.b);
+  g.strokeStyle = 'rgba(148,178,224,0.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(p2.l, p2.t); g.lineTo(p2.l, h - p2.b); g.lineTo(w - p2.r, h - p2.b); g.stroke();
+  g.fillStyle = '#94a3b8'; g.font = '10px system-ui, sans-serif'; g.fillText('readouts', p2.l + 4, p2.t + 10); g.fillText('time', w - p2.r - 22, h - 4);
+  g.fillText(num(ymax, 1), 2, p2.t + 8); g.fillText(num(ymin, 1), 2, h - p2.b);
+  [[0, 'rgba(148,178,224,0.55)'], [r.g, '#94a3b8'], [r.g / 2, '#6b7a90']].forEach(([v, c]) => { g.strokeStyle = c; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(p2.l, Y2(v)); g.lineTo(w - p2.r, Y2(v)); g.stroke(); });
+  g.setLineDash([]); g.fillText('g', w - p2.r - 10, Y2(r.g) - 2); g.fillText('g/2', w - p2.r - 20, Y2(r.g / 2) - 2);
+  g.save(); g.beginPath(); g.rect(p2.l, p2.t, w - p2.l - p2.r, h - p2.t - p2.b); g.clip();
+  curve(t => TW.ordinaryFlow(rt.ls, rt.lr, rt.P, rt.Q, t), '#4ade80', Y2, 2);
+  curve(t => TW.signedFlow(rt.ls, rt.lr, rt.P, rt.Q, t), '#f87171', Y2, 2);
+  g.restore();
+  if (r.T > 0) { g.strokeStyle = '#e2e8f0'; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(X(r.T), 6); g.lineTo(X(r.T), h - 16); g.stroke(); g.setLineDash([]); g.fillStyle = '#e2e8f0'; g.fillText('T', X(r.T) + 3, 16); }
+}
+[['sP2', 'P'], ['sQ2', 'Q'], ['sLs2', 'ls'], ['sLr2', 'lr']].forEach(([id, k]) => document.getElementById(id).addEventListener('input', e => { rt[k] = parseFloat(e.target.value); updateRatio(); }));
+document.getElementById('leanEx2').addEventListener('click', () => {
+  Object.assign(rt, { ls: 0, lr: 4, P: 4, Q: 16 });
+  [['sP2', 4], ['sQ2', 16], ['sLs2', 0], ['sLr2', 4]].forEach(([id, v]) => document.getElementById(id).value = v);
+  updateRatio();
+});
+
+// ---- Tab 5: two waves on a ring ----
+const rg = { N: 12, ks: 1, kr: 3, a: 1, b: 1.5, tau: 0.1, k: 0, u: null, hist: [], timer: null };
+function ringMode(N, kk) { return Array.from({ length: N }, (_, j) => (kk === 0 ? 1 : 2 * kk === N ? (j % 2 ? -1 : 1) : Math.cos(2 * Math.PI * kk * j / N))); }
+const ringRate = (N, kk) => (kk === 0 ? 0 : 2 * kk === N ? 4 : 2 - 2 * Math.cos(2 * Math.PI * kk / N));
+const rSize = u => u.reduce((p, c) => p + c * c, 0);
+const rCost = u => u.reduce((p, c, j) => p + (u[(j + 1) % u.length] - c) ** 2, 0);
+const rGen = u => u.map((c, j) => u[(j + 1) % u.length] - 2 * c + u[(j - 1 + u.length) % u.length]);
+const rDot = (u, v) => u.reduce((p, c, j) => p + c * v[j], 0);
+const heatStep = (tau, u) => u.map((c, j) => c + tau * (u[(j + 1) % u.length] - 2 * c + u[(j - 1 + u.length) % u.length]));
+function ringSetup() {
+  const v = ringMode(rg.N, rg.ks), wv = ringMode(rg.N, rg.kr);
+  const ls = ringRate(rg.N, rg.ks), lr = ringRate(rg.N, rg.kr);
+  return { v, w: wv, ls, lr, P: rg.a * rg.a * rSize(v), Q: rg.b * rg.b * rSize(wv), u0: v.map((x, j) => rg.a * x + rg.b * wv[j]) };
+}
+const ringReadout = (ls, u) => 2 * (rCost(u) / rSize(u) - ls);
+function ringReset() {
+  const S = ringSetup(); rg.k = 0; rg.u = S.u0.slice(); rg.hist = [ringReadout(S.ls, rg.u)];
+  if (rg.timer) { clearInterval(rg.timer); rg.timer = null; } document.getElementById('runBtn3').textContent = '▶ Run';
+  updateRing();
+}
+function ringStep() { const S = ringSetup(); rg.u = heatStep(rg.tau, rg.u); rg.k++; rg.hist.push(ringReadout(S.ls, rg.u)); updateRing(); }
+function ringNumbers() {
+  const S = ringSetup(), g = TW.gap(S.ls, S.lr), cs = TW.multiplier(rg.tau, S.ls), cr = TW.multiplier(rg.tau, S.lr);
+  const r = TW.factor(S.ls, S.lr, rg.tau), clk = TW.clock(S.ls, S.lr, rg.tau);
+  return { ...S, g, cs, cr, r, clk, read: ringReadout(S.ls, rg.u), form: g * S.Q / (S.P * r ** rg.k + S.Q),
+    den: TW.sampleEnergy(rg.tau, S.lr, S.Q, rg.k) - TW.sampleEnergy(rg.tau, S.ls, S.P, rg.k) };
+}
+function syncRingSliders() {
+  const half = Math.floor(rg.N / 2);
+  rg.kr = Math.min(Math.max(rg.kr, 1), half); rg.ks = Math.min(rg.ks, rg.kr - 1);
+  const ks = document.getElementById('sKs3'), kr = document.getElementById('sKr3');
+  ks.max = half - 1; kr.max = half; ks.value = rg.ks; kr.value = rg.kr;
+  document.getElementById('sN3').value = rg.N; document.getElementById('sB3').value = rg.b; document.getElementById('sTau3').value = rg.tau;
+}
+function updateRing() {
+  const n = ringNumbers(), set = (id, t) => document.getElementById(id).textContent = t;
+  set('vN3', rg.N); set('vKs3', rg.ks); set('vKr3', rg.kr); set('vAB3', `a = ${rg.a.toFixed(1)}, b = ${rg.b.toFixed(1)}`); set('vTau3', rg.tau.toFixed(4));
+  set('gL', `${n.ls.toFixed(4)}, ${n.lr.toFixed(4)}`);
+  set('gC', `${n.cs.toFixed(4)}, ${n.cr.toFixed(4)}`);
+  set('gR', n.r.toFixed(4));
+  set('gClock', `${n.clk.toFixed(5)}, ${rg.tau.toFixed(4)}`);
+  set('gK', `${rg.k}, ${(rg.k * n.clk).toFixed(5)}`);
+  set('gRead', n.read.toFixed(6));
+  set('gForm', n.form.toFixed(6));
+  set('gDen', Math.abs(n.den) < 1e-12 ? '0 (this step is on the signed pole)' : n.den.toPrecision(6));
+  const ok = n.ls < n.lr && rg.tau > 0 && n.cr > 0;
+  const le = document.getElementById('gLean');
+  le.textContent = ok ? 'ls < lr, τ > 0, cr > 0: factor_gt_one, clock_pos, iterate_readout' : 'outside the stated range';
+  le.className = ok ? 'ok' : 'bad';
+  drawRingChart(n);
+}
+function drawRingChart(n) {
+  const C = prepChart('ringChart'); if (!C) return;
+  const { g, w, h } = C, cx = Math.min(w * 0.27, h * 0.5), cy = h / 2, R0 = Math.min(cx, h / 2) * 0.55;
+  const amp = R0 * 0.32 / Math.max(1e-9, ...n.u0.map(Math.abs)), N = rg.N;
+  const pt = (j, v) => { const th = 2 * Math.PI * j / N - Math.PI / 2; return [cx + (R0 + amp * v) * Math.cos(th), cy + (R0 + amp * v) * Math.sin(th)]; };
+  g.strokeStyle = 'rgba(148,178,224,0.55)'; g.beginPath(); g.arc(cx, cy, R0, 0, 2 * Math.PI); g.stroke();
+  const loop = (u, col, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); for (let j = 0; j <= N; j++) { const p = pt(j % N, u[j % N]); j ? g.lineTo(...p) : g.moveTo(...p); } g.stroke(); };
+  loop(n.u0, '#64748b', 1.2); loop(rg.u, '#f97316', 2);
+  g.fillStyle = '#f97316'; for (let j = 0; j < N; j++) { const p = pt(j, rg.u[j]); g.beginPath(); g.arc(p[0], p[1], 3, 0, 2 * Math.PI); g.fill(); }
+  // right: readout against steps
+  const pad = { l: cx * 2 + 26, r: 8, t: 10, b: 16 }, kMax = Math.max(8, rg.k + 1);
+  const ymax = Math.max(n.g, ...rg.hist) * 1.05;
+  const X = k => pad.l + k / kMax * (w - pad.l - pad.r), Y = v => pad.t + (ymax - v) / ymax * (h - pad.t - pad.b);
+  g.strokeStyle = 'rgba(148,178,224,0.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(pad.l, pad.t); g.lineTo(pad.l, h - pad.b); g.lineTo(w - pad.r, h - pad.b); g.stroke();
+  g.fillStyle = '#94a3b8'; g.font = '10px system-ui, sans-serif'; g.fillText('readout', pad.l + 4, pad.t + 8); g.fillText('steps k', w - pad.r - 36, h - 4);
+  g.fillText(ymax.toFixed(2), pad.l - 26, pad.t + 8); g.fillText('0', pad.l - 10, h - pad.b);
+  g.strokeStyle = '#38bdf8'; g.lineWidth = 2; g.beginPath();
+  for (let i = 0; i <= 200; i++) { const x = kMax * i / 200, v = TW.ordinaryFlow(n.ls, n.lr, n.P, n.Q, x * n.clk); i ? g.lineTo(X(x), Y(v)) : g.moveTo(X(x), Y(v)); } g.stroke();
+  g.fillStyle = '#4ade80'; rg.hist.forEach((v, k) => { g.beginPath(); g.arc(X(k), Y(v), 3, 0, 2 * Math.PI); g.fill(); });
+}
+document.getElementById('sN3').addEventListener('input', e => { rg.N = parseInt(e.target.value, 10); syncRingSliders(); ringReset(); });
+document.getElementById('sKs3').addEventListener('input', e => { rg.ks = parseInt(e.target.value, 10); syncRingSliders(); ringReset(); });
+document.getElementById('sKr3').addEventListener('input', e => { rg.kr = parseInt(e.target.value, 10); if (rg.ks >= rg.kr) rg.ks = rg.kr - 1; syncRingSliders(); ringReset(); });
+document.getElementById('sB3').addEventListener('input', e => { rg.b = parseFloat(e.target.value); ringReset(); });
+document.getElementById('sTau3').addEventListener('input', e => { rg.tau = parseFloat(e.target.value); ringReset(); });
+document.getElementById('stepBtn3').addEventListener('click', ringStep);
+document.getElementById('resetBtn3').addEventListener('click', ringReset);
+document.getElementById('runBtn3').addEventListener('click', () => {
+  if (rg.timer) { clearInterval(rg.timer); rg.timer = null; document.getElementById('runBtn3').textContent = '▶ Run'; return; }
+  document.getElementById('runBtn3').textContent = '⏸ Stop';
+  rg.timer = setInterval(() => { if (rg.k >= 40) { clearInterval(rg.timer); rg.timer = null; document.getElementById('runBtn3').textContent = '▶ Run'; return; } ringStep(); }, 600);
+});
+function ringLeanCase(tau) { Object.assign(rg, { N: 4, ks: 0, kr: 2, a: 1, b: 2, tau }); syncRingSliders(); ringReset(); ringStep(); }
+document.getElementById('hitBtn3').addEventListener('click', () => ringLeanCase(1 / 8));
+document.getElementById('skipBtn3').addEventListener('click', () => ringLeanCase(3 / 16));
+
+function drawTwoWaveCharts() { updateSplit(); updateRatio(); updateRing(); updateRates(); }
+
+// ---- Checks for tabs 3 to 5 ----
+function twoWaveChecks(check) {
+  const close = (x, y, tol) => Math.abs(x - y) <= tol * Math.max(1, Math.abs(y));
+  // Data
+  const a = NINO34.anom, sumH = a.reduce((p, c) => p + Math.round(c * 100), 0);
+  check('Built-in Niño 3.4 record: 538 months, Jan 1982 to Oct 2026, same total as the CPC file', a.length === NINO34.count && a.length === 538 && monthName(0) === 'Jan 1982' && monthName(a.length - 1) === 'Oct 2026' && sumH === NINO34.sumHundredths && a[0] === 0.08 && a[a.length - 1] === 3.25, `${a.length} months, first +0.08, last +3.25 °C`);
+  let addErr = 0;
+  for (const w of [5, 7, 9, 11, 13]) { const s = splitRecord(w); a.forEach((v, i) => addErr = Math.max(addErr, Math.abs(s.slow[i] + s.fast[i] - v))); }
+  check('Slow part plus fast part gives back the record in every month', addErr < 1e-12, `largest difference ${addErr.toExponential(1)} °C, windows 5 to 13`);
+  const st = splitStats(), L = a.length - 1;
+  check('Tab 3 readouts match a fresh count (latest month, P, Q, share, ρ, fitted rates)',
+    document.getElementById('sLatest').textContent === `${sgn(a[L], 2)}, ${sgn(st.slow[L], 2)}, ${sgn(st.fast[L], 2)} °C` &&
+    document.getElementById('sP').textContent === st.P.toFixed(4) + ' °C²' && document.getElementById('sQ').textContent === st.Q.toFixed(4) + ' °C²' &&
+    document.getElementById('sShare').textContent === (100 * st.Q / (st.P + st.Q)).toFixed(2) + ' %' &&
+    document.getElementById('sRho').textContent === `${num(st.rs, 4)}, ${num(st.rf, 4)}` &&
+    (!isFinite(st.fitLr) || (close(Math.exp(-st.fitLs), st.rs, 1e-12) && close(Math.exp(-st.fitLr), st.rf, 1e-12))), `w = ${sp.w}, P = ${st.P.toFixed(4)}, Q = ${st.Q.toFixed(4)}`);
+  let fitOrder = true; for (const w of [5, 7, 9, 11, 13]) { sp.w = w; const s2 = splitStats(); if (!(s2.fitLs > 0 && s2.fitLr > s2.fitLs)) fitOrder = false; }
+  sp.w = parseInt(document.getElementById('sWin').value, 10);
+  check('For every window the fitted slow rate is below the fitted fast rate, so ls < lr holds', fitOrder, 'windows 5, 7, 9, 11, 13');
+  // ordinary readout
+  let cErr = 0, rErr = 0, oErr = 0, betw = true;
+  for (const [ls, lr] of [[0.03, 0.87], [0, 4], [0.25, 1], [0.0193, 0.2728]]) for (const [P, Q] of [[0.6, 0.04], [4, 16], [1, 1], [2.1, 0.07]]) {
+    const g = TW.gap(ls, lr);
+    cErr = Math.max(cErr, Math.abs(2 * ((ls * P + lr * Q) / (P + Q) - ls) - TW.ordinary(g, P, Q)));
+    for (const t of [0, 0.3, 2, 7]) {
+      rErr = Math.max(rErr, Math.abs(TW.ordinaryFlow(ls, lr, P, Q, t) - g * Q / (P * Math.exp(g * t) + Q)));
+      const A = TW.ordinaryFlow(ls, lr, P, Q, t); if (!(A > 0 && A < g)) betw = false;
+      oErr = Math.max(oErr, Math.abs(A - TW.bump(g, TW.ordinary(g, P, Q), t)));
+    }
+  }
+  check('2·((ls·P + lr·Q)/(P + Q) − ls) equals g·Q/(P + Q) (cost_ratio_map)', cErr < 1e-12, `largest difference ${cErr.toExponential(1)}, 16 cases`);
+  check('Ordinary readout equals g·Q/(P·e^(g·t) + Q) and the gap equation curve, and stays between 0 and g (ordinary_reduced, ordinary_motion, ordinary_between)', rErr < 1e-12 && oErr < 1e-10 && betw, `differences ${rErr.toExponential(1)}, ${oErr.toExponential(1)}`);
+  let sErr = 0;
+  for (const [ls, lr, P, Q] of [[0.03, 0.87, 0.6, 0.04], [0, 4, 4, 16], [0.25, 1, 3, 0.5]]) {
+    const g = TW.gap(ls, lr), tEnd = 3, ode = gapODE(g, TW.ordinary(g, P, Q), tEnd, 30000);
+    for (let i = 0; i <= 30000; i += 1000) sErr = Math.max(sErr, Math.abs(ode[i] - TW.ordinaryFlow(ls, lr, P, Q, tEnd * i / 30000)));
+  }
+  check('Step-by-step solution of dA/dt = A² − g·A matches the formula (ordinary_solves)', sErr < 1e-9, `largest difference ${sErr.toExponential(1)}`);
+  let fade = true;
+  for (const [ls, lr, P, Q] of [[0.03, 0.87, 0.6, 0.04], [0, 4, 4, 16], [0.25, 1, 3, 0.5]]) {
+    const g = TW.gap(ls, lr), t = 40 / g, A = TW.ordinaryFlow(ls, lr, P, Q, t);
+    if (!(A > 0 && A < g * (Q / P) * 1e-16 && Math.abs(A / (g * Q / P * Math.exp(-g * t)) - 1) < 1e-12)) fade = false;
+  }
+  check('The readout tends to 0, and for large t it equals (g·Q/P)·e^(−g·t) up to a factor tending to 1 (ordinary_fades)', fade, 'checked at t = 40/g');
+  const m = fadeNumbers(st);
+  check('Tab 3 model readouts match the formulas', document.getElementById('mGap').textContent === m.g.toFixed(4) + ' per month' && document.getElementById('mA0').textContent === m.A0.toFixed(5) && document.getElementById('mA0c').textContent === m.A0.toFixed(5) && document.getElementById('mS6').textContent === document.getElementById('mS6n').textContent, `A(0) = ${m.A0.toFixed(5)}, share at 1 month ${(100 * m.s6).toFixed(4)} %`);
+  // signed readout
+  let pOk = true, eqOk = true, halfOk = true, blowOk = true, fpOk = true, nfOk = true, regOk = true, pairOk = true;
+  for (const [ls, lr] of [[0, 4], [0.25, 1], [0.1, 0.35]]) for (const [P, Q] of [[4, 16], [1, 3], [5, 2], [2, 2], [0.5, 20]]) {
+    const g = TW.gap(ls, lr), T = TW.poleTime(ls, lr, P, Q);
+    if (!close(T, Math.log(Q / P) / g, 1e-14)) pOk = false;
+    if (!close(TW.energy(ls, P, T), TW.energy(lr, Q, T), 1e-12)) eqOk = false;
+    for (const dt of [-0.5, -0.01, 0.01, 0.5]) if (Math.abs(TW.energy(ls, P, T + dt) - TW.energy(lr, Q, T + dt)) < 1e-9) eqOk = false;
+    if (!close(TW.ordinaryFlow(ls, lr, P, Q, T), g / 2, 1e-12)) halfOk = false;
+    if (P < Q) {
+      if (!close(T, TW.blowTime(g, TW.signed(g, P, Q)), 1e-12)) blowOk = false;
+      let prev = -Infinity; for (let e = 1; e <= 8; e++) { const v = TW.signedFlow(ls, lr, P, Q, T - T * 10 ** -e); if (!(v > prev && v > g)) blowOk = false; prev = v; }
+      if (!(prev > 1e6)) blowOk = false;
+      if (!(T > 0)) fpOk = false;
+    } else if (T > 0) fpOk = false;
+    if (Q < P) for (let t = 0; t <= 50; t += 0.05) if (!(TW.energy(lr, Q, t) - TW.energy(ls, P, t) < 0)) nfOk = false;
+    for (const t of [0.07, 0.4, 1.3]) {
+      if (Math.abs(t - T) < 0.02) continue;
+      const e = 1e-6, S = TW.signedFlow(ls, lr, P, Q, t), dS = (TW.signedFlow(ls, lr, P, Q, t + e) - TW.signedFlow(ls, lr, P, Q, t - e)) / (2 * e);
+      if (P !== Q && Math.abs(dS - (S * S - g * S)) > 1e-4 * Math.max(1, Math.abs(S * S))) regOk = false;
+      if (!close(S, TW.pair(g, TW.ordinaryFlow(ls, lr, P, Q, t)), 1e-9)) pairOk = false;
+    }
+  }
+  check('Pole time is log(Q/P)/g and is the one moment the two sizes are equal (energies_equal_iff)', pOk && eqOk, '15 cases');
+  check('At the pole time the ordinary readout is exactly g/2 (ordinary_at_pole)', halfOk, '15 cases');
+  check('For P < Q the pole time equals the blow-up time from S(0), and S rises past g and past 1 000 000 as t nears it (pole_eq_blowTime, signed_above_gap, signed_blows_up)', blowOk, 'approach at T − T·10^(−k), k = 1…8');
+  check('A future pole exists exactly when P < Q, and for Q < P the difference stays below 0 for all t ≥ 0 (future_pole_iff, no_future_pole)', fpOk && nfOk, 't from 0 to 50 for Q < P');
+  check('Away from the pole S solves dS/dt = S² − g·S, and S = g·A/(2A − g) for the ordinary readout A (signed_solves_regular, mirror_at_time)', regOk && pairOk, '');
+  const rn = ratioNumbers();
+  check('Tab 4 readouts match the formulas', document.getElementById('rGap').textContent === num(rn.g, 4) && (!(rt.ls < rt.lr) || (document.getElementById('rPole').textContent.startsWith(num(rn.T, 4)) && document.getElementById('rHalf').textContent === `${rn.AT.toFixed(4)} and ${(rn.g / 2).toFixed(4)}`)), `T = ${num(rn.T, 4)}`);
+  // ring
+  let eigOk = true, orthOk = true, ibpOk = true;
+  for (const N of [4, 7, 12, 24]) for (let k1 = 0; k1 <= N / 2; k1++) {
+    const v = ringMode(N, k1), lv = ringRate(N, k1), gv = rGen(v);
+    if (v.some((x, j) => Math.abs(gv[j] + lv * x) > 1e-12)) eigOk = false;
+    if (Math.abs(rCost(v) + rDot(v, gv)) > 1e-10) ibpOk = false;
+    for (let k2 = k1 + 1; k2 <= N / 2; k2++) if (Math.abs(rDot(v, ringMode(N, k2))) > 1e-10) orthOk = false;
+  }
+  check('Ring waves: each is an exact wave of the heat generator, any two are at right angles, and cost = −(f · heat f) (cost_eq_neg_dot_heat)', eigOk && orthOk && ibpOk, 'N = 4, 7, 12, 24, all wave numbers');
+  let iterErr = 0, szErr = 0, rdErr = 0, smpErr = 0, stepErr = 0, contErr = 0;
+  for (const [N, ks, kr, b, tau] of [[12, 1, 3, 1.5, 0.1], [7, 1, 2, 0.8, 0.2], [24, 2, 9, 2.5, 0.24], [4, 0, 2, 2, 0.125]]) {
+    const v = ringMode(N, ks), wv = ringMode(N, kr), ls = ringRate(N, ks), lr = ringRate(N, kr), g = TW.gap(ls, lr);
+    const cs = TW.multiplier(tau, ls), cr = TW.multiplier(tau, lr), P = rSize(v), Q = b * b * rSize(wv);
+    let u = v.map((x, j) => x + b * wv[j]);
+    for (let k = 0; k <= 30; k++) {
+      const f = v.map((x, j) => cs ** k * x + cr ** k * b * wv[j]);
+      iterErr = Math.max(iterErr, ...u.map((x, j) => Math.abs(x - f[j])));
+      szErr = Math.max(szErr, Math.abs(rSize(u) - (TW.sampleEnergy(tau, ls, P, k) + TW.sampleEnergy(tau, lr, Q, k))) / Math.max(1e-300, rSize(u)), Math.abs(rCost(u) - (ls * TW.sampleEnergy(tau, ls, P, k) + lr * TW.sampleEnergy(tau, lr, Q, k))) / Math.max(1e-300, rSize(u)));
+      const rd = ringReadout(ls, u), oa = TW.ordinaryAt(ls, lr, tau, P, Q, k);
+      rdErr = Math.max(rdErr, Math.abs(rd - oa), Math.abs(oa - g * Q / (P * TW.factor(ls, lr, tau) ** k + Q)));
+      smpErr = Math.max(smpErr, Math.abs(oa - TW.ordinaryFlow(ls, lr, P, Q, k * TW.clock(ls, lr, tau))), Math.abs(oa - TW.bump(g, TW.ordinary(g, P, Q), k * TW.clock(ls, lr, tau))));
+      const un = heatStep(tau, u); stepErr = Math.max(stepErr, Math.abs(ringReadout(ls, un) - TW.realStep(g, TW.factor(ls, lr, tau), rd)));
+      u = un;
+    }
+    for (const t of [0, 0.3, 1.7]) { const f = v.map((x, j) => Math.exp(-ls * t) * x + b * Math.exp(-lr * t) * wv[j]); contErr = Math.max(contErr, Math.abs(ringReadout(ls, f) - TW.ordinaryFlow(ls, lr, P, Q, t))); }
+  }
+  check('k actual heat steps multiply the waves by cs^k and cr^k (heat_step_mix, iterate_heat_mix)', iterErr < 1e-12, `largest difference ${iterErr.toExponential(1)}, 4 rings, 30 steps`);
+  check('Size and cost of the dots equal the two-wave sums (iterate_size, iterate_cost)', szErr < 1e-10, `largest relative difference ${szErr.toExponential(1)}`);
+  check('Readout of the dots equals g·Q/(P·r^k + Q), the continuous readout at clock k·log(r)/g, and the continuous ring readout (iterate_readout, ordinary_sample, iterate_motion, ring_readout)', rdErr < 1e-9 && smpErr < 1e-9 && contErr < 1e-10, `differences ${rdErr.toExponential(1)}, ${smpErr.toExponential(1)}, ${contErr.toExponential(1)}`);
+  check('One heat step moves the readout by g·A/(r·g − (r − 1)·A) (heat_step_readout)', stepErr < 1e-9, `largest difference ${stepErr.toExponential(1)}`);
+  let facOk = true;
+  for (const [ls, lr, tau] of [[0, 4, 0.1], [0.27, 1.5, 0.2], [0.5, 4, 0.24], [1, 2, 0.01]]) {
+    const r = TW.factor(ls, lr, tau), cs = TW.multiplier(tau, ls), cr = TW.multiplier(tau, lr), c = TW.clock(ls, lr, tau), g = TW.gap(ls, lr);
+    if (!(close(r, (cs / cr) ** 2, 1e-14) && r > 1 && c > 0 && cr > 0 && close(Math.exp(g * c), r, 1e-12) && close(Math.exp(g * 5 * c), r ** 5, 1e-12))) facOk = false;
+  }
+  const zs = TW.factor(0.3, 2, 0) === 1 && TW.clock(0.3, 2, 0) === 0;
+  check('r = (cs/cr)² > 1, clock > 0, e^(g·clock) = r and e^(g·k·clock) = r^k; with τ = 0 the factor is 1 and the clock 0 (factor_square, factor_gt_one, clock_pos, clock_factor, sample_clock_factor, zero_step)', facOk && zs, '4 cases in the stable range');
+  // Lean worked cases
+  const T0 = TW.poleTime(0, 4, 4, 16);
+  const u1 = heatStep(1 / 8, ringMode(4, 0).map((x, j) => x + 2 * ringMode(4, 2)[j]));
+  const hit = TW.factor(0, 4, 1 / 8) === 4 && close(TW.clock(0, 4, 1 / 8), Math.log(4) / 8, 1e-15) && ringReadout(0, u1) === 4 && TW.sampleEnergy(1 / 8, 4, 16, 1) - TW.sampleEnergy(1 / 8, 0, 4, 1) === 0;
+  let skipDen = true; for (let k = 0; k <= 60; k++) if (TW.sampleEnergy(3 / 16, 4, 16, k) - TW.sampleEnergy(3 / 16, 0, 4, k) === 0) skipDen = false;
+  const skip = TW.factor(0, 4, 3 / 16) === 16 && close(TW.signedAt(0, 4, 3 / 16, 4, 16, 0), 32 / 3, 1e-14) && close(TW.signedAt(0, 4, 3 / 16, 4, 16, 1), -8 / 3, 1e-14) && 0 < T0 && T0 < TW.clock(0, 4, 3 / 16) && skipDen;
+  check('Lean worked cases: τ = 1/8 gives factor 4, clock log 4/8 and readout 4 on the pole after one step; τ = 3/16 gives factor 16, signed values 32/3 and −8/3, and skips the pole (concrete_clock, concrete_hits_pole, concrete_skips_pole)', hit && skip, `pole time log 4/8 = ${T0.toFixed(5)}`);
+  const rn3 = ringNumbers();
+  check('Tab 5 readouts match the formulas', document.getElementById('gR').textContent === rn3.r.toFixed(4) && document.getElementById('gRead').textContent === rn3.read.toFixed(6) && document.getElementById('gForm').textContent === rn3.form.toFixed(6) && Math.abs(rn3.read - rn3.form) < 1e-9, `k = ${rg.k}, readout ${rn3.read.toFixed(6)}`);
+  const links = ['lnkTW1', 'lnkTW2', 'lnkTWD1', 'lnkTWD2'].map(id => document.getElementById(id).href);
+  check('Links to TwoWaveGapBridge.lean and TwoWaveDiscreteGapBridge.lean point to blob/main', links[0] === LEAN + 'TwoWaveGapBridge.lean' && links[1] === links[0] && links[2] === LEAN + 'TwoWaveDiscreteGapBridge.lean' && links[3] === links[2], '');
+}
+
+syncRingSliders();
+ringReset();
+updateSplit();
+updateRatio();
+// ---------------- Tab 6: read the hidden rates ----------------
+[['lnkRD1', 'RingDecay.lean'], ['lnkWI1', 'Wirtinger.lean'], ['lnkRD2', 'RingDecay.lean'], ['lnkWI2', 'Wirtinger.lean'], ['lnkGM1', 'GapMirror.lean'], ['lnkGMB1', 'GapMirrorBridge.lean']]
+  .forEach(([id, f]) => { const e = document.getElementById(id); if (e) e.href = LEAN + f; });
+
+function mulberry32(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const demean = x => { const m = x.reduce((p, c) => p + c, 0) / x.length; return x.map(v => v - m); };
+// Least-squares fit x_t = a1 x_{t-1} + a2 x_{t-2}
+function fitAR2(x) {
+  let s11 = 0, s12 = 0, s22 = 0, b1 = 0, b2 = 0;
+  for (let t = 2; t < x.length; t++) { const u = x[t - 1], v = x[t - 2], y = x[t]; s11 += u * u; s12 += u * v; s22 += v * v; b1 += u * y; b2 += v * y; }
+  const det = s11 * s22 - s12 * s12, a1 = (b1 * s22 - b2 * s12) / det, a2 = (s11 * b2 - s12 * b1) / det;
+  const resid = []; for (let t = 2; t < x.length; t++) resid.push(x[t] - a1 * x[t - 1] - a2 * x[t - 2]);
+  const disc = a1 * a1 + 4 * a2;
+  let r1 = NaN, r2 = NaN;
+  if (disc >= 0) { r1 = (a1 + Math.sqrt(disc)) / 2; r2 = (a1 - Math.sqrt(disc)) / 2; }
+  const real = disc >= 0 && r1 > 0 && r2 > 0 && r1 < 1 && r2 < 1;
+  return { a1, a2, disc, r1, r2, real, ls: -Math.log(r1), lr: -Math.log(r2), resid };
+}
+function acfOf(x, L) { const y = demean(x), d = y.reduce((p, c) => p + c * c, 0), out = [1]; for (let k = 1; k <= L; k++) { let s = 0; for (let t = k; t < y.length; t++) s += y[t] * y[t - k]; out.push(s / d); } return out; }
+function ar2Acf(a1, a2, L) { const r = [1, a1 / (1 - a2)]; for (let k = 2; k <= L; k++) r.push(a1 * r[k - 1] + a2 * r[k - 2]); return r; }
+const pct = (arr, q) => { const s = arr.slice().sort((a, b) => a - b), i = (s.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
+const sd = arr => { const m = arr.reduce((p, c) => p + c, 0) / arr.length; return Math.sqrt(arr.reduce((p, c) => p + (c - m) ** 2, 0) / (arr.length - 1)); };
+function bootstrapAR2(fit, n, B, seed) {
+  const rnd = mulberry32(seed), e = fit.resid, out = { ls: [], lr: [], ratio: [], tried: B };
+  for (let b = 0; b < B; b++) {
+    const xb = new Array(n + 100).fill(0);
+    for (let t = 2; t < n + 100; t++) xb[t] = fit.a1 * xb[t - 1] + fit.a2 * xb[t - 2] + e[Math.floor(rnd() * e.length)];
+    const f = fitAR2(demean(xb.slice(100)));
+    if (f.real) { out.ls.push(f.ls); out.lr.push(f.lr); out.ratio.push(f.lr / f.ls); }
+  }
+  return out;
+}
+const HR = (() => {
+  const x = demean(NINO34.anom), fit = fitAR2(x), boot = bootstrapAR2(fit, x.length, 500, 20261119);
+  const acf = acfOf(NINO34.anom, 36), model = ar2Acf(fit.a1, fit.a2, 36);
+  const rms = L => Math.sqrt(model.slice(1, L + 1).reduce((p, m, i) => p + (m - acf[i + 1]) ** 2, 0) / L);
+  let dipK = 1; for (let k = 1; k <= 36; k++) if (acf[k] < acf[dipK]) dipK = k;
+  const ci = a => [pct(a, 0.025), pct(a, 0.975)];
+  return { x, fit, boot, acf, model, rms12: rms(12), rms36: rms(36), dipK, ci: { ls: ci(boot.ls), lr: ci(boot.lr), ratio: ci(boot.ratio) }, sd: { ls: sd(boot.ls), lr: sd(boot.lr), ratio: sd(boot.ratio) } };
+})();
+const ringMu = (n, k) => 4 * Math.sin(Math.PI * k / n) ** 2;
+function simulatedRingRate(n, k, tau, steps) {
+  const v = Array.from({ length: n }, (_, j) => Math.cos(2 * Math.PI * k * j / n));
+  let u = v.slice(); for (let s = 0; s < steps; s++) u = heatStep(tau, u);
+  const amp = rDot(u, v) / rDot(v, v);
+  return (1 - Math.sign(amp) * Math.abs(amp) ** (1 / steps)) / tau;
+}
+let hrN = 24;
+function rateRows(n) {
+  const f = HR.fit, D = f.ls / ringMu(n, 1), rows = [];
+  for (let k = 0; k <= 4; k++) {
+    const mu = ringMu(n, k), sim = simulatedRingRate(n, k, 0.1, 20), pred = D * mu;
+    const row = { k, mu, sim, pred, rec: null, match: null, lo: null, hi: null };
+    if (k === 1) { row.rec = f.ls; row.match = 1; }
+    if (k >= 2) { const s = ringMu(n, 1) / mu; row.rec = f.lr; row.match = f.lr / pred; row.lo = HR.ci.ratio[0] * s; row.hi = HR.ci.ratio[1] * s; }
+    rows.push(row);
+  }
+  const target = (f.lr / f.ls) * Math.sin(Math.PI / n) ** 2;
+  const kfit = target <= 1 ? n / Math.PI * Math.asin(Math.sqrt(target)) : NaN;
+  return { D, rows, kfit };
+}
+function updateRates() {
+  const f = HR.fit, set = (id, t) => document.getElementById(id).textContent = t;
+  const pm = (v, s, c, d) => `${v.toFixed(d)} ± ${s.toFixed(d)} (95%: ${c[0].toFixed(d)} to ${c[1].toFixed(d)})`;
+  set('hA', `${f.a1.toFixed(4)}, ${num(f.a2, 4)}`);
+  set('hR', `${f.r1.toFixed(4)}, ${f.r2.toFixed(4)}`);
+  set('hLs', pm(f.ls, HR.sd.ls, HR.ci.ls, 3));
+  set('hLr', pm(f.lr, HR.sd.lr, HR.ci.lr, 3));
+  set('hRatio', pm(f.lr / f.ls, HR.sd.ratio, HR.ci.ratio, 2));
+  set('hReal', `${HR.boot.ls.length} of ${HR.boot.tried}`);
+  set('hShort', (-Math.log(HR.acf[1])).toFixed(4) + ' per month');
+  { const c1 = (HR.model[1] - f.r2) / (f.r1 - f.r2); set('hC', `${num(c1, 4)}, ${num(1 - c1, 4)}`); }
+  set('hRms', `${HR.rms12.toFixed(3)} and ${HR.rms36.toFixed(3)}`);
+  set('hDip', `${num(HR.acf[HR.dipK], 3)} at ${HR.dipK} months; fit ${num(HR.model[HR.dipK], 3)}`);
+  set('vRn', String(hrN));
+  const R = rateRows(hrN);
+  set('hD', R.D.toFixed(4) + ' per month');
+  set('hKfit', isFinite(R.kfit) ? R.kfit.toFixed(2) + ' crests' : 'none on this ring');
+  const fmtR = v => v == null ? '–' : v.toFixed(4);
+  document.getElementById('rateTable').innerHTML =
+    '<tr><th>Crests k</th><th>Proved μ<sub>k</sub> = 4sin²(πk/n)</th><th>Simulated ring</th><th>Ring prediction D·μ<sub>k</sub></th><th>Record rate</th><th>Match</th></tr>' +
+    R.rows.map(r => `<tr><td>${r.k}</td><td>${r.mu.toFixed(4)}</td><td>${r.sim.toFixed(4)}</td><td>${r.pred.toFixed(4)}</td><td>${r.k === 0 ? 'not tested' : fmtR(r.rec) + (r.k === 1 ? ' (ls)' : ' (lr)')}</td><td>${r.k === 0 ? 'mean removed' : r.k === 1 ? 'sets D' : r.match.toFixed(2) + ` (${r.lo.toFixed(2)}–${r.hi.toFixed(2)})`}</td></tr>`).join('');
+  const inside = R.rows.filter(r => r.k >= 2 && r.lo <= 1 && r.hi >= 1).map(r => r.k);
+  const best = R.rows.filter(r => r.k >= 2).reduce((a, b) => Math.abs(Math.log(b.match)) < Math.abs(Math.log(a.match)) ? b : a);
+  document.getElementById('hVerdict').textContent = `Plain result: the closest crest count is ${best.k}, with match ${best.match.toFixed(2)}. ` +
+    (inside.length > 1 ? `But the 95% range of the match also includes 1.00 for k = ${inside.length > 2 ? inside.slice(0, -1).join(', ') + ' and ' + inside[inside.length - 1] : inside.join(' and ')}, so the record cannot single out one crest count.` : inside.length === 1 ? `Only k = ${inside[0]} has 1.00 inside its 95% range.` : 'No crest count from 2 to 4 has 1.00 inside its 95% range, so the ring ladder does not fit.') +
+    ` This is one fitted ratio tested against a ladder with a free choice of k, so even a close match is weak support. The two-wave fit also misses the measured dip near ${HR.dipK} months.`;
+  drawAcfChart();
+}
+function drawAcfChart() {
+  const C = prepChart('acfChart'); if (!C) return;
+  const { g, w, h } = C, pad = { l: 26, r: 8, t: 8, b: 16 }, ymin = -1, ymax = 1;
+  const X = k => pad.l + k / 36 * (w - pad.l - pad.r), Y = v => pad.t + (ymax - v) / (ymax - ymin) * (h - pad.t - pad.b);
+  axes(g, w, h, pad, 36, ymin, ymax, 'lag (months)', 'memory');
+  g.strokeStyle = '#f97316'; g.lineWidth = 2; g.beginPath(); HR.model.forEach((v, k) => k ? g.lineTo(X(k), Y(v)) : g.moveTo(X(k), Y(v))); g.stroke();
+  g.fillStyle = '#94a3b8'; HR.acf.forEach((v, k) => { g.beginPath(); g.arc(X(k), Y(v), 2.6, 0, 2 * Math.PI); g.fill(); });
+}
+document.getElementById('sRn').addEventListener('input', e => { hrN = parseInt(e.target.value, 10); updateRates(); });
+
+function hiddenRateChecks(check) {
+  const close = (x, y, tol) => Math.abs(x - y) <= tol * Math.max(1, Math.abs(y));
+  // Item 1: the 2026 preset
+  const W = NINO34_WEEKLY;
+  check('2026 preset equals the CPC weekly Niño 3.4 value for the week of Nov 11, 2026 (+3.2 °C); weeks Oct 7 to Nov 11 lie in +3.2 to +3.4 °C', presets['2026'].target === W.anom[W.anom.length - 1] && W.weeks[W.weeks.length - 1] === '11NOV2026' && W.anom.every(v => v >= 3.2 && v <= 3.4), W.anom.map(v => '+' + v.toFixed(1)).join(', ') + ' °C');
+  // Fit
+  const f = HR.fit, x = HR.x;
+  let o1 = 0, o2 = 0; for (let t = 2; t < x.length; t++) { o1 += f.resid[t - 2] * x[t - 1]; o2 += f.resid[t - 2] * x[t - 2]; }
+  check('Least-squares fit: leftovers are at right angles to both earlier months', Math.abs(o1) < 1e-9 && Math.abs(o2) < 1e-9, `${o1.toExponential(1)}, ${o2.toExponential(1)}`);
+  const rootErr = Math.max(...[f.r1, f.r2].map(r => Math.abs(r * r - f.a1 * r - f.a2)));
+  check('r₁ and r₂ solve z² = a₁z + a₂, are real and between 0 and 1, and give ls < lr', rootErr < 1e-14 && f.real && f.ls < f.lr && close(Math.exp(-f.ls), f.r1, 1e-14) && close(Math.exp(-f.lr), f.r2, 1e-14), `ls = ${f.ls.toFixed(4)}, lr = ${f.lr.toFixed(4)}`);
+  const c1 = (HR.model[1] - f.r2) / (f.r1 - f.r2), c2 = 1 - c1;
+  let shapeErr = 0; for (let k = 0; k <= 36; k++) shapeErr = Math.max(shapeErr, Math.abs(HR.model[k] - (c1 * f.r1 ** k + c2 * f.r2 ** k)));
+  check('The fitted memory curve is exactly two fading waves, c₁·r₁^k + c₂·r₂^k, and the shown weights match', shapeErr < 1e-12 && document.getElementById('hC').textContent === `${num(c1, 4)}, ${num(c2, 4)}`, `c₁ = ${c1.toFixed(4)}, c₂ = ${c2.toFixed(4)}`);
+  const again = bootstrapAR2(f, x.length, 500, 20261119);
+  check('Bootstrap repeats exactly with the same seed, and each 95% range contains its fitted value', again.ls.length === HR.boot.ls.length && again.ls.every((v, i) => v === HR.boot.ls[i]) && HR.ci.ls[0] < f.ls && f.ls < HR.ci.ls[1] && HR.ci.lr[0] < f.lr && f.lr < HR.ci.lr[1] && HR.boot.ls.length >= 450, `${HR.boot.ls.length} of 500 copies used`);
+  // Ring rates
+  let muOk = true, gapOk = true;
+  for (let n = 3; n <= 120; n++) { for (let k = 0; k <= 4; k++) if (Math.abs(ringMu(n, k) - (2 - 2 * Math.cos(2 * Math.PI * k / n))) > 1e-12) muOk = false; for (let k = 1; k < n; k++) if (ringMu(n, k) < ringMu(n, 1) - 1e-12) gapOk = false; }
+  check('μ_k = 4sin²(πk/n) = 2 − 2cos(2πk/n), and no nonzero crest count fades slower than one crest (gap_eq_four_sin_sq, gap_le_mu)', muOk && gapOk, 'n = 3 to 120');
+  const rnd = mulberry32(7); let wOk = true;
+  for (const n of [5, 12, 24, 60]) {
+    for (let trial = 0; trial < 20; trial++) { const f0 = demean(Array.from({ length: n }, () => rnd() - 0.5)); if (ringMu(n, 1) * rSize(f0) > rCost(f0) + 1e-12) wOk = false; }
+    const c = Array.from({ length: n }, (_, j) => Math.cos(2 * Math.PI * j / n)); if (Math.abs(rCost(c) - ringMu(n, 1) * rSize(c)) > 1e-10) wOk = false;
+  }
+  check('Wirtinger: for mean-zero patterns 4sin²(π/n)·size ≤ cost, with equality for the one-crest wave (wirtinger, wirtinger_sharp)', wOk, '80 random patterns, n = 5, 12, 24, 60');
+  let simErr = 0, meanOk = true;
+  for (const n of [5, 12, 24, 120]) for (let k = 0; k <= 4; k++) simErr = Math.max(simErr, Math.abs(simulatedRingRate(n, k, 0.1, 20) - ringMu(n, k)));
+  const u0 = [1, 3, -2, 0.5, 4, -1], m0 = u0.reduce((p, c) => p + c, 0); let u = u0; for (let s = 0; s < 10; s++) u = heatStep(0.2, u); if (Math.abs(u.reduce((p, c) => p + c, 0) - m0) > 1e-12) meanOk = false;
+  check('Simulated ring: 20 actual heat steps fade each k-crest wave by exactly 1 − τ·μ_k per step, and the mean never changes (fourier_heatStep, heatStep_wave, mean_heatStep)', simErr < 1e-10 && meanOk, `largest difference ${simErr.toExponential(1)}`);
+  const R = rateRows(hrN), shownRows = [...document.querySelectorAll('#rateTable tr')].slice(1).map(tr => [...tr.children].map(td => td.textContent));
+  const tabOk = R.rows.every((r, i) => shownRows[i] && shownRows[i][1] === r.mu.toFixed(4) && shownRows[i][3] === r.pred.toFixed(4) && (r.k < 2 || shownRows[i][5].startsWith(r.match.toFixed(2)))) && close(R.rows[1].pred, f.ls, 1e-12);
+  check('Rate table matches a fresh count, and D·μ₁ gives back ls', tabOk, `n = ${hrN}, D = ${R.D.toFixed(4)}`);
+  // Color contrast (WCAG 2): text 4.5:1, chart lines 3:1, frame edges about 1.2:1
+  const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+  const mix = (fg, a, bg) => fg.map((v, i) => v * a + bg[i] * (1 - a));
+  const lumi = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+  const cr = (a, b) => { const x = lumi(a), y = lumi(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const PAGE = hex('#080c14'), DRAWER = mix([10, 16, 27], 0.97, PAGE), CHART = mix([15, 23, 42], 0.7, DRAWER), PANEL = mix([14, 21, 34], 0.9, PAGE);
+  const texts = ['#e2e8f0', '#f8fafc', '#f1f5f9', '#cbd5e1', '#94a3b8', '#38bdf8', '#f97316', '#4ade80', '#f87171'].map(hex);
+  const lines = [[hex('#f97316'), 1], [hex('#38bdf8'), 1], [hex('#4ade80'), 1], [hex('#f87171'), 1], [hex('#64748b'), 1], [hex('#94a3b8'), 1], [hex('#6b7a90'), 1], [[148, 163, 184], 0.6], [[148, 178, 224], 0.55]];
+  const tr = []; texts.forEach(c => [PAGE, DRAWER, PANEL, CHART].forEach(b => tr.push(cr(c, b))));
+  const lr2 = lines.map(([c, a]) => cr(mix(c, a, CHART), CHART));
+  const fr = [PAGE, DRAWER, PANEL].map(b => cr(mix([148, 178, 224], 0.2, b), b));
+  check('Color contrast: every text color at least 4.5:1, every chart line at least 3:1, frame edges at least 1.2:1', Math.min(...tr) >= 4.5 && Math.min(...lr2) >= 3 && Math.min(...fr) >= 1.2, `weakest text ${Math.min(...tr).toFixed(2)}, weakest line ${Math.min(...lr2).toFixed(2)}, weakest frame ${Math.min(...fr).toFixed(2)}`);
+  // Item 4: the rate bound
+  let bOk = true;
+  for (const [ls, lr, P, Q] of [[0.03, 0.87, 0.6, 0.04], [0, 4, 4, 16], [0.25, 1, 3, 0.5], [0.1048, 0.9712, 1, 9]]) {
+    const g = TW.gap(ls, lr);
+    for (let t = 0; t <= 30 / g; t += 0.013 / g) if (TW.ordinaryFlow(ls, lr, P, Q, t) > g * Q / P * Math.exp(-g * t) * (1 + 1e-12)) bOk = false;
+  }
+  let qOk = true;
+  for (const [g, A] of [[1, 0.8], [8, 6.4], [2, 0.5]]) for (const r of [1, 2, 3, 2.5, 10]) {
+    const step = g * A / (r * g - (r - 1) * A), t = Math.log(r) / g;
+    if (!(step * r * (g - A) <= g * A * (1 + 1e-12)) || !close(step, TW.bump(g, A, t), 1e-12)) qOk = false;
+  }
+  check('Rate bound A(t) ≤ (g·Q/P)·e^(−g·t) checked at real times; at rational factors e^(g·t) the step value equals the flow and meets the bound (GapMirror.below_fades, rational_step_at_time)', bOk && qOk, 'page check for real times; Lean proof only at rational factors');
+}
+
+updateRates();
 // ---------------- Run checks ----------------
 function runPageChecks() {
   const results = [];
@@ -7998,6 +8723,9 @@ function runPageChecks() {
   // 9. Live store readout
   const si = storeInputs();
   check('Tab 1 readout at 36 months matches the Lean formula', document.getElementById('oH36').textContent === store(si.r, si.u, si.x0, 36).toFixed(4) + ' m', document.getElementById('oH36').textContent);
+
+  twoWaveChecks(check);
+  hiddenRateChecks(check);
 
   const pass = results.filter(r => r.ok).length;
   const sum = document.getElementById('check-summary');
