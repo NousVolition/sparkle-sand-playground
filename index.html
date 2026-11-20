@@ -25417,12 +25417,13 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     slimeArm(C, R);
   }
 
-  // ---- "The equal case" ring, molded in sand, as a centerpiece on the small guide circle ----
+  // ---- "The equal case" ring, molded in sand, as a centerpiece on the next guide circle out ----
   // A ring that is one cosine wave around a dashed zero-line circle: one bump outside it on the right, one equal dip
   // inside it on the left, with radial slope ticks between the wave and the zero line (warm brown on the bump side,
-  // teal on the dip side). The wheel sits on the small innermost guide circle in the middle of the canvas, and the
-  // title stays above it, a little down from the top so it is not tight against the header. The words around it are
-  // small labels on the page; the ring itself is sand.
+  // teal on the dip side). The wheel sits on the next guide circle out from the small middle one, still in the middle
+  // of the canvas, and the title stays above it, a little down from the top so it is not tight against the header.
+  // If that size will not leave room, the largest guide that still fits is used. The words around it are small labels
+  // on the page; the ring itself is sand.
   let ring = null;   // { cx, cyUp (rows up from the floor), r0, a } in cells
   let zeroLine = null;
   // on the light (stone) background the welcome's sand takes deeper versions of the same colors, so it reads well
@@ -25455,12 +25456,33 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const top = minTop + 8;   // a little breathing room under the header, not tight against the canvas edge
     const availBot = R - capRows - floorRows - labRows;
     const peak = Math.max(4, Math.round(R * 0.05));
-    // same center and radius as the small innermost guide circle in drawSand (r = 50, at the canvas midpoint)
+    // the wheel stays concentric with the guides (same midpoint as in drawSand). Its zero-line sits on the next
+    // guide circle out (r = 100), so the wave and the ticks are readable again; if that size would run into the
+    // title above or the Clear row below, use the largest guide that still leaves room
     const cx = (typeof width === 'number' && width > 0) ? width / (2 * CELL) : C / 2;
     const cy = (typeof height === 'number' && height > 0) ? height / (2 * CELL) : R / 2;
-    const r0 = 50 / CELL, a = r0 * (narrow ? 0.22 : 0.2), thW = narrow ? 0.8 : 1.05;
+    const thW = narrow ? 0.8 : 1.05;
+    const minBlock = Math.round(10 * 1.18) + (narrow ? 2 : 3) + Math.round(8 * 1.18);   // the smallest one-line subtitle title
+    const guideFits = g => {
+      const r0g = g / CELL, ag = r0g * (narrow ? 0.22 : 0.2), Rog = r0g + ag + thW + 1;
+      if (Rog < 12) return false;
+      if (cy - Rog < minTop + minBlock + 4) return false;                 // leave room for the title above
+      if (cy + Rog + labRows + capRows > R - peak) return false;          // leave room for the Clear row above the dunes
+      return true;
+    };
+    const preferred = 100;   // the next guide circle out from the small middle one
+    let guide = 50;
+    if (guideFits(preferred)) guide = preferred;
+    else {
+      const lim = Math.max((typeof width === 'number' && width > 0) ? width : C * CELL,
+                           (typeof height === 'number' && height > 0) ? height : R * CELL);
+      let best = 50;
+      for (let g = 50; g < lim; g += 50) if (guideFits(g)) best = g;
+      guide = best;
+    }
+    const r0 = guide / CELL, a = r0 * (narrow ? 0.22 : 0.2);
     const Ro = r0 + a + thW + 1;
-    return { capRows, floorRows, labRows, minTop, top, availBot, peak, Ro, cx, cy, r0, a, thW, wheelTop: cy - Ro };
+    return { capRows, floorRows, labRows, minTop, top, availBot, peak, Ro, cx, cy, r0, a, thW, guide, wheelTop: cy - Ro };
   }
   function buildRing(C, R, narrow, plan) {
     const { capRows, floorRows, labRows, Ro, cx, cy, r0, a } = plan;
