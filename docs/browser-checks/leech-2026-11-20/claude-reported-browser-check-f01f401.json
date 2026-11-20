@@ -1,0 +1,29 @@
+{
+  "label": "Claude's independently reported browser check",
+  "evidence_type": "user_relayed_external_report",
+  "reported_by": "The user, relaying Claude",
+  "performed_by_as_reported": "Claude",
+  "repository_revision_as_reported": "f01f401",
+  "status_as_reported": "PASS",
+  "checks_as_reported": {
+    "cloud_default": "PASS",
+    "seven_layer_counts": [
+      1,
+      4600,
+      47104,
+      93150,
+      47104,
+      4600,
+      1
+    ],
+    "empty_slots": [
+      -24,
+      24
+    ],
+    "next": "PASS",
+    "previous": "PASS"
+  },
+  "scope": "Stored separately from this chat's one visual check and from Lean results. This entry records the user's report of Claude's independent check; this chat did not repeat that check to create this entry.",
+  "recorded_at_utc": "2026-11-20 10:05:25 UTC",
+  "attribution": "Recorded by Codex under the user's direction from the user's message relaying Claude."
+}
