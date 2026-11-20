@@ -121,7 +121,7 @@ No proof link added.
 
 ### 11. −1/12
 
-**No matching proof in this library.** The regularized −1/12 limit, alternating-series bridge and Casimir interpretation are not proved in this project. −1/12 is not the ordinary sum of the positive integers.
+**No matching proof in this library.** Tab 11 compares softened unit-width bars with the area under their smooth curve. The signed space approaches −1/12 as ε shrinks. The numerical checks cover the displayed difference and the area drawn for the bars. A merged Lean proof link is pending.
 
 No proof link added.
 

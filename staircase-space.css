@@ -1,0 +1,81 @@
+/* Tab 11 · Copyright © 2026 NousVolition. All rights reserved. */
+:root {
+  color-scheme: dark;
+  --paper: #101921;
+  --panel: #14212c;
+  --line: #354753;
+  --ink: #ecf2f2;
+  --muted: #bdcbd1;
+  --amber: #ffbe78;
+  --teal: #7ae3dc;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+.space-page { width: min(100%, 1250px); padding: clamp(16px, 3.3vw, 46px); margin: auto; }
+.intro { margin-bottom: clamp(18px, 2.7vw, 34px); }
+h1, h2, p, figure, dl, dd { margin: 0; }
+h1 { font: 500 clamp(1.75rem, 3.3vw, 2.8rem)/1.12 Georgia, "Times New Roman", serif; letter-spacing: -.023em; }
+h1 span { color: var(--teal); }
+h2 { font-size: 1.12rem; line-height: 1.35; font-weight: 650; }
+p { color: var(--muted); }
+.intro p { margin-top: 10px; max-width: 78ch; }
+.lab { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(255px, 1fr); grid-template-areas: "plot slider" "plot numbers"; grid-template-rows: auto 1fr; gap: 16px; }
+.plot, .softness, .readout, details { min-width: 0; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; }
+.plot, .softness, .readout { padding: clamp(14px, 1.8vw, 24px); }
+.plot { grid-area: plot; }
+.softness { grid-area: slider; }
+.readout { grid-area: numbers; }
+.plot > p, .softness p { margin-top: 4px; }
+.views, .controls, .comparison-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.views { margin: 14px 0 8px; }
+button { font: inherit; font-size: .86rem; line-height: 1.25; color: var(--muted); padding: 7px 11px; border: 1px solid var(--line); background: transparent; border-radius: 5px; cursor: pointer; }
+button:hover, button[aria-pressed="true"] { color: var(--ink); border-color: var(--teal); }
+button[aria-pressed="true"] { background: #204447; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+canvas { display: block; width: 100%; }
+#space-chart { height: clamp(215px, 30vh, 350px); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 9px 0 5px; font-size: .9rem; }
+.legend span { display: inline-flex; gap: 7px; align-items: center; }
+.legend i { width: 14px; height: 9px; border-radius: 2px; }
+.amber { background: #d99754; border-top: 2px solid var(--amber); }
+.teal { background: #41a9ad; border-top: 2px solid var(--teal); }
+figcaption, .strip p, .strip-label, .strip-ticks { font-size: .84rem; color: var(--muted); }
+.strip { margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--line); }
+.strip-label, .strip-ticks, .slider-label, .slider-ticks { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.strip-label strong { color: var(--ink); }
+#space-strip { height: 35px; margin-top: 4px; background: #111d26; }
+.strip-ticks, .slider-ticks { font-variant-numeric: tabular-nums; }
+.strip p { margin-top: 3px; }
+.slider-label > span { color: var(--teal); font: 1.2rem ui-monospace, Consolas, monospace; }
+input[type="range"] { accent-color: var(--teal); cursor: pointer; }
+#epsSlider { display: block; margin: 9px 0 0; width: 100%; height: 30px; }
+.slider-ticks { position: relative; height: 1.5em; font-size: .8rem; color: var(--muted); margin: 0 4px 9px; }
+.slider-ticks span { position: absolute; }
+.slider-ticks span:nth-child(2) { left: 33.333%; transform: translateX(-50%); }
+.slider-ticks span:nth-child(3) { left: 66.667%; transform: translateX(-50%); }
+.slider-ticks span:last-child { right: 0; }
+dl { margin: 7px 0 12px; }
+dl > div { padding: 9px 0; border-bottom: 1px solid var(--line); }
+dt { color: var(--muted); font-size: .94rem; }
+dt small { margin-left: 4px; white-space: nowrap; font-size: .8rem; }
+dd { font: 500 clamp(1.04rem, 1.65vw, 1.42rem)/1.45 ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.difference dt, .difference dd { color: var(--teal); }
+.readout p strong { color: var(--ink); }
+details { margin-top: 12px; }
+summary { cursor: pointer; padding: 13px clamp(14px, 1.8vw, 24px); }
+summary span { color: var(--teal); margin: 0 12px 0 4px; }
+.comparison-body { padding: 2px clamp(14px, 1.8vw, 24px) 18px; }
+.comparison-body p { max-width: 85ch; margin: 0 0 9px; }
+a { color: var(--teal); text-underline-offset: 2px; }
+.comparison-controls { margin: 14px 0 10px; gap: 8px 12px; }
+.comparison-controls label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.comp-value { font-variant-numeric: tabular-nums; }
+.comparison-plots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.comparison-plots canvas { height: 210px; background: #101921; border-radius: 4px; }
+@media (max-width: 720px) {
+  .lab { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "slider" "plot" "numbers"; gap: 10px; }
+  .space-page { padding: 14px 12px 34px; }
+  #space-chart { height: 220px; }
+  .comparison-plots { grid-template-columns: minmax(0, 1fr); }
+  button { min-height: 36px; }
+}
