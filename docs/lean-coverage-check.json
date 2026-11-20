@@ -2,113 +2,194 @@
   "status": "PASS",
   "scope": "External source/computation comparison; no new Lean theorem and no interactive browser test",
   "proof_revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf",
-  "html_sha256": "4acf7ed96016509016228a381487bf39e2c4b1db6047a666f99748b14a7b1ca3",
-  "coverage_js_sha256": "85b1adaa020e43a49896cef9eebec22826533f837fdfef5a9a7c82f83869efe5",
-  "node_version": "v24.22.3",
+  "proof_added_revision": "53ecf1d4dc11a97871c9512b58020d926a85304c",
+  "html_sha256": "e130e810c6f34e168a37a6346d1ecb08d1b9c9901d82c9361ebe67a7f7944eb8",
+  "coverage_js_sha256": "650dfda33118b4e8d5da368cf98df79926e606b20711627e0dbd35e012423c6f",
+  "node_version": "v24.22.1",
   "tabs_checked": 33,
   "status_counts": {
-    "No matching proof in this library": 21,
-    "Related theorem; limited match": 3,
-    "Some results proved; limits below": 9
+    "No matching proof in this library": 19,
+    "Related, not a proof of this tab": 1,
+    "Some results proved; limits below": 10,
+    "Related theorem; limited match": 3
   },
   "theorem_targets": [
     {
+      "file": "Gap.lean",
+      "line": 48,
+      "declaration": "HugGap.keep_unbounded",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "Gap.lean",
+      "line": 98,
+      "declaration": "HugGap.finite_iff_gap",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 102,
+      "declaration": "GapWaveTail.carry_two_waves",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 134,
+      "declaration": "GapWaveTail.carry_feeds",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 162,
+      "declaration": "GapWaveTail.feed_tested",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 227,
+      "declaration": "GapWaveTail.lone_solves",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 246,
+      "declaration": "GapWaveTail.gap_wave_fades",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 275,
+      "declaration": "GapWaveTail.broad_no_feed",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
+      "file": "GapWaveTail.lean",
+      "line": 334,
+      "declaration": "GapWaveTail.forecast_straight",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
+    },
+    {
       "file": "RingDecay.lean",
       "line": 191,
-      "declaration": "RingDecay.energy_heatStep_le_mean"
+      "declaration": "RingDecay.energy_heatStep_le_mean",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "Wirtinger.lean",
       "line": 168,
-      "declaration": "CycleWirtinger.wirtinger"
+      "declaration": "CycleWirtinger.wirtinger",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "RingDecay.lean",
       "line": 41,
-      "declaration": "RingDecay.gap_eq_four_sin_sq"
+      "declaration": "RingDecay.gap_eq_four_sin_sq",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "Poincare.lean",
       "line": 69,
-      "declaration": "DiscretePoincare.poincare"
+      "declaration": "DiscretePoincare.poincare",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "PathSix.lean",
       "line": 70,
-      "declaration": "PathSix.poincare"
+      "declaration": "PathSix.poincare",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "CubeCheeger.lean",
       "line": 179,
-      "declaration": "CubeCheeger.gap"
+      "declaration": "CubeCheeger.gap",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "EdgeOptimal.lean",
       "line": 230,
-      "declaration": "HypercubeEdgeOptimal.max_dir_eq"
+      "declaration": "HypercubeEdgeOptimal.max_dir_eq",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
+    },
+    {
+      "file": "RingDecay.lean",
+      "line": 41,
+      "declaration": "RingDecay.gap_eq_four_sin_sq",
+      "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
     },
     {
       "file": "E8PlumbingBridge.lean",
       "line": 188,
-      "declaration": "E8PlumbingBridge.total_E8_roots"
+      "declaration": "E8PlumbingBridge.total_E8_roots",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "E8PlumbingBridge.lean",
       "line": 79,
-      "declaration": "E8PlumbingBridge.E8_det"
+      "declaration": "E8PlumbingBridge.E8_det",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8.lean",
       "line": 85,
-      "declaration": "LeechThreeE8.glued_eq_leech"
+      "declaration": "LeechThreeE8.glued_eq_leech",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8Cosets.lean",
       "line": 118,
-      "declaration": "LeechThreeE8.leech_unique_glue"
+      "declaration": "LeechThreeE8.leech_unique_glue",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8Cosets.lean",
       "line": 131,
-      "declaration": "LeechThreeE8.glue_label_count"
+      "declaration": "LeechThreeE8.glue_label_count",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8.lean",
       "line": 42,
-      "declaration": "LeechThreeE8.e8_gram"
+      "declaration": "LeechThreeE8.e8_gram",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8.lean",
       "line": 122,
-      "declaration": "LeechThreeE8.glued_basis_and_volume"
+      "declaration": "LeechThreeE8.glued_basis_and_volume",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8.lean",
       "line": 135,
-      "declaration": "LeechThreeE8.glued_kissing_number"
+      "declaration": "LeechThreeE8.glued_kissing_number",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechThreeE8.lean",
       "line": 116,
-      "declaration": "LeechThreeE8.playground_correspondence"
+      "declaration": "LeechThreeE8.playground_correspondence",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "PlaygroundGolay.lean",
       "line": 182,
-      "declaration": "PlaygroundGolay.code_correspondence"
+      "declaration": "PlaygroundGolay.code_correspondence",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "LeechBasis.lean",
       "line": 415,
-      "declaration": "LeechBasis.leech_unimodular"
+      "declaration": "LeechBasis.leech_unimodular",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
       "file": "Wirtinger.lean",
       "line": 228,
-      "declaration": "CycleWirtinger.wirtinger_sharp"
+      "declaration": "CycleWirtinger.wirtinger_sharp",
+      "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     }
   ],
-  "axiom_declarations": 743,
+  "axiom_declarations": 769,
   "inline_scripts_syntax_checked": 40,
   "e8_enumerations": {
     "penteract": {
@@ -671,12 +752,16 @@
   },
   "lean_source_sha256": {
     "CheckAxioms.lean": "ef832815770147ce0d02a19c8509ed68f9475bc339147c1b4dd68939d4beb2ad",
+    "53ecf1d4dc11a97871c9512b58020d926a85304c:CheckAxioms.lean": "9371b5d7a26bdfb1cfb307e9a27c10c0a0adc24d007b1f1dc75ef87243c49f27",
+    "53ecf1d4dc11a97871c9512b58020d926a85304c:Gap.lean": "80ca5f81dc72ea71bebea5c73e3e814fbe3e7ae211e10a342c776be1a17f9cae",
+    "53ecf1d4dc11a97871c9512b58020d926a85304c:GapWaveTail.lean": "672ec5f670c7cf7ae8e9915acde2ed7779437218164f27251dceff00c74918a5",
     "RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
     "Wirtinger.lean": "e5e18956e8d4477ca3101a9c5e839981c4880530e5b7523d682a14c17d3e5093",
     "Poincare.lean": "e4a76d125f57885221ac70ed59749b9ea12143bcbca3a71c56e74ee6c05b4fd0",
     "PathSix.lean": "d8f35f7e0b6975388a4598dcc1e8c4db968e466a5fe7d6fd107b792e9aa7122f",
     "CubeCheeger.lean": "c7dee65161ca232c5ca51dbcb4c1c594dcfe4f2714b0e94f24047fb9768d9509",
     "EdgeOptimal.lean": "5ea6d3c18261dfd4e5dd0a68e559edd4c1109fd08b4315e71c3fe026216a6048",
+    "53ecf1d4dc11a97871c9512b58020d926a85304c:RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
     "E8PlumbingBridge.lean": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
     "LeechThreeE8.lean": "c9cc5c450bdb5ee6a9318b7727dd302fc08fa20fa88ed2438be7437982f26b64",
     "LeechThreeE8Cosets.lean": "e6953a4a33af94d372e8d9e03c9bba1e18fc8b300568e26ac12c4f0025ca7411",

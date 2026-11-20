@@ -12,12 +12,19 @@ const coverage = require('../proof-coverage.js');
 const sha = text => crypto.createHash('sha256').update(text).digest('hex');
 const leanHashes = {};
 const leanCache = {};
-function lean(file) {
-  if (leanCache[file]) return leanCache[file];
-  const text = fs.readFileSync(path.join(leanRoot, file), 'utf8').replace(/\r\n/g, '\n');
-  const pinned = execFileSync('git', ['-C', leanRoot, 'show', coverage.revision + ':' + file], { encoding: 'utf8' }).replace(/\r\n/g, '\n');
-  assert.equal(text, pinned, 'Lean source differs from pinned revision: ' + file);
-  leanHashes[file] = sha(text); leanCache[file] = text; return text;
+function lean(file, rev) {
+  const r = rev || coverage.revision;
+  const key = r + ':' + file;
+  if (leanCache[key]) return leanCache[key];
+  const pinned = execFileSync('git', ['-C', leanRoot, 'show', r + ':' + file], { encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  if (r === coverage.revision) {
+    const text = fs.readFileSync(path.join(leanRoot, file), 'utf8').replace(/\r\n/g, '\n');
+    assert.equal(text, pinned, 'Lean source differs from pinned revision: ' + file);
+    leanHashes[file] = sha(text);
+  } else {
+    leanHashes[r + ':' + file] = sha(pinned);
+  }
+  leanCache[key] = pinned; return pinned;
 }
 const pieces = {};
 function template(key) {
@@ -36,16 +43,23 @@ const tabs = [...html.slice(0, html.indexOf('<div class="controls"')).matchAll(/
 same(tabs.map(m => m[1]), Object.keys(coverage.pages)); assert.equal(tabs.length, 33);
 const audit = lean('CheckAxioms.lean');
 const auditNames = [...audit.matchAll(/^#print axioms (\S+)/gm)].map(m => m[1]);
+if (coverage.addedRevision && coverage.addedRevision !== coverage.revision) {
+  const addedAudit = lean('CheckAxioms.lean', coverage.addedRevision);
+  for (const name of [...addedAudit.matchAll(/^#print axioms (\S+)/gm)].map(m => m[1])) {
+    if (!auditNames.includes(name)) auditNames.push(name);
+  }
+}
+const allowedRevisions = new Set([coverage.revision, coverage.addedRevision].filter(Boolean));
 const targets = [];
 for (const href of new Set(Object.values(coverage.pages).flatMap(p => p.links.map(l => l.href)))) {
   const m = href.match(/\/blob\/([^/]+)\/([^#]+)#L(\d+)$/); assert(m, href);
-  assert.equal(m[1], coverage.revision);
-  const source = lean(m[2]), line = source.split('\n')[Number(m[3]) - 1];
+  assert(allowedRevisions.has(m[1]), href);
+  const source = lean(m[2], m[1]), line = source.split('\n')[Number(m[3]) - 1];
   const decl = line.match(/^(?:theorem|lemma) (\w+)/); assert(decl, href);
   const namespace = source.match(/^namespace (\w+)/m); assert(namespace, m[2]);
   const qualified = namespace[1] + '.' + decl[1];
   assert(auditNames.includes(qualified), 'Missing axiom report: ' + qualified);
-  targets.push({ file: m[2], line: +m[3], declaration: qualified });
+  targets.push({ file: m[2], line: +m[3], declaration: qualified, revision: m[1] });
 }
 
 // E8: evaluate each page's enumeration, then check all vectors against the two shapes.
@@ -219,7 +233,7 @@ assert(!html.includes('GUE Match: 99.4%'));
 const statusCounts={}; for(const page of Object.values(coverage.pages)) statusCounts[page.status]=(statusCounts[page.status]||0)+1;
 console.log(JSON.stringify({
   status:'PASS', scope:'External source/computation comparison; no new Lean theorem and no interactive browser test',
-  proof_revision:coverage.revision, html_sha256:sha(html), coverage_js_sha256:sha(fs.readFileSync(path.join(root,'proof-coverage.js'),'utf8').replace(/\r\n/g,'\n')),
+  proof_revision:coverage.revision, proof_added_revision:coverage.addedRevision || null, html_sha256:sha(html), coverage_js_sha256:sha(fs.readFileSync(path.join(root,'proof-coverage.js'),'utf8').replace(/\r\n/g,'\n')),
   node_version:process.version, tabs_checked:tabs.length, status_counts:statusCounts,
   theorem_targets:targets, axiom_declarations:auditNames.length, inline_scripts_syntax_checked:scriptCount,
   e8_enumerations:rootRecords, e8_gram_correspondence:grams, e8_tree_correspondence:trees,
