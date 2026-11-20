@@ -41,7 +41,7 @@ const run = code => new vm.Script(code).runInNewContext({}, { timeout: 15000 });
 const same = (a, b) => assert.deepEqual(JSON.parse(JSON.stringify(a)), JSON.parse(JSON.stringify(b)));
 const tabs = [...html.slice(0, html.indexOf('<div class="controls"')).matchAll(/<button class="tab(?: active)?" data-mode="([^"]+)"[^>]*>(.*?)<\/button>/g)];
 same(tabs.map(m => m[1]), Object.keys(coverage.pages)); assert.equal(tabs.length, 34);
-const allowedRevisions = new Set([coverage.revision, coverage.addedRevision, coverage.symmetryRevision].filter(Boolean));
+const allowedRevisions = new Set([coverage.revision, coverage.addedRevision, coverage.symmetryRevision, coverage.lightCaptureRevision].filter(Boolean));
 const auditedByRevision = new Map();
 const auditNames = new Set();
 for (const revision of allowedRevisions) {
@@ -226,6 +226,46 @@ for(const mode of ['line','ring']) {
   pendulum.push({mode,n,maximum_acceleration_difference:error,scope:'neighbor stencil only; no trajectory proof'});
 }
 
+// Compare the tab 34 catalog and color calculations with the linked bounds.
+const materialSource = between(html, '(function moreMaterials() {', '\n})();', 'more-materials');
+const catalogSource = between(materialSource, '  const SMOOTH_T = ', '  const byKey = ', 'more-materials.catalog');
+const catalog = run(catalogSource + '\nCATALOG');
+const grain = catalog[1];
+assert.equal(grain.key, 'super-black-grain');
+assert.equal(grain.name, 'Super-black grain');
+assert.equal(catalog[4].key, 'ferro');
+assert(coverage.pages['more-materials'].links.some(link => link.href === grain.leanHref));
+
+const shadeSource = between(materialSource, '  function hexRgb(', '  function resize()', 'more-materials.shade');
+const shade = new vm.Script(shadeSource + `
+  (hex, j) => {
+    Math.random = () => (j + 0.5) / 6;
+    return shadeAt(grain, hex, 0, 0, 0) >>> 0;
+  }`).runInNewContext({ grain, pattern: 'solid' });
+let shadeCases = 0;
+for (let c = 0; c < 256; c++) {
+  const inputs = [c, 255 - c, (c + 37) % 256];
+  const hex = '#' + inputs.map(value => value.toString(16).padStart(2, '0')).join('');
+  for (let j = 0; j < 6; j++) {
+    const pixel = shade(hex, j);
+    const [r, g, b] = inputs.map(value => Math.min(value, 12));
+    same([pixel & 255, (pixel >>> 8) & 255, (pixel >>> 16) & 255], [r + j, g + j, b + Math.floor(j / 2)]);
+    shadeCases++;
+  }
+}
+const neighborSource = between(materialSource, '      if (dark[i] !== 1) {', '      data[p] = r;', 'more-materials.neighbors');
+const shadeNeighbors = run('(function(dark, i, cols, rows, r, g, b) {' + neighborSource + '\nreturn [r, g, b]; })');
+const center = 4, adjacent = [1, 3, 5, 7], color = [37, 128, 255];
+for (let mask = 0; mask < 16; mask++) {
+  const dark = new Uint8Array(9);
+  adjacent.forEach((index, bit) => { dark[index] = (mask >> bit) & 1; });
+  const near = adjacent.filter(index => dark[index]).length;
+  same(shadeNeighbors(dark, center, 3, 3, ...color), color.map(channel => Math.trunc(channel * (1 - 0.18 * near))));
+  dark[center] = 1;
+  same(shadeNeighbors(dark, center, 3, 3, ...color), color);
+}
+const grainResult = { catalog_index:1, ferro_index:4, color_cases:shadeCases, neighbor_masks:16 };
+
 // Compile every inline script (including templates), without executing page handlers.
 let scriptCount=0;
 for(const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) { new vm.Script(m[1]); scriptCount++; }
@@ -233,9 +273,9 @@ assert(!html.includes('GUE Match: 99.4%'));
 const statusCounts={}; for(const page of Object.values(coverage.pages)) statusCounts[page.status]=(statusCounts[page.status]||0)+1;
 console.log(JSON.stringify({
   status:'PASS', scope:'External source/computation comparison; no new Lean theorem and no interactive browser test',
-  proof_revision:coverage.revision, proof_added_revision:coverage.addedRevision || null, proof_symmetry_revision:coverage.symmetryRevision, html_sha256:sha(html), coverage_js_sha256:sha(fs.readFileSync(path.join(root,'proof-coverage.js'),'utf8').replace(/\r\n/g,'\n')),
+  proof_revision:coverage.revision, proof_added_revision:coverage.addedRevision || null, proof_symmetry_revision:coverage.symmetryRevision, proof_light_capture_revision:coverage.lightCaptureRevision, html_sha256:sha(html), coverage_js_sha256:sha(fs.readFileSync(path.join(root,'proof-coverage.js'),'utf8').replace(/\r\n/g,'\n')),
   node_version:process.version, tabs_checked:tabs.length, status_counts:statusCounts,
   theorem_targets:targets, axiom_declarations:auditNames.size, inline_scripts_syntax_checked:scriptCount,
   e8_enumerations:rootRecords, e8_gram_correspondence:grams, e8_tree_correspondence:trees,
-  leech:leechResult, ferro, ring, pendulum, source_slices:pieces, lean_source_sha256:leanHashes
+  super_black_grain:grainResult, leech:leechResult, ferro, ring, pendulum, source_slices:pieces, lean_source_sha256:leanHashes
 },null,2));

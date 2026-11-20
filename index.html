@@ -347,9 +347,13 @@ Third-party material is governed by its own terms.
   .pn-full[aria-checked="true"] .pn-sw::after { left: 17px; background: #000; }
   .pn-full small { display: block; color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
   html.lite .pn-heavy-head { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 8px; padding: 10px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: left; }
-  .pn-note { display: none; }
-  html.lite .pn-note { display: block; font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
-  html.lite .pn-opt[aria-selected="true"] .pn-note { color: #000; }
+  /* Menu hooks and short badges — Copyright © 2026 NousVolition. All rights reserved. */
+  .pn-opt .pn-name { flex: 1; min-width: 0; }
+  .pn-hook { display: block; font-size: 0.78rem; font-weight: 400; color: var(--muted); margin-top: 2px; line-height: 1.35; white-space: normal; }
+  .pn-opt[aria-selected="true"] .pn-hook { color: #000; }
+  .pn-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .pn-badge { display: inline-block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.02em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: transparent; }
+  .pn-opt[aria-selected="true"] .pn-badge { border-color: #000; color: #000; }
   .pn-group { padding: 10px 10px 4px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .pn-opt { display: flex; gap: 8px; align-items: baseline; width: 100%; padding: 9px 10px; min-height: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--text, #e6e6f0); font-size: 0.95rem; text-align: left; cursor: pointer; }
   .pn-opt .pn-num { flex: none; min-width: 2em; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -24841,11 +24845,13 @@ loop();
       mass: 0.28, fall: 0.07, slide: 0.72, alpha: 0.72
     },
     {
-      key: 'vantablack',
-      name: 'Vantablack',
+      key: 'super-black-grain',
+      name: 'Super-black grain',
       also: '',
-      blurb: 'Grains so dark they barely show shape or shine, and they eat light rather than bounce it.',
-      lean: 'No Lean file backs this material. The look is ordinary physical Vantablack.',
+      blurb: 'These grains look almost black and darken the grains next to them.',
+      lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean also proves that each color channel is at most 17 out of 255.',
+      leanHref: 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L238',
+      leanLabel: 'Grain motion in Lean',
       colors: ['#050505', '#0a0806', '#07080a'],
       patterns: ['solid', 'gradient'],
       mass: 1.0, fall: 0.22, slide: 0.28, alpha: 1
@@ -24932,7 +24938,7 @@ loop();
   };
   const REAL_COLORS = {
     aerogel: ['#e8f0f6', '#f7fbff', '#cfe4f2'],
-    vantablack: ['#050505'],
+    'super-black-grain': ['#050505'],
     pasta: ['#cbb89a', '#9a8f84', '#e6d9b8', '#7a7468'],
     gallium: ['#c5cdd4', '#b7c0c6', '#d7e0e8'],
     ferro: null,
@@ -25003,7 +25009,14 @@ loop();
 
   function bootState() {
     const k = load('key', 'aerogel');
-    mat = byKey[k] || CATALOG[0];
+    mat = Object.hasOwn(byKey, k) ? byKey[k] : null;
+    if (!mat) {
+      // The renamed grain was saved with its color and pattern.
+      const grain = byKey['super-black-grain'];
+      const savedPalette = load('color', '') && grain.patterns.includes(load('pattern', ''));
+      mat = savedPalette ? grain : CATALOG[0];
+      store('key', mat.key);
+    }
     color = load('color', mat.colors[0]);
     pattern = load('pattern', mat.patterns[0]);
     if (mat.patterns.indexOf(pattern) < 0) pattern = mat.patterns[0];
@@ -25027,7 +25040,7 @@ loop();
   function shadeAt(m, hex, x, y, origin) {
     let [r, g, b] = hexRgb(hex);
     const pat = (m.patterns.indexOf(pattern) >= 0) ? pattern : 'solid';
-    if (m.key === 'vantablack') {
+    if (m.key === 'super-black-grain') {
       const j = (Math.random() * 6) | 0;
       r = Math.min(r, 12) + j; g = Math.min(g, 12) + j; b = Math.min(b, 12) + (j >> 1);
       return pack(r, g, b);
@@ -25385,9 +25398,9 @@ loop();
     ctx.fillRect(0, 0, w, h);
     const img = ctx.createImageData(cols, rows);
     const data = img.data;
-    // vantablack eats a little neighboring light: first pass write, second pass darken near it
+    // Mark super-black grains before shading the grains beside them.
     const dark = new Uint8Array(cols * rows);
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'vantablack') dark[i] = 1;
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'super-black-grain') dark[i] = 1;
     for (let i = 0, p = 0; i < type.length; i++, p += 4) {
       if (type[i] === EMPTY) { data[p] = 18; data[p+1] = 22; data[p+2] = 31; data[p+3] = 255; continue; }
       const rec = recOf(i);
@@ -25796,33 +25809,97 @@ loop();
   // On small screens the menu lists the lighter entries; the heavy ones sit in a collapsed group at the end, each still one tap away.
   // Measured at 390x844 with touch and a 4x slower CPU (frames per second while running, and anything wider than the screen).
   // "Full version" in the menu (remembered) or ?full=1 lists everything as on a computer. Links like #23 open any entry.
+  // HEAVY keys still drive the phone "More on a computer" group. Long performance
+  // notes are replaced by a one-line hook on every entry, plus a short badge here.
   const HEAVY = {
-    blackhole: 'Black hole: slow on phones, and two buttons run off the screen',
-    ocean: 'Slow on phones (about 23 frames a second)',
-    fourd: '4D drawing: heavy for phones',
-    polychora: '4D drawing: heavy for phones',
-    fireflies: 'Slow on phones (about 23 frames a second)',
-    nonorient: 'Slow on phones (about 21 frames a second)',
-    penteract: '5D drawing: very slow on phones (about 3 frames a second)',
-    leech: '24D drawing: slow on phones (about 12 frames a second)',
-    pentlite: '5D drawing: slow on phones (about 23 frames a second)',
-    hopf: '4D drawing: slow on phones (about 23 frames a second)',
-    bh2: 'Black hole: slow on phones (about 35 frames a second)',
-    bh3: 'Black hole: heavy for phones',
-    e8studio: 'E₈ drawing: heavy for phones',
-    e8insp: 'E₈ drawing: a little wider than a phone screen',
-    e8studio2: 'E₈ drawing: heavy for phones',
-    cipher: 'A little wider than a phone screen',
-    // trimmed list: the phone menu keeps only hands-on touch play that runs smoothly
-    silk: 'Touch play, but slow on phones (about 29 frames a second)',
-    stretch: 'Slow on phones (about 9 frames a second)',
-    sum: 'Mostly sliders and reading: easier on a bigger screen',
-    ringsum: 'Mostly sliders and reading: easier on a bigger screen',
-    zeros: 'Mostly sliders and reading: easier on a bigger screen',
-    pendulum: 'Mostly sliders and watching: easier on a bigger screen',
-    trilogy: 'Mostly sliders and reading: easier on a bigger screen',
-    horned: 'Mostly sliders and watching: easier on a bigger screen',
-    'unit-distances': 'Mostly sliders and reading: easier on a bigger screen'
+    blackhole: 1,
+    ocean: 1,
+    fourd: 1,
+    polychora: 1,
+    fireflies: 1,
+    nonorient: 1,
+    penteract: 1,
+    leech: 1,
+    pentlite: 1,
+    hopf: 1,
+    bh2: 1,
+    bh3: 1,
+    e8studio: 1,
+    e8insp: 1,
+    e8studio2: 1,
+    cipher: 1,
+    silk: 1,
+    stretch: 1,
+    sum: 1,
+    ringsum: 1,
+    zeros: 1,
+    pendulum: 1,
+    trilogy: 1,
+    horned: 1,
+    'unit-distances': 1
+  };
+  const HOOKS = {
+    sand: 'Pour glitter sand, stamp a mold, or carve and pile it on a ledge.',
+    loop: 'Swirl the light around you, let go, and watch the ring drift home.',
+    bubbles: 'Blow bubbles, drag them about, and watch close ones merge.',
+    plate: 'Shake a plate and watch sand gather on the still lines.',
+    waves: 'Let two line-waves meet, and see sand gather at their still points.',
+    silk: 'Drag to paint luminous silk currents, then change the flow.',
+    crystal: 'Watch vapor freeze onto a six-sided seed, or click to add a branch.',
+    magnets: 'Drag a magnet to pull the fluid, or double-click to flip its pole.',
+    stretch: 'Set two opposite swirls side by side, then add a rising warm blob.',
+    ferro: 'Add north and south magnets and watch the fluid keep its area.',
+    sum: 'Peel away infinite growth and see the hidden −1/12 balance point.',
+    ringsum: 'Compare a smooth fade with a sharp stop, and see where −1/12 appears.',
+    zeros: 'Launch a wave in a chaotic drum and match its tones to Riemann zeros.',
+    pendulum: 'Watch pendulums drift from unison into traveling waves and helices.',
+    trilogy: 'Watch a path, a ring, a cube, and a grid of two rings settle and heal.',
+    blackhole: 'Aim light past a black hole, or watch two holes merge and ring down.',
+    ocean: 'Run El Niño\'s cycle on a globe, and see the heat store fill and drain.',
+    fourd: 'Walk around a square-root cut, or turn a 4D torus inside-out.',
+    polychora: 'Rotate all six regular 4D shapes, and switch on their Hopf rings.',
+    fireflies: 'Send ripples through a water dish, or pulse fireflies into one rhythm.',
+    horned: 'Watch horns clasp level by level and trap the loop around them. The drawing shows five levels; the math says the trap holds at every one. Or twist an Akbulut cork.',
+    nonorient: 'Walk a traveler on a 4D Möbius, Klein bottle, or projective plane.',
+    penteract: 'Turn a 5D cube, E₈ and E₆, or pull two sheets apart in 5D.',
+    leech: 'See all 196,560 shortest Leech vectors, projected from 24 dimensions.',
+    pentlite: 'Explore the 240 E₈ roots, or watch 4D collisions untie in 5D.',
+    hopf: 'Watch the 3-sphere project into linked rings in 3D.',
+    bh2: 'Turn on the Einstein ring, or watch two holes merge and ring down.',
+    bh3: 'Launch light past a hole with a glowing disk, or restart the merger.',
+    e8studio: 'Morph an 8-cube into a 240-point mandala, then to Milnor\'s 7-sphere.',
+    e8insp: 'See the exact E₈ roots, and drop a root to watch the boundary change.',
+    e8studio2: 'Morph an 8-cube into E₈\'s Coxeter mandala, then to Milnor\'s 7-sphere.',
+    'unit-distances': 'Pick one length and join every pair of grid dots that far apart.',
+    cipher: 'Anneal a homophonic cipher, and see the Z340 grid on a torus.',
+    'more-materials': 'Pour aerogel, gallium, and more, then poke, warm, or pull them.'
+  };
+  const BADGES = {
+    blackhole: ['Desktop best', 'Wide screen'],
+    ocean: ['Desktop best'],
+    fourd: ['Desktop best'],
+    polychora: ['Desktop best'],
+    fireflies: ['Desktop best'],
+    nonorient: ['Desktop best'],
+    penteract: ['Desktop best'],
+    leech: ['Desktop best'],
+    pentlite: ['Desktop best'],
+    hopf: ['Desktop best'],
+    bh2: ['Desktop best'],
+    bh3: ['Desktop best'],
+    e8studio: ['Desktop best'],
+    e8insp: ['Wide screen'],
+    e8studio2: ['Desktop best'],
+    cipher: ['Wide screen'],
+    silk: ['Desktop best'],
+    stretch: ['Desktop best'],
+    sum: ['Wide screen'],
+    ringsum: ['Wide screen'],
+    zeros: ['Wide screen'],
+    pendulum: ['Wide screen'],
+    trilogy: ['Wide screen'],
+    horned: ['Wide screen'],
+    'unit-distances': ['Wide screen']
   };
   const FULL_KEY = 'sparkle.full';
   let fullParam = /[?&]full=1(&|$)/.test(location.search);
@@ -25831,8 +25908,15 @@ loop();
   function liteOn() { return smallScreen() && !fullParam && !fullPref; }
   const homeOrder = [...list.children];   // the menu as built above (the full version)
   opts.forEach(o => {
-    const n = HEAVY[o.dataset.pick];
-    if (n) { const sp = document.createElement('span'); sp.className = 'pn-note'; sp.textContent = n; o.lastChild.appendChild(sp); }
+    const k = o.dataset.pick, nameEl = o.lastChild;
+    const hook = HOOKS[k];
+    if (hook) { const sp = document.createElement('span'); sp.className = 'pn-hook'; sp.textContent = hook; nameEl.appendChild(sp); }
+    const badges = BADGES[k];
+    if (badges && badges.length) {
+      const row = document.createElement('span'); row.className = 'pn-badges';
+      badges.forEach(b => { const el = document.createElement('span'); el.className = 'pn-badge'; el.textContent = b; row.appendChild(el); });
+      nameEl.appendChild(row);
+    }
   });
   const fullBtn = document.createElement('button');
   fullBtn.type = 'button'; fullBtn.className = 'pn-full'; fullBtn.setAttribute('role', 'switch');
