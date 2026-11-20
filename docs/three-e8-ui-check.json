@@ -12,6 +12,7 @@
     "published proof links",
     "cloud default and return",
     "seven layer counts from all raw vectors on selection, Next and Previous",
+    "whole-table proof link and full browser histogram",
     "proof links at +8, −8, +16, −16, +32 and −32",
     "+32 contains the selected vector and −32 contains its negative",
     "empty slots at both signs of 24",
@@ -94,7 +95,7 @@
     "scope": "Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."
   },
   "source_sha256": {
-    "leech-three-e8.js": "4af57d8c0868aeb9bb55182423618ac7cc1fbec8c208bdac215c71fb17271bbd",
+    "leech-three-e8.js": "46ef1da64d4834a36bd72340479f5d20d8d870ed678c8c8efe4613e7b345870c",
     "leech-three-e8.css": "b0510b8c4f0f7d006b577c5b20769323cea8e037c23f212b553fcc48d1e1dbe2",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
