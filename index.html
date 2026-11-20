@@ -107,6 +107,31 @@ Third-party material is governed by its own terms.
   @media (max-width: 700px) {
     #viewSwitch button { min-height: 44px; padding: 8px 12px; }
   }
+
+  /* Real / Fun look switch (home Sand and tab 34). No transitions. */
+  .phys-switch { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; flex-wrap: wrap; }
+  .phys-switch .vs-label { font-size: 0.78rem; color: var(--muted); margin-right: 2px; }
+  .phys-switch button {
+    font: inherit;
+    font-size: 0.78rem;
+    padding: 6px 11px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: none;
+  }
+  .phys-switch button[aria-pressed="true"] {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  #palette.phys-off { opacity: 0.35; pointer-events: none; }
+  @media (max-width: 700px) {
+    .phys-switch button { min-height: 44px; padding: 8px 12px; }
+  }
   .tab, .sound-btn { padding: 8px 10px; }
   .tabs { gap: 5px; }
   header { padding: 16px 18px; }
@@ -24896,6 +24921,39 @@ loop();
   ];
   const byKey = {};
   CATALOG.forEach(m => { byKey[m.key] = m; });
+  // Real / Fun look — Copyright © 2026 NousVolition. All rights reserved.
+  // Fun (the default) is today's behavior. Real uses everyday colors and relative weights. Ferrofluids smoothing stays at t ≤ 1/4.
+  const REAL_PHYS = {
+    aerogel: { fall: 0.05, slide: 0.80 },
+    pasta: { fall: 0.40, slide: 0.10 },
+    gallium: { fall: 0.30 },
+    silk: { fall: 0.10 },
+    stf: { slide: 0.92 }
+  };
+  const REAL_COLORS = {
+    aerogel: ['#e8f0f6', '#f7fbff', '#cfe4f2'],
+    vantablack: ['#050505'],
+    pasta: ['#cbb89a', '#9a8f84', '#e6d9b8', '#7a7468'],
+    gallium: ['#c5cdd4', '#b7c0c6', '#d7e0e8'],
+    ferro: null,
+    silk: ['#e6c35c', '#f3dfa0', '#f7eed6'],
+    ni3: ['#3b1848', '#2a1014', '#5a3040'],
+    stf: ['#f4f1ea', '#efe6d8']
+  };
+  let phys = 'fun', funColor = null;
+  const isReal = () => phys === 'real';
+  function physOf(rec) {
+    if (!rec || !isReal() || !REAL_PHYS[rec.key]) return rec;
+    return Object.assign({}, rec, REAL_PHYS[rec.key]);
+  }
+  function allowedColors(rec) {
+    if (!isReal()) return rec.colors;
+    if (Object.prototype.hasOwnProperty.call(REAL_COLORS, rec.key)) {
+      const list = REAL_COLORS[rec.key];
+      return list || rec.colors;
+    }
+    return rec.colors.slice(0, 1);
+  }
 
   const css = `
     #mmStage { position:absolute; inset:0; z-index:5; display:none; overflow:hidden; background:#12161f; color:#d7dbe6;
@@ -24949,6 +25007,12 @@ loop();
     color = load('color', mat.colors[0]);
     pattern = load('pattern', mat.patterns[0]);
     if (mat.patterns.indexOf(pattern) < 0) pattern = mat.patterns[0];
+    phys = load('phys', 'fun') === 'real' ? 'real' : 'fun';
+    funColor = color;
+    if (isReal()) {
+      const allow = allowedColors(mat);
+      if (allow.indexOf(color) < 0) color = allow[0];
+    }
   }
   bootState();
 
@@ -25109,7 +25173,7 @@ loop();
   function updateFlying() {
     const keep = [];
     for (const p of flying) {
-      const rec = CATALOG[p.m] || CATALOG[0];
+      const rec = physOf(CATALOG[p.m] || CATALOG[0]);
       p.vy = Math.min(p.vy + rec.fall, 8);
       p.vx *= 0.98;
       p.x += p.vx; p.y += p.vy;
@@ -25245,7 +25309,7 @@ loop();
         const x = flip ? k : C - 1 - k;
         const i = y * C + x;
         if (type[i] !== GRAIN) continue;
-        const rec = recOf(i);
+        const rec = physOf(recOf(i));
         if (rec.dilatant && flag[i]) continue; // rigid solid until the lock relaxes
         let slide = rec.slide;
         if (rec.key === 'gallium') slide = heat[i] > 80 ? 0.85 : 0.12;
@@ -25441,9 +25505,26 @@ loop();
 
   function setMat(m) {
     mat = m;
-    if (m.colors.indexOf(color) < 0) color = m.colors[0];
+    const allow = allowedColors(m);
+    if (allow.indexOf(color) < 0) color = allow[0];
     if (m.patterns.indexOf(pattern) < 0) pattern = m.patterns[0];
     store('key', m.key); store('color', color); store('pattern', pattern);
+    writeNote();
+    fillControls();
+  }
+  function setPhysMode(v) {
+    const next = v === 'real' ? 'real' : 'fun';
+    if (next === phys) return;
+    if (phys === 'fun') funColor = color;
+    phys = next;
+    store('phys', phys);
+    if (phys === 'fun') {
+      if (funColor && mat.colors.indexOf(funColor) >= 0) color = funColor;
+    } else {
+      const allow = allowedColors(mat);
+      if (allow.indexOf(color) < 0) color = allow[0];
+    }
+    store('color', color);
     writeNote();
     fillControls();
   }
@@ -25457,6 +25538,23 @@ loop();
       if (lab) { const s = document.createElement('div'); s.className = 'mm-lab'; s.textContent = lab; r.appendChild(s); }
       box.appendChild(r); return r;
     };
+    const look = addRow('Look');
+    const sw = document.createElement('div');
+    sw.id = 'mmPhysSwitch';
+    sw.className = 'phys-switch';
+    sw.setAttribute('role', 'tablist');
+    sw.setAttribute('aria-label', 'Look');
+    [['fun', 'Fun'], ['real', 'Real']].forEach(([k, lab]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.phys = k;
+      b.textContent = lab;
+      b.setAttribute('aria-pressed', String(phys === k));
+      b.title = k === 'fun' ? 'The usual playground look and colors' : 'Everyday colors and relative weights';
+      b.addEventListener('click', () => setPhysMode(k));
+      sw.appendChild(b);
+    });
+    look.appendChild(sw);
     const mats = addRow('Material');
     CATALOG.forEach(m => {
       const b = document.createElement('button');
@@ -25467,18 +25565,25 @@ loop();
       mats.appendChild(b);
     });
     const colsRow = addRow('Color');
-    mat.colors.forEach(hex => {
+    const allow = allowedColors(mat);
+    allow.forEach(hex => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'mm-swatch' + (hex.toLowerCase() === color.toLowerCase() ? ' active' : '');
       b.style.background = hex; b.title = hex;
       b.onclick = () => { color = hex; store('color', color); fillControls(); };
       colsRow.appendChild(b);
     });
-    const custom = document.createElement('input');
-    custom.type = 'color'; custom.className = 'mm-custom'; custom.value = color;
-    custom.title = 'Custom color';
-    custom.oninput = () => { color = custom.value; store('color', color); fillControls(); };
-    colsRow.appendChild(custom);
+    if (!isReal()) {
+      const custom = document.createElement('input');
+      custom.type = 'color'; custom.className = 'mm-custom'; custom.value = color;
+      custom.title = 'Custom color';
+      custom.oninput = () => { color = custom.value; store('color', color); fillControls(); };
+      colsRow.appendChild(custom);
+    } else if (allow.length <= 1) {
+      colsRow.title = 'This material keeps its real look, so the swatches are unused in Real';
+    } else if (mat.key === 'ferro') {
+      colsRow.title = 'Dyed ferrofluids, a real-world option';
+    }
     const pats = addRow('Pattern');
     PATTERNS.forEach(p => {
       const b = document.createElement('button');
@@ -25559,6 +25664,12 @@ loop();
   window.__moreMaterials = {
     catalog: CATALOG,
     key: () => mat.key,
+    phys: () => phys,
+    setPhys(v) { setPhysMode(v); },
+    isReal,
+    allowedColors: () => allowedColors(mat).slice(),
+    smoothT: () => SMOOTH_T,
+    physOf,
     setKey(k) { if (byKey[k]) setMat(byKey[k]); },
     setTool(k) { tool = k; if (document.getElementById('controls') && typeof mode !== 'undefined' && mode === MODE) fillControls(); },
     setColor(hex) { color = hex; store('color', color); if (typeof mode !== 'undefined' && mode === MODE) fillControls(); },
@@ -26880,6 +26991,37 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   ];
   const byKey = {}; LIST.forEach(m => { byKey[m[1]] = m[0]; });
   let mat = (() => { try { return byKey[localStorage.getItem('sparkle.sand.mat')] || SAND; } catch (e) { return SAND; } })();
+  // Real / Fun look — Copyright © 2026 NousVolition. All rights reserved.
+  // Fun (the default) is today's behavior, including Snow following the chosen swatch. Real uses everyday colors and weights.
+  const PHYS_KEY = 'sparkle.sand.phys';
+  let phys = (() => { try { return localStorage.getItem(PHYS_KEY) === 'real' ? 'real' : 'fun'; } catch (e) { return 'fun'; } })();
+  const isReal = () => phys === 'real';
+  const SAND_REAL = ['#c2a36b', '#e6d3a3', '#8a6a3a', '#d8c4a0', '#5c5346'];
+  const CLAY_REAL = ['#b85c38', '#c4a574', '#d9d0c3', '#6e6254'];
+  const GLITTER_REAL = ['#c0c8d0', '#d4af37', '#c41e3a', '#2e8b57', '#1e4d8c'];
+  let funColor = typeof color === 'string' ? color : '#ff6b9d';
+  function realColors() {
+    if (mat === SAND) return SAND_REAL;
+    if (mat === CLAY) return CLAY_REAL;
+    if (mat === GLITTER) return GLITTER_REAL;
+    return null;
+  }
+  function snapRealColor() {
+    const cols = realColors();
+    if (!cols) return;
+    if (cols.indexOf(color) < 0) color = cols[0];
+  }
+  function grav(m) {
+    if (!isReal()) return m === SNOW ? 0.07 : m === ROCKS ? 0.32 : m === LAVA ? 0.14 : 0.25;
+    if (m === SNOW) return 0.06;
+    if (m === ROCKS) return 0.38;
+    if (m === LAVA) return 0.30;
+    if (m === CLAY) return 0.27;
+    if (m === GLITTER) return 0.22;
+    if (m === BEADS) return 0.28;
+    if (m === SPRINKLES) return 0.20;
+    return 0.25;
+  }
   const matOf = c => 255 - (c >>> 24);
   const withMat = (c, m) => (((c & 0xffffff) | ((255 - m) << 24)) >>> 0);
   const pack = (r, g, b, m) => withMat((b << 16) | (g << 8) | r, m);
@@ -26901,7 +27043,8 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     if (m === ROCKS) { const [r, g, b] = rgb(rnd(ROCK_COLS)); return pack(Math.min(255, r * k | 0), Math.min(255, g * k | 0), Math.min(255, b * k | 0), m); }
     // Snow follows the chosen swatch as light and lighter tints — Copyright © 2026 NousVolition. All rights reserved.
     if (m === SNOW) {
-      const [r, g, b] = rgb(hex || rnd(SNOW_COLS));
+      if (isReal() || !hex) { const [r, g, b] = rgb(rnd(SNOW_COLS)); return pack(r, g, b, m); }
+      const [r, g, b] = rgb(hex);
       const t = rnd([0.48, 0.60, 0.72, 0.84]);
       const lift = v => Math.min(255, v + ((255 - v) * t) | 0);
       return pack(lift(r), lift(g), lift(b), m);
@@ -26938,7 +27081,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     basePourSand.apply(this, arguments);
     if (mat === ROCKS) for (let k = flying.length - 1; k >= n0; k--) if (Math.random() < 0.7) flying.splice(k, 1);   // fewer, bigger pieces
     if (mat === SNOW) for (let k = n0; k < flying.length; k++) { flying[k].vy *= 0.4; flying[k].vx *= 1.5; }
-    if (mat === LAVA) for (let k = n0; k < flying.length; k++) { flying[k].vy *= 0.45; flying[k].vx *= 0.6; flying[k].heat = 230 + ((Math.random() * 25) | 0); }
+    if (mat === LAVA) for (let k = n0; k < flying.length; k++) { if (isReal()) { flying[k].vy *= 0.85; flying[k].vx *= 0.7; } else { flying[k].vy *= 0.45; flying[k].vx *= 0.6; } flying[k].heat = 230 + ((Math.random() * 25) | 0); }
   };
 
   // ----- landing -----
@@ -26968,7 +27111,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const keep = [];
     for (const p of flying) {
       const m = matOf(p.c);
-      const G = m === SNOW ? 0.07 : m === ROCKS ? 0.32 : m === LAVA ? 0.14 : 0.25;
+      const G = grav(m);
       const maxV = m === SNOW ? 2 : m === LAVA ? 3.2 : 9;
       p.vy = Math.min(p.vy + G, maxV);
       if (m === SNOW) { p.vx += (Math.random() - 0.5) * 0.18; p.vx *= 0.97; } else p.vx *= m === LAVA ? 0.94 : 0.985;
@@ -27156,8 +27299,8 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     if (m === SNOW) {
       c.fillStyle = `rgb(${r},${g},${b})`;
       c.beginPath(); c.arc(x, y, 2.05, 0, Math.PI * 2); c.fill();
-      const sr = (r * 0.62 + 20) | 0, sg = (g * 0.66 + 16) | 0, sb = (b * 0.70 + 24) | 0;
-      c.fillStyle = `rgba(${sr},${sg},${sb},0.35)`;
+      if (isReal()) c.fillStyle = 'rgba(150,175,215,0.35)';
+      else { const sr = (r * 0.62 + 20) | 0, sg = (g * 0.66 + 16) | 0, sb = (b * 0.70 + 24) | 0; c.fillStyle = `rgba(${sr},${sg},${sb},0.35)`; }
       c.beginPath(); c.arc(x + 0.5, y + 0.6, 1.2, 0, Math.PI * 2); c.fill();
       return;
     }
@@ -27230,7 +27373,10 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     },
     // a stamp color in the picked material (used by the Letters tool)
     stampColor(hex) { const c = colorFor(mat, hex, true); return c === null ? baseMold(hex) : c; },
-    usesColor() { return mat === SAND || mat === CLAY || mat === GLITTER || mat === SNOW; },
+    usesColor() { return isReal() ? (mat === SAND || mat === CLAY || mat === GLITTER) : (mat === SAND || mat === CLAY || mat === GLITTER || mat === SNOW); },
+    get phys() { return phys; },
+    setPhys(v) { setPhysMode(v); },
+    isReal,
     get material() { return LIST.find(m => m[0] === mat)[1]; },
     set material(k) { if (byKey[k] !== undefined) setMat(byKey[k]); },
     test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER, BEADS, LAVA,
@@ -27435,6 +27581,8 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const sel = document.getElementById('material');
     if (sel) sel.value = LIST.find(x => x[0] === m)[1];
     if (mode === 'sand') { hint.textContent = LIST.find(x => x[0] === m)[3]; hint.classList.remove('faded'); }
+    if (isReal()) snapRealColor();
+    syncPhysUI();
   }
   function addPicker() {
     if (mode !== 'sand' || document.getElementById('material')) return;
@@ -27448,9 +27596,104 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const anchor = document.getElementById('meltBtn');
     if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(lab, anchor.nextSibling); else controlsDiv.appendChild(lab);
   }
+  function setPhysMode(v) {
+    const next = v === 'real' ? 'real' : 'fun';
+    if (next === phys) return;
+    if (phys === 'fun') funColor = color;
+    phys = next;
+    try { localStorage.setItem(PHYS_KEY, phys); } catch (e) {}
+    if (phys === 'fun') color = funColor;
+    else snapRealColor();
+    syncPhysUI();
+    if (typeof drawMoldIcon === 'function') drawMoldIcon();
+  }
+  function addPhysSwitch() {
+    if (mode !== 'sand' || document.getElementById('sandPhysSwitch')) return;
+    const bar = document.createElement('div');
+    bar.id = 'sandPhysSwitch';
+    bar.className = 'phys-switch';
+    bar.setAttribute('role', 'tablist');
+    bar.setAttribute('aria-label', 'Look');
+    bar.innerHTML = '<span class="vs-label">Look</span>';
+    [['fun', 'Fun'], ['real', 'Real']].forEach(([k, lab]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.phys = k;
+      b.textContent = lab;
+      b.title = k === 'fun' ? 'The usual playground look and colors' : 'Everyday colors and relative weights';
+      b.addEventListener('click', () => setPhysMode(k));
+      bar.appendChild(b);
+    });
+    const host = document.getElementById('controls');
+    const matLab = host && host.querySelector('.mat-pick');
+    if (matLab && matLab.parentNode) matLab.parentNode.insertBefore(bar, matLab.nextSibling);
+    else if (host) host.appendChild(bar);
+  }
+  function syncPhysUI() {
+    if (mode !== 'sand') return;
+    addPhysSwitch();
+    const bar = document.getElementById('sandPhysSwitch');
+    if (bar) bar.querySelectorAll('button[data-phys]').forEach(b => {
+      b.setAttribute('aria-pressed', String(b.dataset.phys === phys));
+      b.setAttribute('aria-selected', String(b.dataset.phys === phys));
+    });
+    const pal = document.getElementById('palette');
+    let extra = document.getElementById('realPalette');
+    if (!isReal()) {
+      if (pal) { pal.classList.remove('phys-off'); pal.style.display = ''; }
+      if (extra) extra.remove();
+      if (pal) pal.querySelectorAll('.swatch').forEach(el => {
+        const bg = (el.style.background || el.style.backgroundColor || '').replace(/\s/g, '');
+        const want = (color || '').toLowerCase();
+        const ok = bg.toLowerCase() === want || bg === 'rgb(' + (typeof hexRgb === 'function' ? hexRgb(color).join(',') : '') + ')';
+        el.classList.toggle('active', el.style.background === color || (el.style.backgroundColor === color));
+        // also compare computed-less: data not stored; match by setting from palette rebuild usually
+      });
+      // refresh active class against the live `color`
+      if (pal) pal.querySelectorAll('.swatch').forEach(el => {
+        el.classList.toggle('active', (el.style.background || '').replace(/\s/g, '').toLowerCase() === (color || '').toLowerCase()
+          || (el.style.backgroundColor || '').replace(/\s/g, '').toLowerCase() === (color || '').toLowerCase());
+      });
+      return;
+    }
+    const cols = realColors();
+    if (!cols) {
+      if (pal) { pal.style.display = ''; pal.classList.add('phys-off'); pal.title = 'This material keeps its real look, so the swatches are unused in Real'; }
+      if (extra) extra.remove();
+      return;
+    }
+    if (pal) { pal.classList.remove('phys-off'); pal.style.display = 'none'; }
+    if (!extra) {
+      extra = document.createElement('div');
+      extra.id = 'realPalette';
+      extra.className = 'palette';
+      extra.title = 'Real-world colors for this material';
+      if (pal && pal.parentNode) pal.parentNode.insertBefore(extra, pal.nextSibling);
+      else {
+        const host = document.getElementById('controls');
+        if (host) host.appendChild(extra);
+      }
+    }
+    extra.innerHTML = '';
+    cols.forEach(c => {
+      const s = document.createElement('div');
+      s.className = 'swatch' + (c === color ? ' active' : '');
+      s.style.background = c;
+      s.title = c;
+      s.onclick = () => {
+        color = c;
+        extra.querySelectorAll('.swatch').forEach(el => el.classList.remove('active'));
+        s.classList.add('active');
+        if (typeof drawMoldIcon === 'function') drawMoldIcon();
+      };
+      extra.appendChild(s);
+    });
+  }
   const baseControls = setControls;
-  setControls = function () { baseControls.apply(this, arguments); addPicker(); };
+  setControls = function () { baseControls.apply(this, arguments); addPicker(); addPhysSwitch(); syncPhysUI(); };
   addPicker();
+  addPhysSwitch();
+  syncPhysUI();
 })();
 </script>
 <script id="sandLetters">
