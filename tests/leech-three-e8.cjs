@@ -23,7 +23,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8').replace(/\r\n/g,'\n');
 for(const file of ['leech-three-e8-data.js','leech-three-e8.js'])vm.runInContext(read(file),sandbox,{timeout:2000});
 const tab=read('index.html').match(/<template id="page-src-leech">([\s\S]*?)<\/template>/)[1];
 const source=tab.slice(tab.indexOf('const Q = [];'),tab.indexOf("document.getElementById('sTotal')"));
-const generated=new vm.Script(source+'\n({vecs,shellOf,N});').runInNewContext({}, {timeout:15000});
+const generated=new vm.Script(source+'\n({vecs,shellOf,N,code,weights});').runInNewContext({}, {timeout:15000});
 sandbox.LeechThreeE8.mount(generated);
 const $=id=>document.getElementById(id),page=created.find(e=>e.id==='e8Construction'),bits=page.querySelectorAll('[data-glue]');
 assert.equal(bits.length,12);assert(sandbox.__leechThreeE8Active);assert.equal(sandbox.__threeE8Check.rootCount,240);
@@ -32,7 +32,7 @@ assert.equal($('e8CloudMode').getAttribute('aria-pressed'), 'true');
 assert.equal($('e8LayersMode').getAttribute('aria-pressed'), 'false');
 const expectedLayers = [[-32,1],[-24,0],[-16,4600],[-8,47104],[0,93150],[8,47104],[16,4600],[24,0],[32,1]];
 const proofNote = page.html.match(/<p[^>]*id="e8LayerProofs"[^>]*>(.*?)<\/p>/)[1];
-const tableLink = proofNote.match(/<a href="([^"]+)"[^>]*>Lean proof of the whole table<\/a>/);
+const tableLink = proofNote.match(/<a href="([^"]+)"[^>]*>Lean proof of the length-32 table<\/a>/);
 assert.ok(tableLink, 'The Layers view links to the theorem for every integer dot product');
 assert.match(tableLink[1], /^https:\/\/github\.com\/NousVolition\/discrete-gap-inequalities-lean\/blob\/[a-f0-9]{40}\/LeechLayers\.lean#L\d+$/);
 const signedLinks = [...proofNote.matchAll(/<a href="([^"]+)"[^>]*>([−+]\d+)<\/a>/g)];
@@ -43,6 +43,25 @@ for (const [, href] of signedLinks) {
   assert.match(href, /^https:\/\/github\.com\/NousVolition\/discrete-gap-inequalities-lean\/blob\/[a-f0-9]{40}\/LeechLayers\.lean#L\d+$/);
 }
 const sampledSelections = [];
+const reference48 = require('./leech-norm48-layers.cjs')(generated.code, generated.weights);
+const table48 = page.html.match(/<table id="e8Length48Table"[^>]*>([\s\S]*?)<\/table>/)[1];
+const rows48 = [...table48.matchAll(/<th scope="row">([^<]+)<\/th><td>([^<]+)<\/td>/g)]
+  .map(([,label,count]) => [label, count]);
+const displays48 = new Map(reference48);
+const total48 = reference48.reduce((sum, [,n]) => sum + n, 0);
+const formatCount = n => n.toLocaleString('en-US');
+assert.deepEqual(reference48.map(([k]) => k), [-24,-16,-8,0,8,16,24]);
+assert.deepEqual(rows48, [
+  ['0', formatCount(displays48.get(0))],
+  ...[8,16,24].map(k => {
+    assert.equal(displays48.get(k), displays48.get(-k));
+    return ['−' + k + ' or +' + k, formatCount(displays48.get(k)) + ' each'];
+  }),
+  ['Every other integer','0'], ['All layers', formatCount(total48)]
+]);
+assert.equal(total48, 16773120);
+assert.match($('e8Length48Proof').getAttribute('href'),
+  /^https:\/\/github\.com\/NousVolition\/discrete-gap-inequalities-lean\/blob\/[a-f0-9]{40}\/LeechLayers\.lean#L\d+$/);
 const endpoints = [];
 let measuredLayers;
 function selectedIndex() {
@@ -104,4 +123,6 @@ for(const a of page.querySelectorAll('a')){assert.match(a.attrs.href,/\/blob\/[0
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','whole-table proof link and full browser histogram','proof links at +8, −8, +16, −16, +32 and −32','+32 contains the selected vector and −32 contains its negative','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
  layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,endpoints,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
+ length48:{reference_axis:[4,-4,...Array(22).fill(0)],dot_product_and_count:reference48,total:total48,
+   scope:"The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."},
  source_sha256:Object.fromEntries(['leech-three-e8.js','leech-three-e8.css','leech-three-e8-data.js'].map(p=>[p,sha(read(p))])),scope:'DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test.'},null,2));

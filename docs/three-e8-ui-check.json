@@ -94,9 +94,69 @@
     ],
     "scope": "Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."
   },
+  "length48": {
+    "reference_axis": [
+      4,
+      -4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "dot_product_and_count": [
+      [
+        -24,
+        47104
+      ],
+      [
+        -16,
+        953856
+      ],
+      [
+        -8,
+        4147200
+      ],
+      [
+        0,
+        6476800
+      ],
+      [
+        8,
+        4147200
+      ],
+      [
+        16,
+        953856
+      ],
+      [
+        24,
+        47104
+      ]
+    ],
+    "total": 16773120,
+    "scope": "The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."
+  },
   "source_sha256": {
-    "leech-three-e8.js": "46ef1da64d4834a36bd72340479f5d20d8d870ed678c8c8efe4613e7b345870c",
-    "leech-three-e8.css": "b0510b8c4f0f7d006b577c5b20769323cea8e037c23f212b553fcc48d1e1dbe2",
+    "leech-three-e8.js": "78d92850d0a9408989936379add13d821fa4368c87cfbce6043f661bc099482c",
+    "leech-three-e8.css": "20474a5d6d5b74d29f40aa4688d6d98c26cc2c426473961de0ef9a0dfbf4079b",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
   "scope": "DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test."
