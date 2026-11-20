@@ -465,7 +465,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="nonorient" title="4D Non-Orientable Surfaces Studio v2">22. Non-Orientable</button>
     <button class="tab" data-mode="penteract" title="5D Penteract &amp; 8D E₈ Root System Studio v2">23. 5D / E₈</button>
     <button class="tab" data-mode="leech" title="24D Leech Lattice Projection Studio v2">24. Leech</button>
-    <button class="tab" data-mode="pentlite" title="5D Penteract &amp; 8D E8 Root System Explorer (Lite)">25. 5D Lite</button>
+    <button class="tab" data-mode="pentlite" hidden data-menu="off" title="5D Penteract &amp; 8D E8 Root System Explorer (Lite)">25. 5D Lite</button>
     <button class="tab" data-mode="hopf" title="4D Hopf Fibration Studio v2 (S³ → S²)">26. Hopf</button>
     <button class="tab" data-mode="bh2" title="Black Hole Spacetime &amp; Ringdown Explorer (Einstein Ring version)">27. Black Hole B</button>
     <button class="tab" data-mode="bh3" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
@@ -25632,7 +25632,8 @@ loop();
   ];
   const btns = [...document.querySelectorAll('.tabs .tab')];
   const byKey = {}; btns.forEach(b => { byKey[b.dataset.mode] = b; });
-  const order = btns.map(b => b.dataset.mode);   // number order, for Prev / Next
+  const inMenu = b => !b.hidden && b.getAttribute('data-menu') !== 'off';
+  const order = btns.filter(inMenu).map(b => b.dataset.mode);   // number order, for Prev / Next
   const num = b => b.textContent.split('.')[0].trim();
   const name = b => b.title || b.textContent.replace(/^\s*\d+\.\s*/, '');
   const list = document.getElementById('playList'), menuBtn = document.getElementById('playMenuBtn'), cur = document.getElementById('playCur');
@@ -25640,7 +25641,7 @@ loop();
   const listed = new Set();
   GROUPS.forEach(([g, keys], gi) => {
     const h = document.createElement('div'); h.className = 'pn-group'; h.id = 'pn-g' + gi; h.textContent = g; h.setAttribute('role', 'presentation'); list.appendChild(h);
-    keys.forEach(k => { if (byKey[k]) { addOpt(k); listed.add(k); } });
+    keys.forEach(k => { if (byKey[k] && inMenu(byKey[k])) { addOpt(k); listed.add(k); } });
   });
   const rest = order.filter(k => !listed.has(k));   // any tab not in a group still gets listed
   if (rest.length) { const h = document.createElement('div'); h.className = 'pn-group'; h.textContent = 'More'; list.appendChild(h); rest.forEach(addOpt); }
@@ -25799,7 +25800,17 @@ loop();
   window.addEventListener('resize', () => close(false));
   const step = d => {
     const seq = liteOn() && !HEAVY[current()] ? order.filter(k => !HEAVY[k]) : order;
-    const i = seq.indexOf(current()); choose(seq[(i + d + seq.length) % seq.length]);
+    let i = seq.indexOf(current());
+    if (i < 0) {
+      const all = btns.map(b => b.dataset.mode);
+      const start = Math.max(0, all.indexOf(current()));
+      for (let s = 1; s <= all.length; s++) {
+        const k = all[(start + d * s + all.length * 8) % all.length];
+        if (seq.includes(k)) { choose(k); return; }
+      }
+      return;
+    }
+    choose(seq[(i + d + seq.length) % seq.length]);
   };
   document.getElementById('playPrev').addEventListener('click', () => step(-1));
   document.getElementById('playNext').addEventListener('click', () => step(1));
@@ -25808,7 +25819,8 @@ loop();
   function fromHash() {
     const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
     if (!h) return;
-    const k = byKey[h] ? h : (order.find(x => num(byKey[x]) === h) || null);
+    const all = btns.map(b => b.dataset.mode);
+    const k = byKey[h] ? h : (all.find(x => num(byKey[x]) === h) || null);
     if (k) choose(k, true);
   }
   window.addEventListener('hashchange', fromHash);
