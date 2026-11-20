@@ -298,3 +298,11 @@ No proof link added.
 **Some results proved; limits below.** The roughness bound applies to centered, nonconstant real windows with n ≥ 3. Flat windows have an undefined ratio. Solver convergence, the stall threshold, intended plaintext and generated key certificates are outside this library’s cycle proofs.
 
 [Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [Cosine equality case](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L228)
+
+<a id="more-materials"></a>
+
+### 34. More materials
+
+**Related theorem; limited match.** This tab was added later. Every non-main branch of every NousVolition repo was checked for further Lean files; no side-branch result matched Aerogel, Vantablack, Nuclear Pasta, Gallium, Darwin’s Bark Spider Silk or Nitrogen Triiodide, and none added a tighter Ferrofluids match. Only the Ferrofluids smoothing pass matches a Lean result: one step of the ring heat flow in RingDecay, with t at most 1/4 (`energy_heatStep_le_mean`). That is a related match, not a proof of the material as a whole. Magnetic spikes, swirl, colors and patterns sit outside the proof. The other six materials have no matching Lean file. Gallium melting, the silk snap length and the Nitrogen Triiodide crumble (a single soft fade, never a strobe) are ordinary physical behavior, not proved.
+
+[Ring smoothing step](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L191)

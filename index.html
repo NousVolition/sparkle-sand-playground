@@ -474,6 +474,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="e8studio2" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2">31. E₈ → Milnor v2</button>
     <button class="tab" data-mode="unit-distances" title="Unit Distances on a Square Grid">32. Unit Distances</button>
     <button class="tab" data-mode="cipher" title="Homophonic Cipher Annealing Inspector">33. Cipher Inspector</button>
+    <button class="tab" data-mode="more-materials" title="More materials">34. More materials</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -24763,6 +24764,723 @@ setLinked(linkedOn);
 
 setControls();
 loop();
+// Tab 34 "More materials" — Copyright © 2026 NousVolition. All rights reserved.
+// A separate canvas and a data-driven catalog. The home Sand materials list is not touched.
+(function moreMaterials() {
+  const MODE = 'more-materials';
+  const PATTERNS = [
+    { key: 'solid', name: 'Solid' },
+    { key: 'speckle', name: 'Speckle' },
+    { key: 'stripes', name: 'Stripes' },
+    { key: 'swirl', name: 'Swirl' },
+    { key: 'gradient', name: 'Gradient' }
+  ];
+  const SMOOTH_T = 0.25; // RingDecay energy_heatStep_le_mean requires t ≤ 1/4
+  const RING_HREF = 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L191';
+  const CATALOG = [
+    {
+      key: 'aerogel',
+      name: 'Aerogel',
+      also: 'Frozen Smoke',
+      blurb: 'Very light, pale grains that settle slowly, pile loosely, and crush easily.',
+      lean: 'No Lean file backs this material. The look and motion are ordinary physical aerogel.',
+      colors: ['#e8f0f6', '#f7fbff', '#cfe4f2', '#e8dcc8'],
+      patterns: ['solid', 'speckle', 'gradient'],
+      mass: 0.28, fall: 0.07, slide: 0.72, alpha: 0.72
+    },
+    {
+      key: 'vantablack',
+      name: 'Vantablack',
+      also: '',
+      blurb: 'Grains so dark they barely show shape or shine, and they eat light rather than bounce it.',
+      lean: 'No Lean file backs this material. The look is ordinary physical Vantablack.',
+      colors: ['#050505', '#0a0806', '#07080a'],
+      patterns: ['solid', 'gradient'],
+      mass: 1.0, fall: 0.22, slide: 0.28, alpha: 1
+    },
+    {
+      key: 'pasta',
+      name: 'Nuclear Pasta',
+      also: '',
+      blurb: 'A dense, heavy pile. Stripes, threads and speckle follow the usual pasta phases. This is a picture, not a proved crust.',
+      lean: 'No Lean file backs this material. The phases are ordinary pictures of nuclear pasta.',
+      colors: ['#cbb89a', '#9a8f84', '#e6d9b8', '#7a7468'],
+      patterns: ['solid', 'speckle', 'stripes', 'swirl', 'gradient'],
+      mass: 1.8, fall: 0.32, slide: 0.16, alpha: 1
+    },
+    {
+      key: 'gallium',
+      name: 'Gallium',
+      also: '',
+      blurb: 'Silvery metal that stays solid when cool and slumps into a puddle when warmed, then hardens as it cools.',
+      lean: 'No Lean file backs this material. Melting and cooling are ordinary physical gallium, not a Lean freeze theorem.',
+      colors: ['#c5cdd4', '#9aa3ab', '#d7e0e8', '#b7c0c6'],
+      patterns: ['solid', 'gradient', 'swirl'],
+      mass: 1.4, fall: 0.24, slide: 0.22, alpha: 1
+    },
+    {
+      key: 'ferro',
+      name: 'Ferrofluids',
+      also: '',
+      blurb: 'Dark, heavy fluid that climbs toward a magnet and makes spikes. A separate smoothing pass evens the outline.',
+      lean: 'Related: only the smoothing pass matches RingDecay energy_heatStep_le_mean, with t at most 1/4. Magnetic spikes, swirl, colors and patterns sit outside the proof.',
+      leanHref: RING_HREF,
+      leanLabel: 'RingDecay.energy_heatStep_le_mean',
+      colors: ['#1a120e', '#3a1c14', '#7a1f1f', '#16324a', '#14532d'],
+      patterns: ['solid', 'speckle', 'swirl', 'stripes'],
+      mass: 1.3, fall: 0.22, slide: 0.35, alpha: 1
+    },
+    {
+      key: 'silk',
+      name: "Darwin's Bark Spider Silk",
+      also: '',
+      blurb: 'Long, strong, slightly stretchy golden threads. They can hold a wide span, then snap at a chosen length that is not proved.',
+      lean: 'No Lean file backs this material. The snap length is a chosen number, not a proved constant. Tab 6 Silk is a different page, also with no matching motion proof.',
+      colors: ['#e6c35c', '#f3dfa0', '#f7eed6', '#ffffff'],
+      patterns: ['solid', 'stripes', 'speckle', 'gradient'],
+      mass: 0.45, fall: 0.12, slide: 0.08, alpha: 0.95,
+      snap: 8
+    },
+    {
+      key: 'ni3',
+      name: 'Nitrogen Triiodide',
+      also: '',
+      blurb: 'Deep violet-brown crystals that sit quietly until touched, then crumble once to a pale dust. The burst is a single soft fade, never a strobe.',
+      lean: 'No Lean file backs this material. The touch threshold and the crumble are ordinary physical Nitrogen Triiodide, not proved.',
+      colors: ['#3b1848', '#2a1014', '#4a2270', '#5a3040'],
+      patterns: ['solid', 'speckle'],
+      mass: 1.1, fall: 0.24, slide: 0.2, alpha: 1
+    }
+  ];
+  const byKey = {};
+  CATALOG.forEach(m => { byKey[m.key] = m; });
+
+  const css = `
+    #mmStage { position:absolute; inset:0; z-index:5; display:none; overflow:hidden; background:#12161f; color:#d7dbe6;
+      font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #mmStage canvas { display:block; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+    #mmStage .mm-copy { position:absolute; right:12px; bottom:8px; font-size:11px; opacity:0.7; pointer-events:none; }
+    #mmStage .mm-note { position:absolute; left:12px; top:12px; max-width:min(92%, 420px); padding:8px 12px; border-radius:12px;
+      background:rgba(16,20,32,0.84); border:1px solid rgba(130,148,196,0.18); pointer-events:auto; font-size:12px; line-height:1.45; }
+    #mmStage .mm-note a { color:#7dd3fc; }
+    #controls .mm-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; width:100%; }
+    #controls .mm-lab { font-size:11px; letter-spacing:0.04em; text-transform:uppercase; opacity:0.7; width:100%; margin-top:4px; }
+    #controls button.mm-mat, #controls button.mm-pat, #controls button.mm-tool { padding:6px 8px; }
+    #controls button.mm-mat.active, #controls button.mm-pat.active, #controls button.mm-tool.active { outline:2px solid #22d3ee; }
+    #controls button.mm-pat:disabled { opacity:0.4; cursor:not-allowed; }
+    #controls .mm-swatch { width:22px; height:22px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; }
+    #controls .mm-swatch.active { border-color:#fff; }
+    #controls .mm-custom { width:28px; height:22px; border:0; padding:0; background:none; cursor:pointer; }
+    #controls .mm-lean { width:100%; font-size:12px; line-height:1.4; opacity:0.9; }
+    #controls .mm-lean a { color:#7dd3fc; }
+  `;
+
+  function ready() {
+    if (document.getElementById('mmStage')) return document.getElementById('mmStage');
+    const st = document.createElement('style');
+    st.textContent = css;
+    document.head.appendChild(st);
+    const stage = document.createElement('div');
+    stage.id = 'mmStage';
+    stage.innerHTML = '<canvas id="mmCanvas"></canvas><div class="mm-note" id="mmNote"></div><div class="mm-copy">Copyright © 2026 NousVolition. All rights reserved.</div>';
+    const host = document.getElementById('canvas-container');
+    host.appendChild(stage);
+    return stage;
+  }
+
+  const EMPTY = 0, GRAIN = 1;
+  let mat = CATALOG[0], color = CATALOG[0].colors[0], pattern = 'solid', tool = 'pour';
+  let size = 4, cols = 0, rows = 0, cell = 4;
+  let type, kind, pix, heat, flag, link, rest;
+  let flying = [];
+  let magnet = null, magnetOn = false;
+  let silkSeq = 1;
+  let running = false, raf = 0, frame = 0, drawBuf = null, drawBufCtx = null;
+  let canvas, ctx, stage, pointer = { down:false, x:0, y:0, px:0, py:0 };
+
+  function store(k, v) { try { localStorage.setItem('sparkle.moremat.' + k, v); } catch (e) {} }
+  function load(k, d) { try { return localStorage.getItem('sparkle.moremat.' + k) || d; } catch (e) { return d; } }
+
+  function bootState() {
+    const k = load('key', 'aerogel');
+    mat = byKey[k] || CATALOG[0];
+    color = load('color', mat.colors[0]);
+    pattern = load('pattern', mat.patterns[0]);
+    if (mat.patterns.indexOf(pattern) < 0) pattern = mat.patterns[0];
+  }
+  bootState();
+
+  function hexRgb(h) {
+    const n = parseInt(h.slice(1), 16);
+    return [n >> 16 & 255, n >> 8 & 255, n & 255];
+  }
+  function pack(r, g, b) { return (255 << 24) | (b << 16) | (g << 8) | r; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function shadeAt(m, hex, x, y, origin) {
+    let [r, g, b] = hexRgb(hex);
+    const pat = (m.patterns.indexOf(pattern) >= 0) ? pattern : 'solid';
+    if (m.key === 'vantablack') {
+      const j = (Math.random() * 6) | 0;
+      r = Math.min(r, 12) + j; g = Math.min(g, 12) + j; b = Math.min(b, 12) + (j >> 1);
+      return pack(r, g, b);
+    }
+    if (pat === 'speckle') {
+      const k = 0.82 + Math.random() * 0.3;
+      r = clamp(r * k, 0, 255) | 0; g = clamp(g * k, 0, 255) | 0; b = clamp(b * k, 0, 255) | 0;
+    } else if (pat === 'stripes') {
+      const band = Math.floor((x + y * 0.3) / 5) & 1;
+      const k = band ? 0.72 : 1.08;
+      r = clamp(r * k, 0, 255) | 0; g = clamp(g * k, 0, 255) | 0; b = clamp(b * k, 0, 255) | 0;
+    } else if (pat === 'swirl' && origin) {
+      const ang = Math.atan2(y - origin.y, x - origin.x);
+      const k = 0.85 + 0.25 * Math.sin(ang * 3);
+      r = clamp(r * k, 0, 255) | 0; g = clamp(g * k, 0, 255) | 0; b = clamp(b * k, 0, 255) | 0;
+    } else if (pat === 'gradient') {
+      const t = clamp((y / (rows || 1)), 0, 1);
+      r = clamp(r * (1 - 0.35 * t) + 40 * t, 0, 255) | 0;
+      g = clamp(g * (1 - 0.35 * t) + 40 * t, 0, 255) | 0;
+      b = clamp(b * (1 - 0.25 * t) + 30 * t, 0, 255) | 0;
+    } else {
+      const k = 0.94 + Math.random() * 0.1;
+      r = clamp(r * k, 0, 255) | 0; g = clamp(g * k, 0, 255) | 0; b = clamp(b * k, 0, 255) | 0;
+    }
+    return pack(r, g, b);
+  }
+
+  function resize() {
+    stage = ready();
+    canvas = document.getElementById('mmCanvas');
+    ctx = canvas.getContext('2d', { alpha: false });
+    const dpr = window.devicePixelRatio || 1;
+    const w = stage.clientWidth || 1, h = stage.clientHeight || 1;
+    const W = Math.max(1, Math.round(w * dpr)), H = Math.max(1, Math.round(h * dpr));
+    if (canvas.width !== W || canvas.height !== H) {
+      canvas.width = W; canvas.height = H;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cell = 4;
+    const nc = Math.max(8, Math.floor(w / cell)), nr = Math.max(8, Math.floor(h / cell));
+    if (nc !== cols || nr !== rows) {
+      const ot = type, ok = kind, op = pix, oh = heat, of = flag, ol = link, orr = rest, oc = cols, orw = rows;
+      cols = nc; rows = nr;
+      const n = cols * rows;
+      type = new Uint8Array(n);
+      kind = new Uint8Array(n);
+      pix = new Uint32Array(n);
+      heat = new Uint8Array(n);
+      flag = new Uint8Array(n);
+      link = new Int32Array(n);
+      rest = new Float32Array(n);
+      link.fill(-1);
+      if (ot) {
+        const mc = Math.min(oc, cols), mr = Math.min(orw, rows);
+        for (let y = 0; y < mr; y++) for (let x = 0; x < mc; x++) {
+          const i = y * cols + x, j = y * oc + x;
+          type[i] = ot[j]; kind[i] = ok[j]; pix[i] = op[j]; heat[i] = oh[j]; flag[i] = of[j];
+          link[i] = ol[j] >= 0 ? ((ol[j] / oc | 0) * cols + (ol[j] % oc)) : -1;
+          rest[i] = orr[j];
+        }
+      }
+    }
+  }
+
+  function idxOf(key) { return CATALOG.indexOf(byKey[key]); }
+
+  function pourAt(px, py) {
+    const rad = 1 + size;
+    const ox = (px / cell), oy = (py / cell);
+    const origin = { x: ox, y: oy };
+    const n = 2 + size * 2;
+    for (let k = 0; k < n; k++) {
+      const ang = Math.random() * Math.PI * 2, d = Math.random() * rad;
+      flying.push({
+        x: ox + Math.cos(ang) * d,
+        y: oy + Math.sin(ang) * d,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: 0.2 + Math.random() * 0.3,
+        m: idxOf(mat.key),
+        c: shadeAt(mat, color, ox, oy, origin),
+        heat: mat.key === 'gallium' ? 0 : 0,
+        silk: mat.key === 'silk' ? silkSeq : 0,
+        linkFlying: mat.key === 'silk' && flying.length ? flying.length - 1 : -1
+      });
+    }
+    if (mat.key === 'silk') silkSeq++;
+  }
+
+  function settle(p) {
+    let cx = clamp(p.x | 0, 0, cols - 1);
+    let cy = Math.floor(p.y);
+    if (cy < 0) return;
+    let lim = cy - 3;
+    while (cy >= 0 && cy >= lim && type[cy * cols + cx] !== EMPTY) cy--;
+    if (cy < 0 || cy < lim) return;
+    const i = cy * cols + cx;
+    type[i] = GRAIN;
+    kind[i] = p.m;
+    pix[i] = p.c;
+    heat[i] = p.heat || 0;
+    flag[i] = 0;
+    link[i] = -1;
+    rest[i] = 0;
+    if (p.silk && p.linkFlying >= 0) {
+      // link later if the previous flyer has settled nearby — skip; silk links form from neighbors after settle
+    }
+  }
+
+  function at(x, y) {
+    if (x < 0 || x >= cols || y < 0 || y >= rows) return 1;
+    return type[y * cols + x];
+  }
+  function recOf(i) { return CATALOG[kind[i]] || CATALOG[0]; }
+
+  function updateFlying() {
+    const keep = [];
+    for (const p of flying) {
+      const rec = CATALOG[p.m] || CATALOG[0];
+      p.vy = Math.min(p.vy + rec.fall, 8);
+      p.vx *= 0.98;
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) { p.x = 0; p.vx = Math.abs(p.vx) * 0.3; }
+      if (p.x > cols - 0.01) { p.x = cols - 0.01; p.vx = -Math.abs(p.vx) * 0.3; }
+      const cx = p.x | 0, cy = Math.floor(p.y);
+      if (cy >= rows) { settle(p); continue; }
+      if (cy >= 0 && type[cy * cols + cx] !== EMPTY) { settle(p); continue; }
+      keep.push(p);
+    }
+    flying = keep;
+    // silk: link newly settled neighbors of the same pour
+    if (mat.key === 'silk') linkSilk();
+  }
+
+  function linkSilk() {
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      if (type[i] !== GRAIN || recOf(i).key !== 'silk' || link[i] >= 0) continue;
+      let best = -1, bd = 9;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        if (!dx && !dy) continue;
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || xx >= cols || yy < 0 || yy >= rows) continue;
+        const j = yy * cols + xx;
+        if (type[j] !== GRAIN || recOf(j).key !== 'silk') continue;
+        const d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = j; }
+      }
+      if (best >= 0 && link[best] !== i) {
+        link[i] = best;
+        rest[i] = Math.sqrt(bd) || 1;
+      }
+    }
+  }
+
+  function magnetForce(x, y) {
+    if (!magnet && !magnetOn) return [0, 0];
+    const mx = magnetOn ? pointer.x / cell : magnet.x;
+    const my = magnetOn ? pointer.y / cell : magnet.y;
+    const dx = mx - x, dy = my - y, d2 = dx * dx + dy * dy + 0.8;
+    const s = 2.2 / d2;
+    return [dx * s, dy * s];
+  }
+
+  function ferroSmooth() {
+    // 1D ring of radii around the mass center; heatStep with t = 0.25 ≤ 1/4
+    let sx = 0, sy = 0, n = 0;
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ferro') {
+      sx += i % cols; sy += (i / cols) | 0; n++;
+    }
+    if (n < 12) return;
+    const cx = sx / n, cy = sy / n;
+    const N = 64, t = SMOOTH_T, r = new Float64Array(N), cnt = new Float64Array(N);
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ferro') {
+      const x = i % cols, y = (i / cols) | 0;
+      const ang = Math.atan2(y - cy, x - cx);
+      const j = ((ang + Math.PI) / (Math.PI * 2) * N) | 0;
+      const rr = Math.hypot(x - cx, y - cy);
+      const k = clamp(j, 0, N - 1);
+      if (rr > r[k]) r[k] = rr;
+      cnt[k]++;
+    }
+    for (let j = 0; j < N; j++) if (!cnt[j]) {
+      const a = r[(j + N - 1) % N], b = r[(j + 1) % N];
+      r[j] = 0.5 * (a + b);
+    }
+    const next = new Float64Array(N);
+    for (let j = 0; j < N; j++) {
+      const l = r[(j + N - 1) % N], m = r[j], rt = r[(j + 1) % N];
+      next[j] = m + t * (l - 2 * m + rt);
+      if (next[j] < 0.5) next[j] = 0.5;
+    }
+    // softly pull the outer grains toward the smoothed radius
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ferro') {
+      const x = i % cols, y = (i / cols) | 0;
+      const ang = Math.atan2(y - cy, x - cx);
+      const j = clamp(((ang + Math.PI) / (Math.PI * 2) * N) | 0, 0, N - 1);
+      const rr = Math.hypot(x - cx, y - cy);
+      if (rr > next[j] + 0.85) {
+        const nx = cx + Math.cos(ang) * next[j], ny = cy + Math.sin(ang) * next[j];
+        const tx = clamp(nx | 0, 0, cols - 1), ty = clamp(ny | 0, 0, rows - 1);
+        const j2 = ty * cols + tx;
+        if (type[j2] === EMPTY) {
+          type[j2] = GRAIN; kind[j2] = kind[i]; pix[j2] = pix[i]; heat[j2] = heat[i]; flag[j2] = flag[i];
+          type[i] = EMPTY;
+        }
+      }
+    }
+  }
+
+  function snapSilk() {
+    const rec = byKey.silk;
+    const snap = rec.snap || 8;
+    for (let i = 0; i < type.length; i++) {
+      if (type[i] !== GRAIN || recOf(i).key !== 'silk' || link[i] < 0) continue;
+      const j = link[i];
+      if (j >= type.length || type[j] !== GRAIN) { link[i] = -1; continue; }
+      const x1 = i % cols, y1 = (i / cols) | 0, x2 = j % cols, y2 = (j / cols) | 0;
+      const d = Math.hypot(x1 - x2, y1 - y2);
+      const r0 = rest[i] || 1;
+      if (d > r0 * snap) link[i] = -1;
+    }
+  }
+
+  function crumbleAt(px, py, rad) {
+    const cx = px / cell, cy = py / cell;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      if (type[i] !== GRAIN) continue;
+      const rec = recOf(i);
+      const d = Math.hypot(x - cx, y - cy);
+      if (d > rad) continue;
+      if (rec.key === 'ni3' && flag[i] === 0) {
+        flag[i] = 1; // start a one-way fade to dust; never reversed, never pulsed
+        heat[i] = 0;
+      }
+      if (rec.key === 'aerogel') {
+        // crush: drop this grain down if space, or just loosen
+        type[i] = EMPTY;
+        flying.push({ x: x + 0.2, y: y + 0.2, vx: (Math.random() - 0.5) * 0.8, vy: 0.4, m: idxOf('aerogel'), c: pix[i], heat: 0, silk: 0, linkFlying: -1 });
+      }
+    }
+  }
+
+  function updateGrid() {
+    const C = cols, R = rows, flip = frame & 1;
+    for (let y = R - 2; y >= 0; y--) {
+      for (let k = 0; k < C; k++) {
+        const x = flip ? k : C - 1 - k;
+        const i = y * C + x;
+        if (type[i] !== GRAIN) continue;
+        const rec = recOf(i);
+        let slide = rec.slide;
+        if (rec.key === 'gallium') slide = heat[i] > 80 ? 0.85 : 0.12;
+        if (rec.key === 'ni3' && flag[i]) slide = 0.7;
+        if (rec.key === 'silk' && link[i] >= 0) slide *= 0.15;
+        const below = i + C;
+        if (type[below] === EMPTY) {
+          type[below] = GRAIN; kind[below] = kind[i]; pix[below] = pix[i]; heat[below] = heat[i]; flag[below] = flag[i];
+          link[below] = link[i]; rest[below] = rest[i];
+          type[i] = EMPTY; link[i] = -1;
+          continue;
+        }
+        const dir = flip ? 1 : -1;
+        const side = x + dir;
+        if (side >= 0 && side < C && type[y * C + side] === EMPTY && type[(y + 1) * C + side] === EMPTY && Math.random() < slide) {
+          const j = (y + 1) * C + side;
+          type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
+          link[j] = link[i]; rest[j] = rest[i];
+          type[i] = EMPTY; link[i] = -1;
+          continue;
+        }
+        if (rec.key === 'ferro') {
+          const [fx, fy] = magnetForce(x, y);
+          const nx = clamp((x + Math.round(Math.sign(fx) * (Math.random() < Math.min(1, Math.abs(fx)) ? 1 : 0))) | 0, 0, C - 1);
+          const ny = clamp((y + Math.round(Math.sign(fy) * (Math.random() < Math.min(1, Math.abs(fy)) ? 1 : 0))) | 0, 0, R - 1);
+          const j = ny * C + nx;
+          if ((nx !== x || ny !== y) && type[j] === EMPTY) {
+            type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
+            type[i] = EMPTY;
+          }
+        }
+      }
+    }
+    // gallium cools slowly, no pulse
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'gallium' && heat[i] > 0) {
+      if ((frame & 3) === 0) heat[i]--;
+    }
+    // NI3 one-way crumble: fade color toward pale dust, then stay dust. No strobe.
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ni3' && flag[i] && flag[i] < 40) {
+      flag[i]++;
+      const t = flag[i] / 40;
+      const r = pix[i] & 255, g = (pix[i] >> 8) & 255, b = (pix[i] >> 16) & 255;
+      const nr = (r + (220 - r) * t) | 0, ng = (g + (210 - g) * t) | 0, nb = (b + (190 - b) * t) | 0;
+      pix[i] = pack(nr, ng, nb);
+    }
+    if ((frame & 3) === 0) ferroSmooth();
+    snapSilk();
+  }
+
+  function heatAt(px, py, rad) {
+    const cx = px / cell, cy = py / cell;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      if (type[i] !== GRAIN || recOf(i).key !== 'gallium') continue;
+      const d = Math.hypot(x - cx, y - cy);
+      if (d < rad) heat[i] = clamp(heat[i] + 12, 0, 255);
+    }
+  }
+
+  function draw() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    ctx.fillStyle = '#12161f';
+    ctx.fillRect(0, 0, w, h);
+    const img = ctx.createImageData(cols, rows);
+    const data = img.data;
+    // vantablack eats a little neighboring light: first pass write, second pass darken near it
+    const dark = new Uint8Array(cols * rows);
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'vantablack') dark[i] = 1;
+    for (let i = 0, p = 0; i < type.length; i++, p += 4) {
+      if (type[i] === EMPTY) { data[p] = 18; data[p+1] = 22; data[p+2] = 31; data[p+3] = 255; continue; }
+      const rec = recOf(i);
+      let r = pix[i] & 255, g = (pix[i] >> 8) & 255, b = (pix[i] >> 16) & 255;
+      if (rec.key === 'gallium' && heat[i] > 80) {
+        // steady warm tint, not a pulse
+        const u = (heat[i] - 80) / 175;
+        r = clamp(r + 20 * u, 0, 255) | 0;
+        g = clamp(g + 10 * u, 0, 255) | 0;
+      }
+      if (rec.key === 'aerogel') {
+        // mix a little background through, still a grain
+        r = (r * 0.78 + 18 * 0.22) | 0; g = (g * 0.78 + 22 * 0.22) | 0; b = (b * 0.78 + 31 * 0.22) | 0;
+      }
+      if (dark[i] !== 1) {
+        const x = i % cols, y = (i / cols) | 0;
+        let near = 0;
+        if (x > 0 && dark[i - 1]) near++;
+        if (x + 1 < cols && dark[i + 1]) near++;
+        if (y > 0 && dark[i - cols]) near++;
+        if (y + 1 < rows && dark[i + cols]) near++;
+        if (near) { const k = 1 - 0.18 * near; r = (r * k) | 0; g = (g * k) | 0; b = (b * k) | 0; }
+      }
+      data[p] = r; data[p+1] = g; data[p+2] = b; data[p+3] = 255;
+    }
+    // flyers
+    for (const p of flying) {
+      const x = clamp(p.x | 0, 0, cols - 1), y = clamp(p.y | 0, 0, rows - 1);
+      const o = (y * cols + x) * 4;
+      data[o] = p.c & 255; data[o+1] = (p.c >> 8) & 255; data[o+2] = (p.c >> 16) & 255; data[o+3] = 255;
+    }
+    if (!drawBuf || drawBuf.width !== cols || drawBuf.height !== rows) {
+      drawBuf = document.createElement('canvas'); drawBuf.width = cols; drawBuf.height = rows; drawBufCtx = drawBuf.getContext('2d');
+    }
+    drawBufCtx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(drawBuf, 0, 0, cols, rows, 0, 0, cols * cell, rows * cell);
+    // silk threads
+    ctx.strokeStyle = 'rgba(230,195,92,0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    let any = false;
+    for (let i = 0; i < type.length; i++) {
+      if (type[i] !== GRAIN || recOf(i).key !== 'silk' || link[i] < 0) continue;
+      const j = link[i];
+      if (type[j] !== GRAIN) continue;
+      const x1 = (i % cols) * cell + cell / 2, y1 = ((i / cols) | 0) * cell + cell / 2;
+      const x2 = (j % cols) * cell + cell / 2, y2 = ((j / cols) | 0) * cell + cell / 2;
+      ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); any = true;
+    }
+    if (any) ctx.stroke();
+    if (magnet || (magnetOn && tool === 'magnet')) {
+      const mx = (magnetOn ? pointer.x : magnet.x * cell);
+      const my = (magnetOn ? pointer.y : magnet.y * cell);
+      ctx.beginPath();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.arc(mx, my, 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  function tick() {
+    if (!running) return;
+    resize();
+    if (pointer.down) {
+      if (tool === 'pour') pourAt(pointer.x, pointer.y);
+      if (tool === 'heat') heatAt(pointer.x, pointer.y, 3 + size);
+      if (tool === 'poke' && (frame % 2 === 0)) crumbleAt(pointer.x, pointer.y, 3 + size);
+    }
+    updateFlying();
+    updateGrid();
+    draw();
+    frame++;
+    raf = requestAnimationFrame(tick);
+  }
+
+  function show() {
+    stage = ready();
+    stage.style.display = 'block';
+    resize();
+    writeNote();
+    if (!running) { running = true; raf = requestAnimationFrame(tick); }
+  }
+  function hide() {
+    running = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    if (stage) stage.style.display = 'none';
+    magnetOn = false;
+  }
+
+  function writeNote() {
+    const el = document.getElementById('mmNote');
+    if (!el) return;
+    let html = '<strong>' + mat.name + (mat.also ? ' (“' + mat.also + '”)' : '') + '</strong>. ' + mat.blurb + ' ' + mat.lean;
+    if (mat.leanHref) html += ' <a href="' + mat.leanHref + '" target="_blank" rel="noopener">' + (mat.leanLabel || 'Lean result') + '</a>';
+    el.innerHTML = html;
+    if (typeof hint !== 'undefined' && hint) {
+      hint.textContent = mat.blurb;
+      hint.classList.remove('faded');
+    }
+  }
+
+  function setMat(m) {
+    mat = m;
+    if (m.colors.indexOf(color) < 0) color = m.colors[0];
+    if (m.patterns.indexOf(pattern) < 0) pattern = m.patterns[0];
+    store('key', m.key); store('color', color); store('pattern', pattern);
+    writeNote();
+    fillControls();
+  }
+
+  function fillControls() {
+    const box = document.getElementById('controls');
+    if (!box || (typeof mode !== 'undefined' && mode !== MODE)) return;
+    box.innerHTML = '';
+    const addRow = (lab) => {
+      const r = document.createElement('div'); r.className = 'mm-row';
+      if (lab) { const s = document.createElement('div'); s.className = 'mm-lab'; s.textContent = lab; r.appendChild(s); }
+      box.appendChild(r); return r;
+    };
+    const mats = addRow('Material');
+    CATALOG.forEach(m => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mm-mat' + (m === mat ? ' active' : '');
+      b.textContent = m.name;
+      b.title = m.also ? m.name + ' (“' + m.also + '”)' : m.name;
+      b.onclick = () => setMat(m);
+      mats.appendChild(b);
+    });
+    const colsRow = addRow('Color');
+    mat.colors.forEach(hex => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mm-swatch' + (hex.toLowerCase() === color.toLowerCase() ? ' active' : '');
+      b.style.background = hex; b.title = hex;
+      b.onclick = () => { color = hex; store('color', color); fillControls(); };
+      colsRow.appendChild(b);
+    });
+    const custom = document.createElement('input');
+    custom.type = 'color'; custom.className = 'mm-custom'; custom.value = color;
+    custom.title = 'Custom color';
+    custom.oninput = () => { color = custom.value; store('color', color); fillControls(); };
+    colsRow.appendChild(custom);
+    const pats = addRow('Pattern');
+    PATTERNS.forEach(p => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mm-pat' + (pattern === p.key ? ' active' : '');
+      b.textContent = p.name;
+      const ok = mat.patterns.indexOf(p.key) >= 0;
+      b.disabled = !ok;
+      b.title = ok ? p.name : p.name + ' is not used for ' + mat.name;
+      if (ok) b.onclick = () => { pattern = p.key; store('pattern', pattern); fillControls(); };
+      pats.appendChild(b);
+    });
+    const tools = addRow('Tool');
+    [['pour', 'Pour'], ['poke', 'Poke'], ['heat', 'Heat'], ['magnet', 'Magnet'], ['clear', 'Clear']].forEach(([k, lab]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mm-tool' + (tool === k && k !== 'clear' ? ' active' : '');
+      b.textContent = lab;
+      b.onclick = () => {
+        if (k === 'clear') {
+          if (type) { type.fill(0); heat.fill(0); flag.fill(0); link.fill(-1); }
+          flying = []; magnet = null; return;
+        }
+        tool = k;
+        fillControls();
+      };
+      tools.appendChild(b);
+    });
+    const sz = addRow();
+    const lab = document.createElement('label');
+    lab.innerHTML = 'Size <input type="range" id="mmSize" min="1" max="8" value="' + size + '">';
+    sz.appendChild(lab);
+    lab.querySelector('input').oninput = e => { size = +e.target.value; };
+    const lean = document.createElement('div');
+    lean.className = 'mm-lean';
+    lean.innerHTML = mat.lean + (mat.leanHref ? ' <a href="' + mat.leanHref + '" target="_blank" rel="noopener">' + mat.leanLabel + '</a>.' : '');
+    box.appendChild(lean);
+  }
+
+  function onPointer(e, down) {
+    if (!stage || stage.style.display === 'none') return;
+    const r = canvas.getBoundingClientRect();
+    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    pointer.px = pointer.x; pointer.py = pointer.y;
+    pointer.x = t.clientX - r.left; pointer.y = t.clientY - r.top;
+    if (down === true) {
+      pointer.down = true;
+      if (tool === 'magnet') {
+        magnetOn = true;
+        magnet = { x: pointer.x / cell, y: pointer.y / cell };
+      }
+      if (tool === 'poke') crumbleAt(pointer.x, pointer.y, 3 + size);
+    }
+    if (down === false) { pointer.down = false; magnetOn = false; }
+  }
+
+  function bind() {
+    stage = ready();
+    canvas = document.getElementById('mmCanvas');
+    canvas.addEventListener('pointerdown', e => { e.preventDefault(); canvas.setPointerCapture(e.pointerId); onPointer(e, true); });
+    canvas.addEventListener('pointermove', e => onPointer(e));
+    canvas.addEventListener('pointerup', e => onPointer(e, false));
+    canvas.addEventListener('pointercancel', e => onPointer(e, false));
+    window.addEventListener('resize', () => { if (running) resize(); });
+  }
+
+  function hook() {
+    ready();
+    bind();
+    const base = setControls;
+    setControls = function () {
+      if (typeof mode !== 'undefined' && mode !== MODE) hide();
+      base.apply(this, arguments);
+      if (typeof mode !== 'undefined' && mode === MODE) { fillControls(); show(); }
+    };
+  }
+
+  hook();
+  if (typeof mode !== 'undefined' && mode === MODE) { fillControls(); show(); }
+  window.__moreMaterials = {
+    catalog: CATALOG,
+    key: () => mat.key,
+    setKey(k) { if (byKey[k]) setMat(byKey[k]); },
+    setTool(k) { tool = k; if (document.getElementById('controls') && typeof mode !== 'undefined' && mode === MODE) fillControls(); },
+    setColor(hex) { color = hex; store('color', color); if (typeof mode !== 'undefined' && mode === MODE) fillControls(); },
+    setPattern(p) { if (mat.patterns.indexOf(p) >= 0) { pattern = p; store('pattern', pattern); fillControls(); } },
+    clear() { if (type) { type.fill(0); heat.fill(0); flag.fill(0); link.fill(-1); } flying = []; magnet = null; },
+    pourAt, crumbleAt, heatAt,
+    counts() {
+      const ids = {};
+      if (!type) return ids;
+      for (let i = 0; i < type.length; i++) if (type[i]) {
+        const k = recOf(i).key; ids[k] = (ids[k] || 0) + 1;
+      }
+      ids.flying = flying.length;
+      return ids;
+    }
+  };
+})();
 // ========== FLASH CAUTION ==========
 // Entries whose recorded frames showed fast blinking or whole-screen pulsing start paused, with a small note and a
 // Play button. Her pages stay unedited: the frame's own pause helper holds them before their first animation frame.
