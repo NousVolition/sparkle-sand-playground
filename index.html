@@ -24841,11 +24841,13 @@ loop();
       mass: 0.28, fall: 0.07, slide: 0.72, alpha: 0.72
     },
     {
-      key: 'vantablack',
-      name: 'Vantablack',
+      key: 'super-black-grain',
+      name: 'Super-black grain',
       also: '',
-      blurb: 'Grains so dark they barely show shape or shine, and they eat light rather than bounce it.',
-      lean: 'No Lean file backs this material. The look is ordinary physical Vantablack.',
+      blurb: 'These grains look almost black and darken the grains next to them.',
+      lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean also proves that each color channel is at most 17 out of 255.',
+      leanHref: 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L238',
+      leanLabel: 'Grain motion in Lean',
       colors: ['#050505', '#0a0806', '#07080a'],
       patterns: ['solid', 'gradient'],
       mass: 1.0, fall: 0.22, slide: 0.28, alpha: 1
@@ -24932,7 +24934,7 @@ loop();
   };
   const REAL_COLORS = {
     aerogel: ['#e8f0f6', '#f7fbff', '#cfe4f2'],
-    vantablack: ['#050505'],
+    'super-black-grain': ['#050505'],
     pasta: ['#cbb89a', '#9a8f84', '#e6d9b8', '#7a7468'],
     gallium: ['#c5cdd4', '#b7c0c6', '#d7e0e8'],
     ferro: null,
@@ -25003,7 +25005,14 @@ loop();
 
   function bootState() {
     const k = load('key', 'aerogel');
-    mat = byKey[k] || CATALOG[0];
+    mat = Object.hasOwn(byKey, k) ? byKey[k] : null;
+    if (!mat) {
+      // The renamed grain was saved with its color and pattern.
+      const grain = byKey['super-black-grain'];
+      const savedPalette = load('color', '') && grain.patterns.includes(load('pattern', ''));
+      mat = savedPalette ? grain : CATALOG[0];
+      store('key', mat.key);
+    }
     color = load('color', mat.colors[0]);
     pattern = load('pattern', mat.patterns[0]);
     if (mat.patterns.indexOf(pattern) < 0) pattern = mat.patterns[0];
@@ -25027,7 +25036,7 @@ loop();
   function shadeAt(m, hex, x, y, origin) {
     let [r, g, b] = hexRgb(hex);
     const pat = (m.patterns.indexOf(pattern) >= 0) ? pattern : 'solid';
-    if (m.key === 'vantablack') {
+    if (m.key === 'super-black-grain') {
       const j = (Math.random() * 6) | 0;
       r = Math.min(r, 12) + j; g = Math.min(g, 12) + j; b = Math.min(b, 12) + (j >> 1);
       return pack(r, g, b);
@@ -25385,9 +25394,9 @@ loop();
     ctx.fillRect(0, 0, w, h);
     const img = ctx.createImageData(cols, rows);
     const data = img.data;
-    // vantablack eats a little neighboring light: first pass write, second pass darken near it
+    // Mark super-black grains before shading the grains beside them.
     const dark = new Uint8Array(cols * rows);
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'vantablack') dark[i] = 1;
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'super-black-grain') dark[i] = 1;
     for (let i = 0, p = 0; i < type.length; i++, p += 4) {
       if (type[i] === EMPTY) { data[p] = 18; data[p+1] = 22; data[p+2] = 31; data[p+3] = 255; continue; }
       const rec = recOf(i);

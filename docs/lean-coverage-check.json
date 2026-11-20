@@ -4,14 +4,15 @@
   "proof_revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf",
   "proof_added_revision": "53ecf1d4dc11a97871c9512b58020d926a85304c",
   "proof_symmetry_revision": "a0498c80c24b1e14925e25233afc93b235429e7b",
-  "html_sha256": "ac116586316959614c1becd5f024de694e3c16728b5997fec48f4ca44927957c",
-  "coverage_js_sha256": "f1c7f3997bf0f92eca06499d9b46606f53d701f82cc23d22df601c320bb00027",
+  "proof_light_capture_revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d",
+  "html_sha256": "d5bfd03d055298455e9a35ff598911de7448af766918f94bfad2e2d8bd9b7476",
+  "coverage_js_sha256": "ca5fafa7ffe90800fb02693062fb7a9ecbf976ecf8371363383402d2043c415c",
   "node_version": "v24.22.3",
-  "tabs_checked": 33,
+  "tabs_checked": 34,
   "status_counts": {
-    "No matching proof in this library": 19,
+    "No matching proof in this library": 16,
     "Related, not a proof of this tab": 1,
-    "Some results proved; limits below": 10,
+    "Some results proved; limits below": 14,
     "Related theorem; limited match": 3
   },
   "theorem_targets": [
@@ -118,6 +119,18 @@
       "revision": "53ecf1d4dc11a97871c9512b58020d926a85304c"
     },
     {
+      "file": "LightBounceAndCapture.lean",
+      "line": 334,
+      "declaration": "LightBounceAndCapture.tab16_captured_stays",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 297,
+      "declaration": "LightBounceAndCapture.captured_frozen",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
       "file": "E8PlumbingBridge.lean",
       "line": 188,
       "declaration": "E8PlumbingBridge.total_E8_roots",
@@ -196,13 +209,55 @@
       "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
+      "file": "LightBounceAndCapture.lean",
+      "line": 342,
+      "declaration": "LightBounceAndCapture.tab27_captured_stays",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 351,
+      "declaration": "LightBounceAndCapture.tab28_captured_stays",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
       "file": "Wirtinger.lean",
       "line": 228,
       "declaration": "CycleWirtinger.wirtinger_sharp",
       "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 238,
+      "declaration": "LightBounceAndCapture.super_black_grain_stays_at_or_below_frames",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 152,
+      "declaration": "LightBounceAndCapture.superBlackChannel_le",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 157,
+      "declaration": "LightBounceAndCapture.neighbor_share_bounds",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 87,
+      "declaration": "LightBounceAndCapture.remainder_eq",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
+    },
+    {
+      "file": "LightBounceAndCapture.lean",
+      "line": 106,
+      "declaration": "LightBounceAndCapture.absorbed_sum_add_remainder",
+      "revision": "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d"
     }
   ],
-  "axiom_declarations": 949,
+  "axiom_declarations": 1009,
   "inline_scripts_syntax_checked": 40,
   "e8_enumerations": {
     "penteract": {
@@ -331,6 +386,12 @@
       "entries_checked": 64,
       "determinant": 1
     }
+  },
+  "super_black_grain": {
+    "catalog_index": 1,
+    "ferro_index": 4,
+    "color_cases": 1536,
+    "neighbor_masks": 16
   },
   "leech": {
     "basis": [
@@ -761,12 +822,33 @@
       "start": "function stepCoupled(dt) {",
       "end": "function drawCoupled",
       "sha256": "f26d98faa9a914c93e5850f7395c6808b992fc7e1fabf27efd6cebfc9267a3a9"
+    },
+    "more-materials": {
+      "start": "(function moreMaterials() {",
+      "end": "\n})();",
+      "sha256": "da8dc7b5208ec8e481c7c353f6fb0875348d15c327b0b3c4bf8a1e9b9b73cc16"
+    },
+    "more-materials.catalog": {
+      "start": "  const SMOOTH_T = ",
+      "end": "  const byKey = ",
+      "sha256": "7f5b2fed749035a42591c2c38b6130cfead3c5c8b20a2402d560554db8160a50"
+    },
+    "more-materials.shade": {
+      "start": "  function hexRgb(",
+      "end": "  function resize()",
+      "sha256": "a42c3da6e1ce15a812ed0642429cdc950d8216acbdb3c2bda896aa666a320aea"
+    },
+    "more-materials.neighbors": {
+      "start": "      if (dark[i] !== 1) {",
+      "end": "      data[p] = r;",
+      "sha256": "1706d854601c0960d69991687d41f2f494942a922d091634bcc2503a291634fc"
     }
   },
   "lean_source_sha256": {
     "CheckAxioms.lean": "ef832815770147ce0d02a19c8509ed68f9475bc339147c1b4dd68939d4beb2ad",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:CheckAxioms.lean": "9371b5d7a26bdfb1cfb307e9a27c10c0a0adc24d007b1f1dc75ef87243c49f27",
     "a0498c80c24b1e14925e25233afc93b235429e7b:CheckAxioms.lean": "c2acabb5da368e7982bca27500e82a7b0029364e9022b4f514c611e24da60a24",
+    "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d:CheckAxioms.lean": "b9366349b34291b714cc7d51a3129c99d22395e4af0d01fc6f3c98542e8145a2",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:Gap.lean": "80ca5f81dc72ea71bebea5c73e3e814fbe3e7ae211e10a342c776be1a17f9cae",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:GapWaveTail.lean": "672ec5f670c7cf7ae8e9915acde2ed7779437218164f27251dceff00c74918a5",
     "RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
@@ -776,6 +858,7 @@
     "CubeCheeger.lean": "c7dee65161ca232c5ca51dbcb4c1c594dcfe4f2714b0e94f24047fb9768d9509",
     "EdgeOptimal.lean": "5ea6d3c18261dfd4e5dd0a68e559edd4c1109fd08b4315e71c3fe026216a6048",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
+    "cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d:LightBounceAndCapture.lean": "9ebd072a09b51da5ede89c350c50f1b3b8761c11b4c1d13c1bd2d13dc685eba6",
     "E8PlumbingBridge.lean": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
     "a0498c80c24b1e14925e25233afc93b235429e7b:ConwayOrder.lean": "2a31d9c6dddb8a10f0b121e0c3510fd14ecd60a1e324e7cfb8d9fdb8557c75a6",
     "a0498c80c24b1e14925e25233afc93b235429e7b:ConwayGenerators.lean": "8b80892fc559ea58f2a2e5b3ae81d63130ddfe0df94a0a5c66c67918d5e68e65",
