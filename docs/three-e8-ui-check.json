@@ -12,7 +12,8 @@
     "published proof links",
     "cloud default and return",
     "seven layer counts from all raw vectors on selection, Next and Previous",
-    "four signed layers link to separate Lean theorems",
+    "proof links at +8, −8, +16, −16, +32 and −32",
+    "+32 contains the selected vector and −32 contains its negative",
     "empty slots at both signs of 24",
     "unit perpendicular projection and horizontal scale",
     "layers for a filtered selection and an empty shift"
@@ -63,10 +64,37 @@
       5,
       98257
     ],
+    "endpoints": [
+      {
+        "selected": 98257,
+        "plus_32": 98257,
+        "minus_32": 101872
+      },
+      {
+        "selected": 98258,
+        "plus_32": 98258,
+        "minus_32": 101871
+      },
+      {
+        "selected": 98257,
+        "plus_32": 98257,
+        "minus_32": 101872
+      },
+      {
+        "selected": 5,
+        "plus_32": 5,
+        "minus_32": 8
+      },
+      {
+        "selected": 98257,
+        "plus_32": 98257,
+        "minus_32": 101872
+      }
+    ],
     "scope": "Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."
   },
   "source_sha256": {
-    "leech-three-e8.js": "e665f36d40f48963befd2190150109be662cd43d9e4045140cd8c0b806a052b8",
+    "leech-three-e8.js": "4af57d8c0868aeb9bb55182423618ac7cc1fbec8c208bdac215c71fb17271bbd",
     "leech-three-e8.css": "b0510b8c4f0f7d006b577c5b20769323cea8e037c23f212b553fcc48d1e1dbe2",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
