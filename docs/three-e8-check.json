@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "evidence_kind": "External integer JavaScript replay; not a Lean proof of browser execution",
+  "generator_sha256": "679e289d3cdcb814b7225e756dfe56cd58789f8193d23082ee87ca4d9599b072",
+  "formal_data_sha256": "10dfce7668bd6a952dc49478085a35fb01892db4dbcbc74572c08a325fcecf71",
+  "construction_json_sha256": "d6ad745b3c9b2c556101d017b5905a93eeeb64b5246739e6829e919195019150",
+  "browser_source_sha256": {
+    "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4",
+    "leech-three-e8.js:integer-prefix-before-mount": "f0d254b60c74d4c717216f0f3e46d7a35b7f4bb8d4504562770afb933a6507fc"
+  },
+  "distinct_glue_labels": 4096,
+  "vectors_reconstructed_in_three_e8": 196560,
+  "all_squared_lengths": 32,
+  "roots_per_e8_block": 240,
+  "base_coset_shortest_vectors": 720,
+  "coset_size_distribution": {
+    "0": 1170,
+    "64": 2880,
+    "256": 45,
+    "720": 1
+  },
+  "component_energy_patterns": {
+    "0+16+16": 11520,
+    "0+0+32": 720,
+    "8+8+16": 184320
+  },
+  "scope": "Compares browser tables with the Lean data, checks the inverse matrix, all 4096 glue readouts and all 196560 vector decompositions. This does not check rendering or claim these JavaScript checks are Lean proofs."
+}

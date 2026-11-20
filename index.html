@@ -12580,7 +12580,7 @@ window.__travelerPoint = travelerPoint;
 </template>
 <!-- end 5D Penteract & 8D E₈ Root System Studio v2 -->
 <!-- 24D Leech Lattice Projection Studio v2 — Copyright © 2026 NousVolition. All rights reserved. -->
-<!-- Tab 24: her page, unchanged, in the template below; it opens in its own frame the first time the tab opens. -->
+<!-- Tab 24: Leech projection and the proved three-E8 construction; loaded in its own frame. -->
 <div class="page-tab" id="page-leech" style="display:none"><div class="page-copy">Copyright © 2026 NousVolition. All rights reserved. <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/LICENSE" target="_blank" rel="noopener">Reuse terms</a></div></div>
 <template id="page-src-leech">
 <!DOCTYPE html>
@@ -12588,7 +12588,8 @@ window.__travelerPoint = travelerPoint;
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>24D Leech Lattice Projection Studio v2</title>
+<title>The Leech lattice · Three E₈</title>
+<link rel="stylesheet" href="leech-three-e8.css">
 <style>
   :root {
     --bg: #070913;
@@ -12734,7 +12735,7 @@ window.__travelerPoint = travelerPoint;
     <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/b9318754a0aab99b9aab3d5edaeb41649472f932/LeechBasis.lean#L379" target="_blank" rel="noopener noreferrer">Basis and volume proof</a>. No separate volume-transfer theorem is claimed for this page's coordinates.<br>
     The page's generated vectors pass a separate JavaScript check. The projection and animation are not Lean-verified; the symmetry group remains unproved.<br><br>
     <b>Why 23-fold:</b> shifting coordinates 0…22 around a circle is a symmetry of this code, so the picture repeats 23 times around the centre. The Leech lattice has no roots, so it has no Coxeter plane; this 23-fold view is a real symmetry instead.<br><br>
-    <b>History:</b> Leech found the lattice in 1965 via the Golay code (1949). It can also be built from three copies of E₈ (a Turyn-style construction), which is not drawn here.
+    <b>History:</b> Leech found the lattice in 1965 via the Golay code (1949). The Three E₈ view shows an explicit gluing of three scaled copies of E₈, proved to give this same lattice.
   </div>
 </div>
 <script>
@@ -12882,6 +12883,7 @@ const img = offCtx.createImageData(S, S);
 const acc = new Float32Array(S * S * 3);
 
 function render() {
+  if (window.__leechThreeE8Active) { requestAnimationFrame(render); return; }
   if (spinning && !dragging) spin += 0.003;
   acc.fill(0);
   const pal = palettes[palIdx].c;
@@ -12917,6 +12919,9 @@ function render() {
 }
 render();
 </script>
+<script src="leech-three-e8-data.js"></script>
+<script src="leech-three-e8.js"></script>
+<script>LeechThreeE8.mount({vecs, shellOf, N});</script>
 </body>
 </html>
 </template>
