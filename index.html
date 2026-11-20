@@ -82,6 +82,31 @@ Third-party material is governed by its own terms.
   .sound-btn.active { background: #c084fc; color: #000; border: 1px solid #c084fc; }
   .link-btn.active { background: var(--accent); border: 1px solid var(--accent); }
   .linked-note { font-size: 0.78rem; color: var(--muted); }
+
+  /* Combined-tab view switch (Black Hole 16/27/28, E₈ → Milnor 31/29). No transitions. */
+  #viewSwitch { display: none; align-items: center; gap: 6px; flex: 0 1 auto; flex-wrap: wrap; }
+  #viewSwitch.on { display: flex; }
+  #viewSwitch .vs-label { font-size: 0.78rem; color: var(--muted); margin-right: 2px; }
+  #viewSwitch button {
+    font: inherit;
+    font-size: 0.78rem;
+    padding: 6px 11px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: none;
+  }
+  #viewSwitch button[aria-pressed="true"] {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  @media (max-width: 700px) {
+    #viewSwitch button { min-height: 44px; padding: 8px 12px; }
+  }
   .tab, .sound-btn { padding: 8px 10px; }
   .tabs { gap: 5px; }
   header { padding: 16px 18px; }
@@ -467,9 +492,9 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="leech" title="24D Leech Lattice Projection Studio v2">24. Leech</button>
     <button class="tab" data-mode="pentlite" hidden data-menu="off" title="5D Penteract &amp; 8D E8 Root System Explorer (Lite)">25. 5D Lite</button>
     <button class="tab" data-mode="hopf" title="4D Hopf Fibration Studio v2 (S³ → S²)">26. Hopf</button>
-    <button class="tab" data-mode="bh2" title="Black Hole Spacetime &amp; Ringdown Explorer (Einstein Ring version)">27. Black Hole B</button>
-    <button class="tab" data-mode="bh3" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
-    <button class="tab" data-mode="e8studio" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio">29. E₈ → Milnor</button>
+    <button class="tab" data-mode="bh2" hidden data-menu="off" title="Black Hole Spacetime &amp; Ringdown Explorer (Einstein Ring version)">27. Black Hole B</button>
+    <button class="tab" data-mode="bh3" hidden data-menu="off" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
+    <button class="tab" data-mode="e8studio" hidden data-menu="off" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio">29. E₈ → Milnor</button>
     <button class="tab" data-mode="e8insp" title="Exact E8 &amp; Extended Hamming [8,4,4] Structural Inspector">30. E₈ Inspector</button>
     <button class="tab" data-mode="e8studio2" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2">31. E₈ → Milnor v2</button>
     <button class="tab" data-mode="unit-distances" title="Unit Distances on a Square Grid">32. Unit Distances</button>
@@ -25633,6 +25658,8 @@ loop();
   const btns = [...document.querySelectorAll('.tabs .tab')];
   const byKey = {}; btns.forEach(b => { byKey[b.dataset.mode] = b; });
   const inMenu = b => !b.hidden && b.getAttribute('data-menu') !== 'off';
+  const FACE = { bh2: 'blackhole', bh3: 'blackhole', e8studio: 'e8studio2' };
+  const faceOf = k => FACE[k] || k;
   const order = btns.filter(inMenu).map(b => b.dataset.mode);   // number order, for Prev / Next
   const num = b => b.textContent.split('.')[0].trim();
   const name = b => b.title || b.textContent.replace(/^\s*\d+\.\s*/, '');
@@ -25740,10 +25767,10 @@ loop();
   let focusI = -1;
   function current() { const a = document.querySelector('.tabs .tab.active'); return a ? a.dataset.mode : order[0]; }
   function sync() {
-    const k = current(), b = byKey[k];
+    const k = current(), b = byKey[faceOf(k)] || byKey[k];
     cur.textContent = num(b) + '. ' + name(b);
     menuBtn.title = 'Choose a playground (now: ' + num(b) + '. ' + name(b) + ')';
-    opts.forEach(o => o.setAttribute('aria-selected', o.dataset.pick === k ? 'true' : 'false'));
+    opts.forEach(o => o.setAttribute('aria-selected', o.dataset.pick === faceOf(k) ? 'true' : 'false'));
   }
   function choose(k, fromHash) {
     if (!byKey[k]) return;
@@ -25763,7 +25790,7 @@ loop();
     if (!list.hidden) return;
     document.documentElement.style.setProperty('--pn-top', Math.round(menuBtn.getBoundingClientRect().bottom + 6) + 'px');
     list.hidden = false; menuBtn.setAttribute('aria-expanded', 'true');
-    const i = vis().findIndex(o => o.dataset.pick === current());
+    const i = vis().findIndex(o => o.dataset.pick === faceOf(current()));
     setFocus(i < 0 ? 0 : i);
     vis()[focusI].scrollIntoView({ block: 'center' });
   }
@@ -25826,6 +25853,77 @@ loop();
   window.addEventListener('hashchange', fromHash);
   fromHash();
   sync();
+})();
+// View switch for combined tabs — Copyright © 2026 NousVolition. All rights reserved.
+// Host-side only: the embedded pages stay as they are. 27 and 28 are views of 16; 29 is a view of 31.
+(function viewSwitch() {
+  const GROUPS = [
+    { face: 'blackhole', label: 'View', views: [
+      { key: 'blackhole', name: 'Original' },
+      { key: 'bh2', name: 'Einstein Ring' },
+      { key: 'bh3', name: 'Disk v2' }
+    ]},
+    { face: 'e8studio2', label: 'View', views: [
+      { key: 'e8studio', name: 'Original (29)' },
+      { key: 'e8studio2', name: 'v2 (31)' }
+    ]}
+  ];
+  const byKey = {};
+  GROUPS.forEach(g => g.views.forEach(v => { byKey[v.key] = g; }));
+  const bar = document.createElement('div');
+  bar.id = 'viewSwitch';
+  bar.setAttribute('role', 'tablist');
+  const label = document.createElement('span');
+  label.className = 'vs-label';
+  bar.appendChild(label);
+  function groupOf(k) { return byKey[k] || null; }
+  function pick(k) {
+    const btn = document.querySelector('.tabs .tab[data-mode="' + k + '"]');
+    if (!btn) return;
+    if (!btn.classList.contains('active')) btn.click();
+    if (history.replaceState) history.replaceState(null, '', '#' + k);
+  }
+  function paint() {
+    const g = groupOf(mode);
+    if (!g) {
+      bar.classList.remove('on');
+      bar.hidden = true;
+      if (bar.parentNode) bar.parentNode.removeChild(bar);
+      return;
+    }
+    label.textContent = g.label;
+    [...bar.querySelectorAll('button')].forEach(b => b.remove());
+    g.views.forEach(v => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-pressed', String(v.key === mode));
+      b.setAttribute('aria-selected', String(v.key === mode));
+      b.dataset.view = v.key;
+      b.textContent = v.name;
+      b.addEventListener('click', () => pick(v.key));
+      bar.appendChild(b);
+    });
+    bar.setAttribute('aria-label', g.label);
+    bar.hidden = false;
+    bar.classList.add('on');
+    const host = document.getElementById('controls');
+    if (host && bar.parentNode !== host) host.appendChild(bar);
+    else if (host && host.lastElementChild !== bar) host.appendChild(bar);
+  }
+  const base = setControls;
+  setControls = function () {
+    base.apply(this, arguments);
+    paint();
+  };
+  window.__viewSwitch = {
+    groups: GROUPS,
+    group: () => (groupOf(mode) && groupOf(mode).face) || null,
+    view: () => mode,
+    pick,
+    pressed: () => [...bar.querySelectorAll('button[aria-pressed="true"]')].map(b => b.dataset.view)
+  };
+  paint();
 })();
 </script>
 <script>
