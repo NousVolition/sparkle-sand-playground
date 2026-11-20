@@ -9,7 +9,7 @@ const intro = `# Playground tabs and Lean proofs
 
 All 33 tabs were compared with the definitions and theorem statements in [discrete-gap-inequalities-lean at ${revision.slice(0,7)}](${base}README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
 
-Nine tabs have matching mathematical results with limits, three have a related theorem that covers only part of their calculation, and 21 have no matching proof in this library. The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
+Ten tabs have matching mathematical results with limits, three have a related theorem that covers only part of their calculation, one has a related result that is not a proof of that tab, and 19 have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
 
 ## What was checked
 
@@ -23,7 +23,7 @@ The source comparison reads the actual JavaScript enumerations, smoothing code a
 - **Ferro:** each isolated smoothing pass has the RingDecay form with t = (1 − (1 − s)^(1/3))/2, where s is the surface-tension setting. The theorem requires t ≤ 1/4, hence s ≤ 7/8. Of the 45 slider settings, 43 meet that restriction; 0.88 and 0.90 do not. All 45 were compared with the step formula. This says nothing about failure at those two settings; they are outside this theorem's hypotheses. Magnetic forcing, constant-area rescaling and the measured swirl-decay rate are separate.
 - **Ring and Pendulum:** Ring's first frequency squared agrees with the cycle gap; the −1/12 limit is not covered. Pendulum's neighbor forces match a path or cycle coupling term, but it evolves a damped second-order system, not the heat step.
 - **Zeros:** “GUE Match: 99.4%” was fixed markup, with no computed fit behind that badge. It now reads “GUE-like illustration.” The tab's drum bars are drawn from the stored Riemann zeros rather than obtained by solving a drum eigenvalue problem. These are illustrations, not a Lean proof of their correspondence.
-- **Other tempting matches:** a drawn torus is not the finite periodic grid of Torus.lean; Crystal uses six neighbors and freezing; Stretch uses a nonlinear Fourier/RK4 vorticity solver; a polychoron is not the planar polygon inequality. E8CostMirror's quadratic cost/flip identity has no matching displayed quantity in the E8 tabs, so it has no proof link there.
+- **Other tempting matches:** a drawn torus is not the finite periodic grid of Torus.lean; Crystal uses six neighbors and freezing; Stretch uses a nonlinear Fourier/RK4 vorticity solver, now with a partial match in GapWaveTail.lean (the feed formula and tail, not the measured +0.75 rate, the dP/dt budget, or Hot/Cold); a polychoron is not the planar polygon inequality. E8CostMirror's quadratic cost/flip identity has no matching displayed quantity in the E8 tabs, so it has no proof link there.
 
 ## Reproduce
 
