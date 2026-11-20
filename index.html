@@ -24850,6 +24850,21 @@ loop();
       colors: ['#3b1848', '#2a1014', '#4a2270', '#5a3040'],
       patterns: ['solid', 'speckle'],
       mass: 1.1, fall: 0.24, slide: 0.2, alpha: 1
+    },
+    {
+      key: 'stf',
+      name: 'Shear-Thickening Fluids',
+      also: 'Non-Newtonian Dilatants',
+      blurb: 'A milky liquid that flows under a slow pour or a slow drag, but a fast hit or a fast-falling grain locks the struck patch into a rigid solid for a short moment, then it relaxes back to liquid.',
+      lean: 'No Lean file backs this material, including after a check of every main and non-main branch of every NousVolition repo. The flow, the impact lock and the relaxation are ordinary physical shear-thickening behavior, not proved.',
+      colors: ['#f4f1ea', '#d9e3ec', '#efe6d8', '#c8d4de'],
+      patterns: ['solid', 'speckle', 'swirl', 'gradient'],
+      mass: 1.05, fall: 0.16, slide: 0.88, alpha: 0.94,
+      dilatant: true,
+      lockSpeed: 1.6,
+      lockFlick: 14,
+      lockTime: 24,
+      lockRadius: 5
     }
   ];
   const byKey = {};
@@ -25028,6 +25043,34 @@ loop();
     if (p.silk && p.linkFlying >= 0) {
       // link later if the previous flyer has settled nearby — skip; silk links form from neighbors after settle
     }
+    const rec = CATALOG[p.m] || CATALOG[0];
+    if (rec.dilatant && Math.hypot(p.vx || 0, p.vy || 0) >= (rec.lockSpeed || 1.6)) {
+      lockPatch(cx, cy, rec);
+    }
+  }
+
+  function lockPatch(cx, cy, rec) {
+    if (!rec || !rec.dilatant || !type) return;
+    const rad = rec.lockRadius || 5;
+    const hold = rec.lockTime || 24;
+    const x0 = Math.max(0, Math.floor(cx - rad)), x1 = Math.min(cols - 1, Math.ceil(cx + rad));
+    const y0 = Math.max(0, Math.floor(cy - rad)), y1 = Math.min(rows - 1, Math.ceil(cy + rad));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      if (Math.hypot(x - cx, y - cy) > rad) continue;
+      const i = y * cols + x;
+      if (type[i] !== GRAIN) continue;
+      const r = recOf(i);
+      if (!r.dilatant) continue;
+      // set a remaining lock; never toggle or pulse
+      if (flag[i] < hold) flag[i] = hold;
+    }
+  }
+
+  function lockAt(px, py, rec) {
+    rec = rec || mat;
+    if (!rec || !rec.dilatant) rec = byKey.stf;
+    if (!rec || !rec.dilatant) return;
+    lockPatch(px / cell, py / cell, rec);
   }
 
   function at(x, y) {
@@ -25157,6 +25200,9 @@ loop();
         flag[i] = 1; // start a one-way fade to dust; never reversed, never pulsed
         heat[i] = 0;
       }
+      if (rec.dilatant) {
+        lockPatch(cx, cy, rec);
+      }
       if (rec.key === 'aerogel') {
         // crush: drop this grain down if space, or just loosen
         type[i] = EMPTY;
@@ -25173,6 +25219,7 @@ loop();
         const i = y * C + x;
         if (type[i] !== GRAIN) continue;
         const rec = recOf(i);
+        if (rec.dilatant && flag[i]) continue; // rigid solid until the lock relaxes
         let slide = rec.slide;
         if (rec.key === 'gallium') slide = heat[i] > 80 ? 0.85 : 0.12;
         if (rec.key === 'ni3' && flag[i]) slide = 0.7;
@@ -25188,6 +25235,14 @@ loop();
         const side = x + dir;
         if (side >= 0 && side < C && type[y * C + side] === EMPTY && type[(y + 1) * C + side] === EMPTY && Math.random() < slide) {
           const j = (y + 1) * C + side;
+          type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
+          link[j] = link[i]; rest[j] = rest[i];
+          type[i] = EMPTY; link[i] = -1;
+          continue;
+        }
+        // dilatant liquid: a slow sideways seep on the same row, never while locked
+        if (rec.dilatant && side >= 0 && side < C && type[y * C + side] === EMPTY && Math.random() < slide * 0.5) {
+          const j = y * C + side;
           type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
           link[j] = link[i]; rest[j] = rest[i];
           type[i] = EMPTY; link[i] = -1;
@@ -25217,6 +25272,8 @@ loop();
       const nr = (r + (220 - r) * t) | 0, ng = (g + (210 - g) * t) | 0, nb = (b + (190 - b) * t) | 0;
       pix[i] = pack(nr, ng, nb);
     }
+    // dilatant lock relaxes once, with no pulse
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).dilatant && flag[i]) flag[i]--;
     if ((frame & 3) === 0) ferroSmooth();
     snapSilk();
   }
@@ -25253,6 +25310,12 @@ loop();
       if (rec.key === 'aerogel') {
         // mix a little background through, still a grain
         r = (r * 0.78 + 18 * 0.22) | 0; g = (g * 0.78 + 22 * 0.22) | 0; b = (b * 0.78 + 31 * 0.22) | 0;
+      }
+      if (rec.dilatant && flag[i]) {
+        const hold = rec.lockTime || 24;
+        const u = flag[i] / hold;
+        const k = 1 - 0.18 * u;
+        r = (r * k) | 0; g = (g * k) | 0; b = (b * k) | 0;
       }
       if (dark[i] !== 1) {
         const x = i % cols, y = (i / cols) | 0;
@@ -25309,6 +25372,11 @@ loop();
       if (tool === 'pour') pourAt(pointer.x, pointer.y);
       if (tool === 'heat') heatAt(pointer.x, pointer.y, 3 + size);
       if (tool === 'poke' && (frame % 2 === 0)) crumbleAt(pointer.x, pointer.y, 3 + size);
+      const flick = Math.hypot(pointer.x - pointer.px, pointer.y - pointer.py);
+      const stf = byKey.stf;
+      if (stf && flick >= (stf.lockFlick || 14)) lockAt(pointer.x, pointer.y, stf);
+      pointer.px = pointer.x;
+      pointer.py = pointer.y;
     }
     updateFlying();
     updateGrid();
@@ -25469,14 +25537,26 @@ loop();
     setColor(hex) { color = hex; store('color', color); if (typeof mode !== 'undefined' && mode === MODE) fillControls(); },
     setPattern(p) { if (mat.patterns.indexOf(p) >= 0) { pattern = p; store('pattern', pattern); fillControls(); } },
     clear() { if (type) { type.fill(0); heat.fill(0); flag.fill(0); link.fill(-1); } flying = []; magnet = null; },
-    pourAt, crumbleAt, heatAt,
+    pourAt, crumbleAt, heatAt, lockAt,
+    center(key) {
+      if (!type) return null;
+      let sx = 0, sy = 0, n = 0;
+      for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === (key || mat.key)) {
+        sx += i % cols; sy += (i / cols) | 0; n++;
+      }
+      if (!n) return null;
+      return { x: (sx / n + 0.5) * cell, y: (sy / n + 0.5) * cell, n };
+    },
     counts() {
       const ids = {};
       if (!type) return ids;
+      let locked = 0;
       for (let i = 0; i < type.length; i++) if (type[i]) {
         const k = recOf(i).key; ids[k] = (ids[k] || 0) + 1;
+        if (recOf(i).dilatant && flag[i]) locked++;
       }
       ids.flying = flying.length;
+      ids.locked = locked;
       return ids;
     }
   };
