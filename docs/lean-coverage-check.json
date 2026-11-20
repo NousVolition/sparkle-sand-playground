@@ -3,9 +3,10 @@
   "scope": "External source/computation comparison; no new Lean theorem and no interactive browser test",
   "proof_revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf",
   "proof_added_revision": "53ecf1d4dc11a97871c9512b58020d926a85304c",
-  "html_sha256": "e130e810c6f34e168a37a6346d1ecb08d1b9c9901d82c9361ebe67a7f7944eb8",
-  "coverage_js_sha256": "650dfda33118b4e8d5da368cf98df79926e606b20711627e0dbd35e012423c6f",
-  "node_version": "v24.22.1",
+  "proof_symmetry_revision": "a0498c80c24b1e14925e25233afc93b235429e7b",
+  "html_sha256": "ac116586316959614c1becd5f024de694e3c16728b5997fec48f4ca44927957c",
+  "coverage_js_sha256": "f1c7f3997bf0f92eca06499d9b46606f53d701f82cc23d22df601c320bb00027",
+  "node_version": "v24.22.3",
   "tabs_checked": 33,
   "status_counts": {
     "No matching proof in this library": 19,
@@ -129,6 +130,18 @@
       "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     },
     {
+      "file": "ConwayOrder.lean",
+      "line": 29,
+      "declaration": "ConwayOrder.card_aut",
+      "revision": "a0498c80c24b1e14925e25233afc93b235429e7b"
+    },
+    {
+      "file": "ConwayGenerators.lean",
+      "line": 21,
+      "declaration": "ConwayGenerators.listed_generate",
+      "revision": "a0498c80c24b1e14925e25233afc93b235429e7b"
+    },
+    {
       "file": "LeechThreeE8.lean",
       "line": 85,
       "declaration": "LeechThreeE8.glued_eq_leech",
@@ -189,7 +202,7 @@
       "revision": "8d520965e87e391ae4ce31bb5ee398733e8781bf"
     }
   ],
-  "axiom_declarations": 769,
+  "axiom_declarations": 949,
   "inline_scripts_syntax_checked": 40,
   "e8_enumerations": {
     "penteract": {
@@ -753,6 +766,7 @@
   "lean_source_sha256": {
     "CheckAxioms.lean": "ef832815770147ce0d02a19c8509ed68f9475bc339147c1b4dd68939d4beb2ad",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:CheckAxioms.lean": "9371b5d7a26bdfb1cfb307e9a27c10c0a0adc24d007b1f1dc75ef87243c49f27",
+    "a0498c80c24b1e14925e25233afc93b235429e7b:CheckAxioms.lean": "c2acabb5da368e7982bca27500e82a7b0029364e9022b4f514c611e24da60a24",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:Gap.lean": "80ca5f81dc72ea71bebea5c73e3e814fbe3e7ae211e10a342c776be1a17f9cae",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:GapWaveTail.lean": "672ec5f670c7cf7ae8e9915acde2ed7779437218164f27251dceff00c74918a5",
     "RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
@@ -763,6 +777,8 @@
     "EdgeOptimal.lean": "5ea6d3c18261dfd4e5dd0a68e559edd4c1109fd08b4315e71c3fe026216a6048",
     "53ecf1d4dc11a97871c9512b58020d926a85304c:RingDecay.lean": "e7f594faaff2a20978f1fab5c5ecfc48f39ee6bbdf6cff2a84aa9673f3f6c1be",
     "E8PlumbingBridge.lean": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
+    "a0498c80c24b1e14925e25233afc93b235429e7b:ConwayOrder.lean": "2a31d9c6dddb8a10f0b121e0c3510fd14ecd60a1e324e7cfb8d9fdb8557c75a6",
+    "a0498c80c24b1e14925e25233afc93b235429e7b:ConwayGenerators.lean": "8b80892fc559ea58f2a2e5b3ae81d63130ddfe0df94a0a5c66c67918d5e68e65",
     "LeechThreeE8.lean": "c9cc5c450bdb5ee6a9318b7727dd302fc08fa20fa88ed2438be7437982f26b64",
     "LeechThreeE8Cosets.lean": "e6953a4a33af94d372e8d9e03c9bba1e18fc8b300568e26ac12c4f0025ca7411",
     "PlaygroundGolay.lean": "8400f102e7c5f1827f354e0e41f6956753acdc09c6f9b568d2f4f7cf24564b0f",

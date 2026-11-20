@@ -41,15 +41,15 @@ const run = code => new vm.Script(code).runInNewContext({}, { timeout: 15000 });
 const same = (a, b) => assert.deepEqual(JSON.parse(JSON.stringify(a)), JSON.parse(JSON.stringify(b)));
 const tabs = [...html.slice(0, html.indexOf('<div class="controls"')).matchAll(/<button class="tab(?: active)?" data-mode="([^"]+)"[^>]*>(.*?)<\/button>/g)];
 same(tabs.map(m => m[1]), Object.keys(coverage.pages)); assert.equal(tabs.length, 33);
-const audit = lean('CheckAxioms.lean');
-const auditNames = [...audit.matchAll(/^#print axioms (\S+)/gm)].map(m => m[1]);
-if (coverage.addedRevision && coverage.addedRevision !== coverage.revision) {
-  const addedAudit = lean('CheckAxioms.lean', coverage.addedRevision);
-  for (const name of [...addedAudit.matchAll(/^#print axioms (\S+)/gm)].map(m => m[1])) {
-    if (!auditNames.includes(name)) auditNames.push(name);
-  }
+const allowedRevisions = new Set([coverage.revision, coverage.addedRevision, coverage.symmetryRevision].filter(Boolean));
+const auditedByRevision = new Map();
+const auditNames = new Set();
+for (const revision of allowedRevisions) {
+  const audit = lean('CheckAxioms.lean', revision);
+  const names = new Set([...audit.matchAll(/^#print axioms (\S+)/gm)].map(match => match[1]));
+  auditedByRevision.set(revision, names);
+  for (const name of names) auditNames.add(name);
 }
-const allowedRevisions = new Set([coverage.revision, coverage.addedRevision].filter(Boolean));
 const targets = [];
 for (const href of new Set(Object.values(coverage.pages).flatMap(p => p.links.map(l => l.href)))) {
   const m = href.match(/\/blob\/([^/]+)\/([^#]+)#L(\d+)$/); assert(m, href);
@@ -58,7 +58,7 @@ for (const href of new Set(Object.values(coverage.pages).flatMap(p => p.links.ma
   const decl = line.match(/^(?:theorem|lemma) (\w+)/); assert(decl, href);
   const namespace = source.match(/^namespace (\w+)/m); assert(namespace, m[2]);
   const qualified = namespace[1] + '.' + decl[1];
-  assert(auditNames.includes(qualified), 'Missing axiom report: ' + qualified);
+  assert(auditedByRevision.get(m[1]).has(qualified), 'Missing axiom report: ' + qualified);
   targets.push({ file: m[2], line: +m[3], declaration: qualified, revision: m[1] });
 }
 
@@ -233,9 +233,9 @@ assert(!html.includes('GUE Match: 99.4%'));
 const statusCounts={}; for(const page of Object.values(coverage.pages)) statusCounts[page.status]=(statusCounts[page.status]||0)+1;
 console.log(JSON.stringify({
   status:'PASS', scope:'External source/computation comparison; no new Lean theorem and no interactive browser test',
-  proof_revision:coverage.revision, proof_added_revision:coverage.addedRevision || null, html_sha256:sha(html), coverage_js_sha256:sha(fs.readFileSync(path.join(root,'proof-coverage.js'),'utf8').replace(/\r\n/g,'\n')),
+  proof_revision:coverage.revision, proof_added_revision:coverage.addedRevision || null, proof_symmetry_revision:coverage.symmetryRevision, html_sha256:sha(html), coverage_js_sha256:sha(fs.readFileSync(path.join(root,'proof-coverage.js'),'utf8').replace(/\r\n/g,'\n')),
   node_version:process.version, tabs_checked:tabs.length, status_counts:statusCounts,
-  theorem_targets:targets, axiom_declarations:auditNames.length, inline_scripts_syntax_checked:scriptCount,
+  theorem_targets:targets, axiom_declarations:auditNames.size, inline_scripts_syntax_checked:scriptCount,
   e8_enumerations:rootRecords, e8_gram_correspondence:grams, e8_tree_correspondence:trees,
   leech:leechResult, ferro, ring, pendulum, source_slices:pieces, lean_source_sha256:leanHashes
 },null,2));
