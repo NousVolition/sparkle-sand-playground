@@ -26898,7 +26898,13 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     const k = 0.9 + Math.random() * 0.16;
     if (m === SPRINKLES) { const [r, g, b] = rgb(rnd(SPRINKLE_COLS)); return pack(r, g, b, m); }
     if (m === ROCKS) { const [r, g, b] = rgb(rnd(ROCK_COLS)); return pack(Math.min(255, r * k | 0), Math.min(255, g * k | 0), Math.min(255, b * k | 0), m); }
-    if (m === SNOW) { const [r, g, b] = rgb(rnd(SNOW_COLS)); return pack(r, g, b, m); }
+    // Snow follows the chosen swatch as light and lighter tints — Copyright © 2026 NousVolition. All rights reserved.
+    if (m === SNOW) {
+      const [r, g, b] = rgb(hex || rnd(SNOW_COLS));
+      const t = rnd([0.48, 0.60, 0.72, 0.84]);
+      const lift = v => Math.min(255, v + ((255 - v) * t) | 0);
+      return pack(lift(r), lift(g), lift(b), m);
+    }
     if (m === GLITTER) {   // bright and a bit metallic
       const [r, g, b] = rgb(hex), w = 0.18 + Math.random() * 0.2;
       return pack(Math.min(255, r + (255 - r) * w | 0), Math.min(255, g + (255 - g) * w | 0), Math.min(255, b + (255 - b) * w | 0), m);
@@ -27149,7 +27155,8 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     if (m === SNOW) {
       c.fillStyle = `rgb(${r},${g},${b})`;
       c.beginPath(); c.arc(x, y, 2.05, 0, Math.PI * 2); c.fill();
-      c.fillStyle = 'rgba(150,175,215,0.35)';
+      const sr = (r * 0.62 + 20) | 0, sg = (g * 0.66 + 16) | 0, sb = (b * 0.70 + 24) | 0;
+      c.fillStyle = `rgba(${sr},${sg},${sb},0.35)`;
       c.beginPath(); c.arc(x + 0.5, y + 0.6, 1.2, 0, Math.PI * 2); c.fill();
       return;
     }
@@ -27222,7 +27229,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     },
     // a stamp color in the picked material (used by the Letters tool)
     stampColor(hex) { const c = colorFor(mat, hex, true); return c === null ? baseMold(hex) : c; },
-    usesColor() { return mat === SAND || mat === CLAY || mat === GLITTER; },
+    usesColor() { return mat === SAND || mat === CLAY || mat === GLITTER || mat === SNOW; },
     get material() { return LIST.find(m => m[0] === mat)[1]; },
     set material(k) { if (byKey[k] !== undefined) setMat(byKey[k]); },
     test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER, BEADS, LAVA,
