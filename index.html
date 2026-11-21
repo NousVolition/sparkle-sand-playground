@@ -24081,7 +24081,7 @@ loop();
       name: 'Super Black Grain',
       also: '',
       blurb: 'Absorbs 99.965% of light, based on published measurements of Surrey NanoSystems\' super-black coating (<a href="https://www.vantablack.co.uk/our-story" target="_blank" rel="noopener">Surrey NanoSystems</a>). That is a reflectance of 0.035%, which encodes as sRGB #010101. The grains are drawn at that value, with a faint edge so they stay visible on this page\'s ground. The page shows a drawing based on that number, not the real material.',
-      lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean also proves that each color channel is at most 17 out of 255.',
+      lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean bounds the earlier color formula at 17 per channel. The current drawing uses RGB (1, 1, 1) inside a pile and RGB (50, 58, 74) on exposed edges.',
       leanHref: 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L238',
       leanLabel: 'Grain motion in Lean',
       colors: ['#010101'],
@@ -24416,6 +24416,10 @@ loop();
     #controls .mm-custom { width:28px; height:22px; border:0; padding:0; background:none; cursor:pointer; }
     #controls .mm-lean { width:100%; font-size:12px; line-height:1.4; opacity:0.9; }
     #controls .mm-lean a { color:#7dd3fc; }
+    #controls .mm-contrast { width:100%; font-size:13px; }
+    #controls .mm-contrast summary { cursor:pointer; }
+    #controls .mm-contrast img { display:block; max-width:100%; height:auto; margin:8px 0; }
+    #controls .mm-contrast p { margin:6px 0; }
     #controls .mm-blue { width:100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
     #controls .mm-blue input[type=range] { flex:1; min-width:120px; }
     #controls .mm-readout, #mmStage .mm-fluor {
@@ -25381,6 +25385,15 @@ loop();
       colsRow.title = 'This material keeps its real look, so the swatches are unused in Real';
     } else if (mat.key === 'ferro') {
       colsRow.title = 'Dyed ferrofluids, a real-world option';
+    }
+    if (mat.key === 'super-black-grain') {
+      const chart = document.createElement('details');
+      chart.className = 'mm-contrast';
+      chart.innerHTML = '<summary>Outline on Welcome Navy</summary>' +
+        '<img src="guides/super-black-grain-on-navy.png" alt="A blue-gray, stair-stepped outline around a nearly black pile on Welcome Navy." width="385" height="204">' +
+        '<p>The outline measures 1.39:1 on Welcome Navy (#1C2230) and 1.65:1 on the default Tab 34 canvas (#0E1119).</p>' +
+        '<a href="guides/welcome-navy-color-chart.pdf#page=6" target="_blank" rel="noopener">Open the full color chart (PDF, page 6)</a>';
+      box.appendChild(chart);
     }
     const pats = addRow('Pattern');
     PATTERNS.forEach(p => {
