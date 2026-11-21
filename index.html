@@ -25512,7 +25512,7 @@ loop();
       p.vx += (wpx * (0.6 + 0.4 * Math.sin(p.ph + clock)) + 12 - p.vx) * Math.min(1, dt * 1.6);
       p.vy += (-9 + 26 * Math.sin(p.ph * 2 + clock * 2.3) + 14 - p.vy) * Math.min(1, dt * 1.2);
       p.x += p.vx * dt; p.y += p.vy * dt; p.ang += p.spin * dt;
-      if (p.x > W + 30 || p.y > H + 30 || p.y < -30) p.st = 2;
+      if (p.x > (L.cx1 + L.cx2) / 2 || p.x > W + 30 || p.y > H + 30 || p.y < -30) p.st = 2;
     }
     for (const s of streaks) { s.x += Math.min(0.42, v * 0.05 + 0.03) * s.sp * dt * (reduce() ? 0.4 : 1); if (s.x > 1.2) { s.x = -0.2; s.y = rnd(); } }
     for (const a of airDots) { a.ph += dt * 0.5; }
@@ -25593,7 +25593,8 @@ loop();
     if (bandT < 0.5) g.arc(L.cx1, L.platTop, rl, Math.PI, 0); else g.arc(L.cx1, L.platTop - rb, rb, 0, Math.PI * 2);
     g.stroke(); g.setLineDash([]);
     g.restore();
-    const slideX = slid ? slide * slide * (W * 0.5) : 0, slideY = slid ? slide * slide * 60 : 0;
+    const offX = L.platHalf + 20, offY = L.bodyH + 90;
+    const slideX = slid ? slide * slide * offX : 0, slideY = slid ? slide * slide * offY : 0;
     const sway = wm === 'wind' ? Math.min(2.2, wind * 0.5) : 0;
     for (const p of parts) {
       if (p.st === 2) continue;
