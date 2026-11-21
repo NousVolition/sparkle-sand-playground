@@ -16,4 +16,5 @@ jobs:
       - run: node tests/staircase-shortcut.cjs
       - run: node tests/zeros-gap.cjs
       - run: node tests/zeros-gap-crossing.cjs
+      - run: node tests/zeros-tightrope.cjs
       - run: node --check zeros-gap-ui.js && node --check staircase-shortcut.js && node --check zeros-gap-crossing.js

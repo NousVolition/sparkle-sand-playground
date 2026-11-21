@@ -299,5 +299,5 @@
     "series_cutoff": 48
   },
   "limitations": "Finite-window floating-point experiment; no interval enclosure, no proof of uniqueness or completeness of the zero search, and no RH proof. The full complex finite-part limit and theta identity are sourced mathematics, not new Lean theorems in this change.",
-  "source_sha256": "542185916bc709ef34f46c15b3fbc495253873dba5519aa40624a6c0ca6f2b2e"
+  "source_sha256": "4029f7c147d7506048f1371757c6f943207e7a6717e0c51261aab7fa978843f5"
 }

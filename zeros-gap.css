@@ -1,5 +1,7 @@
 /* Copyright © 2026 NousVolition. All rights reserved. */
 body > header .tabs { flex-wrap: wrap; }
+#tab-critical .card { min-width: 0; }
+#zetaCanvas { height: 362px; cursor: default; } /* 360px of plot plus the canvas border */
 #tab-gap { flex-direction: column; gap: 20px; font-size: 16px; line-height: 1.5; width: 100%; max-width: 1180px; }
 #tab-gap h2 { font: 500 clamp(1.8rem, 3vw, 2.7rem)/1.15 Georgia, serif; margin-bottom: 10px; }
 #tab-gap h3 { font-size: 1.15rem; margin-bottom: 8px; }

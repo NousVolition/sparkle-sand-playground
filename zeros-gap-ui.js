@@ -54,7 +54,7 @@
     <section class="gap-card"><h3>What is established?</h3>
       <p>Lean proves the real space at s = −1, the cancellation of the two smooth areas, the softened alternating identity, and the limit's agreement with ζ(−1). The complex gap used in this search is a further numerical experiment, supported by the polylogarithm expansion; it has not yet been formalized in this library.</p>
       <p class="gap-source"><a href="${lean('RamanujanGap.lean',113)}" target="_blank" rel="noopener">Merged Lean result</a> · <a href="https://dlmf.nist.gov/25.12.E12" target="_blank" rel="noopener">Complex expansion: DLMF 25.12.12</a> · <a href="docs/zeros-gap-check.json" target="_blank" rel="noopener">Saved numerical checks</a> · <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/docs/zeros-gap-experiment.md" target="_blank" rel="noopener">Methods and limits</a></p>
-      <p class="gap-muted">The other three views use illustrative constructions and stored zero ordinates. Their drum bars are not an independently solved drum spectrum.</p>
+      <p class="gap-muted">The tightrope computes its crossings from the gap. The spacing, drum and prime-wave illustrations use tabulated zero heights.</p>
     </section>`;
   document.getElementById('tab-spacing').before(section);
   const button = document.createElement('button'); button.className='tab-btn'; button.dataset.tab='gap'; button.textContent='Gap → Zeta';
