@@ -1,0 +1,37 @@
+/* Copyright © 2026 NousVolition. All rights reserved. */
+body > header .tabs { flex-wrap: wrap; }
+#tab-gap { flex-direction: column; gap: 20px; font-size: 16px; line-height: 1.5; width: 100%; max-width: 1180px; }
+#tab-gap h2 { font: 500 clamp(1.8rem, 3vw, 2.7rem)/1.15 Georgia, serif; margin-bottom: 10px; }
+#tab-gap h3 { font-size: 1.15rem; margin-bottom: 8px; }
+#tab-gap p { margin: 8px 0; max-width: 84ch; }
+#tab-gap .gap-intro { padding: 20px 0 0; }
+#tab-gap .gap-eyebrow { color: #7ae3dc; font-size: 14px; letter-spacing: .05em; }
+#tab-gap .gap-formula { font: 1.15rem/1.65 Georgia, serif; color: #edf4ff; overflow-wrap: anywhere; }
+#tab-gap .gap-layout { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(270px,1fr); gap: 18px; }
+#tab-gap .gap-card { min-width: 0; padding: clamp(14px,2vw,24px); background: #111d2e; border: 1px solid #34465c; border-radius: 10px; }
+#tab-gap label { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; font-size: 15px; }
+#tab-gap input, #tab-gap select, #tab-gap button { font: inherit; color: #e8eefc; background: #0b1322; border: 1px solid #59718d; border-radius: 5px; padding: 7px 10px; min-height: 38px; }
+#tab-gap input[type=number] { width: 100px; }
+#tab-gap button { cursor: pointer; }
+#tab-gap button:hover { border-color: #7ae3dc; }
+#tab-gap :focus-visible { outline: 2px solid #ffbe78; outline-offset: 3px; }
+#gap-map { width: 100%; height: 340px; display: block; cursor: crosshair; }
+#tab-gap .gap-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; margin: 8px 0; }
+#tab-gap .gap-muted, #tab-gap figcaption { color: #b3c2da; font-size: 14px; }
+#tab-gap .gap-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+#tab-gap dl div { border-top: 1px solid #34465c; padding: 8px 0; }
+#tab-gap dt { font-size: 14px; color: #b3c2da; }
+#tab-gap dd { font: 15px/1.6 ui-monospace,Consolas,monospace; overflow-wrap: anywhere; }
+#tab-gap .gap-table-wrap { overflow-x: auto; }
+#tab-gap table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
+#tab-gap th, #tab-gap td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #34465c; white-space: nowrap; }
+#tab-gap a { color: #7ae3dc; }
+#tab-gap summary { cursor: pointer; font-size: 1.1rem; }
+#tab-gap #golay-word { width: min(100%,370px); font-family: ui-monospace,Consolas,monospace; }
+#tab-gap .gap-status { border-left: 3px solid #7ae3dc; padding-left: 12px; }
+#tab-gap .gap-source { font-size: 14px; }
+@media(max-width:720px) {
+  #tab-gap .gap-layout { grid-template-columns: minmax(0,1fr); }
+  #gap-map { height: 300px; }
+  #tab-gap .gap-intro { padding-top: 8px; }
+}
