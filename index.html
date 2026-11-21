@@ -524,7 +524,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="bh2" hidden data-menu="off" title="Black Hole Spacetime &amp; Ringdown Explorer (Einstein Ring version)">27. Black Hole B</button>
     <button class="tab" data-mode="bh3" hidden data-menu="off" title="Black Hole Spacetime Explorer (Disk) v2">28. Black Hole C (Disk) v2</button>
     <button class="tab" data-mode="e8studio" hidden data-menu="off" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio">29. E₈ → Milnor</button>
-    <button class="tab" data-mode="e8insp" title="Exact E8 &amp; Extended Hamming [8,4,4] Structural Inspector">30. E₈ Inspector</button>
+    <button class="tab" data-mode="e8insp" title="E₈ roots and the [8,4,4] Hamming code">30. E₈ Inspector</button>
     <button class="tab" data-mode="e8studio2" title="8-Cube → E8 Root Mandala → Milnor Exotic 7-Sphere Studio v2">31. E₈ → Milnor v2</button>
     <button class="tab" data-mode="unit-distances" title="Unit Distances on a Square Grid">32. Unit Distances</button>
     <button class="tab" data-mode="cipher" title="Homophonic Cipher Annealing Inspector">33. Cipher Inspector</button>
@@ -15833,7 +15833,7 @@ draw();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exact E8 & Extended Hamming [8,4,4] Structural Inspector</title>
+<title>E₈ roots and the [8,4,4] Hamming code</title>
 <style>
   :root {
     --bg: #0b0e14;
@@ -16080,30 +16080,44 @@ draw();
   .kv { display: flex; justify-content: space-between; margin-bottom: 3px; }
   .kv span:first-child { color: var(--muted); }
   .kv span:last-child { color: var(--text); font-weight: 600; }
+  .intro { margin: 0 0 12px; max-width: 1100px; color: var(--muted); }
+  .intro b { color: var(--text); }
+  .evidence-note { margin-top: 12px; }
+  .evidence-note summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+  .evidence-note p, .evidence-note ul { margin-top: 10px; max-width: 1100px; }
+  .evidence-note ul { padding-left: 20px; }
+  .evidence-note li { margin: 6px 0; }
+  .evidence-note a { color: var(--accent); text-decoration: underline; }
+  .evidence-note code { overflow-wrap: anywhere; }
+  @media (max-width: 1180px) {
+    .controls-bar { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
 
 <header>
   <div>
-    <h1>EXACT E₈ & EXTENDED HAMMING [8, 4, 4] STRUCTURAL INSPECTOR</h1>
-    <div class="sub">Zero-Decoration Algebraic Engine • Exact GF(2) Generator • Gaussian Determinant • True ⟨u,v⟩=1 Neighbor Graph</div>
+    <h1>E₈ roots and the [8,4,4] Hamming code</h1>
+    <div class="sub">Explore 240 root vectors, their inner-product matrix, and their neighbor graph.</div>
   </div>
   <div class="controls-bar">
     <label>Brightness <input type="range" id="dimmer" min="45" max="100" value="95" style="vertical-align:middle;width:80px;"></label>
-    <span class="badge ok">240 Roots • 6,720 Edges • Norm² = 2</span>
+    <span class="badge ok" title="Fixed reference facts, independently checked for this root list">Reference: 240 roots • 6,720 edges • Norm² = 2</span>
   </div>
 </header>
+
+<p class="intro">The extended Hamming code organizes the <b>128 half-integer roots</b> into 16 groups of eight; the other <b>112 integer roots</b> are listed separately. The selected codeword, its weight, the Gram matrix and the rounded determinant update as you use the controls. Reference counts are fixed labels. Open the notes below for the independent checks, Lean proofs and topology background.</p>
 
 <div class="grid">
   <!-- PANEL 1: [8,4,4] HAMMING GENERATOR -->
   <div class="card">
     <h2>
-      <span>1. [8, 4, 4] Hamming → Spinor Lift</span>
+      <span>1. Hamming code → 128 half-integer roots</span>
       <span class="badge" id="cw-weight-badge">Weight: 0</span>
     </h2>
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">
-      Toggle 4 message bits <b>m ∈ GF(2)⁴</b> to compute <b>c = m · [I₄ | P]</b> on Cube 8:
+      Toggle 4 message bits <b>m ∈ GF(2)⁴</b> to compute <b>c = m · [I₄ | P]</b> modulo 2. Fixed code facts: 16 words, minimum distance 4, and weights 0, 4 or 8.
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
       <span style="color:var(--muted);">Message m:</span>
@@ -16125,7 +16139,7 @@ draw();
       <tbody></tbody>
     </table>
 
-    <div style="font-size:11px;color:var(--muted);margin-top:8px;">Resulting 8-Bit Codeword <b>c ∈ Cube 8</b> (Doubly-Even):</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;">Computed 8-bit codeword <b>c ∈ Cube 8</b>:</div>
     <div class="codeword-strip" id="cw-strip"></div>
 
     <div style="font-size:11px;color:var(--muted);margin:6px 0 4px;">
@@ -16137,7 +16151,7 @@ draw();
   <!-- PANEL 2: 8x8 GRAM / CARTAN MATRIX -->
   <div class="card">
     <h2>
-      <span>2. Exact 8×8 Simple Root Gram Matrix</span>
+      <span>2. Simple-root inner-product matrix</span>
       <span class="badge ok" id="det-badge">det = 1</span>
     </h2>
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">
@@ -16154,11 +16168,11 @@ draw();
     </div>
 
     <div class="inspector-box" style="margin-top:10px;">
-      <div class="kv"><span>Active Sub-Lattice:</span><span id="sub-name">E₈ (8 Simple Roots)</span></div>
-      <div class="kv"><span>Exact Gaussian Det(G):</span><span id="sub-det" style="color:var(--green);">1 (Unimodular)</span></div>
-      <div class="kv"><span>Plumbed Boundary ∂P(G):</span><span id="sub-topo">Homology Sphere (H₃ = 0)</span></div>
+      <div class="kv"><span>Active root system:</span><span id="sub-name">E₈ (8 Simple Roots)</span></div>
+      <div class="kv"><span>Determinant (rounded):</span><span id="sub-det" style="color:var(--green);">1 (Unimodular)</span></div>
+      <div class="kv"><span>Selected Gram matrix:</span><span id="sub-topo">Positive definite</span></div>
       <div style="margin-top:6px;font-size:10.5px;color:var(--muted);" id="sub-note">
-        Because det(G) = 1, the 7D boundary ∂P(E₈) of the 8D plumbing has the homology of a sphere (H₃ = 0). It is also simply connected, so by Smale's theorem it is homeomorphic to S⁷; Milnor's invariant shows it is not the standard smooth sphere, and it generates the 28 smooth structures on S⁷.
+        Every nonempty selection is independent, so its Gram determinant is positive. The empty selection has determinant 1 by convention.
       </div>
     </div>
   </div>
@@ -16166,13 +16180,13 @@ draw();
   <!-- PANEL 3: EXACT 240-ROOT GRAPH PROJECTION -->
   <div class="card">
     <h2>
-      <span>3. Exact R⁸ Root Graph (⟨u, v⟩ = 1)</span>
-      <span class="badge" id="proj-badge">Coxeter 30-Fold Plane</span>
+      <span>3. Root neighbor graph (⟨u, v⟩ = 1)</span>
+      <span class="badge" id="proj-badge">Coxeter plane (numerical)</span>
     </h2>
     <div class="toolbar">
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn-sm" id="mode-coxeter">Coxeter Plane</button>
-        <button class="btn-sm" id="mode-coords">Coord Slice (x₁+x₂, x₃+x₄)</button>
+        <button class="btn-sm" id="mode-coords">Coordinate projection (x₁+x₂, x₃+x₄)</button>
         <label style="display:flex;align-items:center;gap:4px;">
           <input type="checkbox" id="chk-int" checked> 112 Integer
         </label>
@@ -16206,6 +16220,24 @@ draw();
     </div>
   </div>
 </div>
+
+<details class="card evidence-note" id="computation-proof-note">
+  <summary>What is computed, checked, and proved?</summary>
+  <ul>
+    <li><b>Computed here:</b> the selected codeword and weight, root list, inner products, selected-root determinant, neighbor lists and drawing. The determinant uses floating-point Gaussian elimination and rounds to an integer. The Coxeter-plane basis is a numerical approximation.</li>
+    <li><b>Fixed reference labels:</b> the header counts, code minimum distance and preset determinant labels. Independent checks verify these facts; the labels themselves do not recalculate them.</li>
+    <li><b>Independent exact checks:</b> all 16 codewords, all 256 root selections (including the empty set), the partition of 128 half-integer roots, and the 240-root graph. The rounded determinant agreed with rational arithmetic in every selectable case. See the <a href="docs/e8-inspector-check.json" target="_blank" rel="noopener">saved check record</a> and <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/tab30-exact.py" target="_blank" rel="noopener">reproducible check</a>.</li>
+    <li><b>Proved in Lean:</b> <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L79" target="_blank" rel="noopener">E8PlumbingBridge.E8_det</a> states <code>E8_matrix.det = 1</code> for one fixed integer matrix. It has no variable hypotheses. The tab’s full Gram matrix is the negative of that matrix after renumbering; all 64 entries were checked externally. That bridge is not a new Lean proof. The <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L188" target="_blank" rel="noopener">112 + 128 = 240 theorem</a> proves the two finite counts, not the browser implementation or its topology text.</li>
+  </ul>
+  <p>A subset of these independent simple roots has a positive Gram determinant. Determinant zero cannot occur with the current toggles; the empty selection uses det(0×0) = 1.</p>
+</details>
+
+<details class="card evidence-note" id="topology-background">
+  <summary>Mathematical background: plumbing and exotic spheres</summary>
+  <p>For the standard eight-dimensional E₈ plumbing of tangent disk bundles over S⁴, the construction supplies the connectivity and intersection-form hypotheses. Its unimodular form gives a homology-sphere boundary. The generalized Poincaré theorem identifies the boundary topologically with S⁷; additional smooth invariants and Kervaire–Milnor theory show that it is exotic and generates Θ₇ ≅ ℤ/28ℤ. See <a href="https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf" target="_blank" rel="noopener">the plumbing construction and topology argument</a>.</p>
+  <p>For the corresponding standard eight-dimensional D₇, E₇ and A₇ plumbings, the boundary groups H₃ are ℤ/4ℤ, ℤ/2ℤ and ℤ/8ℤ. These descriptions use the construction’s homology sequence and the intersection matrix’s Smith normal form; the determinant alone gives only the finite group’s order.</p>
+  <p>These are background results about specified manifolds. This page does not construct those manifolds or compute their homology or smooth invariants. The exotic-sphere claim is <b>not a direct consequence</b> of <code>E8_det</code> alone, and comments surrounding a Lean theorem are not part of its formal statement.</p>
+</details>
 
 <script>
 (function() {
@@ -16297,7 +16329,7 @@ draw();
 
   let selectedRootIdx = roots.findIndex(r => r.simpleIdx === 0);
 
-  // Exact Coxeter plane basis vectors (orthonormalized eigenvectors of Coxeter element w = s1..s8)
+  // Numerical approximation to a Coxeter-plane basis; the iteration is unchanged.
   // Compute real Coxeter element matrix W in R^8 by multiplying the 8 reflections
   function reflect(v, alpha) {
     const k = 2 * dot8(v, alpha) / dot8(alpha, alpha);
@@ -16351,7 +16383,7 @@ draw();
       }
     }
     const weight = cw.reduce((a, b) => a + b, 0);
-    document.getElementById('cw-weight-badge').textContent = `Weight: ${weight} (d_min=4)`;
+    document.getElementById('cw-weight-badge').textContent = `Weight: ${weight}`;
 
     const strip = document.getElementById('cw-strip');
     strip.innerHTML = '';
@@ -16422,7 +16454,8 @@ draw();
     renderHamming();
   };
 
-  // PANEL 2: EXACT 8x8 CARTAN / GRAM MATRIX & GAUSSIAN DETERMINANT
+  // PANEL 2: exact integer Gram entries; floating-point elimination, rounded result.
+  // The historical function name is retained; this is not an exact-arithmetic algorithm.
   function exactDet(mat) {
     const n = mat.length;
     if (n === 0) return 1;
@@ -16496,27 +16529,19 @@ draw();
     const key = activeSimple.map(b => (b ? '1' : '0')).join('');
     if (key === '11111111') {
       subName.textContent = 'E₈ (8 Simple Roots)';
-      subTopo.textContent = 'Homology Sphere (H₃ = 0)';
-      subNote.textContent = 'det(G) = 1: the plumbed 7D boundary ∂P(E₈) is a homology sphere; being simply connected, it is homeomorphic to S⁷ (Smale), and it is Milnor\'s exotic 7-sphere.';
     } else if (key === '11111110') {
       subName.textContent = 'D₇ Fork (α₈ removed)';
-      subTopo.textContent = 'Homology Torsion H₃ = ℤ/4ℤ';
-      subNote.textContent = 'det(D₇) = 4: the boundary has order-4 torsion in H₃, so it is not a sphere.';
     } else if (key === '01111111') {
       subName.textContent = 'E₇ Sub-Lattice (α₁ removed)';
-      subTopo.textContent = 'Homology Torsion H₃ = ℤ/2ℤ';
-      subNote.textContent = 'det(E₇) = 2: the plumbed boundary has ℤ/2ℤ torsion in H₃, so it is not a sphere.';
     } else if (key === '11111011') {
       subName.textContent = 'A₇ Chain (α₆ removed)';
-      subTopo.textContent = 'Homology Torsion H₃ = ℤ/8ℤ';
-      subNote.textContent = 'det(A₇) = 8: removing α₆ leaves the straight chain α₁–α₅–α₇–α₈; the boundary has ℤ/8ℤ torsion in H₃, so it is not a sphere.';
     } else {
-      subName.textContent = `Custom Sub-Graph (${subIndices.length} roots)`;
-      subTopo.textContent = d === 1 ? 'Unimodular Boundary (H₃ = 0)' : `Torsion Order |H₃| = ${Math.abs(d)}`;
-      subNote.textContent = d === 1
-        ? 'Unimodular sub-graph (det = 1): boundary has trivial H₃ (a homology sphere).'
-        : `Non-unimodular sub-graph (det = ${d}): boundary carries non-trivial homology loops.`;
+      subName.textContent = `Custom selection (${subIndices.length} roots)`;
     }
+    subTopo.textContent = subIndices.length ? 'Positive definite' : 'Empty (0×0)';
+    subNote.textContent = subIndices.length
+      ? 'Every nonempty selection is independent, so its Gram determinant is positive. No selection available here has determinant 0.'
+      : 'No roots selected. The empty determinant is 1 by convention; this is not a claim about a boundary manifold.';
   }
 
   document.getElementById('preset-e8').onclick = () => { activeSimple = [true,true,true,true,true,true,true,true]; renderGram(); drawCanvas(); };
@@ -16694,12 +16719,12 @@ draw();
 
   document.getElementById('mode-coxeter').onclick = () => {
     projMode = 'coxeter';
-    document.getElementById('proj-badge').textContent = 'Coxeter 30-Fold Plane';
+    document.getElementById('proj-badge').textContent = 'Coxeter plane (numerical)';
     drawCanvas();
   };
   document.getElementById('mode-coords').onclick = () => {
     projMode = 'coords';
-    document.getElementById('proj-badge').textContent = 'Coordinate Orthogonal Slice';
+    document.getElementById('proj-badge').textContent = 'Coordinate projection';
     drawCanvas();
   };
   ['chk-int', 'chk-spin', 'chk-simple', 'chk-all-edges'].forEach(id => {
@@ -26354,7 +26379,7 @@ loop();
     bh2: 'Turn on the Einstein ring, or watch two holes merge and ring down.',
     bh3: 'Launch light past a hole with a glowing disk, or restart the merger.',
     e8studio: 'Morph an 8-cube into a 240-point mandala, then to Milnor\'s 7-sphere.',
-    e8insp: 'See the exact E₈ roots, and drop a root to watch the boundary change.',
+    e8insp: 'Explore E₈ roots, Hamming codewords and selected-root determinants.',
     e8studio2: 'Morph an 8-cube into E₈\'s Coxeter mandala, then to Milnor\'s 7-sphere.',
     'unit-distances': 'Pick one length and join every pair of grid dots that far apart.',
     cipher: 'Anneal a homophonic cipher, and see the Z340 grid on a torus.',

@@ -1,0 +1,2717 @@
+{
+  "status": "PASS",
+  "checked_at_utc": "2026-11-21T04:59:03.659839+00:00",
+  "scope": "Exact finite arithmetic and replay of the actual standalone JavaScript determinant function; not a Lean compilation, browser rendering test, or proof of manifold topology.",
+  "command": "python tests/tab30-exact.py [optional-index-html]",
+  "tab30_template_sha256": "2e0c7616b1eb2fb407a0ba11ac51a45cca40494aca9bdc1d1cecccdba3cc4d33",
+  "lean_source": {
+    "url": "https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L60",
+    "git_blob_sha": "49f88cf46f59e29c2d6c01f9ba4289d97053be88",
+    "statement": "theorem E8_det : E8_matrix.det = 1",
+    "fixture": [
+      [
+        -2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        -2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        -2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        -2,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        -2,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        -2,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        -2,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -2
+      ]
+    ]
+  },
+  "matrix_matches_negative_permuted_lean_matrix": true,
+  "permutation_zero_based": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    7,
+    5,
+    6
+  ],
+  "matrix_entries_checked": 64,
+  "principal_subsets_checked": 256,
+  "zero_principal_determinants": 0,
+  "determinant_range_including_empty": [
+    1,
+    36
+  ],
+  "standalone_JavaScript_determinants_match_exact_arithmetic": true,
+  "preset_determinants": {
+    "E8": 1,
+    "D7_remove_alpha8": 4,
+    "E7_remove_alpha1": 2,
+    "A7_remove_alpha6": 8
+  },
+  "preset_cokernel_checks": {
+    "D7": {
+      "gcd_of_all_6_by_6_minors": 1,
+      "cokernel_cyclic_order": 4
+    },
+    "E7": {
+      "gcd_of_all_6_by_6_minors": 1,
+      "cokernel_cyclic_order": 2
+    },
+    "A7": {
+      "gcd_of_all_6_by_6_minors": 1,
+      "cokernel_cyclic_order": 8
+    }
+  },
+  "hamming": {
+    "distinct_words": 16,
+    "weight_distribution": {
+      "0": 1,
+      "4": 14,
+      "8": 1
+    },
+    "minimum_distance": 4,
+    "groups": 16,
+    "vectors_per_group": 8,
+    "distinct_half_integer_vectors": 128,
+    "covers_all_128": true
+  },
+  "roots": {
+    "integer": 112,
+    "half_integer": 128,
+    "total": 240,
+    "squared_norm": 2,
+    "degrees": [
+      56
+    ],
+    "undirected_edges": 6720
+  },
+  "principal_minors": [
+    {
+      "mask": 0,
+      "indices_zero_based": [],
+      "determinant": 1
+    },
+    {
+      "mask": 1,
+      "indices_zero_based": [
+        0
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 2,
+      "indices_zero_based": [
+        1
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 3,
+      "indices_zero_based": [
+        0,
+        1
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 4,
+      "indices_zero_based": [
+        2
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 5,
+      "indices_zero_based": [
+        0,
+        2
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 6,
+      "indices_zero_based": [
+        1,
+        2
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 7,
+      "indices_zero_based": [
+        0,
+        1,
+        2
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 8,
+      "indices_zero_based": [
+        3
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 9,
+      "indices_zero_based": [
+        0,
+        3
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 10,
+      "indices_zero_based": [
+        1,
+        3
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 11,
+      "indices_zero_based": [
+        0,
+        1,
+        3
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 12,
+      "indices_zero_based": [
+        2,
+        3
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 13,
+      "indices_zero_based": [
+        0,
+        2,
+        3
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 14,
+      "indices_zero_based": [
+        1,
+        2,
+        3
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 15,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "determinant": 5
+    },
+    {
+      "mask": 16,
+      "indices_zero_based": [
+        4
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 17,
+      "indices_zero_based": [
+        0,
+        4
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 18,
+      "indices_zero_based": [
+        1,
+        4
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 19,
+      "indices_zero_based": [
+        0,
+        1,
+        4
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 20,
+      "indices_zero_based": [
+        2,
+        4
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 21,
+      "indices_zero_based": [
+        0,
+        2,
+        4
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 22,
+      "indices_zero_based": [
+        1,
+        2,
+        4
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 23,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 24,
+      "indices_zero_based": [
+        3,
+        4
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 25,
+      "indices_zero_based": [
+        0,
+        3,
+        4
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 26,
+      "indices_zero_based": [
+        1,
+        3,
+        4
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 27,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 28,
+      "indices_zero_based": [
+        2,
+        3,
+        4
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 29,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 30,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "determinant": 5
+    },
+    {
+      "mask": 31,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 32,
+      "indices_zero_based": [
+        5
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 33,
+      "indices_zero_based": [
+        0,
+        5
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 34,
+      "indices_zero_based": [
+        1,
+        5
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 35,
+      "indices_zero_based": [
+        0,
+        1,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 36,
+      "indices_zero_based": [
+        2,
+        5
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 37,
+      "indices_zero_based": [
+        0,
+        2,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 38,
+      "indices_zero_based": [
+        1,
+        2,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 39,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 40,
+      "indices_zero_based": [
+        3,
+        5
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 41,
+      "indices_zero_based": [
+        0,
+        3,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 42,
+      "indices_zero_based": [
+        1,
+        3,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 43,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        5
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 44,
+      "indices_zero_based": [
+        2,
+        3,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 45,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        5
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 46,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 47,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        5
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 48,
+      "indices_zero_based": [
+        4,
+        5
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 49,
+      "indices_zero_based": [
+        0,
+        4,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 50,
+      "indices_zero_based": [
+        1,
+        4,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 51,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        5
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 52,
+      "indices_zero_based": [
+        2,
+        4,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 53,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        5
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 54,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        5
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 55,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 56,
+      "indices_zero_based": [
+        3,
+        4,
+        5
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 57,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 58,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        5
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 59,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        5
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 60,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "determinant": 5
+    },
+    {
+      "mask": 61,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        5
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 62,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 63,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "determinant": 7
+    },
+    {
+      "mask": 64,
+      "indices_zero_based": [
+        6
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 65,
+      "indices_zero_based": [
+        0,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 66,
+      "indices_zero_based": [
+        1,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 67,
+      "indices_zero_based": [
+        0,
+        1,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 68,
+      "indices_zero_based": [
+        2,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 69,
+      "indices_zero_based": [
+        0,
+        2,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 70,
+      "indices_zero_based": [
+        1,
+        2,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 71,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 72,
+      "indices_zero_based": [
+        3,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 73,
+      "indices_zero_based": [
+        0,
+        3,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 74,
+      "indices_zero_based": [
+        1,
+        3,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 75,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 76,
+      "indices_zero_based": [
+        2,
+        3,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 77,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 78,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 79,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        6
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 80,
+      "indices_zero_based": [
+        4,
+        6
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 81,
+      "indices_zero_based": [
+        0,
+        4,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 82,
+      "indices_zero_based": [
+        1,
+        4,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 83,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        6
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 84,
+      "indices_zero_based": [
+        2,
+        4,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 85,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 86,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        6
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 87,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 88,
+      "indices_zero_based": [
+        3,
+        4,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 89,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 90,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 91,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 92,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        6
+      ],
+      "determinant": 5
+    },
+    {
+      "mask": 93,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 94,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 95,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "determinant": 7
+    },
+    {
+      "mask": 96,
+      "indices_zero_based": [
+        5,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 97,
+      "indices_zero_based": [
+        0,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 98,
+      "indices_zero_based": [
+        1,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 99,
+      "indices_zero_based": [
+        0,
+        1,
+        5,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 100,
+      "indices_zero_based": [
+        2,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 101,
+      "indices_zero_based": [
+        0,
+        2,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 102,
+      "indices_zero_based": [
+        1,
+        2,
+        5,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 103,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 104,
+      "indices_zero_based": [
+        3,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 105,
+      "indices_zero_based": [
+        0,
+        3,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 106,
+      "indices_zero_based": [
+        1,
+        3,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 107,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        5,
+        6
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 108,
+      "indices_zero_based": [
+        2,
+        3,
+        5,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 109,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        5,
+        6
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 110,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 111,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      "determinant": 20
+    },
+    {
+      "mask": 112,
+      "indices_zero_based": [
+        4,
+        5,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 113,
+      "indices_zero_based": [
+        0,
+        4,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 114,
+      "indices_zero_based": [
+        1,
+        4,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 115,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        5,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 116,
+      "indices_zero_based": [
+        2,
+        4,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 117,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 118,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        5,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 119,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 120,
+      "indices_zero_based": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 121,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 122,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 123,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 124,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 125,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 126,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 127,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 128,
+      "indices_zero_based": [
+        7
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 129,
+      "indices_zero_based": [
+        0,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 130,
+      "indices_zero_based": [
+        1,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 131,
+      "indices_zero_based": [
+        0,
+        1,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 132,
+      "indices_zero_based": [
+        2,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 133,
+      "indices_zero_based": [
+        0,
+        2,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 134,
+      "indices_zero_based": [
+        1,
+        2,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 135,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 136,
+      "indices_zero_based": [
+        3,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 137,
+      "indices_zero_based": [
+        0,
+        3,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 138,
+      "indices_zero_based": [
+        1,
+        3,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 139,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 140,
+      "indices_zero_based": [
+        2,
+        3,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 141,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 142,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 143,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 144,
+      "indices_zero_based": [
+        4,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 145,
+      "indices_zero_based": [
+        0,
+        4,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 146,
+      "indices_zero_based": [
+        1,
+        4,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 147,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 148,
+      "indices_zero_based": [
+        2,
+        4,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 149,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 150,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 151,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 152,
+      "indices_zero_based": [
+        3,
+        4,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 153,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 154,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 155,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 156,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 157,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 158,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 159,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 160,
+      "indices_zero_based": [
+        5,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 161,
+      "indices_zero_based": [
+        0,
+        5,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 162,
+      "indices_zero_based": [
+        1,
+        5,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 163,
+      "indices_zero_based": [
+        0,
+        1,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 164,
+      "indices_zero_based": [
+        2,
+        5,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 165,
+      "indices_zero_based": [
+        0,
+        2,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 166,
+      "indices_zero_based": [
+        1,
+        2,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 167,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 168,
+      "indices_zero_based": [
+        3,
+        5,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 169,
+      "indices_zero_based": [
+        0,
+        3,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 170,
+      "indices_zero_based": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 171,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        5,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 172,
+      "indices_zero_based": [
+        2,
+        3,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 173,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        5,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 174,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 175,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        7
+      ],
+      "determinant": 20
+    },
+    {
+      "mask": 176,
+      "indices_zero_based": [
+        4,
+        5,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 177,
+      "indices_zero_based": [
+        0,
+        4,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 178,
+      "indices_zero_based": [
+        1,
+        4,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 179,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        5,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 180,
+      "indices_zero_based": [
+        2,
+        4,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 181,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        5,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 182,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        5,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 183,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 184,
+      "indices_zero_based": [
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 185,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 186,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 187,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 188,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 189,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 20
+    },
+    {
+      "mask": 190,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 191,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "determinant": 14
+    },
+    {
+      "mask": 192,
+      "indices_zero_based": [
+        6,
+        7
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 193,
+      "indices_zero_based": [
+        0,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 194,
+      "indices_zero_based": [
+        1,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 195,
+      "indices_zero_based": [
+        0,
+        1,
+        6,
+        7
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 196,
+      "indices_zero_based": [
+        2,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 197,
+      "indices_zero_based": [
+        0,
+        2,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 198,
+      "indices_zero_based": [
+        1,
+        2,
+        6,
+        7
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 199,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 200,
+      "indices_zero_based": [
+        3,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 201,
+      "indices_zero_based": [
+        0,
+        3,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 202,
+      "indices_zero_based": [
+        1,
+        3,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 203,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        6,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 204,
+      "indices_zero_based": [
+        2,
+        3,
+        6,
+        7
+      ],
+      "determinant": 9
+    },
+    {
+      "mask": 205,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        6,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 206,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 207,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        6,
+        7
+      ],
+      "determinant": 15
+    },
+    {
+      "mask": 208,
+      "indices_zero_based": [
+        4,
+        6,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 209,
+      "indices_zero_based": [
+        0,
+        4,
+        6,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 210,
+      "indices_zero_based": [
+        1,
+        4,
+        6,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 211,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 212,
+      "indices_zero_based": [
+        2,
+        4,
+        6,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 213,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        6,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 214,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 215,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        6,
+        7
+      ],
+      "determinant": 16
+    },
+    {
+      "mask": 216,
+      "indices_zero_based": [
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 5
+    },
+    {
+      "mask": 217,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 218,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 219,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 15
+    },
+    {
+      "mask": 220,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 221,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 222,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 7
+    },
+    {
+      "mask": 223,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 224,
+      "indices_zero_based": [
+        5,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 225,
+      "indices_zero_based": [
+        0,
+        5,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 226,
+      "indices_zero_based": [
+        1,
+        5,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 227,
+      "indices_zero_based": [
+        0,
+        1,
+        5,
+        6,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 228,
+      "indices_zero_based": [
+        2,
+        5,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 229,
+      "indices_zero_based": [
+        0,
+        2,
+        5,
+        6,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 230,
+      "indices_zero_based": [
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 231,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 232,
+      "indices_zero_based": [
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 233,
+      "indices_zero_based": [
+        0,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 234,
+      "indices_zero_based": [
+        1,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 235,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 36
+    },
+    {
+      "mask": 236,
+      "indices_zero_based": [
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 18
+    },
+    {
+      "mask": 237,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 36
+    },
+    {
+      "mask": 238,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 24
+    },
+    {
+      "mask": 239,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "determinant": 30
+    },
+    {
+      "mask": 240,
+      "indices_zero_based": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 5
+    },
+    {
+      "mask": 241,
+      "indices_zero_based": [
+        0,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 242,
+      "indices_zero_based": [
+        1,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 243,
+      "indices_zero_based": [
+        0,
+        1,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 15
+    },
+    {
+      "mask": 244,
+      "indices_zero_based": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 10
+    },
+    {
+      "mask": 245,
+      "indices_zero_based": [
+        0,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 20
+    },
+    {
+      "mask": 246,
+      "indices_zero_based": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 15
+    },
+    {
+      "mask": 247,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 20
+    },
+    {
+      "mask": 248,
+      "indices_zero_based": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 4
+    },
+    {
+      "mask": 249,
+      "indices_zero_based": [
+        0,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 250,
+      "indices_zero_based": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 8
+    },
+    {
+      "mask": 251,
+      "indices_zero_based": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 12
+    },
+    {
+      "mask": 252,
+      "indices_zero_based": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 3
+    },
+    {
+      "mask": 253,
+      "indices_zero_based": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 6
+    },
+    {
+      "mask": 254,
+      "indices_zero_based": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 2
+    },
+    {
+      "mask": 255,
+      "indices_zero_based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "determinant": 1
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "checked_at_utc": "2026-11-21T04:59:27.183Z",
+  "browser_version": "157.0.8103.52",
+  "tab30_template_sha256": "2e0c7616b1eb2fb407a0ba11ac51a45cca40494aca9bdc1d1cecccdba3cc4d33",
+  "root_selections_via_actual_controls": 256,
+  "hamming_messages_via_actual_controls": 16,
+  "presets_checked": 4,
+  "empty_selection_label": true,
+  "local_evidence_link_resolves": true,
+  "proof_link": "https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L79",
+  "projection_labels": true,
+  "desktop_horizontal_overflow": false,
+  "mobile_horizontal_overflow": false,
+  "page_errors": [],
+  "unrelated_page_source_unchanged": true,
+  "unchanged_computational_ranges": [
+    {
+      "start": "const G_HAMMING =",
+      "end": "let selectedRootIdx =",
+      "sha256": "a33d97569706bcae60fce0e36bfd8945d09f1c982615f13deaac8f2a7a4f022f"
+    },
+    {
+      "start": "function reflect(",
+      "end": "function renderHamming()",
+      "sha256": "9385784e02a7914de242ba923ae205ac899cf02c98ca68ef54edc427c3f288dc"
+    },
+    {
+      "start": "function exactDet(mat)",
+      "end": "function renderGram()",
+      "sha256": "1882e238481c313acdd23635e2a52c343bb8a8122459da31c2122d332314e115"
+    },
+    {
+      "start": "function renderGram()",
+      "end": "    const key = activeSimple.map",
+      "sha256": "3a7163905dea4f74ac804a66b9aec889867c42bb247edde8f6ac5d6f97ed2474"
+    }
+  ],
+  "scope": "Headless Chrome on the full local playground and its exact Tab 30 template; no Lean compilation."
+}
