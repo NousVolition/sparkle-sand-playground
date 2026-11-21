@@ -1,0 +1,45 @@
+Tab 30 · E₈ plumbing assembly
+Lean verification · 21 November 2026
+
+PASS · Lean 4.34.0-rc2 checked all nine declarations listed below.
+
+YOURS ALONE · The Tab 30 workbench and its assembly checks are specific to this project.
+OLD IN THE PROJECT · The checks reuse the eight simple roots and the proved Gram matrix correspondence.
+KNOWN TO THE WORLD · The local plumbing construction exchanges the base and fiber disk factors.
+
+What the nine declarations establish
+
+1. gram_joint_iff — The listed joints are exactly the upper-triangular −1 entries in the simple-root Gram matrix.
+2. seven_joints — There are seven distinct joints.
+3. distinct_sites — Each attachment site occurs once in the list of paired charts.
+4. assembly_connected — Every one of the eight pieces reaches the first piece along the joints.
+5. cross_to_listed_sites — Crossing goes to the chart listed at the other end of the selected joint.
+6. cross_twice — Crossing a joint in both directions returns the original chart address and disk coordinates.
+7. zero_section_to_fiber — The zero section on one side maps to the central fiber on the other.
+8. both_zero_sections — Both representatives lie on their zero sections exactly at the chart center.
+9. distinct_caps_disjoint — The chosen closed attachment caps around different coordinate axes in S⁴ are disjoint.
+
+Lean output
+
+'Tab30PlumbingAssembly.gram_joint_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.seven_joints' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.distinct_sites' depends on axioms: [propext]
+'Tab30PlumbingAssembly.assembly_connected' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.cross_to_listed_sites' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.cross_twice' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.zero_section_to_fiber' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.both_zero_sections' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingAssembly.distinct_caps_disjoint' depends on axioms: [propext, Classical.choice, Quot.sound]
+
+Source and replay
+
+The checked source is tests/lean/Tab30PlumbingAssembly.lean in the playground.
+Its SHA-256 is 6ee5084f2fd266d536c47fca04db3d62cbb3189a9ec993e383e6b2013d7f89dc.
+The run imported the existing compiled E8Tab30Bridge module from the proof project.
+Its Lean source has Git blob 5bac3cf841316716aa8d9023492d0d540ecce4de.
+https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/af9f8d532d99b1b267c8daab81684c2d30459dee/E8Tab30Bridge.lean
+
+From a built checkout of that proof project, run lake env lean followed by the path to Tab30PlumbingAssembly.lean.
+From the playground checkout, node tests/tab30-plumbing.cjs compares the browser model's seven pairs of attachment sites with the Lean list and exercises its coordinate maps in both directions.
+
+The Lean results cover the assembly and the local disk-factor exchange. Floating-point chart coordinates are checked separately in JavaScript. Corner smoothing and the classification of the global boundary are background topology.

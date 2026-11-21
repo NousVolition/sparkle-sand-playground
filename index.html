@@ -15834,6 +15834,7 @@ draw();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>E₈ roots and the [8,4,4] Hamming code</title>
+<link rel="stylesheet" href="e8-plumbing.css">
 <style>
   :root {
     --bg: #0b0e14;
@@ -16099,7 +16100,7 @@ draw();
 <header>
   <div>
     <h1>E₈ roots and the [8,4,4] Hamming code</h1>
-    <div class="sub">Explore 240 root vectors, their inner-product matrix, and their neighbor graph.</div>
+    <div class="sub">Explore 240 root vectors and their neighbor graph. <a class="pl-jump" href="#plumbing">Assemble the plumbing ↓</a></div>
   </div>
   <div class="controls-bar">
     <label>Brightness <input type="range" id="dimmer" min="45" max="100" value="95" style="vertical-align:middle;width:80px;"></label>
@@ -16221,10 +16222,54 @@ draw();
   </div>
 </div>
 
+<section class="card plumbing" id="plumbing" aria-labelledby="pl-title">
+  <div class="pl-heading">
+    <h2 id="pl-title">4. Assemble the E₈ plumbing</h2>
+    <output id="pl-progress" aria-live="polite"></output>
+  </div>
+  <p class="pl-intro">Each circle represents a tangent disk bundle over S⁴. Choose a joint and glue its two pieces. The root toggles in panel 2 choose which pieces take part.</p>
+  <div class="pl-layout">
+    <div class="pl-assembly">
+      <canvas id="pl-tree" aria-label="Plumbing tree. Choose a joint using the selector below."></canvas>
+      <div class="pl-legend"><span class="pl-dashed">Open joint</span><span class="pl-solid">Glued</span><span class="pl-ring">Selected</span></div>
+      <div class="pl-actions">
+        <label>Joint <select id="pl-joint"></select></label>
+        <button type="button" class="btn-sm pl-primary" id="pl-glue">Glue this joint</button>
+        <button type="button" class="btn-sm" id="pl-reset">Start over</button>
+      </div>
+    </div>
+    <div class="pl-inspector">
+      <div class="pl-subheading"><h3>Across the joint</h3><span id="pl-state"></span></div>
+      <p id="pl-empty" hidden>Choose two connected simple roots in panel 2 to inspect a joint.</p>
+      <div id="pl-detail">
+        <div class="pl-patches">
+          <div class="pl-patch"><strong id="pl-left-name"></strong><canvas id="pl-left" aria-label="Selected coordinate in the first local chart"></canvas><div id="pl-left-vectors"></div></div>
+          <span class="pl-exchange" aria-hidden="true">⇄</span>
+          <div class="pl-patch"><strong id="pl-right-name"></strong><canvas id="pl-right" aria-label="Selected coordinate in the second local chart"></canvas><div id="pl-right-vectors"></div></div>
+        </div>
+        <p id="pl-relation" aria-live="polite"></p>
+        <div class="pl-coordinate-controls">
+          <label>Coordinate <select id="pl-axis"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+          <label>Base <input type="range" id="pl-base" step="any"></label>
+          <label>Fiber <input type="range" id="pl-fiber" step="any"></label>
+          <button type="button" class="btn-sm" id="pl-zero">Show center</button>
+        </div>
+        <details class="pl-math"><summary>Coordinates on the two bundles</summary>
+          <p>Each point has a base position x on the unit sphere in ℝ⁵ and a tangent vector v of length at most one. Each joint gets its own base disk. The chart pictures show one of the four coordinate pairs.</p>
+          <pre id="pl-ambient"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+  <p class="pl-foot">Each join identifies two copies of D⁴ × D⁴ by exchanging base and fiber. The tree uses the eight simple roots and their −1 inner products. A choice of alternating zero-section orientations gives the sign convention in panel 2. <a href="https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf" target="_blank" rel="noopener">Plumbing construction ↗</a> · <a href="docs/verification/tab30-plumbing-assembly.txt" target="_blank" rel="noopener">Nine Lean checks ↗</a> · <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/lean/Tab30PlumbingAssembly.lean" target="_blank" rel="noopener">Lean source ↗</a></p>
+</section>
+
 <details class="card evidence-note" id="computation-proof-note">
   <summary>What is computed, checked, and proved?</summary>
   <ul>
     <li><b>Computed here:</b> the selected codeword and weight, root list, inner products, selected-root determinant, neighbor lists and drawing. The determinant uses floating-point Gaussian elimination and rounds to an integer. The Coxeter-plane basis is a numerical approximation.</li>
+    <li><b>Plumbing workbench:</b> panel 4 computes the paired local charts in the tangent disk bundles and identifies their points at each selected joint. The drawing schematizes the pieces.</li>
+    <li><b>Assembly checks in Lean:</b> the seven joints match the simple-root matrix and connect all eight pieces. Distinct attachment caps are disjoint. Exchanging the two disk factors twice returns the starting point, and the two zero sections meet at the chart center. <a href="docs/verification/tab30-plumbing-assembly.txt" target="_blank" rel="noopener">Verification record</a> · <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/lean/Tab30PlumbingAssembly.lean" target="_blank" rel="noopener">Assembly proof</a>.</li>
     <li><b>Fixed reference labels:</b> the header counts, code minimum distance and preset determinant labels. Independent checks verify these facts; the labels themselves do not recalculate them.</li>
     <li><b>Independent exact checks:</b> all 16 codewords, all 256 root selections (including the empty set), the partition of 128 half-integer roots, and the 240-root graph. The rounded determinant agreed with rational arithmetic in every selectable case. See the <a href="docs/e8-inspector-check.json" target="_blank" rel="noopener">saved check record</a> and <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/tab30-exact.py" target="_blank" rel="noopener">reproducible check</a>.</li>
     <li><b>Proved in Lean:</b> <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L79" target="_blank" rel="noopener">E8PlumbingBridge.E8_det</a> states <code>E8_matrix.det = 1</code> for one fixed integer matrix. It has no variable hypotheses. The tab’s full Gram matrix is the negative of that matrix after renumbering; all 64 entries were checked externally. That bridge is not a new Lean proof. The <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L188" target="_blank" rel="noopener">112 + 128 = 240 theorem</a> proves the two finite counts, not the browser implementation or its topology text.</li>
@@ -16236,9 +16281,10 @@ draw();
   <summary>Mathematical background: plumbing and exotic spheres</summary>
   <p>For the standard eight-dimensional E₈ plumbing of tangent disk bundles over S⁴, the construction supplies the connectivity and intersection-form hypotheses. Its unimodular form gives a homology-sphere boundary. The generalized Poincaré theorem identifies the boundary topologically with S⁷; additional smooth invariants and Kervaire–Milnor theory show that it is exotic and generates Θ₇ ≅ ℤ/28ℤ. See <a href="https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf" target="_blank" rel="noopener">the plumbing construction and topology argument</a>.</p>
   <p>For the corresponding standard eight-dimensional D₇, E₇ and A₇ plumbings, the boundary groups H₃ are ℤ/4ℤ, ℤ/2ℤ and ℤ/8ℤ. These descriptions use the construction’s homology sequence and the intersection matrix’s Smith normal form; the determinant alone gives only the finite group’s order.</p>
-  <p>These are background results about specified manifolds. This page does not construct those manifolds or compute their homology or smooth invariants. The exotic-sphere claim is <b>not a direct consequence</b> of <code>E8_det</code> alone, and comments surrounding a Lean theorem are not part of its formal statement.</p>
+  <p>Panel 4 models the disk bundles and their local gluing maps. Boundary homology and the smooth classification of the rounded boundary come from the cited topology results. The formal statement of <code>E8_det</code> establishes the determinant of the specified integer matrix.</p>
 </details>
 
+<script src="e8-plumbing.js"></script>
 <script>
 (function() {
   // 1. EXACT [8,4,4] EXTENDED HAMMING GENERATOR MATRIX [I_4 | P]
@@ -16271,6 +16317,8 @@ draw();
     for (let i = 0; i < 8; i++) s += a[i] * b[i];
     return s;
   }
+
+  const plumbing = E8Plumbing.mount(SIMPLE_ROOTS, dot8);
 
   function vecEq(a, b) {
     for (let i = 0; i < 8; i++) if (Math.abs(a[i] - b[i]) > 1e-6) return false;
@@ -16526,6 +16574,7 @@ draw();
     subDet.textContent = d === 1 ? '1 (Unimodular)' : `${d} (Non-Unimodular)`;
     subDet.style.color = d === 1 ? 'var(--green)' : 'var(--red)';
 
+    plumbing.setPieces(activeSimple);
     const key = activeSimple.map(b => (b ? '1' : '0')).join('');
     if (key === '11111111') {
       subName.textContent = 'E₈ (8 Simple Roots)';
@@ -16633,17 +16682,11 @@ draw();
       ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
       ctx.lineWidth = 2.2;
       ctx.beginPath();
-      for (let i = 0; i < 8; i++) {
-        if (!activeSimple[i]) continue;
-        const idxI = roots.findIndex(r => r.simpleIdx === i);
-        for (let j = i + 1; j < 8; j++) {
-          if (!activeSimple[j]) continue;
-          if (Math.round(dot8(SIMPLE_ROOTS[i], SIMPLE_ROOTS[j])) === -1) {
-            const idxJ = roots.findIndex(r => r.simpleIdx === j);
-            ctx.moveTo(projected2D[idxI].sx, projected2D[idxI].sy);
-            ctx.lineTo(projected2D[idxJ].sx, projected2D[idxJ].sy);
-          }
-        }
+      for (const joint of plumbing.joints) {
+        const idxI = roots.findIndex(r => r.simpleIdx === joint.a);
+        const idxJ = roots.findIndex(r => r.simpleIdx === joint.b);
+        ctx.moveTo(projected2D[idxI].sx, projected2D[idxI].sy);
+        ctx.lineTo(projected2D[idxJ].sx, projected2D[idxJ].sy);
       }
       ctx.stroke();
     }
