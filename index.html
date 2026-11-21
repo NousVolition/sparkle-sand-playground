@@ -529,6 +529,7 @@ Third-party material is governed by its own terms.
     <button class="tab" data-mode="unit-distances" title="Unit Distances on a Square Grid">32. Unit Distances</button>
     <button class="tab" data-mode="cipher" title="Homophonic Cipher Annealing Inspector">33. Cipher Inspector</button>
     <button class="tab" data-mode="more-materials" title="More materials">34. More materials</button>
+    <button class="tab" data-mode="feathers-bricks" title="Feathers and Bricks">35. Feathers and Bricks</button>
     <button class="sound-btn" id="soundToggle" title="Sound for every tab">Sound: Off</button>
     <button class="sound-btn link-btn" id="linkToggle" title="Tie size and settling into one number">Linked: On</button>
   </div>
@@ -25362,6 +25363,563 @@ loop();
     }
   };
 })();
+// Tab 35 "Feathers and Bricks" — Copyright © 2026 NousVolition. All rights reserved.
+// Two scales, one pound each. Vacuum, still air, and wind, with a rubber band and five kinds of feathers.
+// A separate stage and canvas. No other tab is touched.
+(function feathersBricks() {
+  const MODE = 'feathers-bricks';
+  const LB_KG = 0.45359237;          // the international pound, exactly
+  const G = 9.80665;
+  const RHO_AIR = 1.204;             // kg/m³, dry air at 20 °C and sea level
+  const RHO_BRICK = 1922;            // kg/m³, common red brick
+  const RHO_KERATIN = 1200;          // kg/m³, solid feather material (keratin)
+  const OZ_KG = 0.028349523125, IN3_M3 = 1.6387064e-5;
+  const fillToDensity = fp => OZ_KG / (fp * IN3_M3);   // fill power (in³ per oz) to kg/m³
+  const BAND_DENSITY = 30;           // kg/m³, feathers squeezed by a rubber band (feather batting is 29.8)
+  const MU = 0.5;                    // friction of a bundle on a pan, chosen
+  const CL = 0.1;                    // rough lift on a compact lump sitting on a surface, chosen
+  const BRICK_STD = { l: 0.215, w: 0.1025, h: 0.065 };   // a standard brick, m
+  const BRICK_VOL = LB_KG / RHO_BRICK;
+  const BRICK_S = Math.cbrt(BRICK_VOL / (BRICK_STD.l * BRICK_STD.w * BRICK_STD.h));
+  const BRICK = { l: BRICK_STD.l * BRICK_S, w: BRICK_STD.w * BRICK_S, h: BRICK_STD.h * BRICK_S };
+  const N = 300;                     // feather specks that stand for the whole pound
+  const QUOTE1 = 'i have always been so curious about the 1lb of feathers and the 1lb of bricks as the same weight... i dont trust it because you would have toput the feathers in a rubber band and i always imagine wind... so it cant work,, can you prove this or can we see if i am wrong';
+  const QUOTE2 = 'can we have differnt types of feathers, like eagle or pillow?';
+
+  const TYPES = [
+    { key: 'down', name: 'Pillow down', sub: 'Goose down, 600 fill power', fill: 600, cited: true,
+      mg: 2, cm2: 7, cd: 1.0, sprite: 9, color: '#f6f3ec',
+      basis: 'Fill power 600 means 1 oz fills 600 in³ (IDFL, Wikipedia “Fill power”). That is 2.88 kg/m³.' },
+    { key: 'pillow', name: 'Pillow feathers', sub: 'Chicken or duck, small curved', fill: 300, cited: true,
+      mg: 20, cm2: 10, cd: 1.2, sprite: 12, color: '#e8dcc2',
+      basis: 'Plain feathers fill about 300 in³ per oz (Wikipedia “Fill power”). That is 5.77 kg/m³.' },
+    { key: 'eagle', name: 'Eagle flight feathers', sub: 'Big, stiff, flat', density: 9, cited: false,
+      mg: 2500, cm2: 240, cd: 1.2, sprite: 20, color: '#6b4a2b',
+      basis: 'My estimate, not a lab number: big flat feathers heap denser than small curly ones, so I put it between plain feathers (5.8) and tightly packed poultry feathers (14.8, ASABE field test).' },
+    { key: 'peacock', name: 'Peacock feathers', sub: 'Long, with an eye', density: 4.5, cited: false,
+      mg: 800, cm2: 200, cd: 1.2, sprite: 18, color: '#1f8f8a',
+      basis: 'My estimate, not a lab number: long, wispy barbs heap looser than pillow feathers.' },
+    { key: 'ostrich', name: 'Ostrich plume', sub: 'Long and fluffy', density: 3.5, cited: false,
+      mg: 500, cm2: 400, cd: 1.0, sprite: 17, color: '#d9d6cf',
+      basis: 'My estimate, not a lab number: soft plumes loft nearly like down.' }
+  ];
+  TYPES.forEach(t => {
+    t.density = t.fill ? fillToDensity(t.fill) : t.density;
+    t.vBlow = Math.sqrt(2 * (t.mg / 1e6) * G / (RHO_AIR * t.cd * (t.cm2 / 1e4)));   // drag equals weight, m/s
+  });
+  const byKey = {}; TYPES.forEach(t => { byKey[t.key] = t; });
+
+  let wm = 'still';                // 'vacuum' | 'still' | 'wind'
+  let wind = 1.0;                    // m/s
+  let typeKey = 'pillow';
+  let banded = false;
+
+  // ---------- the numbers ----------
+  function numbers(tk, band) {
+    const t = byKey[tk || typeKey], b = band === undefined ? banded : band;
+    const vBulk = LB_KG / (b ? BAND_DENSITY : t.density);
+    const vSolid = LB_KG / RHO_KERATIN;
+    const rLoose = Math.cbrt(3 * (LB_KG / t.density) / (2 * Math.PI));
+    const vBundle = LB_KG / BAND_DENSITY;
+    const rBundle = Math.cbrt(3 * vBundle / (4 * Math.PI));
+    const aBundle = Math.PI * rBundle * rBundle;
+    return {
+      type: t.key, banded: b,
+      massKg: LB_KG, massG: LB_KG * 1000,
+      bulkDensity: b ? BAND_DENSITY : t.density,
+      looseDensity: t.density,
+      bulkL: vBulk * 1000, looseL: (LB_KG / t.density) * 1000, bundleL: vBundle * 1000,
+      solidCm3: vSolid * 1e6,
+      featherBuoyG: RHO_AIR * vSolid * 1000,           // real: only the feather material is pushed up
+      whatIfG: RHO_AIR * vBulk * 1000,                 // if air could not get between the feathers
+      whatIfLooseG: RHO_AIR * (LB_KG / t.density) * 1000,
+      whatIfBundleG: RHO_AIR * vBundle * 1000,
+      brickCm3: BRICK_VOL * 1e6,
+      brickBuoyG: RHO_AIR * BRICK_VOL * 1000,
+      brickDims: [BRICK.l * 100, BRICK.w * 100, BRICK.h * 100],
+      vBlow: t.vBlow, rLoose, rBundle, aBundle,
+      slideSpeed: Math.sqrt(2 * MU * LB_KG * G / (RHO_AIR * 0.47 * aBundle)),
+      brickSlideSpeed: Math.sqrt(2 * MU * LB_KG * G / (RHO_AIR * 1.1 * BRICK.l * BRICK.h)),
+      brickLiftPerMs2: 0.5 * RHO_AIR * CL * (BRICK.l * BRICK.w) / G * 1000
+    };
+  }
+  const liftG = (area, v) => 0.5 * RHO_AIR * v * v * CL * area / G * 1000;
+  const fmt = (x, d) => (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
+  const comma = x => Math.round(x).toLocaleString('en-US');
+  function breeze(v) {
+    return v < 0.3 ? 'calm' : v < 1.6 ? 'light air' : v < 3.4 ? 'light breeze' : v < 5.5 ? 'gentle breeze' : v < 8 ? 'moderate breeze' : v < 10.8 ? 'fresh breeze' : 'strong breeze';
+  }
+  const mph = v => v * 2.23694;
+
+  // ---------- state of the scene ----------
+  let stage, canvas, ctx, W = 0, H = 0, dpr = 1, running = false, raf = 0, last = 0, clock = 0, txtClock = 0;
+  let parts = [], streaks = [], airDots = [], restCount = N, bandT = 0, slide = 0, slid = false, pxm = 200;
+  let sprites = {}, shown = null;
+  const reduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let seedS = 12345;
+  const rnd = () => { seedS ^= seedS << 13; seedS ^= seedS >>> 17; seedS ^= seedS << 5; return ((seedS >>> 0) % 1000000) / 1000000; };
+
+  function makeParts() {
+    parts = [];
+    for (let i = 0; i < N; i++) {
+      const r = Math.sqrt(rnd()), a = rnd() * Math.PI;
+      const r2 = Math.sqrt(rnd()), a2 = rnd() * Math.PI * 2;
+      parts.push({
+        hx: r * Math.cos(a), hy: r * Math.sin(a),
+        sx: r2 * Math.cos(a2), sy: r2 * Math.sin(a2),
+        thr: 0.8 + rnd() * 0.8, ang: rnd() * Math.PI * 2, ph: rnd() * 6.28,
+        st: 0, x: 0, y: 0, vx: 0, vy: 0, spin: (rnd() - 0.5) * 2
+      });
+    }
+    restCount = N; slide = 0; slid = false;
+  }
+  function refill() { makeParts(); }
+  function makeSprites() {
+    sprites = {};
+    TYPES.forEach(t => {
+      const s = Math.max(24, Math.ceil(t.sprite * 1.6)), sc = 2;
+      const c = document.createElement('canvas'); c.width = c.height = s * sc;
+      const g = c.getContext('2d'); g.scale(sc, sc); g.translate(s / 2, s / 2);
+      g.lineCap = 'round';
+      const L = t.sprite;
+      if (t.key === 'down') {
+        g.strokeStyle = t.color; g.globalAlpha = 0.9; g.lineWidth = 0.9;
+        for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2; g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(Math.cos(a) * L * 0.25, Math.sin(a) * L * 0.25 + 0.6, Math.cos(a) * L * 0.5, Math.sin(a) * L * 0.5); g.stroke(); }
+        g.fillStyle = t.color; g.beginPath(); g.arc(0, 0, 1.2, 0, 6.3); g.fill();
+      } else if (t.key === 'pillow') {
+        g.fillStyle = t.color; g.beginPath(); g.ellipse(0, 0, L * 0.5, L * 0.2, 0, 0, 6.3); g.fill();
+        g.strokeStyle = 'rgba(120,100,70,.8)'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(-L * 0.55, L * 0.05); g.quadraticCurveTo(0, -L * 0.12, L * 0.5, 0); g.stroke();
+      } else if (t.key === 'eagle') {
+        g.fillStyle = t.color; g.beginPath(); g.ellipse(0, 0, L * 0.5, L * 0.17, 0, 0, 6.3); g.fill();
+        g.fillStyle = '#e9e1d2'; g.beginPath(); g.ellipse(L * 0.34, 0, L * 0.14, L * 0.14, 0, 0, 6.3); g.fill();
+        g.strokeStyle = '#2d1d10'; g.lineWidth = 1; g.beginPath(); g.moveTo(-L * 0.52, 0); g.lineTo(L * 0.5, 0); g.stroke();
+      } else if (t.key === 'peacock') {
+        g.strokeStyle = t.color; g.lineWidth = 1.4; g.beginPath(); g.moveTo(-L * 0.5, 0); g.quadraticCurveTo(0, -L * 0.18, L * 0.34, 0); g.stroke();
+        g.strokeStyle = '#74c7a0'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(-L * 0.5, L * 0.06); g.quadraticCurveTo(0, -L * 0.1, L * 0.34, L * 0.05); g.stroke();
+        g.fillStyle = '#1b4f9a'; g.beginPath(); g.ellipse(L * 0.42, 0, L * 0.1, L * 0.14, 0, 0, 6.3); g.fill();
+        g.fillStyle = '#d6a431'; g.beginPath(); g.arc(L * 0.42, 0, L * 0.045, 0, 6.3); g.fill();
+      } else {
+        g.strokeStyle = t.color; g.globalAlpha = 0.85; g.lineWidth = 1;
+        for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(-L * 0.5, 0); g.quadraticCurveTo(0, k * L * 0.14 - 1, L * 0.5, k * L * 0.09); g.stroke(); }
+        g.strokeStyle = '#a8a39a'; g.globalAlpha = 1; g.beginPath(); g.moveTo(-L * 0.52, 0); g.lineTo(L * 0.1, 0); g.stroke();
+      }
+      sprites[t.key] = { c, s };
+    });
+  }
+  function makeStreaks() {
+    streaks = [];
+    for (let i = 0; i < 40; i++) streaks.push({ x: rnd(), y: rnd(), len: 18 + rnd() * 46, sp: 0.6 + rnd() * 0.8, a: 0.07 + rnd() * 0.08 });
+    airDots = [];
+    for (let i = 0; i < 46; i++) airDots.push({ x: rnd(), y: rnd(), r: 0.8 + rnd() * 1.2, ph: rnd() * 6.28 });
+  }
+  const gust = t => 1 + 0.35 * Math.sin(t * 1.7) + 0.2 * Math.sin(t * 4.1 + 1) + 0.1 * Math.sin(t * 9.3);
+
+  // ---------- layout ----------
+  function layout() {
+    const half = W / 2;
+    pxm = Math.max(60, Math.min(0.9 * half / 0.85, (H - 120) / 0.46));
+    const baseY = H - 14, bodyH = 44, slabH = 8;
+    return { half, baseY, bodyH, slabH, platTop: baseY - bodyH - slabH, platHalf: Math.min(0.46 * half, 0.45 * pxm * 0.9 + 14), cx1: W * 0.25 + 4, cx2: W * 0.75 };
+  }
+  function resize() {
+    if (!canvas) return;
+    const r = canvas.getBoundingClientRect();
+    if (!r.width) return;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx = canvas.getContext('2d');
+  }
+
+  // ---------- one step ----------
+  function step(dt) {
+    clock += dt;
+    const c = numbers();
+    const v = wm === 'wind' ? wind : 0;
+    const gv = v * gust(clock);
+    // rubber band blend
+    const goal = banded ? 1 : 0;
+    bandT += (goal - bandT) * Math.min(1, dt * 5);
+    if (Math.abs(goal - bandT) < 0.002) bandT = goal;
+    const L = layout();
+    if (!banded) {
+      if (wm === 'wind') {
+        const ratio = gv / c.vBlow;
+        for (const p of parts) {
+          if (p.st !== 0) continue;
+          const q = ratio / p.thr;
+          if (q > 1) {
+            const rate = 1.1 * Math.min(4, q - 1) * (0.4 + 0.6 * p.hy);
+            if (rnd() < 1 - Math.exp(-rate * dt)) {
+              p.st = 1; restCount--;
+              const rl = c.rLoose * pxm;
+              p.x = L.cx1 + p.hx * rl; p.y = L.platTop - p.hy * rl;
+              p.vx = 10 + rnd() * 20; p.vy = -(20 + rnd() * 30);
+            }
+          }
+        }
+      }
+    } else if (wm === 'wind' && !slid && v > c.slideSpeed) {
+      slid = true;
+    }
+    if (slid) slide = Math.min(1, slide + dt * 0.5);
+    // flying specks
+    const wpx = Math.min(v, 4) * 46;
+    for (const p of parts) {
+      if (p.st !== 1) continue;
+      p.vx += (wpx * (0.6 + 0.4 * Math.sin(p.ph + clock)) + 12 - p.vx) * Math.min(1, dt * 1.6);
+      p.vy += (-9 + 26 * Math.sin(p.ph * 2 + clock * 2.3) + 14 - p.vy) * Math.min(1, dt * 1.2);
+      p.x += p.vx * dt; p.y += p.vy * dt; p.ang += p.spin * dt;
+      if (p.x > W + 30 || p.y > H + 30 || p.y < -30) p.st = 2;
+    }
+    for (const s of streaks) { s.x += Math.min(0.42, v * 0.05 + 0.03) * s.sp * dt * (reduce() ? 0.4 : 1); if (s.x > 1.2) { s.x = -0.2; s.y = rnd(); } }
+    for (const a of airDots) { a.ph += dt * 0.5; }
+  }
+
+  function readings() {
+    const c = numbers();
+    const v = wm === 'wind' ? wind : 0;
+    const gv = v * gust(clock);
+    const airOn = wm !== 'vacuum';
+    const onPan = banded ? (1 - slide) : restCount / N;
+    const remG = c.massG * onPan;
+    const buoy = airOn ? RHO_AIR * (remG / 1000 / RHO_KERATIN) * 1000 : 0;
+    let area;
+    if (banded) area = c.aBundle; else area = Math.PI * Math.pow(c.rLoose * Math.pow(Math.max(onPan, 0.0001), 1 / 3), 2);
+    const liftF = wm === 'wind' ? liftG(area, gv) * (banded ? (1 - slide) : onPan) : 0;
+    const lowF = wm === 'wind' ? liftG(area, v) : 0;
+    const feathers = Math.max(0, remG - buoy - liftF);
+    const brickLift = wm === 'wind' ? liftG(BRICK.l * BRICK.w, gv) : 0;
+    const bricks = Math.max(0, c.massG - (airOn ? c.brickBuoyG : 0) - brickLift);
+    return { c, v, gv, remG, onPan, feathers, bricks, buoy, liftF, brickLift, lostG: c.massG - remG, lostN: N - restCount, calmLift: lowF };
+  }
+
+  // ---------- drawing ----------
+  function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  function drawScale(g, cx, L, label, text, dim) {
+    const x0 = cx - L.platHalf, w = L.platHalf * 2;
+    g.fillStyle = '#2a3142'; rr(g, x0 - 6, L.baseY - L.bodyH, w + 12, L.bodyH, 8); g.fill();
+    g.strokeStyle = '#4b5772'; g.lineWidth = 1; g.stroke();
+    g.fillStyle = '#c9d2e6'; rr(g, x0, L.platTop, w, L.slabH, 3); g.fill();
+    g.fillStyle = '#071a0f'; rr(g, cx - Math.min(w / 2 - 6, 92), L.baseY - L.bodyH + 8, Math.min(w - 12, 184), L.bodyH - 16, 5); g.fill();
+    g.fillStyle = dim ? '#4f8a62' : '#7dfc9e'; g.font = '700 ' + Math.max(15, Math.min(22, W / 24)) + 'px ui-monospace, Menlo, Consolas, monospace';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, cx, L.baseY - L.bodyH / 2);
+    g.fillStyle = '#d7dbe6'; g.font = '600 ' + Math.max(11, Math.min(14, W / 34)) + 'px system-ui, sans-serif';
+    g.textBaseline = 'alphabetic';
+    g.fillText(label, cx, 20);
+  }
+  function drawBrick(g, cx, topY, ppm) {
+    const l = BRICK.l * ppm, h = BRICK.h * ppm, d = BRICK.w * ppm * 0.45;
+    const x = cx - l / 2, y = topY - h;
+    g.fillStyle = '#b4533a'; g.fillRect(x, y, l, h);
+    g.fillStyle = '#d0715a'; g.beginPath(); g.moveTo(x, y); g.lineTo(x + d, y - d); g.lineTo(x + l + d, y - d); g.lineTo(x + l, y); g.closePath(); g.fill();
+    g.fillStyle = '#8e3f2b'; g.beginPath(); g.moveTo(x + l, y); g.lineTo(x + l + d, y - d); g.lineTo(x + l + d, y - d + h); g.lineTo(x + l, y + h); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.8; g.strokeRect(x, y, l, h);
+    return { x, y, l, h, d };
+  }
+  function draw() {
+    if (!ctx || !W) return;
+    const g = ctx, L = layout(), c = numbers(), r = readings();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    // background by air
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    if (wm === 'vacuum') { bg.addColorStop(0, '#06070b'); bg.addColorStop(1, '#0b0d14'); }
+    else { bg.addColorStop(0, '#16202f'); bg.addColorStop(1, '#1b2738'); }
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    if (wm === 'vacuum') {
+      g.strokeStyle = 'rgba(150,160,190,.35)'; g.setLineDash([6, 5]); g.lineWidth = 1.2; rr(g, 3, 3, W - 6, H - 6, 12); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(190,200,225,.75)'; g.font = '600 11px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText('Vacuum: no air at all', 12, H - 62 < 40 ? 40 : 38);
+    } else {
+      g.fillStyle = 'rgba(190,215,255,.16)';
+      for (const a of airDots) { g.beginPath(); g.arc(a.x * W + Math.sin(a.ph) * 3, a.y * H + Math.cos(a.ph * 0.8) * 3, a.r, 0, 6.3); g.fill(); }
+      g.fillStyle = 'rgba(190,215,255,.7)'; g.font = '600 11px system-ui, sans-serif'; g.textAlign = 'left';
+      g.fillText(wm === 'wind' ? 'Air, moving at ' + fmt(wind, 1) + ' m/s' : 'Still air', 12, 38);
+    }
+    const bands = [[L.cx1, 'feathers'], [L.cx2, 'bricks']];
+    // scales
+    drawScale(g, L.cx1, L, '1 lb of ' + byKey[typeKey].name.toLowerCase(), fmt(shown ? shown.feathers : r.feathers, 2) + ' g', false);
+    drawScale(g, L.cx2, L, '1 lb of bricks', fmt(shown ? shown.bricks : r.bricks, 2) + ' g', false);
+    // feather pile outline and specks
+    const t = byKey[typeKey], sp = sprites[t.key];
+    const rl = c.rLoose * pxm, rb = c.rBundle * pxm;
+    const rad = rl + (rb - rl) * bandT;
+    g.save();
+    g.strokeStyle = 'rgba(210,225,255,.28)'; g.setLineDash([4, 4]); g.lineWidth = 1;
+    g.beginPath();
+    if (bandT < 0.5) g.arc(L.cx1, L.platTop, rl, Math.PI, 0); else g.arc(L.cx1, L.platTop - rb, rb, 0, Math.PI * 2);
+    g.stroke(); g.setLineDash([]);
+    g.restore();
+    const slideX = slid ? slide * slide * (W * 0.5) : 0, slideY = slid ? slide * slide * 60 : 0;
+    const sway = wm === 'wind' ? Math.min(2.2, wind * 0.5) : 0;
+    for (const p of parts) {
+      if (p.st === 2) continue;
+      let x, y, a = p.ang;
+      if (p.st === 0) {
+        const dx = L.cx1 + p.hx * rl, dy = L.platTop - p.hy * rl;
+        const sxp = L.cx1 + p.sx * rb, syp = L.platTop - rb - p.sy * rb;
+        x = dx + (sxp - dx) * bandT + slideX; y = dy + (syp - dy) * bandT + slideY;
+        if (sway) { x += Math.sin(clock * 3 + p.ph) * sway; y += Math.cos(clock * 2.4 + p.ph) * sway * 0.5; }
+      } else { x = p.x; y = p.y; }
+      g.save(); g.translate(x, y); g.rotate(a);
+      if (p.st === 1) g.globalAlpha = 0.8;
+      g.drawImage(sp.c, -sp.s / 2, -sp.s / 2, sp.s, sp.s);
+      g.restore();
+    }
+    // rubber band
+    if (bandT > 0.6) {
+      g.save(); g.globalAlpha = Math.min(1, (bandT - 0.6) / 0.4) * (1 - slide);
+      g.strokeStyle = '#e0453a'; g.lineWidth = 3; g.lineCap = 'round';
+      const cy = L.platTop - rb + slideY;
+      g.beginPath(); g.ellipse(L.cx1 + slideX, cy, rb * 0.98, rb * 0.22, 0, 0, Math.PI * 2); g.stroke();
+      g.restore();
+    }
+    // bricks, and beside them the feather material alone, at the same size scale
+    const bxc = L.cx2 - L.platHalf * 0.38;
+    const bx = drawBrick(g, bxc, L.platTop, pxm);
+    g.fillStyle = 'rgba(255,214,120,.95)'; g.font = '600 10px system-ui, sans-serif'; g.textAlign = 'center';
+    g.fillText(comma(c.brickCm3) + ' cm³ of brick', bxc, L.platTop + 14 - 0 > 0 ? bx.y - bx.d - 6 : 0);
+    const sCube = Math.cbrt(c.solidCm3 / 1e6) * pxm, cubeCx = L.cx2 + L.platHalf * 0.38;
+    g.strokeStyle = 'rgba(255,214,120,.9)'; g.lineWidth = 1.2; g.setLineDash([2, 2]);
+    g.strokeRect(cubeCx - sCube / 2, L.platTop - sCube - 1, sCube, sCube); g.setLineDash([]);
+    g.fillStyle = 'rgba(255,214,120,.95)';
+    g.fillText('feather material alone:', cubeCx, L.platTop - sCube - 18);
+    g.fillText(comma(c.solidCm3) + ' cm³', cubeCx, L.platTop - sCube - 7);
+    // pile size label
+    g.fillStyle = 'rgba(210,225,255,.85)'; g.textAlign = 'center'; g.font = '600 11px system-ui, sans-serif';
+    const ly = L.platTop - (bandT < 0.5 ? rl : rb * 2) - 8;
+    g.fillText('pile: ' + fmt(c.bulkL, 1) + ' L', L.cx1, Math.max(34, ly));
+    // wind streaks
+    if (wm === 'wind' && wind > 0.05) {
+      g.strokeStyle = '#a9c4ff'; g.lineWidth = 1.2; g.lineCap = 'round';
+      const n = Math.min(streaks.length, Math.round(6 + wind * 3.2));
+      for (let i = 0; i < n; i++) {
+        const s = streaks[i], x = s.x * W, y = 44 + s.y * (H - 100), len = s.len * (0.5 + wind / 8);
+        g.globalAlpha = s.a; g.beginPath(); g.moveTo(x, y); g.lineTo(x + len, y); g.stroke();
+      }
+      g.globalAlpha = 1;
+    }
+    g.textAlign = 'start';
+  }
+
+  // ---------- words and numbers ----------
+  function cardsAndText() {
+    const r = readings(), c = r.c, t = byKey[typeKey];
+    const air = wm !== 'vacuum';
+    const sameAs = (a, b) => fmt(a, 2) === fmt(b, 2);
+    const fb = c.featherBuoyG, bb = c.brickBuoyG;
+    let verdict;
+    if (wm === 'vacuum') {
+      verdict = 'Nothing is pushing up on either one. Both read exactly <b>' + fmt(c.massG, 2) + ' g</b>. Same stuff, same reading.';
+    } else if (wm === 'still') {
+      verdict = 'You are not wrong, but only by a hair. In still air the feathers read <b>' + fmt(fb - bb, 2) + ' g lighter</b> than the bricks, about 1 part in ' + comma(c.massG / (fb - bb)) + '.';
+    } else {
+      const gone = r.lostN;
+      verdict = banded
+        ? 'You are right about wind. At <b>' + fmt(wind, 1) + ' m/s</b> (' + breeze(wind) + ') the rubber-banded bundle ' + (slid ? '<b>slides right off the scale</b>' : 'stays put but gets pushed and lifted, so its reading wobbles') + '.'
+        : 'You are right about wind. At <b>' + fmt(wind, 1) + ' m/s</b> (' + breeze(wind) + ') the loose feathers read <b>' + fmt(r.feathers, 2) + ' g</b> instead of ' + fmt(c.massG, 2) + ' g, and ' + (gone ? 'about ' + Math.round(gone / N * 100) + '% of the pile has blown away.' : 'none has left yet.');
+    }
+    const feathersCard =
+      '<h4>1 lb of ' + t.name.toLowerCase() + '</h4>' +
+      '<div class="fb-row"><span>Amount of stuff (mass)</span><b>' + fmt(c.massKg, 4) + ' kg</b></div>' +
+      '<div class="fb-row"><span>' + (banded ? 'Bundle size' : 'Pile size') + '</span><b>' + fmt(c.bulkL, 1) + ' L</b></div>' +
+      '<div class="fb-row"><span>Pile density' + (banded ? ' (squeezed)' : '') + '</span><b>' + fmt(c.bulkDensity, 2) + ' kg/m³</b></div>' +
+      '<div class="fb-row"><span>Scale reads</span><b class="fb-big">' + fmt(shown ? shown.feathers : r.feathers, 2) + ' g</b></div>' +
+      '<div class="fb-row"><span>Air pushes up by</span><b>' + fmt(air ? c.featherBuoyG * r.onPan : 0, 3) + ' g</b></div>' +
+      (wm === 'wind' ? '<div class="fb-row"><span>Wind lifts by</span><b>' + fmt(r.liftF, 2) + ' g</b></div>' +
+        '<div class="fb-row"><span>' + (banded ? 'Slides off at' : 'Starts to blow at about') + '</span><b>' + fmt(banded ? c.slideSpeed : c.vBlow, 1) + ' m/s</b></div>' +
+        (banded ? '' : '<div class="fb-row"><span>Blown away</span><b>' + fmt(r.lostG, 1) + ' g (' + Math.round(r.lostN / N * 100) + '%)</b></div>') : '');
+    const bricksCard =
+      '<h4>1 lb of bricks</h4>' +
+      '<div class="fb-row"><span>Amount of stuff (mass)</span><b>' + fmt(c.massKg, 4) + ' kg</b></div>' +
+      '<div class="fb-row"><span>Size</span><b>' + comma(c.brickCm3) + ' cm³</b></div>' +
+      '<div class="fb-row"><span>Brick density</span><b>' + comma(RHO_BRICK) + ' kg/m³</b></div>' +
+      '<div class="fb-row"><span>Scale reads</span><b class="fb-big">' + fmt(shown ? shown.bricks : r.bricks, 2) + ' g</b></div>' +
+      '<div class="fb-row"><span>Air pushes up by</span><b>' + fmt(air ? bb : 0, 3) + ' g</b></div>' +
+      (wm === 'wind' ? '<div class="fb-row"><span>Wind lifts by</span><b>' + fmt(r.brickLift, 2) + ' g</b></div>' +
+        '<div class="fb-row"><span>Slides off at</span><b>' + fmt(c.brickSlideSpeed, 0) + ' m/s</b></div>' : '');
+
+    const honest =
+      '<h3>Weigh honestly</h3><ul>' +
+      '<li><b>Same amount of stuff.</b> Both are 1 lb, which is exactly ' + fmt(c.massKg, 8) + ' kg. Air, wind and a rubber band do not change that.</li>' +
+      '<li><b>A scale does not count stuff.</b> It reads how hard the stuff presses down. Air pushes up on everything sitting in it, so the same stuff can read a little different.</li>' +
+      '<li><b>Still air.</b> Air gets in between the feathers, so only the feather material itself is pushed up, not the whole fluffy pile. The feather material is just ' + comma(c.solidCm3) + ' cm³ and pushes up ' + fmt(fb, 3) + ' g. The bricks are ' + comma(c.brickCm3) + ' cm³ and push up ' + fmt(bb, 3) + ' g. That is the whole gap: <b>' + fmt(fb - bb, 2) + ' g</b>. It is the same for every kind of feather, because it is the same material.</li>' +
+      '<li><b>The number people usually quote.</b> If air could not get in, the fluffy ' + fmt(c.bulkL, 1) + ' L would be pushed up by ' + fmt(c.whatIfG, 1) + ' g. A loose pile does not work that way, so that is not what a scale shows.</li>' +
+      '<li><b>The rubber band.</b> It shrinks the pile from ' + fmt(c.looseL, 1) + ' L to ' + fmt(c.bundleL, 1) + ' L. In still air the reading does not change, because the feather material is the same. In wind it matters a lot: the bundle will not blow off until about ' + fmt(c.slideSpeed, 1) + ' m/s (' + fmt(mph(c.slideSpeed), 0) + ' mph).</li>' +
+      '<li><b>Wind.</b> A loose ' + t.name.toLowerCase() + ' speck starts to lift when wind drag matches its weight, about ' + fmt(c.vBlow, 2) + ' m/s (' + fmt(mph(c.vBlow), 1) + ' mph). The pile cannot stay on the scale, and the reading drifts and jitters. That is where your doubt is strongest.</li>' +
+      '</ul>' +
+      '<p class="fb-so"><b>So, judgement:</b> your doubt is right for real scales. The stuff is the same, but the reading is not. In still air the difference is tiny (' + fmt(fb - bb, 2) + ' g). With wind, or loose feathers, it can be huge. Only in a vacuum do the two read exactly the same.</p>';
+    return { verdict, feathersCard, bricksCard, honest };
+  }
+  function paintText(force) {
+    if (!stage) return;
+    const x = cardsAndText();
+    const set = (id, html) => { const el = document.getElementById(id); if (el && (force || el.dataset.h !== html)) { el.innerHTML = html; el.dataset.h = html; } };
+    set('fbVerdict', x.verdict); set('fbCardF', x.feathersCard); set('fbCardB', x.bricksCard); set('fbHonest', x.honest);
+  }
+
+  function notesHTML() {
+    const rows = TYPES.map(t => {
+      const n = numbers(t.key, false);
+      return '<tr><td>' + t.name + '</td><td>' + fmt(n.looseDensity, 2) + (t.cited ? '' : ' <i>(estimate)</i>') + '</td><td>' + fmt(n.looseL, 1) + '</td><td>' + fmt(t.mg, t.mg < 10 ? 0 : 0) + ' mg · ' + t.cm2 + ' cm²</td><td>' + fmt(t.vBlow, 2) + '</td><td>' + fmt(n.featherBuoyG, 3) + '</td><td>' + fmt(n.whatIfLooseG, 1) + '</td></tr>';
+    }).join('');
+    const n0 = numbers('pillow', false);
+    return '<details class="fb-notes" open><summary>Notes and sources</summary>' +
+      '<p><b>What I used.</b> 1 lb = 0.45359237 kg exactly (the international pound). Gravity 9.80665 m/s². Air at 20 °C and sea level: 1.204 kg/m³ (<a href="https://physicstool.com/terminal-velocity-calculator/" target="_blank" rel="noopener">physicstool.com, 1.2041</a>; <a href="https://speedycalculator.com/calculators/physics/terminal-velocity/" target="_blank" rel="noopener">speedycalculator.com, 1.204</a>). Common red brick: 1,922 kg/m³, 120 lb/ft³ (<a href="https://www.engineersedge.com/thermodynamics/thermodynamic_properties_common_liquids_13696.htm" target="_blank" rel="noopener">Engineers Edge</a>, <a href="https://www.piping-designer.com/datasheets/miscellaneous-datasheets/2721-density-table" target="_blank" rel="noopener">Piping Designer</a>); bricks range 1.4 to 2.4 g/cm³ (<a href="https://www.engineeringtoolbox.com/density-solids-d_1265.html" target="_blank" rel="noopener">Engineering ToolBox</a>).</p>' +
+      '<p><b>Feather material.</b> Solid feather keratin is about 1.2 g/cm³ (<a href="https://meyersgroup.ucsd.edu/papers/journals/Meyers%20428.pdf" target="_blank" rel="noopener">Wang and Meyers, seagull feather shaft</a>), and 1.3 g/cm³ in <a href="https://physics.stackexchange.com/questions/449433/which-weighs-more-in-atmosphere-1-rm-kg-of-steel-or-1-rm-kg-of-feat" target="_blank" rel="noopener">this worked answer</a>, which finds a pound of feathers about 0.77 g lighter than a pound of steel. I use 1.2. With 1.3 the feather push-up is 0.42 g instead of 0.46 g.</p>' +
+      '<p><b>Pile density.</b> Fill power is the volume 1 oz fills under a standard light weight (<a href="http://verify.idfl.com/test-methods-1/Fill-power/" target="_blank" rel="noopener">IDFL</a>, <a href="https://en.wikipedia.org/wiki/Fill_power" target="_blank" rel="noopener">Wikipedia</a>). 600 in³/oz gives 2.88 kg/m³ and 300 in³/oz gives 5.77 kg/m³ (1 oz = 0.0283495 kg, 1 in³ = 1.63871×10⁻⁵ m³). For contrast, poultry feathers packed into insulation panels were 14.8 kg/m³ (<a href="https://doi.org/10.13031/2013.6466" target="_blank" rel="noopener">ASABE field test</a>), and feather fiber batting 29.8 kg/m³ (<a href="https://link.springer.com/article/10.1007/s12649-020-01007-3" target="_blank" rel="noopener">Waste and Biomass Valorization, 2020</a>). I use 30 kg/m³ for a rubber-banded bundle.</p>' +
+      '<p><b>Wind.</b> Drag is ½ × air density × drag coefficient × area × speed² (<a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/flight-equations-with-drag/" target="_blank" rel="noopener">NASA Glenn</a>). A speck starts to lift when drag matches weight: speed = √(2 × mass × g ÷ (air density × Cd × area)). Wind-speed words follow the Beaufort scale.</p>' +
+      '<table class="fb-tab"><thead><tr><th>Feather</th><th>Pile kg/m³</th><th>1 lb pile, L</th><th>One feather</th><th>Starts to lift, m/s</th><th>Air pushes up, g</th><th>If air could not get in, g</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p><b>What is a chosen number, not a measured one.</b> The pile densities of Eagle, Peacock and Ostrich are my estimates (I found no lab value). Every single-feather mass and area, the drag coefficients (1.0 to 1.2), the friction of a bundle on a pan (0.5), the bundle lift (10% of the push of a flat plate), and the 0.8 to 1.6 spread in how readily each speck lifts are chosen, plausible values. Real feathers vary a lot. Each speck on screen stands for 1/' + N + ' of the pound.</p>' +
+      '<p><b>Lean.</b> No Lean file backs this tab. I searched every .lean file in discrete-gap-inequalities-lean and hug-sims-lean-proofs for buoyancy, Archimedes, feather, brick, air density, weight and wind. Nothing matches. The only “drag” and “weight” hits are unrelated (a clay-wall fluid model and record weights).</p>' +
+      '<p class="fb-copy">Copyright © 2026 NousVolition. All rights reserved.</p></details>';
+  }
+
+  // ---------- page ----------
+  const css = `
+    #fbStage { position:absolute; inset:0; z-index:5; display:none; overflow-y:auto; overflow-x:hidden; background:#12161f; color:#d7dbe6;
+      font: 500 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; padding:12px 12px 16px; }
+    #fbStage.on { display:block; }
+    #fbStage a { color:#7dd3fc; }
+    #fbStage .fb-quote { margin:0 0 8px; padding:8px 12px; border-radius:12px; background:rgba(16,20,32,.84); border:1px solid rgba(130,148,196,.18); font-size:12px; }
+    #fbStage .fb-quote b { color:#9fb3e8; font-weight:600; }
+    #fbStage .fb-quote q { quotes:"“" "”"; display:block; margin:2px 0 6px; color:#e6e9f2; }
+    #fbStage .fb-quote q:last-child { margin-bottom:0; }
+    #fbStage .fb-verdict { margin:0 0 8px; padding:9px 12px; border-radius:12px; background:#1a2740; border:1px solid #2f4a78; font-size:14px; }
+    #fbStage canvas { display:block; width:100%; height:clamp(250px, 42vh, 380px); border-radius:12px; border:1px solid rgba(130,148,196,.18); touch-action:manipulation; }
+    #fbStage .fb-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px; margin:8px 0; }
+    #fbStage .fb-card { padding:9px 12px; border-radius:12px; background:rgba(16,20,32,.84); border:1px solid rgba(130,148,196,.18); }
+    #fbStage .fb-card h4 { margin:0 0 4px; font-size:13px; color:#e6e9f2; }
+    #fbStage .fb-row { display:flex; justify-content:space-between; gap:10px; padding:1px 0; font-size:12px; }
+    #fbStage .fb-row span { opacity:.8; }
+    #fbStage .fb-row b { font-variant-numeric:tabular-nums; text-align:right; }
+    #fbStage .fb-big { color:#7dfc9e; font-size:14px; }
+    #fbStage .fb-honest, #fbStage .fb-notes { margin:8px 0; padding:10px 14px; border-radius:12px; background:rgba(16,20,32,.84); border:1px solid rgba(130,148,196,.18); }
+    #fbStage .fb-honest h3 { margin:0 0 4px; font-size:15px; }
+    #fbStage .fb-honest ul { margin:0 0 6px 18px; padding:0; }
+    #fbStage .fb-honest li { margin:4px 0; }
+    #fbStage .fb-so { margin:6px 0 0; padding:8px 10px; border-radius:10px; background:#1a2740; }
+    #fbStage .fb-notes summary { cursor:pointer; font-weight:700; font-size:14px; min-height:28px; }
+    #fbStage .fb-notes p { margin:6px 0; font-size:12px; }
+    #fbStage .fb-tab { width:100%; border-collapse:collapse; font-size:11px; display:block; overflow-x:auto; }
+    #fbStage .fb-tab th, #fbStage .fb-tab td { padding:3px 6px; border-bottom:1px solid rgba(130,148,196,.18); text-align:right; white-space:nowrap; }
+    #fbStage .fb-tab th:first-child, #fbStage .fb-tab td:first-child { text-align:left; }
+    #fbStage .fb-copy { opacity:.7; font-size:11px; }
+    #controls .fb-row2 { display:flex; flex-wrap:wrap; gap:6px; align-items:center; width:100%; }
+    #controls .fb-lab { font-size:11px; letter-spacing:.04em; text-transform:uppercase; opacity:.7; width:100%; margin-top:4px; }
+    #controls button.fb-b { padding:6px 8px; }
+    #controls button.fb-b.active { outline:2px solid #22d3ee; }
+    #controls button.fb-b:disabled { opacity:.4; cursor:not-allowed; }
+    #controls .fb-wind { display:block; width:100%; font-size:12px; }
+    #controls .fb-wind span { display:block; margin-bottom:2px; }
+    #controls .fb-wind input[type=range] { width:100%; }
+    #controls .fb-note { width:100%; font-size:12px; line-height:1.4; opacity:.9; }
+  `;
+  function ready() {
+    if (document.getElementById('fbStage')) return document.getElementById('fbStage');
+    const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    const s = document.createElement('div'); s.id = 'fbStage';
+    s.innerHTML =
+      '<div class="fb-quote"><b>Michele asked:</b> <q>' + QUOTE1 + '</q><b>Then:</b> <q>' + QUOTE2 + '</q></div>' +
+      '<div class="fb-verdict" id="fbVerdict" aria-live="polite"></div>' +
+      '<canvas id="fbCanvas" role="img" aria-label="Two scales. On one, a pound of feathers. On the other, a pound of bricks."></canvas>' +
+      '<div class="fb-cards"><div class="fb-card" id="fbCardF"></div><div class="fb-card" id="fbCardB"></div></div>' +
+      '<div class="fb-honest" id="fbHonest"></div>' +
+      '<div id="fbNotes"></div>' +
+      '<div class="fb-copy" style="font-size:11px;opacity:.7;text-align:right">Copyright © 2026 NousVolition. All rights reserved.</div>';
+    document.getElementById('canvas-container').appendChild(s);
+    document.getElementById('fbNotes').innerHTML = notesHTML();
+    return s;
+  }
+
+  function frame(ts) {
+    if (!running) return;
+    const dt = Math.min(0.05, last ? (ts - last) / 1000 : 0.016); last = ts;
+    if (canvas && (canvas.clientWidth !== W || canvas.clientHeight !== H)) resize();
+    step(dt);
+    txtClock += dt;
+    if (!shown || txtClock > 0.25) { shown = readings(); txtClock = 0; paintText(false); }
+    draw();
+    raf = requestAnimationFrame(frame);
+  }
+  function show() {
+    stage = ready(); stage.classList.add('on');
+    canvas = document.getElementById('fbCanvas');
+    if (!sprites.down) makeSprites();
+    if (!parts.length) { makeParts(); makeStreaks(); }
+    resize(); shown = null; paintText(true);
+    if (typeof hint !== 'undefined' && hint) { hint.textContent = 'Weigh a pound of feathers and a pound of bricks in a vacuum, still air, or wind.'; hint.classList.remove('faded'); }
+    if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); }
+  }
+  function hide() {
+    running = false; if (raf) cancelAnimationFrame(raf); raf = 0;
+    if (stage) stage.classList.remove('on');
+  }
+
+  function setMode(m) {
+    wm = m; if (m !== 'wind') refill();
+    shown = null; fillControls(); paintText(true);
+  }
+  function setType(k) { typeKey = k; refill(); shown = null; fillControls(); paintText(true); }
+  function setBand(b) { banded = !!b; refill(); shown = null; fillControls(); paintText(true); }
+
+  function fillControls() {
+    const box = document.getElementById('controls');
+    if (!box || siteMode() !== MODE) return;
+    box.innerHTML = '';
+    const row = lab => {
+      const r = document.createElement('div'); r.className = 'fb-row2';
+      if (lab) { const s = document.createElement('div'); s.className = 'fb-lab'; s.textContent = lab; r.appendChild(s); }
+      box.appendChild(r); return r;
+    };
+    const btn = (txt, on, fn, title) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'fb-b' + (on ? ' active' : ''); b.textContent = txt;
+      b.setAttribute('aria-pressed', String(!!on)); if (title) b.title = title; b.onclick = fn; return b;
+    };
+    const air = row('Air');
+    air.appendChild(btn('Vacuum', wm === 'vacuum', () => setMode('vacuum'), 'No air at all'));
+    air.appendChild(btn('Still air', wm === 'still', () => setMode('still'), 'Calm air at 20 °C, sea level'));
+    air.appendChild(btn('Wind', wm === 'wind', () => setMode('wind'), 'Moving air'));
+    const w = row('Wind speed');
+    const wl = document.createElement('label'); wl.className = 'fb-wind';
+    wl.innerHTML = '<span id="fbWindTxt"></span><input type="range" id="fbWind" min="0" max="12" step="0.1" value="' + wind + '" aria-label="Wind speed in meters per second">';
+    w.appendChild(wl);
+    const inp = wl.querySelector('input'), txt = wl.querySelector('#fbWindTxt');
+    const wt = () => { txt.textContent = wm === 'wind' ? fmt(wind, 1) + ' m/s · ' + fmt(mph(wind), 1) + ' mph · ' + breeze(wind) : 'Turn on Wind to use this'; };
+    inp.disabled = wm !== 'wind'; wt();
+    inp.oninput = e => { wind = +e.target.value; wt(); shown = null; paintText(false); };
+    const ft = row('Feathers');
+    TYPES.forEach(t => ft.appendChild(btn(t.name, t.key === typeKey, () => setType(t.key), t.name + ': ' + t.sub)));
+    const rb = row('Rubber band');
+    rb.appendChild(btn(banded ? 'Rubber band: On' : 'Rubber band: Off', banded, () => setBand(!banded), 'Bundle the feathers'));
+    rb.appendChild(btn('Put feathers back', false, () => { refill(); shown = null; paintText(true); }, 'Bring back feathers that blew away'));
+    const n = document.createElement('div'); n.className = 'fb-note';
+    n.textContent = 'Both sides are 1 lb (0.4536 kg), drawn to the same size scale.';
+    box.appendChild(n);
+  }
+
+  function siteMode() { return typeof mode !== 'undefined' ? mode : undefined; }
+  function hook() {
+    ready();
+    window.addEventListener('resize', () => { if (running) resize(); });
+    const base = setControls;
+    setControls = function () {
+      if (siteMode() !== MODE) hide();
+      base.apply(this, arguments);
+      if (siteMode() === MODE) { fillControls(); show(); }
+    };
+  }
+  hook();
+  if (siteMode() === MODE) { fillControls(); show(); }
+  window.__feathersBricks = {
+    types: TYPES, numbers, readings, state: () => ({ mode: wm, wind, typeKey, banded, restCount, slid, slide, bandT }),
+    setMode, setType, setBand, setWind(v) { wind = +v; shown = null; paintText(false); fillControls(); }, refill,
+    step(n, dt) { for (let i = 0; i < (n || 1); i++) step(dt || 0.016); shown = readings(); paintText(true); draw(); },
+    seed(s) { seedS = (s >>> 0) || 1; },
+    text: cardsAndText, N
+  };
+})();
 // ========== FLASH CAUTION ==========
 // Entries whose recorded frames showed fast blinking or whole-screen pulsing start paused, with a small note and a
 // Play button. Her pages stay unedited: the frame's own pause helper holds them before their first animation frame.
@@ -25522,7 +26080,8 @@ loop();
     e8studio2: 'Morph an 8-cube into E₈\'s Coxeter mandala, then to Milnor\'s 7-sphere.',
     'unit-distances': 'Pick one length and join every pair of grid dots that far apart.',
     cipher: 'Anneal a homophonic cipher, and see the Z340 grid on a torus.',
-    'more-materials': 'Pour aerogel, gallium, and more, then poke, warm, or pull them.'
+    'more-materials': 'Pour aerogel, gallium, and more, then poke, warm, or pull them.',
+    'feathers-bricks': 'Weigh a pound of feathers and a pound of bricks in a vacuum, still air, or wind.'
   };
   const BADGES = {
     blackhole: ['Desktop best', 'Wide screen'],
