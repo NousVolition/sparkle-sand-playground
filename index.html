@@ -24418,7 +24418,9 @@ loop();
     #controls .mm-lean a { color:#7dd3fc; }
     #controls .mm-contrast { width:100%; font-size:13px; }
     #controls .mm-contrast summary { cursor:pointer; }
-    #controls .mm-contrast img { display:block; max-width:100%; height:auto; margin:8px 0; }
+    #controls .mm-contrast label { display:block; margin-top:8px; }
+    #controls .mm-contrast select { max-width:100%; }
+    #controls .mm-contrast img { display:block; max-width:100%; height:auto; margin:8px 0; image-rendering:pixelated; }
     #controls .mm-contrast p { margin:6px 0; }
     #controls .mm-blue { width:100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
     #controls .mm-blue input[type=range] { flex:1; min-width:120px; }
@@ -25389,10 +25391,21 @@ loop();
     if (mat.key === 'super-black-grain') {
       const chart = document.createElement('details');
       chart.className = 'mm-contrast';
-      chart.innerHTML = '<summary>Outline on Welcome Navy</summary>' +
-        '<img src="guides/super-black-grain-on-navy.png" alt="A blue-gray, stair-stepped outline around a nearly black pile on Welcome Navy." width="385" height="204">' +
-        '<p>The outline measures 1.39:1 on Welcome Navy (#1C2230) and 1.65:1 on the default Tab 34 canvas (#0E1119).</p>' +
+      chart.innerHTML = '<summary>Compare navy backgrounds</summary>' +
+        '<label>Chart background <select><option value="#283044" data-ratio="1.15:1">Lighter navy (#283044)</option>' +
+        '<option value="#1C2230" data-ratio="1.39:1">Welcome Navy (#1C2230)</option></select></label>' +
+        '<img src="guides/super-black-grain-pile.png" alt="A stair-stepped blue-gray edge around a nearly black grain pile." width="385" height="204">' +
+        '<p><output aria-live="polite"></output> The default Tab 34 canvas measures 1.65:1 at 50% blue light.</p>' +
         '<a href="guides/welcome-navy-color-chart.pdf#page=6" target="_blank" rel="noopener">Open the full color chart (PDF, page 6)</a>';
+      const background = chart.querySelector('select');
+      const picture = chart.querySelector('img');
+      const ratio = chart.querySelector('output');
+      const updatePreview = () => {
+        picture.style.backgroundColor = background.value;
+        ratio.textContent = 'Outline contrast ' + background.selectedOptions[0].dataset.ratio + '.';
+      };
+      background.addEventListener('change', updatePreview);
+      updatePreview();
       box.appendChild(chart);
     }
     const pats = addRow('Pattern');
