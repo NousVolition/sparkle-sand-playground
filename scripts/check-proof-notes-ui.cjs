@@ -28,8 +28,9 @@ for(const b of buttons){
   const p=data.pages[b.dataset.mode], links=elements['proof-links'].children;
   if(!p){assert.equal(elements['proof-status'].textContent,'Not reviewed');assert.equal(links.length,0);continue;}
   assert.equal(elements['proof-status'].textContent,p.status);assert.equal(elements['proof-note'].textContent,p.note);
-  assert.equal(links.length,p.links.length);
-  links.forEach((li,i)=>{const a=li.children[0];assert.equal(a.href,p.links[i].href);assert.equal(a.target,'_blank');assert.equal(a.rel,'noopener');assert(a.attrs['aria-label'].endsWith('(opens in a new tab)'));});
+  const expected = (p.verification || []).concat(p.links);
+  assert.equal(links.length,expected.length);
+  links.forEach((li,i)=>{const a=li.children[0];assert.equal(a.href,expected[i].href);assert.equal(a.target,'_blank');assert.equal(a.rel,'noopener');assert(a.attrs['aria-label'].endsWith('(opens in a new tab)'));});
   assert(elements['proof-record'].href.endsWith('#'+b.dataset.mode)); checked++;
 }
 const panel=elements['proof-notes'];panel.open=true;
