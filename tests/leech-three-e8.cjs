@@ -46,7 +46,7 @@ const sampledSelections = [];
 const countShellLayers = require('./leech-shell-layers.cjs');
 const formatCount = n => n.toLocaleString('en-US');
 
-function checkShellTable(squaredLength, positive, expectedTotal, file) {
+function checkShellTable(squaredLength, positive, expectedTotal, file, empty = []) {
   const reference = countShellLayers(generated.code, generated.weights, squaredLength);
   const table = page.html.split('id="e8Length' + squaredLength + 'Table"')[1].split('</table>')[0];
   const rows = [...table.matchAll(/<th scope="row">([^<]+)<\/th><td>([^<]+)<\/td>/g)]
@@ -60,6 +60,10 @@ function checkShellTable(squaredLength, positive, expectedTotal, file) {
       assert.equal(counts.get(k), counts.get(-k));
       return ['−' + k + ' or +' + k, formatCount(counts.get(k)) + ' each'];
     }),
+    ...empty.map(k => {
+      assert.ok(!counts.has(k) && !counts.has(-k));
+      return ['−' + k + ' or +' + k, '0 each'];
+    }),
     ['Every other integer','0'], ['All layers', formatCount(total)]
   ]);
   assert.equal(total, expectedTotal);
@@ -69,6 +73,7 @@ function checkShellTable(squaredLength, positive, expectedTotal, file) {
   return {
     reference_axis: [4, -4, ...Array(22).fill(0)],
     dot_product_and_count: reference,
+    ...(empty.length ? {empty_dot_products: empty.flatMap(k => [-k, k])} : {}),
     total,
     scope: "The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."
   };
@@ -77,6 +82,7 @@ const length48 = checkShellTable(48, [8,16,24], 16773120, 'LeechLayers.lean');
 const length64 = checkShellTable(64, [8,16,24,32], 398034000, 'LeechNorm64Layers.lean');
 const length80 = checkShellTable(80, [8,16,24,32,40], 4629381120, 'LeechNorm80Layers.lean');
 const length96 = checkShellTable(96, [8,16,24,32,40,48], 34417656000, 'LeechNorm96Layers.lean');
+const length112 = checkShellTable(112, [8,16,24,32,40,48], 187489935360, 'LeechNorm112Layers.lean', [56]);
 const endpoints = [];
 let measuredLayers;
 function selectedIndex() {
@@ -138,5 +144,5 @@ for(const a of page.querySelectorAll('a')){assert.match(a.attrs.href,/\/blob\/[0
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','whole-table proof link and full browser histogram','proof links at +8, −8, +16, −16, +32 and −32','+32 contains the selected vector and −32 contains its negative','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
  layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,endpoints,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
- length48, length64, length80, length96,
+ length48, length64, length80, length96, length112,
  source_sha256:Object.fromEntries(['leech-three-e8.js','leech-three-e8.css','leech-three-e8-data.js'].map(p=>[p,sha(read(p))])),scope:'DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test.'},null,2));
