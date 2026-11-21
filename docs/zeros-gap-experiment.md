@@ -75,14 +75,14 @@ the largest measured dot-to-edge distance was 0.52 device pixels. All
 
 An isolated headless Chrome 157 session measured the critical-tab draw
 over 120 animation frames after 20 warm-up frames, against
-[main at fbcdfe7](https://github.com/NousVolition/sparkle-sand-playground/commit/fbcdfe7861db4c90d2a006ed2f91533fa9a4d0e5).
+[main at 84dbeb4](https://github.com/NousVolition/sparkle-sand-playground/commit/84dbeb438c0ef5547507aa3769a63a7769c604c9).
 
 | Viewport | Median draw on main | Median draw with gap bands |
 | --- | ---: | ---: |
-| 1280 × 900, 1× | 5.7 ms | 0.6 ms |
-| 390 × 844, 3× phone emulation | 2.9 ms | 2.1 ms |
+| 1280 × 900, 1× | 5.7 ms | 0.7 ms |
+| 390 × 844, 3× phone emulation | 3.1 ms | 2.3 ms |
 
-The first field build took 1.9 seconds in each viewport. Subsequent frames,
+The first field build took 1.9 seconds on desktop and 2.1 seconds in phone emulation. Subsequent frames,
 probe changes and resizes reused it. The phone view fit in 390 CSS pixels.
 
 ## Golay and Leech
@@ -117,3 +117,15 @@ Tab 12's HTML, mathematics and controls are preserved byte for byte; only its
 separate coverage note changes. The older Zeros illustrations stay available.
 Their drum bars use stored zeta ordinates, and their GUE badge is labeled as an
 illustration rather than a measured fit.
+
+## A fixed-height pass through the estimated zero
+
+The crossing view fixes softening at ε = 0.05 and computes a center with the existing two-dimensional gap search. That gives height t ≈ 14.126941386244061 and horizontal center c ≈ 0.4231418192314683. Only σ changes during the pass, from c − 0.02 to c + 0.02. The plane controls below it do not change this pass. No stored zeta ordinates are used.
+
+The two plots share a horizontal coordinate: |G| is the nonnegative size, while Re G is its signed real component. The separate σ readout is the real part of the input s, not the real part of G. The imaginary component remains available below the readings. At the estimated center the actual residual, approximately 3.03 × 10⁻¹⁴, is retained rather than overwritten with zero. This is a zero estimate for the softened gap, not an assertion of an exact zeta zero.
+
+The slider recomputes the direct sum at every selected position; 161 additional samples draw the two curves. Save this pass exports the immutable parameters, current reading and those 161 samples. The seven-point [independent check](zeros-gap-crossing-check.json) uses 60-digit mpmath polylog/Gamma values. The sampled signs and falling/rising size are empirical observations; no interval certificate is claimed.
+
+[GapCrossing.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean) proves six general statements, including the conditional rule for both sides. It assumes an exact zero f(c) = 0 and a strictly increasing real component on the stated interval. These assumptions have not been proved for this numerical slice. The counterexample f(x) = x + i shows why a real sign change alone is insufficient. Lean 4.34.0-rc2 and the full 1,074-declaration axiom audit passed for [PR #30](https://github.com/NousVolition/discrete-gap-inequalities-lean/pull/30).
+
+Run `node tests/zeros-gap-crossing.cjs` to repeat the numerical checks. The [browser check](zeros-gap-crossing-ui-check.json) records independent-control isolation, slider/keyboard use, export, and 390px/320px layouts.
