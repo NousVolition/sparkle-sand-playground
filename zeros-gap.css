@@ -30,8 +30,28 @@ body > header .tabs { flex-wrap: wrap; }
 #tab-gap #golay-word { width: min(100%,370px); font-family: ui-monospace,Consolas,monospace; }
 #tab-gap .gap-status { border-left: 3px solid #7ae3dc; padding-left: 12px; }
 #tab-gap .gap-source { font-size: 14px; }
+#gap-crossing .cross-fixed { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 18px 0; color: #b3c2da; }
+#gap-crossing .cross-fixed strong { color: #edf4ff; font-variant-numeric: tabular-nums; margin-left: 7px; }
+#gap-crossing .cross-plots { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; margin: 18px 0; }
+#gap-crossing figure { margin: 0; min-width: 0; }
+#gap-crossing h4 { font-size: 17px; font-weight: 500; }
+#gap-crossing h4 span { float: right; color: #b3c2da; }
+#gap-crossing canvas { width: 100%; height: 240px; display: block; }
+#gap-crossing input[type=range] { display: block; width: 100%; padding: 0; min-height: 32px; accent-color: #7ae3dc; cursor: ew-resize; }
+#gap-crossing .cross-slider-ends { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; color: #b3c2da; }
+#gap-crossing .cross-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+#gap-crossing button[aria-pressed=true] { background: #234443; border-color: #7ae3dc; }
+#gap-crossing .cross-readings { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+#gap-crossing .cross-readings dd { margin: 5px 0; font-size: 18px; }
+#gap-crossing #cross-size { color: #7ae3dc; }
+#gap-crossing #cross-real { color: #ffbe78; }
+#gap-crossing .cross-evidence { border-top: 1px solid #34465c; margin: 18px 0; padding-top: 14px; }
+#gap-crossing pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #0b1322; padding: 15px; border-radius: 5px; font-size: 14px; }
 @media(max-width:720px) {
   #tab-gap .gap-layout { grid-template-columns: minmax(0,1fr); }
   #gap-map { height: 300px; }
   #tab-gap .gap-intro { padding-top: 8px; }
+  #gap-crossing .cross-plots, #gap-crossing .cross-readings { grid-template-columns: minmax(0,1fr); }
+  #gap-crossing .cross-readings { gap: 0; }
+  #gap-crossing canvas { height: 215px; }
 }

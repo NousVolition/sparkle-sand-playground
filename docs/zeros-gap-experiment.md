@@ -83,3 +83,15 @@ Tab 12's HTML, mathematics and controls are preserved byte for byte; only its
 separate coverage note changes. The older Zeros illustrations stay available.
 Their drum bars use stored zeta ordinates, and their GUE badge is labeled as an
 illustration rather than a measured fit.
+
+## A fixed-height pass through the estimated zero
+
+The crossing view fixes softening at ε = 0.05 and computes a center with the existing two-dimensional gap search. That gives height t ≈ 14.126941386244061 and horizontal center c ≈ 0.4231418192314683. Only σ changes during the pass, from c − 0.02 to c + 0.02. The plane controls below it do not change this pass. No stored zeta ordinates are used.
+
+The two plots share a horizontal coordinate: |G| is the nonnegative size, while Re G is its signed real component. The separate σ readout is the real part of the input s, not the real part of G. The imaginary component remains available below the readings. At the estimated center the actual residual, approximately 3.03 × 10⁻¹⁴, is retained rather than overwritten with zero. This is a zero estimate for the softened gap, not an assertion of an exact zeta zero.
+
+The slider recomputes the direct sum at every selected position; 161 additional samples draw the two curves. Save this pass exports the immutable parameters, current reading and those 161 samples. The seven-point [independent check](zeros-gap-crossing-check.json) uses 60-digit mpmath polylog/Gamma values. The sampled signs and falling/rising size are empirical observations; no interval certificate is claimed.
+
+[GapCrossing.lean](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean) proves six general statements, including the conditional rule for both sides. It assumes an exact zero f(c) = 0 and a strictly increasing real component on the stated interval. These assumptions have not been proved for this numerical slice. The counterexample f(x) = x + i shows why a real sign change alone is insufficient. Lean 4.34.0-rc2 and the full 1,074-declaration axiom audit passed for [PR #30](https://github.com/NousVolition/discrete-gap-inequalities-lean/pull/30).
+
+Run `node tests/zeros-gap-crossing.cjs` to repeat the numerical checks. The [browser check](zeros-gap-crossing-ui-check.json) records independent-control isolation, slider/keyboard use, export, and 390px/320px layouts.

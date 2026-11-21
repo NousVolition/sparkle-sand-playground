@@ -8,7 +8,7 @@
   section.innerHTML = `
     <div class="gap-intro"><p class="gap-eyebrow">THE SPACE, FOLLOWED INTO ZETA</p>
       <h2>Where does the gap vanish?</h2>
-      <p>Start with softened steps. Subtract their smooth background. Let both the horizontal position σ and the height t move, and look for a place where the remaining complex value is zero.</p>
+      <p>Start with softened steps. Subtract their smooth background. First hold height and softening fixed and move horizontally through an estimated zero. The plane search further down lets both coordinates move.</p>
       <p class="gap-formula">s = σ + it &nbsp; · &nbsp; G(s, ε) = ∑<sub>n≥1</sub> n<sup>−s</sup>e<sup>−εn</sup> − Γ(1−s) ε<sup>s−1</sup></p>
       <p class="gap-muted">At s = −1 this is your bars-minus-area space. For Re(s) &lt; 1, G(s, ε) approaches ζ(s) as ε approaches zero. The search below uses this gap, without a list of zero locations.</p>
     </div>

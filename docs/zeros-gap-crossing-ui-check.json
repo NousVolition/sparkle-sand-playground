@@ -1,0 +1,72 @@
+{
+  "status": "PASS",
+  "method": "Isolated headless Chrome through Playwright; no existing browser profile",
+  "checkedAt": "2026-11-21T00:45:39.674Z",
+  "checks": [
+    {
+      "name": "Before, near zero, beyond buttons show actual signed and size readings",
+      "before": {
+        "cross-position": "0.413141819231",
+        "cross-height": "14.12694138624",
+        "cross-size": "7.5706468e-3",
+        "cross-real": "−7.4777815e-3",
+        "cross-imaginary": "−1.1821493e-3"
+      },
+      "center": {
+        "cross-position": "0.423141819231",
+        "cross-height": "14.12694138624",
+        "cross-size": "3.1745352e-14",
+        "cross-real": "−2.8632037e-14",
+        "cross-imaginary": "+1.3710355e-14"
+      },
+      "beyond": {
+        "cross-position": "0.433141819231",
+        "cross-height": "14.12694138624",
+        "cross-size": "7.5095433e-3",
+        "cross-real": "+7.4193225e-3",
+        "cross-imaginary": "+1.1605582e-3"
+      }
+    },
+    {
+      "name": "Keyboard slider changes only horizontal position",
+      "reading": {
+        "cross-position": "0.433241819231",
+        "cross-height": "14.12694138624",
+        "cross-size": "7.5843319e-3",
+        "cross-real": "+7.4932220e-3",
+        "cross-imaginary": "+1.1720558e-3"
+      }
+    },
+    {
+      "name": "Independent plane controls do not alter the locked crossing pass",
+      "passed": true
+    },
+    {
+      "name": "Export preserves fixed parameters and current reading after toggling views",
+      "passed": true
+    },
+    {
+      "name": "Phone 390px layout and slider",
+      "dimensions": {
+        "scroll": 390,
+        "client": 390
+      },
+      "canvas": {
+        "width": 326,
+        "height": 213
+      }
+    },
+    {
+      "name": "Phone 320px layout and slider",
+      "dimensions": {
+        "scroll": 320,
+        "client": 320
+      },
+      "canvas": {
+        "width": 256,
+        "height": 213
+      }
+    }
+  ],
+  "consoleErrors": []
+}
