@@ -1,7 +1,7 @@
 {
   "status": "PASS",
   "method": "Isolated headless Chrome through Playwright; no existing browser profile",
-  "checkedAt": "2026-11-21T00:09:26.180Z",
+  "checkedAt": "2026-11-21T00:14:14.341Z",
   "checks": [
     {
       "name": "Slider updates both shortcut pictures and readouts",

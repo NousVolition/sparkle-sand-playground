@@ -1,11 +1,12 @@
 {
   "status": "PASS",
-  "baseline": "957929e1cc1832bd065147ce833ae148c279629d",
+  "baseline": "3fa625730f1efc1424747f25241b0a6f6fe25179",
   "normalization": "Git LF line endings for comparison and source hashes",
   "modifiedTemplates": [
     "sum",
     "zeros"
   ],
+  "allOtherIndexContentPreserved": true,
   "preservedTemplates": [
     "ringsum",
     "pendulum",
@@ -37,7 +38,7 @@
     "staircase-space.js": "1f745a83385f5fe0acf2c1d02cd39ff6e6e733eb2c0cde0cfdb0034dd4466ae8",
     "staircase-shortcut.js": "bc844481de50a4799da2d5f93c235cc82d3676929e116d43d18b1830638c7e9d",
     "staircase-space.css": "c0a5d216761682c15630128001dd50ecdb78bab8ef211e3ac8ef8e970a1b5e5d",
-    "index.html": "a8d8bbf06a34e78c20ef9ef28b242fbbe10b3ba176c4fdd333fb8e0fd798fecb",
+    "index.html": "55454ff56a06bf86158c37ef848f59493c6545a42146dd2a8d735a562973e221",
     "proof-coverage.js": "94b48675b405822a8ad13e6f496d1904ae458658c4d7177216eafa59e73dc8bb"
   }
 }
