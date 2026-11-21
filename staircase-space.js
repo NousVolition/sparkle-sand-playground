@@ -73,6 +73,7 @@
     module.exports = { epsilonAt, totals, height, staircase, fullColumns, paintFullColumns, viewRange, traceSteps };
   }
   if (typeof document === 'undefined') return;
+  window.StaircaseSpace = { epsilonAt, totals, height, staircase, fullColumns, paintFullColumns };
 
   const byId = id => document.getElementById(id);
   const slider = byId('epsSlider'), chart = byId('space-chart'), strip = byId('space-strip');
@@ -195,6 +196,7 @@
     byId('statOffset').textContent = numbers.format(v.space).replace('-', '−');
     if (toneOn) oscillator.frequency.setTargetAtTime(140 + 340 * epsilon, audio.currentTime, .05);
     render();
+    document.dispatchEvent(new CustomEvent('space-change', { detail: { epsilon } }));
   }
   function setPlaying(on) {
     if (!on) cancelAnimationFrame(animation);

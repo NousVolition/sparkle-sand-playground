@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "method": "Isolated headless Chrome through Playwright; no existing browser profile",
+  "checkedAt": "2026-11-21T00:14:14.341Z",
+  "checks": [
+    {
+      "name": "Slider updates both shortcut pictures and readouts",
+      "values": {
+        "e": "0.001",
+        "l1": "−0.083333329",
+        "twice": "0.002",
+        "l2": "−0.083333317",
+        "area1": "1,000,000.000000000",
+        "area2": "1,000,000.000000000",
+        "difference": "0.249999937",
+        "alternating": "0.249999938",
+        "closed": "0.249999938",
+        "error": "2.49e-10"
+      }
+    },
+    {
+      "name": "Tab 11 phone width",
+      "scroll": 390,
+      "client": 390
+    },
+    {
+      "name": "Gap location and independent reference",
+      "referenceError": 1.525e-10
+    },
+    {
+      "name": "Epsilon changes and invalid-input recovery",
+      "passed": true
+    },
+    {
+      "name": "Golay guard rejects an allowed-weight nonmember and malformed word, accepts zero",
+      "passed": true
+    },
+    {
+      "name": "Zeros phone width",
+      "scroll": 390,
+      "client": 390
+    },
+    {
+      "name": "Existing views remain available and return to gap",
+      "passed": true
+    },
+    {
+      "name": "Experiment JSON download contains actual current readings",
+      "passed": true
+    }
+  ],
+  "consoleErrors": []
+}

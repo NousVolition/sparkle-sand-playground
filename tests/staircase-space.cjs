@@ -85,7 +85,9 @@ assert(history.includes('under my theory') && history.includes('1913') && histor
 assert(!tab.replace(history, '').includes('S − 4S'));
 const title = '1 + 2 + 3 + … grows forever. The space left over is −1/12.';
 assert(tab.replace(/<[^>]+>/g, '').includes(title));
-const outsideHistory = html.replace(history, '')
+const zetaLine = tab.match(/<p id="sum-zeta-line">[^<]*<\/p>/)[0];
+assert(zetaLine.includes('ζ(−1) = −1/12'));
+const outsideHistory = tab.replace(history, '').replace(zetaLine, '')
   .replace(/&(?:minus|#8722|#x2212);/gi, '−').replace(/&(?:nbsp|#160);/gi, ' ');
 assert(!/=\s*[−-]\s*1\s*\/\s*12\b/.test(outsideHistory));
 console.log(JSON.stringify({ checkedEpsilon: reference.map(row => row[1]), maxReadoutError, maxDrawnError, tolerance }));

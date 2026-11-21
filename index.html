@@ -1734,6 +1734,26 @@ function ferroBoot() {
       <p>As ε shrinks, both totals grow without bound. Subtract the teal area from the amber area. The space left over approaches <strong>−1/12</strong>.</p>
     </section>
   </div>
+  <section id="space-shortcut" class="shortcut-panel" aria-labelledby="shortcut-title">
+    <h2 id="shortcut-title">The shortcut, done on the spaces</h2>
+    <p>Keep the same slider. Compare the space at ε with the space at twice ε. The two large smooth areas cancel exactly.</p>
+    <div class="shortcut-pictures">
+      <figure><h3>At ε = <output data-shortcut="e"></output></h3><canvas id="shortcut-first" role="img" aria-label="Unit-width bars and the smooth curve at epsilon"></canvas><figcaption>L(ε) = <output data-shortcut="l1"></output></figcaption></figure>
+      <figure><h3>At 2ε = <output data-shortcut="twice"></output></h3><canvas id="shortcut-second" role="img" aria-label="Unit-width bars and the smooth curve at twice epsilon"></canvas><figcaption>L(2ε) = <output data-shortcut="l2"></output></figcaption></figure>
+    </div>
+    <p class="shortcut-caption">Both pictures show the rise and fall near the peak; their axes rescale. Amber is the bar area, teal is the smooth area. Readouts include the entire infinite softened sum.</p>
+    <div class="area-cancellation"><span><s>1/ε² = <output data-shortcut="area1"></output></s></span><strong>−</strong><span><s>4/(2ε)² = <output data-shortcut="area2"></output></s></span><strong>= 0</strong></div>
+    <p class="shortcut-equation">L(ε) − 4L(2ε) = e<sup>−ε</sup> / (1 + e<sup>−ε</sup>)²</p>
+    <dl class="shortcut-values">
+      <div><dt>The two spaces combined</dt><dd data-shortcut="difference"></dd></div>
+      <div><dt>Direct sum: e<sup>−ε</sup> − 2e<sup>−2ε</sup> + 3e<sup>−3ε</sup> − …</dt><dd data-shortcut="alternating"></dd></div>
+      <div><dt>The closed formula</dt><dd data-shortcut="closed"></dd></div>
+    </dl>
+    <p class="shortcut-caption">Difference between the combined spaces and direct sum: <output data-shortcut="error"></output> (floating-point arithmetic).</p>
+    <p>As ε approaches zero, the right side approaches ¼. Both spaces approach the same finite limit, so their combination approaches −3 times that limit. This gives −3 × limit = ¼, hence the limit is −1/12. At a finite ε, L(ε) and L(2ε) are different.</p>
+    <p id="sum-zeta-line">The zeta rule agrees: ζ(−1) = −1/12.</p>
+    <p class="shortcut-proofs">Checked in Lean: <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L39" target="_blank" rel="noopener">area cancellation</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L45" target="_blank" rel="noopener">the shortcut</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L69" target="_blank" rel="noopener">alternating sum</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RingSumMinusTwelfth.lean#L360" target="_blank" rel="noopener">existence of the limit</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L106" target="_blank" rel="noopener">zeta value</a></p>
+  </section>
   <details class="comparison" id="sum-history" name="sum-comparison">
     <summary><span>History</span><strong>A famous shortcut that needs a special rule</strong></summary>
     <div class="comparison-body">
@@ -1753,6 +1773,7 @@ function ferroBoot() {
   </details>
 </main>
 <script src="staircase-space.js"></script>
+<script src="staircase-shortcut.js"></script>
 <script src="staircase-comparisons.js"></script>
 </body>
 </html>
@@ -2623,7 +2644,7 @@ requestAnimationFrame(tick);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quantum Zeros &amp; Chaotic Drum Explorer</title>
+<title>The gap, zeta and the zeros</title>
 <style>
   :root {
     --bg: #070b14;
@@ -2824,13 +2845,14 @@ requestAnimationFrame(tick);
     line-height: 1.45;
   }
 </style>
+<link rel="stylesheet" href="zeros-gap.css">
 </head>
 <body>
 
 <header>
   <div class="title-block">
-    <h1>Quantum Zeros &amp; Chaotic Drum Explorer</h1>
-    <p>How Riemann zeros on the critical line mirror quantum energy levels &amp; prime wave orbits</p>
+    <h1>Zeta: the gap and the zeros</h1>
+    <p>A computed gap experiment alongside zero-spacing, drum and prime-wave illustrations</p>
   </div>
   <div class="tabs">
     <button class="tab-btn active" data-tab="spacing">1. Level Repulsion &amp; Zeros</button>
@@ -3070,7 +3092,7 @@ zeroWindowSlider.addEventListener('input', () => {
 repelSlider.addEventListener('input', () => {
   const v = repelSlider.value;
   document.getElementById('repelVal').textContent = v == 100 ? '100% (GUE)' : v == 0 ? '0% (Random)' : `${v}%`;
-  document.getElementById('gapMatchBadge').textContent = `GUE Match: ${(62 + v * 0.374).toFixed(1)}%`;
+  document.getElementById('gapMatchBadge').textContent = 'GUE-like illustration';
   generatePoints();
 });
 document.getElementById('soundSpacingBtn').addEventListener('click', (e) => {
@@ -3684,6 +3706,8 @@ function loop(time) {
 }
 requestAnimationFrame(loop);
 </script>
+<script src="zeros-gap-math.js"></script>
+<script src="zeros-gap-ui.js"></script>
 </body>
 </html>
 </template>
