@@ -83,6 +83,7 @@ const length64 = checkShellTable(64, [8,16,24,32], 398034000, 'LeechNorm64Layers
 const length80 = checkShellTable(80, [8,16,24,32,40], 4629381120, 'LeechNorm80Layers.lean');
 const length96 = checkShellTable(96, [8,16,24,32,40,48], 34417656000, 'LeechNorm96Layers.lean');
 const length112 = checkShellTable(112, [8,16,24,32,40,48], 187489935360, 'LeechNorm112Layers.lean', [56]);
+const length128 = checkShellTable(128, [8,16,24,32,40,48,56,64], 814879774800, 'LeechNorm128Layers.lean');
 const endpoints = [];
 let measuredLayers;
 function selectedIndex() {
@@ -144,5 +145,5 @@ for(const a of page.querySelectorAll('a')){assert.match(a.attrs.href,/\/blob\/[0
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','whole-table proof link and full browser histogram','proof links at +8, −8, +16, −16, +32 and −32','+32 contains the selected vector and −32 contains its negative','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
  layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,endpoints,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
- length48, length64, length80, length96, length112,
+ length48, length64, length80, length96, length112, length128,
  source_sha256:Object.fromEntries(['leech-three-e8.js','leech-three-e8.css','leech-three-e8-data.js'].map(p=>[p,sha(read(p))])),scope:'DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test.'},null,2));

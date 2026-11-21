@@ -470,8 +470,108 @@
     "total": 187489935360,
     "scope": "The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."
   },
+  "length128": {
+    "reference_axis": [
+      4,
+      -4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "dot_product_and_count": [
+      [
+        -64,
+        1
+      ],
+      [
+        -56,
+        47104
+      ],
+      [
+        -48,
+        32788800
+      ],
+      [
+        -40,
+        1062195200
+      ],
+      [
+        -32,
+        9403968600
+      ],
+      [
+        -24,
+        39253082112
+      ],
+      [
+        -16,
+        97917423808
+      ],
+      [
+        -8,
+        163357849600
+      ],
+      [
+        0,
+        192825064350
+      ],
+      [
+        8,
+        163357849600
+      ],
+      [
+        16,
+        97917423808
+      ],
+      [
+        24,
+        39253082112
+      ],
+      [
+        32,
+        9403968600
+      ],
+      [
+        40,
+        1062195200
+      ],
+      [
+        48,
+        32788800
+      ],
+      [
+        56,
+        47104
+      ],
+      [
+        64,
+        1
+      ]
+    ],
+    "total": 814879774800,
+    "scope": "The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."
+  },
   "source_sha256": {
-    "leech-three-e8.js": "68eb5f5ead8211b8f3c88e7cb804149f44495fd31c43b475db42a697af4dc7d0",
+    "leech-three-e8.js": "184e2ef60bcdb75144edb03cddd91fb280206285f3842b3149d66f8b4a062256",
     "leech-three-e8.css": "e47f59947cceba7fb9d01fd4e29463114accc682ef65ec079c99abe7a5016fd8",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
