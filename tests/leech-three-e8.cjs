@@ -87,13 +87,14 @@ const length112 = checkShellTable(112, [8,16,24,32,40,48], 187489935360, 'LeechN
 const length128 = checkShellTable(128, [8,16,24,32,40,48,56,64], 814879774800, 'LeechNorm128Layers.lean');
 const length144 = checkShellTable(144, [8,16,24,32,40,48,56], 2975551488000, 'LeechNorm144Layers.lean');
 const length160 = checkShellTable(160, [8,16,24,32,40,48,56,64], 9486551299680, 'LeechNorm160Layers.lean');
+const length176 = checkShellTable(176, [8,16,24,32,40,48,56,64], 27052945920000, 'LeechNorm176Layers.lean');
 const picker = $('e8TableLength');
 const options = [...page.html.match(/<select id="e8TableLength">([\s\S]*?)<\/select>/)[1]
   .matchAll(/<option value="(\d+)">(\d+)<\/option>/g)].map(([, value, label]) => {
     assert.equal(value, label);
     return Number(value);
   });
-assert.deepEqual(options, [32, 48, 64, 80, 96, 112, 128, 144, 160]);
+assert.deepEqual(options, [32, 48, 64, 80, 96, 112, 128, 144, 160, 176]);
 function checkVisibleTable(length) {
   assert.deepEqual(options.filter(n => !$('e8Length' + n + 'Panel').hidden), [length]);
 }
@@ -147,16 +148,16 @@ assert(Math.abs(Math.hypot(...projection.vertical) - 1) < 1e-12);
 const originalVector = generated.vecs.subarray(24 * firstLayerVector, 24 * (firstLayerVector + 1));
 assert(Math.abs(projection.vertical.reduce((acc,x,i) => acc + x*originalVector[i],0)) < 1e-12);
 $('e8Next').onclick(); assert.notEqual(verifyLayers(), firstLayerVector);
-$('e8Prev').onclick(); assert.equal(verifyLayers(), firstLayerVector); checkVisibleTable(160);
+$('e8Prev').onclick(); assert.equal(verifyLayers(), firstLayerVector); checkVisibleTable(176);
 $('e8CloudMode').onclick(); assert(!$('e8Cloud').hidden && $('e8LayersPanel').hidden);
 function choose(target){for(let i=0;i<12;i++)if(((mask()^target)>>i)&1)bits[i].onclick();assert.equal(mask(),target);}
 choose(0);assert.equal($('e8ClassCount').textContent,'720');assert.equal($('e8SumTotal').textContent,'32');assert.equal($('e8Remainder').textContent,'Three E₈ blocks');
-$('e8LayersMode').onclick(); verifyLayers(); checkVisibleTable(160); $('e8CloudMode').onclick();
+$('e8LayersMode').onclick(); verifyLayers(); checkVisibleTable(176); $('e8CloudMode').onclick();
 const before=$('e8VectorNumber').textContent;$('e8Next').onclick();assert.notEqual($('e8VectorNumber').textContent,before);$('e8Prev').onclick();assert.equal($('e8VectorNumber').textContent,before);
 const empty=sandbox.__threeE8Check.classCounts.findIndex(n=>n===0);choose(empty);
 assert.equal($('e8SelectedTitle').textContent,'No shortest vector here');assert.equal($('e8SumTotal').textContent,'—');assert($('e8Next').disabled);assert(!$('e8Empty').hidden);
 $('e8LayersMode').onclick(); assert($('e8LayersData').hidden && !$('e8Empty').hidden);
-$('e8Filter').onclick(); verifyLayers(); checkVisibleTable(160); $('e8CloudMode').onclick(); assert.equal($('e8CloudCount').textContent,'196,560 shortest vectors · 24D → 2D');assert($('e8Empty').hidden);assert.equal($('e8SumTotal').textContent,'32');
+$('e8Filter').onclick(); verifyLayers(); checkVisibleTable(176); $('e8CloudMode').onclick(); assert.equal($('e8CloudCount').textContent,'196,560 shortest vectors · 24D → 2D');assert($('e8Empty').hidden);assert.equal($('e8SumTotal').textContent,'32');
 $('e8Turn').oninput({target:{value:'1.2'}});
 $('e8Original').onclick();assert(!sandbox.__leechThreeE8Active);assert(page.hidden);
 $('e8Mode').onclick();assert(sandbox.__leechThreeE8Active);assert(!page.hidden);
@@ -165,5 +166,5 @@ const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','whole-table proof link and full browser histogram','proof links at +8, −8, +16, −16, +32 and −32','+32 contains the selected vector and −32 contains its negative','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
  layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,endpoints,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
  table_picker:{squared_lengths:options,default_length:32,one_table_visible:true},
- length48, length64, length80, length96, length112, length128, length144, length160,
+ length48, length64, length80, length96, length112, length128, length144, length160, length176,
  source_sha256:Object.fromEntries(['leech-three-e8.js','leech-three-e8.css','leech-three-e8-data.js'].map(p=>[p,sha(read(p))])),scope:'DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test.'},null,2));
