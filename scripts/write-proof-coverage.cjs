@@ -58,6 +58,7 @@ for(const [,key,label] of tabs) {
   const page=pages[key];
   text+=`\n<a id="${key}"></a>\n\n### ${label}\n\n**${page.status}.** ${page.note}\n\n`;
   text+=page.links.length ? page.links.map(p=>`[${p.label}](${p.href})`).join(' · ')+'\n' : 'No proof link added.\n';
+  if (page.verification) text+='\n'+page.verification.map(p=>`[${p.label}](${p.href})`).join(' · ')+'\n';
   if (["zeros", "penteract", "pentlite", "e8studio", "e8insp", "e8studio2"].includes(key)) text+="\n[Saved verification record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/three-e8-verification-2026-11-21-e8-wirtinger-integration.json) · [Full axiom transcript: 1,165 declarations](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/axioms-2026-11-21-e8-wirtinger-integration.txt) · [Successful merged-main build](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44885643672)\n";
 }
 fs.mkdirSync(path.join(root,'docs'),{recursive:true});

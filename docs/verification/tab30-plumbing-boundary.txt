@@ -1,0 +1,79 @@
+Tab 30 · Boundary of the E₈ plumbing
+
+Open the assembled boundary on Tab 30
+https://nousvolition.github.io/sparkle-sand-playground/?view=boundary#e8insp
+
+YOURS ALONE · Tab 30 boundary preview and project-specific formalization
+Lean 4.34.0-rc2 compiled the ten declarations below and printed their axiom dependencies. The prerequisite Tab30PlumbingAssembly compiled in the same run series with its nine earlier checks. The new proof imports the project's existing E8Tab30Bridge through that prerequisite. The project-specific result is the connection between these exact lattice data, local assembly charts and arithmetic.
+
+OLD IN THE PROJECT · Eight specified simple roots, the exact correspondence of all 64 Gram entries, determinant 1, and the seven paired attachments with disjoint caps. See the assembly record in this directory, tab30-plumbing-assembly.txt.
+
+KNOWN TO THE WORLD · The standard positive E₈ plumbing has a rounded boundary homeomorphic to S⁷. Its smooth structure generates Θ₇ ≅ ℤ/28. The plumbing supplies the smooth filling, the identification of its intersection form, and vanishing first Pontryagin class. The Eells–Kuiper theorem identifies its boundary invariant with the formula below. For the standard smooth S⁷, μ is zero.
+
+What Lean checked
+
+1. radial_frontier. In signed squared radii b = |q|² − 1 and f = |p|² − 1, the topological frontier of {b ≤ 0 or f ≤ 0} consists of the two closed rays {b ≥ 0, f = 0} and {b = 0, f ≥ 0}.
+2. overlap_boundary_iff. Within the assembly's closed D⁴ × D⁴ chart, the radii lie on that frontier exactly when both disk vectors have unit norm. The seam is modeled by S³ × S³.
+3. cross_preserves_seam. Exchanging the two disk factors on the chosen joint preserves membership in this seam.
+4. integral_intersection_surjective. The project’s integer E₈ matrix maps ℤ⁸ onto ℤ⁸ via multiplication. Its cokernel is therefore trivial. The plumbing's homology sequence connects this algebraic result to boundary homology.
+5. gram_positive_definite. Tab 30’s real Gram matrix is positive definite. The proof uses the coordinates of the eight simple roots and their previously proved Gram determinant.
+6. gram_signature. The number of positive eigenvalues minus the number of negative eigenvalues, with multiplicities, is +8. The root Gram form uses the orientation with positive form. The project's integer matrix uses the opposite sign after relabeling.
+7. positive_E8_value. For Pontryagin square 0 and signature +8, the rational representative (0 − 4 × 8)/896 is −1/28.
+8. positive_E8_order. Using the signature of the actual Tab 30 Gram matrix and square 0, this class has exact additive order 28 in ℚ/ℤ (Lean's AddCircle (1 : ℚ)).
+9. positive_E8_nonzero. The class from that Gram signature is nonzero.
+10. reversed_orientation_value. For square 0, replacing signature +8 with −8 negates the class, giving +1/28 mod 1.
+
+Geometric scope
+
+YOURS ALONE · The connected overview uses the actual assembly's seven pairs of attachment sites. The seam close-up varies a unit vector q around a great circle in the first S³ while fixing the second unit direction p. In the opposite chart the varying direction is the fiber because the local identification exchanges q and p. The screen shows this circle and a short interval transverse to the rim. The shared ring, angular control, magnification and adjoining-rim navigation visualize the existing assembly and use its checked swap. Selecting another rim on a piece changes the local chart under inspection.
+
+The atlas restricts the base of each unit sphere bundle to a great S² through its attachment centers in S⁴. Over the interior of each used cap its former unit-fiber face lies in the interior after gluing. Outside the caps the unit S³ fibers remain exposed. The corner section shows ordinary radii. The Lean proof uses squared radius minus one, which has the same threshold and side at radius one. Reorienting alternate zero sections along the tree changes the signs of the off-diagonal intersections while preserving the signature. Global smoothing, the identification with a homotopy sphere, the geometric characteristic class and the smooth-invariance theorem enter through the cited mathematics. An end-to-end Lean construction and classification of the smooth boundary remain open in this project.
+
+Sources
+
+Crowley and Wraith, Positive Ricci curvature on highly connected manifolds, §2.1. The boundary is the union of the sphere bundles over the complements of the open base disks, joined along their rims.
+https://mural.maynoothuniversity.ie/id/eprint/6973/1/DW-PosRicci%20%282%29.pdf
+
+Francis, notes by Gwilliam, Plumbing, §§1–2. Construction, intersection form, connectivity, signature +8 and vanishing p₁ for the E₈ filling, followed by the smooth obstruction.
+https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf
+
+Eells and Kuiper, An invariant for certain smooth manifolds.
+https://webhomes.maths.ed.ac.uk/~v1ranick/papers/eelskuip.pdf
+Goodman, Moduli spaces of nonnegatively curved metrics on exotic spheres, §1.6, gives the dimension-seven normalization and μ(S⁷) = 0.
+https://math.berkeley.edu/~mjgoodman/research/hs.pdf#page=6
+
+Reproduction
+
+The review baseline for the playground is 8cc0601e843e74bee8b532616dc194cac8ad5a34.
+The publication check used playground base 6639765c39565ca0abbafd61c08c00178a1e4837. Lean recompiled the assembly and boundary sources for this release. Their compiler transcripts match the saved records. The browser opened the connected view at α₅–α₇ with all seven seams glued and verified the links in the boundary panel and the Lean proofs menu.
+The checked boundary source is tests/lean/Tab30PlumbingBoundary.lean.
+SHA-256 of UTF-8 source with LF line endings
+Tab30PlumbingBoundary.lean  5c665bf608b0c7d29bff87320bbdb792c5a2d6349656fe9216f981d7cf4849ba
+Tab30PlumbingAssembly.lean  6ee5084f2fd266d536c47fca04db3d62cbb3189a9ec993e383e6b2013d7f89dc
+
+The imported E8Tab30Bridge source has Git blob 5bac3cf841316716aa8d9023492d0d540ecce4de.
+https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/af9f8d532d99b1b267c8daab81684c2d30459dee/E8Tab30Bridge.lean
+
+From a checkout of that proof revision, set PLAYGROUND to the absolute path of the updated playground checkout. In a POSIX shell run
+
+    lake build E8Tab30Bridge
+    lake env lean -R "$PLAYGROUND/tests/lean" -o .lake/build/lib/lean/Tab30PlumbingAssembly.olean "$PLAYGROUND/tests/lean/Tab30PlumbingAssembly.lean"
+    lake env lean -R "$PLAYGROUND/tests/lean" "$PLAYGROUND/tests/lean/Tab30PlumbingBoundary.lean"
+
+From the playground root, node tests/tab30-plumbing-boundary.cjs checks all seven rim identifications, both chart directions and unit tangent vectors on each exposed collar. The JavaScript check samples the numerical display. The Lean results above quantify over their stated domains.
+
+YOURS ALONE · Browser and numerical checks for this preview
+The numerical test passed at 21 slider positions for each of the seven joints. It checked all 14 cap rims and the exchanged representatives at the seam. The integrated Tab 30 browser check exercised the seven joints with a rotated rim direction, selected the central branch directly on the map and followed the trace from α₅ through the shared ring onto α₇. It then opened the adjoining α₇–α₈ rim from that same piece. It exercised 16× magnification, wheel zoom, a simulated two-touch pinch, dragging, keyboard input and fit. It also covered the completed assembly, root subsets, the empty selection, reset and both proof links. The preassembled file opened offline and passed the layout check at a 390-pixel viewport. The interactive revision reuses the Lean build documented below.
+
+Lean compiler output
+
+'Tab30PlumbingBoundary.radial_frontier' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.overlap_boundary_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.cross_preserves_seam' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.integral_intersection_surjective' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.gram_positive_definite' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.gram_signature' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.positive_E8_value' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.positive_E8_order' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.positive_E8_nonzero' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Tab30PlumbingBoundary.reversed_orientation_value' depends on axioms: [propext, Classical.choice, Quot.sound]

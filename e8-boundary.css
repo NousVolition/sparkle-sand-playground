@@ -1,0 +1,68 @@
+.boundary { margin: 12px 0 0; scroll-margin-top: 8px; }
+.boundary [hidden] { display: none !important; }
+.boundary .bd-heading, .bd-controls, .bd-key, .bd-trace {
+  display: flex; gap: 9px 14px; align-items: center; flex-wrap: wrap;
+}
+.boundary .bd-heading { justify-content: space-between; }
+.boundary .bd-heading h2 { margin: 0; }
+.bd-heading output { color: #69dfbf; font-weight: 700; font-size: 12px; }
+.bd-intro { color: var(--text); margin: 7px 0 11px; max-width: 105ch; }
+.bd-controls { margin-bottom: 12px; }
+.bd-controls label { display: inline-flex; align-items: center; gap: 7px; }
+.bd-controls select { color: var(--text); background: var(--panel-alt); border: 1px solid var(--border); padding: 5px; border-radius: 4px; font: inherit; }
+.boundary #bd-complete:enabled { background: #69dfbf; color: #08251f; border-color: #69dfbf; }
+.boundary button:disabled { opacity: .55; cursor: default; }
+.bd-jump, .boundary a { color: var(--accent); }
+.bd-grid { display: grid; grid-template-columns: minmax(0,2.7fr) minmax(200px,1fr); gap: 14px; }
+.bd-view { background: #0d1420; border: 1px solid var(--border); border-radius: 6px; min-width: 0; padding: 10px 12px; }
+.bd-view h3, .bd-invariant h3 { color: var(--text); font-size: 13px; margin: 0 0 7px; }
+.bd-view canvas { display: block; width: 100%; }
+.bd-bar, .bd-zoom { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 10px; }
+.bd-bar { justify-content: space-between; }
+.bd-bar h3 { margin: 0; }
+.bd-map { margin-bottom: 10px; }
+#bd-atlas { height: clamp(116px, 13vw, 158px); cursor: pointer; }
+#bd-neighborhood { height: clamp(225px, 29vw, 348px); border-radius: 4px; background: #0b1722; cursor: grab; touch-action: none; }
+#bd-neighborhood:active { cursor: grabbing; }
+#bd-collar { height: 145px; margin: 12px 0 5px; }
+.bd-detail-head { margin-bottom: 8px; }
+.bd-detail-head h3 { font-size: 15px; }
+.bd-zoom { gap: 4px; }
+.bd-zoom output { min-width: 34px; font-variant-numeric: tabular-nums; text-align: center; }
+.bd-zoom button, .bd-trace button { min-height: 30px; }
+#bd-zoom-in, #bd-zoom-out { min-width: 31px; font: bold 17px/1 ui-monospace, monospace; }
+.bd-readout { min-width: 0; border-left: 1px solid var(--border); padding-left: 12px; }
+.bd-readout h4 { color: var(--text); font-size: 12px; }
+#bd-swap, .bd-hint { color: #aebed1; font-size: 11px; }
+.bd-onward { margin-top: 10px; }
+#bd-onward { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; color: var(--muted); font-size: 11px; }
+#bd-onward button { color: #a5e8dc; min-height: 28px; }
+.bd-hint { margin: 5px 0 8px; }
+.bd-caption { margin: 10px 0 0; }
+#bd-cross:enabled { border-color: #d5ad63; color: #ffda92; background: #342a1b; }
+.bd-key { font-size: 11px; color: #c0cbdc; gap: 9px; margin: 5px 0; }
+.bd-line::before { display: inline-block; content: ''; vertical-align: 3px; width: 16px; border-top: 3px solid #68dcc1; margin-right: 5px; }
+.bd-line.open::before { border-top: 2px dashed #96a4b4; }
+.bd-line.chosen::before { border-color: #ffd17d; }
+.bd-view figcaption, .bd-scope, .bd-data { font-size: 11px; color: #b0bdcf; }
+.bd-view figcaption { margin-top: 6px; }
+.bd-trace { font-size: 11px; gap: 6px; }
+.bd-trace input { flex: 1 1 70px; min-width: 68px; accent-color: var(--gold); }
+.bd-turn { margin-top: 5px; }
+.bd-turn input { accent-color: #81c6d2; }
+#bd-angle-value { min-width: 4ch; text-align: right; }
+#bd-point { display: block; font-size: 12px; margin: 7px 0 4px; }
+.bd-data summary { cursor: pointer; }
+.bd-data pre { margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bd-invariant { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 10px 12px; margin-top: 12px; border-left: 3px solid #69dfbf; background: #112327; }
+.bd-invariant h3 { color: #a2e7da; margin-bottom: 3px; }
+.bd-invariant p, #bd-empty { font-size: 12px; }
+.bd-scope { margin-top: 10px; }
+.boundary :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (max-width: 730px) {
+  .bd-grid, .bd-invariant { grid-template-columns: minmax(0,1fr); }
+  .bd-grid { gap: 8px; }
+  .bd-view { padding: 9px; }
+  .bd-readout { border-left: 0; border-top: 1px solid var(--border); padding: 9px 0 0; }
+  #bd-collar { height: 118px; }
+}

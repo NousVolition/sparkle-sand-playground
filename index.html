@@ -15835,6 +15835,7 @@ draw();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>E₈ roots and the [8,4,4] Hamming code</title>
 <link rel="stylesheet" href="e8-plumbing.css">
+<link rel="stylesheet" href="e8-boundary.css">
 <style>
   :root {
     --bg: #0b0e14;
@@ -16100,7 +16101,7 @@ draw();
 <header>
   <div>
     <h1>E₈ roots and the [8,4,4] Hamming code</h1>
-    <div class="sub">Explore 240 root vectors and their neighbor graph. <a class="pl-jump" href="#plumbing">Assemble the plumbing ↓</a></div>
+    <div class="sub">Explore 240 root vectors and their neighbor graph. <a class="pl-jump" href="#plumbing">Assemble the plumbing ↓</a> · <a class="bd-jump" href="#plumbing-boundary">Explore the boundary ↓</a></div>
   </div>
   <div class="controls-bar">
     <label>Brightness <input type="range" id="dimmer" min="45" max="100" value="95" style="vertical-align:middle;width:80px;"></label>
@@ -16264,12 +16265,73 @@ draw();
   <p class="pl-foot">Each join identifies two copies of D⁴ × D⁴ by exchanging base and fiber. The tree uses the eight simple roots and their −1 inner products. A choice of alternating zero-section orientations gives the sign convention in panel 2. <a href="https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf" target="_blank" rel="noopener">Plumbing construction ↗</a> · <a href="docs/verification/tab30-plumbing-assembly.txt" target="_blank" rel="noopener">Nine Lean checks ↗</a> · <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/lean/Tab30PlumbingAssembly.lean" target="_blank" rel="noopener">Lean source ↗</a></p>
 </section>
 
+<section class="card boundary" id="plumbing-boundary" aria-labelledby="bd-title">
+  <div class="bd-heading"><h2 id="bd-title">5. Boundary of the plumbing</h2><output id="bd-status" aria-live="polite"></output></div>
+  <p class="bd-intro">Each piece contributes a 7-dimensional sheet, with a unit S³ fiber over every point of its S⁴ base outside the open glued caps. Two sheets meet along a 6-dimensional S³ × S³ seam at each joint.</p>
+  <div class="bd-controls">
+    <button type="button" class="btn-sm" id="bd-complete">Assemble all eight pieces</button>
+    <label>Inspect joint <select id="bd-joint"></select></label>
+    <a id="bd-assembly" href="#plumbing">Assembly controls ↑</a>
+  </div>
+  <figure class="bd-view bd-map">
+    <div class="bd-bar"><h3>Assembly map</h3><div class="bd-key"><span class="bd-line joined">Glued</span><span class="bd-line open">Open</span><span class="bd-line chosen">Selected</span></div></div>
+    <canvas id="bd-atlas" aria-label="Map of the eight base slices. Select a link to inspect its paired rims. The joint menu offers the same choices."></canvas>
+    <figcaption>Choose a link to explore its seam below. Each solid link identifies two rims in the S² base slices. <a href="https://mural.maynoothuniversity.ie/id/eprint/6973/1/DW-PosRicci%20%282%29.pdf" target="_blank" rel="noopener">Boundary construction, §2.1 ↗</a></figcaption>
+  </figure>
+  <div id="bd-seam-panel" class="bd-view bd-detail">
+    <div class="bd-bar bd-detail-head">
+      <h3 id="bd-joint-title">Inside the joint</h3>
+      <div class="bd-zoom" role="group" aria-label="Seam magnification">
+        <button type="button" class="btn-sm" id="bd-zoom-out" aria-label="Zoom out">−</button>
+        <output id="bd-zoom-level" aria-label="Magnification">1×</output>
+        <button type="button" class="btn-sm" id="bd-zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" class="btn-sm" id="bd-fit">Fit seam</button>
+      </div>
+    </div>
+    <div class="bd-grid">
+      <div class="bd-scene">
+        <canvas id="bd-neighborhood" tabindex="0" role="slider" aria-label="Trace through the seam" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-describedby="bd-scene-hint"></canvas>
+        <p class="bd-hint" id="bd-scene-hint">Drag across to travel, drag up or down to turn around the rim. Scroll or pinch to zoom.</p>
+        <div class="bd-trace">
+          <button type="button" class="btn-sm" id="bd-cross">Cross seam</button>
+          <label id="bd-left-label" for="bd-position">First side</label><input type="range" id="bd-position" min="-100" max="100" step="0.1" value="0" aria-label="Position along the two boundary faces"><span id="bd-right-label">Other side</span>
+          <button type="button" class="btn-sm" id="bd-center">At the rim</button>
+        </div>
+        <div class="bd-trace bd-turn">
+          <label for="bd-angle">Around the rim</label><input type="range" id="bd-angle" min="-180" max="180" value="0" aria-label="Angle around a great circle of the seam"><output id="bd-angle-value" for="bd-angle">0°</output>
+        </div>
+      </div>
+      <aside class="bd-readout">
+        <h4>Where the point is</h4>
+        <output id="bd-point" aria-live="polite"></output>
+        <p id="bd-swap"></p>
+        <nav class="bd-onward" aria-labelledby="bd-onward-heading">
+          <h4 id="bd-onward-heading">Other glued rims</h4>
+          <div id="bd-onward"></div>
+        </nav>
+        <canvas id="bd-collar" aria-label="Base and fiber radii before rounding. The gold point follows the same trace as the close-up."></canvas>
+        <div id="bd-radii" class="bd-hint"></div>
+        <details class="bd-data"><summary>Point coordinates</summary><pre id="bd-coordinates"></pre></details>
+      </aside>
+    </div>
+    <p class="bd-hint bd-caption">The mesh shows one circle in the S³ × S³ seam and a short interval across it. The radius plot uses the first piece’s base and fiber order and shows the corner before smoothing.</p>
+  </div>
+  <p class="bd-scope" id="bd-empty" hidden>Choose two adjacent simple roots in panel 2 to inspect a joint.</p>
+  <div class="bd-invariant" id="bd-invariant" hidden>
+    <div><h3>The rounded boundary</h3><p>For the standard E₈ plumbing the boundary is homeomorphic to S⁷ and has an exotic smooth structure. Its class generates the group of 28 oriented smooth structures on S⁷ under connected sum. <a href="https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf#page=2" target="_blank" rel="noopener">Topology argument ↗</a></p></div>
+    <div><h3>μ = −1/28 mod 1</h3><p>Lean computes signature +8 from these eight roots. The standard plumbing supplies a relative Pontryagin square of 0. Lean evaluates (0 − 4 × 8)/896 and proves the class has order 28 in ℚ/ℤ. The standard smooth S⁷ has μ = 0, so the invariant distinguishes their smooth structures. <a href="https://math.berkeley.edu/~mjgoodman/research/hs.pdf#page=6" target="_blank" rel="noopener">Invariant formula, §1.6 ↗</a></p></div>
+  </div>
+  <p class="bd-scope" id="bd-partial">The exotic-sphere result applies to the completed assembly of eight pieces and seven joints.</p>
+  <p class="bd-scope">Lean checks the local frontier, the seam exchange, the lattice and the invariant arithmetic. The geometric inputs and the smooth classification come from the cited topology. <a href="docs/verification/tab30-plumbing-boundary.txt" target="_blank" rel="noopener">Ten Lean boundary checks ↗</a> · <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/lean/Tab30PlumbingBoundary.lean" target="_blank" rel="noopener">Lean source ↗</a></p>
+</section>
+
 <details class="card evidence-note" id="computation-proof-note">
   <summary>What is computed, checked, and proved?</summary>
   <ul>
     <li><b>Computed here:</b> the selected codeword and weight, root list, inner products, selected-root determinant, neighbor lists and drawing. The determinant uses floating-point Gaussian elimination and rounds to an integer. The Coxeter-plane basis is a numerical approximation.</li>
     <li><b>Plumbing workbench:</b> panel 4 computes the paired local charts in the tangent disk bundles and identifies their points at each selected joint. The drawing schematizes the pieces.</li>
     <li><b>Assembly checks in Lean:</b> the seven joints match the simple-root matrix and connect all eight pieces. Distinct attachment caps are disjoint. Exchanging the two disk factors twice returns the starting point, and the two zero sections meet at the chart center. <a href="docs/verification/tab30-plumbing-assembly.txt" target="_blank" rel="noopener">Verification record</a> · <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/lean/Tab30PlumbingAssembly.lean" target="_blank" rel="noopener">Assembly proof</a>.</li>
+    <li><b>Boundary view and ten Lean checks (YOURS ALONE).</b> Panel 5 traces the exposed boundary in this assembly. Its proofs reuse the Tab 30 matrix and assembly theorems (OLD IN THE PROJECT). The classification of the smooth boundary and the Eells–Kuiper formula are KNOWN TO THE WORLD. <a href="docs/verification/tab30-plumbing-boundary.txt" target="_blank" rel="noopener">Proof and source record</a>.</li>
     <li><b>Fixed reference labels:</b> the header counts, code minimum distance and preset determinant labels. Independent checks verify these facts; the labels themselves do not recalculate them.</li>
     <li><b>Independent exact checks:</b> all 16 codewords, all 256 root selections (including the empty set), the partition of 128 half-integer roots, and the 240-root graph. The rounded determinant agreed with rational arithmetic in every selectable case. See the <a href="docs/e8-inspector-check.json" target="_blank" rel="noopener">saved check record</a> and <a href="https://github.com/NousVolition/sparkle-sand-playground/blob/main/tests/tab30-exact.py" target="_blank" rel="noopener">reproducible check</a>.</li>
     <li><b>Simple roots in Lean.</b> For the eight rational vectors defined in E8Tab30Bridge, all 64 Gram entries equal the entries of the E₈ plumbing matrix after relabeling and changing sign. The full Gram determinant is 1. <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/E8Tab30Bridge.lean#L44" target="_blank" rel="noopener">Gram entry proof</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/E8Tab30Bridge.lean#L67" target="_blank" rel="noopener">Determinant proof</a>.</li>
@@ -16284,9 +16346,10 @@ draw();
   <summary>Mathematical background: plumbing and exotic spheres</summary>
   <p>For the standard eight-dimensional E₈ plumbing of tangent disk bundles over S⁴, the construction supplies the connectivity and intersection-form hypotheses. Its unimodular form gives a homology-sphere boundary. The generalized Poincaré theorem identifies the boundary topologically with S⁷; additional smooth invariants and Kervaire–Milnor theory show that it is exotic and generates Θ₇ ≅ ℤ/28ℤ. See <a href="https://sites.math.northwestern.edu/jnf960/classes/mflds/23plumbing.pdf" target="_blank" rel="noopener">the plumbing construction and topology argument</a>.</p>
   <p>For the corresponding standard eight-dimensional D₇, E₇ and A₇ plumbings, the boundary groups H₃ are ℤ/4ℤ, ℤ/2ℤ and ℤ/8ℤ. These descriptions use the construction’s homology sequence and the intersection matrix’s Smith normal form; the determinant alone gives only the finite group’s order.</p>
-  <p>Panel 4 models the disk bundles and their local gluing maps. Boundary homology and the smooth classification of the rounded boundary come from the cited topology results. The formal statement of <code>E8_det</code> establishes the determinant of the specified integer matrix.</p>
+  <p>Panel 4 models the disk bundles and their local gluing maps. Panel 5 shows exposed boundary patches and their seams before corner rounding. The homology identification and the smooth classification use the cited topology. The formal statement of <code>E8_det</code> establishes the determinant of the specified integer matrix.</p>
 </details>
 
+<script src="e8-boundary.js"></script>
 <script src="e8-plumbing.js"></script>
 <script>
 (function() {
@@ -16321,7 +16384,11 @@ draw();
     return s;
   }
 
-  const plumbing = E8Plumbing.mount(SIMPLE_ROOTS, dot8);
+  const plumbing = E8Plumbing.mount(SIMPLE_ROOTS, dot8, () => {
+    activeSimple = SIMPLE_ROOTS.map(() => true);
+    renderGram();
+    drawCanvas();
+  });
 
   function vecEq(a, b) {
     for (let i = 0; i < 8; i++) if (Math.abs(a[i] - b[i]) > 1e-6) return false;

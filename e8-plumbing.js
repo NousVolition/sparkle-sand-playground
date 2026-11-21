@@ -164,7 +164,7 @@ const E8Plumbing = (() => {
     element.replaceChildren(row('Base',base,reversed ? 'pl-p' : 'pl-q'), row('Fiber',fiber,reversed ? 'pl-q' : 'pl-p'));
   }
 
-  function mount(roots, innerProduct) {
+  function mount(roots, innerProduct, selectAllPieces) {
     const model = create(roots, innerProduct);
     const el = name => document.getElementById('pl-' + name);
     const tree = el('tree'), selector = el('joint'), glue = el('glue');
@@ -172,6 +172,14 @@ const E8Plumbing = (() => {
     let selected = model.joints[0];
     const pending = () => model.joints.find(j => !model.isGlued(j));
     const axis = () => el('axis').selectedIndex;
+    const boundary = E8Boundary.mount(model, { bundlePoint, minHeight, radius, rootName, jointName, layout }, {
+      select(joint) { selected = joint; render(); },
+      complete() {
+        if (model.active.some(active => !active)) selectAllPieces();
+        for (const joint of model.joints) model.glue(joint);
+        render();
+      }
+    });
     document.querySelector('.pl-jump').onclick = event => {
       event.preventDefault();
       document.getElementById('plumbing').scrollIntoView({ block: 'start' });
@@ -221,6 +229,7 @@ const E8Plumbing = (() => {
       el('empty').hidden = !!selected; el('detail').hidden = !selected;
       drawTree(tree,model,selected);
       renderPoint();
+      boundary.update(selected);
     }
 
     selector.onchange = () => { selected = model.joints.find(j => j.id === Number(selector.value)); render(); };
