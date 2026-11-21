@@ -1,0 +1,157 @@
+{
+  "status": "PASS",
+  "verified_at_utc": "2026-11-21T05:24:10.670276+00:00",
+  "scope": "Fresh Lean compilation and axiom audit of the unchanged E8PlumbingBridge module, including all eight public theorems. No new mathematical statement or equation.",
+  "cited_revision": "f0e7c291733f50a950f40cfc786c945b8cf06b99",
+  "current_main_observed_before_check": "d34dae902b30774e28d7e97bf936f4c305a13268",
+  "source_unchanged_between_these_revisions": true,
+  "source_url": "https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean",
+  "source_git_blob": "49f88cf46f59e29c2d6c01f9ba4289d97053be88",
+  "source_sha256": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
+  "lean_version": "Lean (version 4.34.0-rc2, x86_64-w64-windows-gnu, commit 6a10ac8c22beadecabdbb0919c2b50214762f91d, Release)",
+  "lean_binary_sha256": "37dfe799f69b990251f3b6bcff8a1c10c1afe2adcdecc5c580cc6726ffb63433",
+  "pinned_manifest_sha256": "b3dded0821cb21fdc1078fabd04a774594192a41c122e80c249573163129734c",
+  "dependencies": [
+    {
+      "name": "mathlib",
+      "revision": "85e3a25e006c35636f0e53b0e9296caca2685bc0",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "plausible",
+      "revision": "d9598f07b1bc701f1e3aae163d2681c1fd978793",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "LeanSearchClient",
+      "revision": "ba67e212be1197b84c1f1f6299488a10a3002713",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "importGraph",
+      "revision": "d8823026ac7ef130c253089d95685f9877b95323",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "proofwidgets",
+      "revision": "a8acbfd87375ff4abe14ce09db5b7664d383bc7f",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "aesop",
+      "revision": "18889deb9e83ea7420ef51c160d6f88552e744e3",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "Qq",
+      "revision": "507746ab8f4b643ccdacb2ec4cdb5853fa9f8ab3",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "batteries",
+      "revision": "d54dddc581e08be364c278052863524bff7a99a9",
+      "tracked_sources_clean": true,
+      "cached_build_present": true
+    },
+    {
+      "name": "Cli",
+      "revision": "ab3a82db9fea14cf0fd7f5a2de650f4b534640af",
+      "tracked_sources_clean": true,
+      "cached_build_present": false
+    }
+  ],
+  "dependency_builds": "Existing compiled dependencies were reused; their tracked sources were clean and matched all nine pinned manifest revisions. Dependencies were not freshly rebuilt.",
+  "cached_mathlib_olean_sha256": "8ca31f5e75b3431ea4afde497566f2c83a5cba9a27ad5c1b8a19c5856fa6f973",
+  "public_theorem_count": 8,
+  "axioms": {
+    "E8PlumbingBridge.A4_isSymm": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.A4_det": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.E8_isSymm": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.E8_det": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.E8_trace": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.card_spinor_roots": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.card_integer_roots": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "E8PlumbingBridge.total_E8_roots": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "sorryAx_or_other_unapproved_axioms": false,
+  "builds": [
+    {
+      "module": "E8PlumbingBridge",
+      "started_at_utc": "2026-11-21T05:21:43.024459+00:00",
+      "command": [
+        "lean",
+        "-o",
+        "E8PlumbingBridge.olean",
+        "E8PlumbingBridge.lean"
+      ],
+      "input_sha256": "7189fa902add601d395532fa573ed4c05b4b3ef8aa688f4081fdcfe7c6b23d9a",
+      "exit_code": 0,
+      "finished_at_utc": "2026-11-21T05:23:55.050231+00:00",
+      "elapsed_seconds": 132.016,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "olean_sha256": "638c7d7a79a4276a406c4915087f87467244c9520698495de26e5a87ec237ff9"
+    },
+    {
+      "module": "E8SourceAudit",
+      "started_at_utc": "2026-11-21T05:23:55.055926+00:00",
+      "command": [
+        "lean",
+        "-o",
+        "E8SourceAudit.olean",
+        "E8SourceAudit.lean"
+      ],
+      "input_sha256": "17c97616d4610a80ec876099c9a9ee5cc9d53e27c63a8e90faf19319781f76eb",
+      "exit_code": 0,
+      "finished_at_utc": "2026-11-21T05:24:09.921418+00:00",
+      "elapsed_seconds": 14.859,
+      "log_sha256": "05da378797e77373cab39b749222745cf0d9a454e9481c9924a66cc5cb442da6",
+      "olean_sha256": "387690699ac3a4453e73cc69f8f84229f5f9b4faae4964c8fbb89ce30cf34f48"
+    }
+  ],
+  "audit_source_sha256": "17c97616d4610a80ec876099c9a9ee5cc9d53e27c63a8e90faf19319781f76eb",
+  "verification_script_sha256": "7b4588e039f651cd3e073eaad1e1618a96352240217a971814031e7d5131303c",
+  "limits": [
+    "The browser-to-Lean matrix correspondence remains an external exact-arithmetic check, not a new Lean theorem.",
+    "The topology prose is not part of these formal theorem statements.",
+    "No Comparator run, independent kernel replay, fresh dependency rebuild, or whole-repository build is claimed."
+  ]
+}

@@ -1,0 +1,8 @@
+'E8PlumbingBridge.A4_isSymm' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.A4_det' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.E8_isSymm' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.E8_det' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.E8_trace' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.card_spinor_roots' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.card_integer_roots' depends on axioms: [propext, Classical.choice, Quot.sound]
+'E8PlumbingBridge.total_E8_roots' depends on axioms: [propext, Classical.choice, Quot.sound]
