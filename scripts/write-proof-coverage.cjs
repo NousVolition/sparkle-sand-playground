@@ -1,7 +1,7 @@
 // Keep the published tab-by-tab record aligned with the visible proof notes.
 'use strict';
 const fs = require('node:fs'), path = require('node:path');
-const root = path.resolve(__dirname, '..'), {revision, lightCaptureRevision, ramanujanRevision, pages} = require('../proof-coverage.js');
+const root = path.resolve(__dirname, '..'), {revision, lightCaptureRevision, ramanujanRevision, crossingRevision, pages} = require('../proof-coverage.js');
 const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
 const tabs = [...html.slice(0,html.indexOf('<div class="controls"')).matchAll(/<button class="tab(?: active)?" data-mode="([^"]+)"[^>]*>(.*?)<\/button>/g)];
 const base = 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/' + revision + '/';
@@ -10,9 +10,11 @@ const intro = `# Playground tabs and Lean proofs
 
 The table covers all ${tabs.length} tabs. The original review compared the playground with [discrete-gap-inequalities-lean at ${revision.slice(0,7)}](${base}README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
 
-${count('Some results proved; limits below')} tabs have matching mathematical results with limits. ${count('Related theorem; limited match')} have a related theorem for part of their calculation, ${count('Related, not a proof of this tab')} has a related result only, and ${count('No matching proof in this library')} have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
+${count('Some results proved; limits below')} tabs have matching mathematical results with limits. ${count('Related theorem; limited match')} have a related theorem for part of their calculation, ${count('Related, not a proof of this tab')} has a related result only, and ${count('No matching proof in this library')} have no matching proof in this library. ${count('Not yet reviewed')} newly added tab has not yet been reviewed. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
 
 The Ramanujan space proofs are pinned to [the merged addition](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${ramanujanRevision}/RamanujanGap.lean). Its full [build and axiom audit](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44839441230) passed with 1,058 audited declarations. The [gap experiment](zeros-gap-experiment.md) records the separate numerical checks and their limits.
+
+The fixed-height crossing view links to [the merged conditional Lean rule](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/${crossingRevision}/GapCrossing.lean). Its [full build and axiom audit](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44845361754) passed with 1,074 declarations. The exact zero and monotonicity hypotheses have not been certified for the browser curve. See the [separate numerical crossing checks](zeros-gap-crossing-check.json).
 
 ## What was checked
 

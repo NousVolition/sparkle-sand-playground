@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "scope": "Source-line and axiom-registration checks; actual compilation is recorded in the linked CI run.",
+  "revision": "394543d34125c52b41813ee2917158f2058808ae",
+  "ci": "https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44845361754",
+  "targets": [
+    {
+      "file": "GapCrossing.lean",
+      "line": 26,
+      "declaration": "GapCrossing.before_zero",
+      "revision": "394543d34125c52b41813ee2917158f2058808ae"
+    },
+    {
+      "file": "GapCrossing.lean",
+      "line": 37,
+      "declaration": "GapCrossing.after_zero",
+      "revision": "394543d34125c52b41813ee2917158f2058808ae"
+    },
+    {
+      "file": "GapCrossing.lean",
+      "line": 49,
+      "declaration": "GapCrossing.real_sign_change_without_zero",
+      "revision": "394543d34125c52b41813ee2917158f2058808ae"
+    },
+    {
+      "file": "GapCrossing.lean",
+      "line": 16,
+      "declaration": "GapCrossing.size_zero_iff",
+      "revision": "394543d34125c52b41813ee2917158f2058808ae"
+    },
+    {
+      "file": "GapCrossing.lean",
+      "line": 19,
+      "declaration": "GapCrossing.size_of_opposite",
+      "revision": "394543d34125c52b41813ee2917158f2058808ae"
+    },
+    {
+      "file": "GapCrossing.lean",
+      "line": 22,
+      "declaration": "GapCrossing.component_le_size",
+      "revision": "394543d34125c52b41813ee2917158f2058808ae"
+    }
+  ],
+  "broaderCoverageTabs": 35
+}

@@ -1,10 +1,12 @@
 # Playground tabs and Lean proofs
 
-The table covers all 34 tabs. The original review compared the playground with [discrete-gap-inequalities-lean at 8d52096](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
+The table covers all 35 tabs. The original review compared the playground with [discrete-gap-inequalities-lean at 8d52096](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
 
-17 tabs have matching mathematical results with limits. 2 have a related theorem for part of their calculation, 1 has a related result only, and 14 have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
+17 tabs have matching mathematical results with limits. 2 have a related theorem for part of their calculation, 1 has a related result only, and 14 have no matching proof in this library. 1 newly added tab has not yet been reviewed. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
 
 The Ramanujan space proofs are pinned to [the merged addition](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean). Its full [build and axiom audit](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44839441230) passed with 1,058 audited declarations. The [gap experiment](zeros-gap-experiment.md) records the separate numerical checks and their limits.
+
+The fixed-height crossing view links to [the merged conditional Lean rule](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean). Its [full build and axiom audit](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44845361754) passed with 1,074 declarations. The exact zero and monotonicity hypotheses have not been certified for the browser curve. See the [separate numerical crossing checks](zeros-gap-crossing-check.json).
 
 ## What was checked
 
@@ -35,7 +37,7 @@ node scripts/check-proof-notes-ui.cjs
 
 The comparison uses Node's standard libraries, does not start a browser or solver trajectory, and prints JSON. An optional second argument selects a downloaded index.html. Rebuild Lean separately with lake build and run the axiom checker as specified by that repository's workflow. The three-E₈ update adds 32 Lean theorems and reuses the existing volume proof. Run node ../discrete-gap-inequalities-lean/scripts/check_three_e8.cjs . for the integer construction replay, and node tests/leech-three-e8.cjs for the interaction checks with DOM/canvas stand-ins. The attempted visual preview was stopped by the computer-use tool because it could not verify the local browser address; that attempt is not claimed as a completed visual review. The proof repository's node scripts/check_playground_golay.cjs also replays its archived Leech source without needing a playground checkout.
 
-The proof-menu check exercises all 34 selections, safe external links, an unknown-tab fallback and closing behavior with DOM stand-ins. It is not a rendered browser test. Regenerate the record after changing a note with node scripts/write-proof-coverage.cjs.
+The proof-menu check exercises all 35 selections, safe external links, an unknown-tab fallback and closing behavior with DOM stand-ins. It is not a rendered browser test. Regenerate the record after changing a note with node scripts/write-proof-coverage.cjs.
 
 ## Tab-by-tab comparison
 
@@ -139,9 +141,9 @@ No proof link added.
 
 ### 13. Zeros
 
-**Some results proved; limits below.** The new gap search evaluates a softened complex sum minus its Gamma-integral background, without stored zero locations. Lean covers its real starting case at s = −1; it does not yet cover the complex extension, numerical root search or the Riemann hypothesis. The exact finite Golay/Leech coefficient comparison and membership guard have external tests. The older spacing and drum views remain illustrations; the drum bars use stored zero ordinates.
+**Some results proved; limits below.** The fixed-height pass shows gap size and real part on both sides of a numerical zero, keeping height and softening fixed. Lean proves a conditional crossing rule: given an exact zero and strict real-part monotonicity, opposite sides have opposite real signs and positive sizes. It also proves that real-part sign change alone does not imply a complex zero. Those hypotheses are not certified for this numerical gap. Lean covers the real starting case at s = −1, but not the complex extension, numerical root search or RH. The older spacing and drum views remain illustrations using stored zero ordinates.
 
-[Real gap at s = −1](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L32) · [Its limit equals the zeta value](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L113)
+[Before an exact zero](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean#L26) · [Beyond an exact zero](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean#L37) · [Real sign change without a complex zero](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean#L49) · [Zero size iff zero reading](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean#L16) · [Opposite readings have the same size](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean#L19) · [The real component is bounded by the size](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/394543d34125c52b41813ee2917158f2058808ae/GapCrossing.lean#L22) · [Real gap at s = −1](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L32) · [Its limit equals the zeta value](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L113)
 
 <a id="pendulum"></a>
 
@@ -310,3 +312,11 @@ No proof link added.
 **Some results proved; limits below.** On the grid, a Super Black Grain keeps its material and stays at or below its starting row. Its color channels are at most 17 out of 255. A grain of another material can have up to four Super Black Grain neighbors. Each reduces its color multiplier by 0.18, down to 0.28 before rounding. Lean also studies repeated light bounces with a chosen reflected share capped at 0.00035. The page draws colors directly. The ferrofluid smoothing link covers one ring step with t = 1/4. The other six materials have no proof link here.
 
 [Grain motion across frames](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L238) · [Color channel bound](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L152) · [Neighbor shading bounds](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L157) · [Light left after each bounce](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L87) · [Absorbed and remaining light](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L106) · [Ring smoothing step](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L191)
+
+<a id="feathers-bricks"></a>
+
+### 35. Feathers and Bricks
+
+**Not yet reviewed.** No proof links have been registered for this newly added tab. This crossing update preserves its source and does not audit its physics.
+
+No proof link added.

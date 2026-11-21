@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "baseline": "fbcdfe7861db4c90d2a006ed2f91533fa9a4d0e5",
+  "comparison": "LF-normalized text",
+  "modifiedTemplates": [
+    "zeros"
+  ],
+  "changeWithinTemplate": "One external crossing script reference",
+  "otherIndexContentPreserved": true,
+  "tab11Preserved": true,
+  "tab12Preserved": true,
+  "newFeathersBricksPreserved": true,
+  "sourceHashes": {
+    "zeros-gap-crossing.js": "e2f346f318b166e8ef34759b8f12ae06b3a5a015d1e8c52ce52b120511f25311",
+    "zeros-gap-ui.js": "5b61743da9710842e9ff586a6dc94f6cc46c15c9cf7e8967c103e22bc10959c7",
+    "zeros-gap.css": "c1d21b4b09334b222532112e0440c5743a676c079b4f84a0994357781ecc535b",
+    "zeros-gap-math.js": "542185916bc709ef34f46c15b3fbc495253873dba5519aa40624a6c0ca6f2b2e",
+    "index.html": "defd8cd0c04fb94d297f30ebb98fad7213d04f00fe73c4a0123f087ce716d4c1",
+    "proof-coverage.js": "c87cf3e6f5f3519254b67834e7baf636486b994643a807b1c0f5f9ea25ce7d15"
+  }
+}
