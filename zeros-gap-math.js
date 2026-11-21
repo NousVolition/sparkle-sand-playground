@@ -26,15 +26,18 @@
     for(let n=1;n<=N;n++){logs[n-1]=Math.log(n);fade[n-1]=Math.exp(-epsilon*n);}
     const result={N,logs,fade}; profiles.set(key,result); return result;
   }
-  function gap(s,epsilon,cutoff=48) {
-    if(!s.every(Number.isFinite)||s[0]<-1||s[0]>=1||Math.abs(s[1])>30||
-       !Number.isFinite(epsilon)||epsilon<.001||epsilon>2||cutoff<32||cutoff>96)
-      throw new RangeError('Use −1 ≤ Re(s) < 1, |Im(s)| ≤ 30 and 0.001 ≤ ε ≤ 2.');
+  function checkGapDomain(s,epsilon,cutoff) {
+    if(!s.every(Number.isFinite)||s[0]<-1||s[0]>=1||Math.abs(s[1])>68||
+       !Number.isFinite(epsilon)||epsilon<.001||epsilon>2||!Number.isFinite(cutoff)||cutoff<32||cutoff>96)
+      throw new RangeError('Use −1 ≤ Re(s) < 1, |Im(s)| ≤ 68, 0.001 ≤ ε ≤ 2 and a cutoff from 32 to 96.');
+  }
+  function gap(s,epsilon,cutoff=48,basis) {
+    checkGapDomain(s,epsilon,cutoff);
     const {N,logs,fade}=profile(epsilon,cutoff);let re=0,im=0,cr=0,ci=0;
     for(let i=0;i<N;i++){
-      const amplitude=fade[i]*Math.exp(-s[0]*logs[i]), phase=-s[1]*logs[i];
-      const yr=amplitude*Math.cos(phase)-cr, tr=re+yr; cr=(tr-re)-yr;re=tr;
-      const yi=amplitude*Math.sin(phase)-ci, ti=im+yi; ci=(ti-im)-yi;im=ti;
+      const amplitude=fade[i]*(basis ? basis.powers[i] : Math.exp(-s[0]*logs[i])), phase=-s[1]*logs[i];
+      const yr=amplitude*(basis ? basis.cosines[i] : Math.cos(phase))-cr, tr=re+yr; cr=(tr-re)-yr;re=tr;
+      const yi=amplitude*(basis ? basis.sines[i] : Math.sin(phase))-ci, ti=im+yi; ci=(ti-im)-yi;im=ti;
     }
     const area=mul(gamma(sub([1,0],s)),exp(scale(sub(s,[1,0]),Math.log(epsilon))));
     // n^(-sigma) <= n for sigma >= -1 gives a bound on the omitted series tail.
@@ -42,12 +45,38 @@
     const tailBound=Math.exp(-epsilon*(N+1))*(1+N*d)/(d*d);
     return {value:sub([re,im],area),bars:[re,im],area,terms:N,tailBound};
   }
-  function extrapolate(s,epsilon,levels=5,cutoff=48) {
+  function checkLevels(levels) {
     if(!Number.isInteger(levels)||levels<1||levels>5)throw new RangeError('Use 1 to 5 levels.');
-    const samples=Array.from({length:levels},(_,j)=>gap(s,epsilon/2**j,cutoff));
+  }
+  function extrapolate(s,epsilon,levels=5,cutoff=48,basis) {
+    checkLevels(levels);
+    const samples=Array.from({length:levels},(_,j)=>gap(s,epsilon/2**j,cutoff,basis));
     let row=samples.map(x=>x.value);
     for(let k=1;k<levels;k++)row=row.slice(0,-1).map((x,j)=>scale(sub(scale(row[j+1],2**k),x),1/(2**k-1)));
     return {value:row[0],samples};
+  }
+  // The damping levels share n^(-s). Reuse its radial factor down each grid
+  // column and its angular factor across each row of the same extrapolation.
+  function prepareExtrapolatedRow(sigmas, epsilon, levels, cutoff=48) {
+    checkLevels(levels);
+    const finest = epsilon / 2**(levels-1);
+    checkGapDomain([0,0], finest, cutoff);
+    const {logs} = profile(finest, cutoff);
+    const columns = Array.from(sigmas, sigma => {
+      checkGapDomain([sigma,0], epsilon, cutoff);
+      return {sigma, powers: logs.map(logN => Math.exp(-sigma * logN))};
+    });
+    const cosines = new Float64Array(logs.length), sines = new Float64Array(logs.length);
+    return function row(t) {
+      checkGapDomain([0,t], epsilon, cutoff);
+      for (let i=0; i<logs.length; i++) {
+        const phase = -t * logs[i];
+        cosines[i] = Math.cos(phase);
+        sines[i] = Math.sin(phase);
+      }
+      return columns.map(({sigma, powers}) =>
+        extrapolate([sigma,t], epsilon, levels, cutoff, {powers, cosines, sines}).value);
+    };
   }
   // Independent reference: Euler–Maclaurin summation, not used in gap(), search(), or findRoot().
   function zetaReference(s,N=48) {
@@ -122,6 +151,6 @@
       reason:member?'Golay member: this word passes the input guard.':allowed?'Allowed weight, but this word is not in the Golay code.':'This weight is not allowed in the Golay code.'};
   }
   function distribution(){const counts={};for(const w of code)counts[weight(w)]=(counts[weight(w)]||0)+1;return counts;}
-  const api={gap,extrapolate,zetaReference,findRoot,grid,search,gamma,thetaCoefficients,golayBasis,guard,distribution,complex:{add,sub,scale,mul,div,abs}};
+  const api={gap,extrapolate,prepareExtrapolatedRow,zetaReference,findRoot,grid,search,gamma,thetaCoefficients,golayBasis,guard,distribution,complex:{add,sub,scale,mul,div,abs}};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ZeroGapMath=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

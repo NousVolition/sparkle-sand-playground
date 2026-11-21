@@ -139,7 +139,7 @@ No proof link added.
 
 ### 13. Zeros
 
-**Some results proved; limits below.** The new gap search evaluates a softened complex sum minus its Gamma-integral background, without stored zero locations. Lean covers its real starting case at s = −1; it does not yet cover the complex extension, numerical root search or the Riemann hypothesis. The exact finite Golay/Leech coefficient comparison and membership guard have external tests. The older spacing and drum views remain illustrations; the drum bars use stored zero ordinates.
+**Some results proved; limits below.** Lean proves the real gap at s = −1. The complex gap search and the Critical Line Tightrope are numerical illustrations. The tightrope finds its marked crossings from the phase-turned gap on σ = ½. The complex extension and the Riemann hypothesis remain outside the cited proofs. The finite Golay/Leech coefficient comparison and membership guard have external tests. The spacing, drum and prime-wave illustrations use tabulated ordinates.
 
 [Real gap at s = −1](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L32) · [Its limit equals the zeta value](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L113)
 

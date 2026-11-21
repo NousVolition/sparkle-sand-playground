@@ -51,6 +51,40 @@ The five-level limit estimate from ε = 0.025 is near
 0.499999999997 + 14.134725141730i. These checks support the expected limiting
 behavior in this one window. They establish no statement about all zeta zeros.
 
+## The Critical Line Tightrope
+
+Across 0.25 ≤ σ ≤ 0.75 and 12 ≤ t ≤ 68, the tightrope estimates the gap limit
+using ε = 0.008, 0.004, 0.002 and 0.001. It multiplies the result by
+exp(iθ(t)). On σ = ½ this approximates Hardy’s real-valued Z(t).
+[DLMF 25.10.1](https://dlmf.nist.gov/25.10.E1)
+
+The plot brackets sign changes in the center column, refines each height
+against the same gap evaluator and samples a new row there. This gives
+the dots and bands a common height scale. The offset slider moves a probe.
+The numerical mesh is shared across sizes. A resize resamples it at the
+new pixel centers. Animation rotates the cached complex values while
+their magnitudes and the computed zero positions stay fixed.
+
+Run `node tests/zeros-tightrope.cjs` to compare the computed crossings with
+reference ordinates and check the rasterized field at several phases.
+
+The 15 requested reference heights agreed within 4.88 × 10⁻⁷. The same
+search found a sixteenth crossing at t ≈ 67.079811. Across seven phases,
+the largest measured dot-to-edge distance was 0.52 device pixels. All
+16 magnitude minima retained their positions at φ = 0 and φ = 1.
+
+An isolated headless Chrome 157 session measured the critical-tab draw
+over 120 animation frames after 20 warm-up frames, against
+[main at fbcdfe7](https://github.com/NousVolition/sparkle-sand-playground/commit/fbcdfe7861db4c90d2a006ed2f91533fa9a4d0e5).
+
+| Viewport | Median draw on main | Median draw with gap bands |
+| --- | ---: | ---: |
+| 1280 × 900, 1× | 5.7 ms | 0.6 ms |
+| 390 × 844, 3× phone emulation | 2.9 ms | 2.1 ms |
+
+The first field build took 1.9 seconds in each viewport. Subsequent frames,
+probe changes and resizes reused it. The phone view fit in 390 CSS pixels.
+
 ## Golay and Leech
 
 The module also computes the coefficients through q⁵ of E₄³ − 720Δ using exact

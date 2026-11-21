@@ -2960,11 +2960,17 @@ requestAnimationFrame(tick);
     <div class="card">
       <div class="card-header">
         <span class="card-title">The Critical Line Tightrope (Re(s) = 1/2)</span>
-        <span class="badge">Zeta Wave Ocean</span>
+        <span class="badge">Gap limit estimate</span>
       </div>
-      <canvas id="zetaCanvas" height="360"></canvas>
-      <p class="caption">
-        Glowing whirlpools sit directly along the vertical mirror line <strong>Re(s) = 1/2</strong>. Every zero on this tightrope contributes a smooth cosine wave that shapes the distribution of prime numbers.
+      <canvas id="zetaCanvas" height="360" role="img" aria-label="Rotating gap bands and their fixed crossings on the critical line" aria-describedby="tightrope-legend tightrope-caption"></canvas>
+      <div id="tightrope-legend" class="legend">
+        <span class="legend-item"><span class="dot" style="background:#2acdb4"></span>Positive</span>
+        <span class="legend-item"><span class="dot" style="background:#aa71ee"></span>Negative</span>
+        <span class="legend-item"><span class="dot" style="background:#fef08a"></span>Computed zero</span>
+        <span>Darker shades show smaller |F|</span>
+      </div>
+      <p class="caption" id="tightrope-caption">
+        Colors show the sign of the gap, turned by Riemann's phase. All band edges meet at each zero; the flow rotates that phase and never moves a zero. Numerical illustration; Lean covers the gap at s = −1.
       </p>
     </div>
 
@@ -2986,15 +2992,17 @@ requestAnimationFrame(tick);
       <input type="range" id="numZerosSlider" min="1" max="60" value="25">
     </div>
     <div class="control-group">
-      <div class="control-label"><span>Critical Line Offset</span><span id="sigmaVal">0.500 (Balanced)</span></div>
+      <div class="control-label"><label for="sigmaSlider">Critical Line Offset (probe σ)</label><span id="sigmaVal">0.500</span></div>
       <input type="range" id="sigmaSlider" min="35" max="65" value="50">
     </div>
     <button class="btn" id="animateZerosBtn">Animate Wave Build</button>
   </div>
 </section>
 
+<script src="zeros-gap-math.js"></script>
+<script src="zeros-gap-tightrope.js"></script>
 <script>
-// First 90 genuine imaginary parts of nontrivial Riemann zeros
+// Tabulated ordinates for the spacing, drum and prime-wave illustrations.
 const RIEMANN_ZEROS = [
   14.1347, 21.0220, 25.0109, 30.4249, 32.9351, 37.5862, 40.9187, 43.3271, 48.0052, 49.7738,
   52.9703, 56.4462, 59.3470, 60.8318, 65.1125, 67.0798, 69.5464, 72.0672, 75.7047, 77.1448,
@@ -3535,6 +3543,7 @@ function drawStadiumTab(time) {
 // TAB 3: CRITICAL LINE & PRIME WAVES
 // ==========================================
 const zetaCanvas = document.getElementById('zetaCanvas');
+const drawTightrope = ZeroGapTightrope.createPlot(zetaCanvas);
 const primeCanvas = document.getElementById('primeCanvas');
 const numZerosSlider = document.getElementById('numZerosSlider');
 const sigmaSlider = document.getElementById('sigmaSlider');
@@ -3545,8 +3554,7 @@ numZerosSlider.addEventListener('input', () => {
   document.getElementById('zeroCountBadge').textContent = `${numZerosSlider.value} Zero Waves`;
 });
 sigmaSlider.addEventListener('input', () => {
-  const s = (sigmaSlider.value / 100).toFixed(3);
-  document.getElementById('sigmaVal').textContent = s === '0.500' ? '0.500 (Balanced)' : `${s} (Tilted)`;
+  document.getElementById('sigmaVal').textContent = (sigmaSlider.value / 100).toFixed(3);
 });
 document.getElementById('animateZerosBtn').addEventListener('click', (e) => {
   animZeros = !animZeros;
@@ -3555,6 +3563,7 @@ document.getElementById('animateZerosBtn').addEventListener('click', (e) => {
 });
 
 function drawCriticalTab(time) {
+  if (!zetaCanvas.clientWidth) return;
   if (animZeros) {
     const val = 1 + Math.floor(((time * 0.012) % 60));
     numZerosSlider.value = val;
@@ -3563,74 +3572,7 @@ function drawCriticalTab(time) {
   }
 
   const dpr = window.devicePixelRatio || 1;
-  const zw = zetaCanvas.clientWidth;
-  const zh = 360;
-  if (zetaCanvas.width !== zw * dpr || zetaCanvas.height !== zh * dpr) {
-    zetaCanvas.width = zw * dpr;
-    zetaCanvas.height = zh * dpr;
-  }
-  const ctx = zetaCanvas.getContext('2d');
-  ctx.save();
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, zw, zh);
-
-  const sigma = sigmaSlider.value / 100;
-  const critX = zw * (0.2 + (sigma - 0.35) * 2.0);
-  const tPhase = time * 0.0018;
-
-  // Wave field background
-  const step = 8;
-  for (let px = 0; px < zw; px += step) {
-    const reOffset = (px - critX) / (zw * 0.35);
-    for (let py = 0; py < zh; py += step) {
-      const tVal = 10 + (py / zh) * 52;
-      // Approximate Hardy Z-like interference
-      let wave = 0;
-      for (let n = 1; n <= 7; n++) {
-        wave += Math.pow(n, -0.5 - reOffset * 0.5) * Math.cos(tVal * Math.log(n) - tPhase);
-      }
-      const mag = Math.min(1, Math.abs(wave) * 0.42);
-      ctx.fillStyle = wave >= 0
-        ? `rgba(56, 189, 248, ${mag * 0.45})`
-        : `rgba(167, 139, 250, ${mag * 0.45})`;
-      ctx.fillRect(px, py, step, step);
-    }
-  }
-
-  // Critical line tightrope
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 2.2;
-  ctx.setLineDash([6, 4]);
-  ctx.beginPath();
-  ctx.moveTo(critX, 12);
-  ctx.lineTo(critX, zh - 12);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Plot first 15 zeros along the line
-  const visibleZeros = RIEMANN_ZEROS.slice(0, 15);
-  visibleZeros.forEach((z, idx) => {
-    const y = 24 + ((z - 12) / 56) * (zh - 44);
-    const glow = 6 + Math.sin(time * 0.004 + idx) * 2;
-    ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
-    ctx.beginPath();
-    ctx.arc(critX, y, glow, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#fef08a';
-    ctx.beginPath();
-    ctx.arc(critX, y, 3.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '10px -apple-system, sans-serif';
-    ctx.fillText(`t = ${z.toFixed(1)}`, critX + 10, y + 3);
-  });
-
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = '600 12px -apple-system, sans-serif';
-  ctx.fillText(`Re(s) = ${sigma.toFixed(2)}`, critX - 34, 18);
-  ctx.restore();
+  drawTightrope(time, sigmaSlider.value / 100);
 
   // Right panel: Prime Staircase reconstruction
   const pw = primeCanvas.clientWidth;
@@ -3676,7 +3618,7 @@ function drawCriticalTab(time) {
     const lnX = Math.log(xVal);
     for (let k = 0; k < numZeros; k++) {
       const gamma = RIEMANN_ZEROS[k];
-      const amp = (2 * Math.pow(xVal, sigma)) / (gamma * lnX);
+      const amp = (2 * Math.sqrt(xVal)) / (gamma * lnX);
       approx -= amp * Math.sin(gamma * lnX);
     }
     const clamped = Math.max(0, Math.min(yMax, approx));
@@ -3707,7 +3649,6 @@ function loop(time) {
 }
 requestAnimationFrame(loop);
 </script>
-<script src="zeros-gap-math.js"></script>
 <script src="zeros-gap-ui.js"></script>
 </body>
 </html>
