@@ -24125,10 +24125,193 @@ loop();
   };
   let phys = 'fun', funColor = null;
   const isReal = () => phys === 'real';
-  function physOf(rec) {
-    if (!rec || !isReal() || !REAL_PHYS[rec.key]) return rec;
-    return Object.assign({}, rec, REAL_PHYS[rec.key]);
+  function physOf(rec, heatVal) {
+    if (!rec) return rec;
+    const f = FRIC[rec.key];
+    if (!f) {
+      if (!isReal() || !REAL_PHYS[rec.key]) return rec;
+      return Object.assign({}, rec, REAL_PHYS[rec.key]);
+    }
+    const melt = rec.key === 'gallium' && (heatVal || 0) > 80;
+    const ck = melt ? rec.key + ':melt' : rec.key;
+    let out = PHYS_CACHE[ck];
+    if (!out) {
+      out = Object.assign({}, rec, { fall: f.fall, mass: f.density });
+      if (melt) { out.fall = f.meltFall; out.mass = f.meltDensity; }
+      PHYS_CACHE[ck] = out;
+    }
+    return out;
   }
+
+  // Tab 34 friction and weight — Copyright © 2026 NousVolition. All rights reserved.
+  // Values and citations live in the accompanying values.md, written before measurement.
+  // Fun and Real use the same tipping, stopping, weight and flow rules.
+  const FRIC = {
+    aerogel: { kind: 'granular', density: 0.10, tip: 30, stop: 26, fall: 0.045 },
+    'super-black-grain': { kind: 'granular', density: 0.56, tip: 41, stop: 37, fall: 0.12 },
+    pasta: { kind: 'granular', density: 8.0, tip: 38, stop: 34, fall: 0.42 },
+    gallium: { kind: 'granular', density: 5.91, tip: 36, stop: 32, fall: 0.32, meltDensity: 6.095, meltFall: 0.34, flow: 0.85 },
+    ferro: { kind: 'liquid', density: 1.21, fall: 0.18, flow: 0.80 },
+    silk: { kind: 'thread', density: 1.36, fall: 0.16 },
+    ni3: { kind: 'granular', density: 4.08, tip: 42, stop: 38, fall: 0.28 },
+    stf: { kind: 'liquid', density: 1.20, fall: 0.18, flow: 0.90 }
+  };
+  // Shared records, so the hot loop never allocates.
+  const FRIC_MELT = { kind: 'liquid', density: FRIC.gallium.meltDensity, fall: FRIC.gallium.meltFall, flow: FRIC.gallium.flow };
+  const FRIC_LOCK = { kind: 'locked', density: FRIC.stf.density, fall: FRIC.stf.fall };
+  const PHYS_CACHE = {};
+  let tops = null, HP = null, relocCount = 0, climbCount = 0, movedMark = null, lastStart = null;
+  // Per-column slope cache: filled on demand, cleared for the columns a surface change can reach.
+  let scValid = null, scDeg = null, scDir = null, scTie = null, scWide = null, scDL = null, scDR = null, scFill = null, scM = null, scReg = null;
+  let KT = null;   // per-kind tables
+
+  function kindTables() {
+    if (KT && KT.n === CATALOG.length) return KT;
+    const n = CATALOG.length;
+    const cls = new Uint8Array(n), dil = new Uint8Array(n), mag = new Uint8Array(n);
+    const dens = new Float64Array(n), tip = new Float64Array(n), stop = new Float64Array(n), flow = new Float64Array(n);
+    const ix = { GA: -1, NI: -1, SK: -1, FE: -1, STF: -1 };
+    for (let k = 0; k < n; k++) {
+      const rec = CATALOG[k], f = FRIC[rec.key];
+      const kd = f ? f.kind : 'granular';
+      cls[k] = kd === 'liquid' ? 1 : (kd === 'thread' ? 2 : 0);
+      dil[k] = rec.dilatant ? 1 : 0;
+      mag[k] = rec.magnetic ? 1 : 0;
+      dens[k] = f ? f.density : rec.mass;
+      tip[k] = (f && f.tip != null) ? f.tip : 35;
+      stop[k] = (f && f.stop != null) ? f.stop : 32;
+      flow[k] = (f && f.flow) ? f.flow : 0.85;
+      if (rec.key === 'gallium') ix.GA = k;
+      else if (rec.key === 'ni3') ix.NI = k;
+      else if (rec.key === 'silk') ix.SK = k;
+      else if (rec.key === 'ferro') ix.FE = k;
+      else if (rec.key === 'stf') ix.STF = k;
+    }
+    KT = { n, cls, dil, mag, dens, tip, stop, flow, GA: ix.GA, NI: ix.NI, SK: ix.SK, FE: ix.FE, STF: ix.STF };
+    return KT;
+  }
+
+  function fricOf(rec, i) {
+    const f = rec && FRIC[rec.key];
+    if (!f) return { kind: 'granular', density: rec ? rec.mass : 1, fall: rec ? rec.fall : 0.2, tip: 35, stop: 32 };
+    if (rec.key === 'gallium' && i >= 0 && heat && heat[i] > 80) return FRIC_MELT;
+    if (rec.key === 'stf' && i >= 0 && flag && flag[i]) return FRIC_LOCK;
+    return f;
+  }
+
+  function refreshTops() {
+    if (!type) return;
+    if (!tops || tops.length !== cols || !scValid || scValid.length !== cols) {
+      tops = new Int16Array(cols);
+      HP = new Int16Array(cols + 10);
+      scValid = new Uint8Array(cols);
+      scDeg = new Float64Array(cols); scM = new Float64Array(cols); scReg = new Float64Array(cols); scWide = new Float64Array(cols);
+      scDir = new Int8Array(cols); scTie = new Uint8Array(cols);
+      scDL = new Int16Array(cols); scDR = new Int16Array(cols); scFill = new Uint8Array(cols);
+    }
+    const C = cols, R = rows, TY = type, tp = tops;
+    tp.fill(R);
+    let remaining = C;
+    for (let y = 0; y < R && remaining > 0; y++) {
+      const base = y * C;
+      for (let x = 0; x < C; x++) {
+        if (tp[x] === R && TY[base + x] === GRAIN) { tp[x] = y; remaining--; }
+      }
+    }
+    for (let x = 0; x < C; x++) HP[x + 5] = tp[x] >= R ? 0 : R - tp[x];
+    scValid.fill(0);
+  }
+
+  function setTop(x, y) {
+    tops[x] = y;
+    HP[x + 5] = y >= rows ? 0 : rows - y;
+    const lo = x - 5 < 0 ? 0 : x - 5, hi = x + 5 >= cols ? cols - 1 : x + 5;
+    for (let c = lo; c <= hi; c++) scValid[c] = 0;
+  }
+
+  function noteFill(x, y) {
+    if (tops && y < tops[x]) setTop(x, y);
+  }
+
+  function noteVacate(x, y) {
+    if (!tops || y !== tops[x]) return;
+    let yy = y + 1;
+    while (yy < rows && type[yy * cols + x] !== GRAIN) yy++;
+    setTop(x, yy);
+  }
+
+  // Slope of the free surface at column x: a straight-line fit across 5 columns (near) and 11 columns (wide).
+  function calcSlope(x) {
+    const C = cols;
+    const hC = HP[x + 5], dropL = hC - HP[x + 4], dropR = hC - HP[x + 6];
+    let lo = x - 2 < 0 ? 0 : x - 2, hi = x + 2 > C - 1 ? C - 1 : x + 2;
+    let n = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let c = lo; c <= hi; c++) {
+      const dx = c - x, H = HP[c + 5];
+      n++; sx += dx; sy += H; sxx += dx * dx; sxy += dx * H;
+    }
+    let m = 0, deg = 0;
+    if (n >= 3) {
+      const denom = n * sxx - sx * sx;
+      m = (Math.abs(denom) >= 1e-12) ? (n * sxy - sx * sy) / denom : 0;
+      deg = Math.atan(Math.abs(m)) * 180 / Math.PI;
+    }
+    const reg = deg;
+    let dir = m > 0.05 ? -1 : (m < -0.05 ? 1 : 0), tie = 0;
+    lo = x - 5 < 0 ? 0 : x - 5; hi = x + 5 > C - 1 ? C - 1 : x + 5;
+    n = 0; sx = 0; sy = 0; sxx = 0; sxy = 0;
+    for (let c = lo; c <= hi; c++) {
+      const H = HP[c + 5];
+      if (H <= 0) continue;
+      const dx = c - x;
+      n++; sx += dx; sy += H; sxx += dx * dx; sxy += dx * H;
+    }
+    let wide = 0;
+    if (n >= 6) {
+      const denom = n * sxx - sx * sx;
+      const wm = (Math.abs(denom) >= 1e-12) ? (n * sxy - sx * sy) / denom : 0;
+      wide = Math.atan(Math.abs(wm)) * 180 / Math.PI;
+    }
+    // A local peak makes the 5-column fit cancel to a flat line; use the drop to each neighbor.
+    if (dropL > 0 && dropR > 0 && deg < 10) {
+      const local = Math.atan(dropL > dropR ? dropL : dropR) * 180 / Math.PI;
+      if (local > deg) deg = local;
+      if (dropL > dropR) dir = -1; else if (dropR > dropL) dir = 1; else { dir = 0; tie = 1; }
+    } else if (!dir) {
+      if (dropL > 0.05) dir = -1;
+      else if (dropR > 0.05) dir = 1;
+    }
+    scDeg[x] = deg; scM[x] = m; scReg[x] = reg; scWide[x] = wide;
+    scDir[x] = dir; scTie[x] = tie; scDL[x] = dropL; scDR[x] = dropR; scFill[x] = n;
+    scValid[x] = 1;
+  }
+
+  function slopeAt(x) {
+    if (!type) return { deg: 0, dir: 0, m: 0, reg: 0, wide: 0, dropL: 0, dropR: 0, filled: 0 };
+    if (!tops || tops.length !== cols || !scValid || scValid.length !== cols) refreshTops();
+    if (!scValid[x]) calcSlope(x);
+    const dir = scTie[x] ? (Math.random() < 0.5 ? -1 : 1) : scDir[x];
+    return { deg: scDeg[x], dir, m: scM[x], reg: scReg[x], wide: scWide[x], dropL: scDL[x], dropR: scDR[x], filled: scFill[x] };
+  }
+
+  function wakePatch(x, y, dir) {
+    const uh = dir ? -dir : 0;
+    const Kt = KT, cls = Kt.cls, GA = Kt.GA;
+    for (let k = 0; k <= 14; k++) {
+      const xx = x + uh * k;
+      if (xx < 0 || xx >= cols) continue;
+      for (let dy = 0; dy <= 5; dy++) {
+        const yy = y - dy;
+        if (yy < 0 || yy >= rows) continue;
+        const j = yy * cols + xx;
+        if (type[j] !== GRAIN) continue;
+        const kk = kind[j];
+        if (cls[kk] === 0 && !(kk === GA && heat[j] > 80)) move[j] = 1;
+      }
+    }
+  }
+
+
   function allowedColors(rec) {
     if (!isReal()) return rec.colors;
     if (Object.prototype.hasOwnProperty.call(REAL_COLORS, rec.key)) {
@@ -24174,7 +24357,7 @@ loop();
   const EMPTY = 0, GRAIN = 1;
   let mat = CATALOG[0], color = CATALOG[0].colors[0], pattern = 'solid', tool = 'pour';
   let size = 4, cols = 0, rows = 0, cell = 4;
-  let type, kind, pix, heat, flag, link, rest;
+  let type, kind, pix, heat, flag, link, rest, move;
   let flying = [];
   let magnet = null, magnetOn = false;
   let silkSeq = 1;
@@ -24263,7 +24446,7 @@ loop();
     if (h > 560) cell = 5;
     const nc = Math.max(8, Math.floor(w / cell)), nr = Math.max(8, Math.floor(h / cell));
     if (nc !== cols || nr !== rows) {
-      const ot = type, ok = kind, op = pix, oh = heat, of = flag, ol = link, orr = rest, oc = cols, orw = rows;
+      const ot = type, ok = kind, op = pix, oh = heat, of = flag, ol = link, orr = rest, om = move, oc = cols, orw = rows;
       cols = nc; rows = nr;
       const n = cols * rows;
       type = new Uint8Array(n);
@@ -24273,6 +24456,7 @@ loop();
       flag = new Uint8Array(n);
       link = new Int32Array(n);
       rest = new Float32Array(n);
+      move = new Uint8Array(n);
       link.fill(-1);
       if (ot) {
         const mc = Math.min(oc, cols), mr = Math.min(orw, rows);
@@ -24281,6 +24465,7 @@ loop();
           type[i] = ot[j]; kind[i] = ok[j]; pix[i] = op[j]; heat[i] = oh[j]; flag[i] = of[j];
           link[i] = ol[j] >= 0 ? ((ol[j] / oc | 0) * cols + (ol[j] % oc)) : -1;
           rest[i] = orr[j];
+          move[i] = om ? om[j] : 0;
         }
       }
     }
@@ -24325,6 +24510,7 @@ loop();
     flag[i] = 0;
     link[i] = -1;
     rest[i] = 0;
+    move[i] = 1;
     if (p.silk && p.linkFlying >= 0) {
       // link later if the previous flyer has settled nearby — skip; silk links form from neighbors after settle
     }
@@ -24367,7 +24553,7 @@ loop();
   function updateFlying() {
     const keep = [];
     for (const p of flying) {
-      const rec = physOf(CATALOG[p.m] || CATALOG[0]);
+      const rec = physOf(CATALOG[p.m] || CATALOG[0], p.heat);
       p.vy = Math.min(p.vy + rec.fall, 8);
       p.vx *= 0.98;
       p.x += p.vx; p.y += p.vy;
@@ -24414,15 +24600,16 @@ loop();
   }
 
   function ferroSmooth() {
+    const FEk = kindTables().FE;
     // 1D ring of radii around the mass center; heatStep with t = 0.25 ≤ 1/4
     let sx = 0, sy = 0, n = 0;
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ferro') {
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && kind[i] === FEk) {
       sx += i % cols; sy += (i / cols) | 0; n++;
     }
     if (n < 12) return;
     const cx = sx / n, cy = sy / n;
     const N = 64, t = SMOOTH_T, r = new Float64Array(N), cnt = new Float64Array(N);
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ferro') {
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && kind[i] === FEk) {
       const x = i % cols, y = (i / cols) | 0;
       const ang = Math.atan2(y - cy, x - cx);
       const j = ((ang + Math.PI) / (Math.PI * 2) * N) | 0;
@@ -24442,7 +24629,7 @@ loop();
       if (next[j] < 0.5) next[j] = 0.5;
     }
     // softly pull the outer grains toward the smoothed radius
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ferro') {
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && kind[i] === FEk) {
       const x = i % cols, y = (i / cols) | 0;
       const ang = Math.atan2(y - cy, x - cx);
       const j = clamp(((ang + Math.PI) / (Math.PI * 2) * N) | 0, 0, N - 1);
@@ -24462,8 +24649,9 @@ loop();
   function snapSilk() {
     const rec = byKey.silk;
     const snap = rec.snap || 8;
+    const SKk = kindTables().SK;
     for (let i = 0; i < type.length; i++) {
-      if (type[i] !== GRAIN || recOf(i).key !== 'silk' || link[i] < 0) continue;
+      if (type[i] !== GRAIN || kind[i] !== SKk || link[i] < 0) continue;
       const j = link[i];
       if (j >= type.length || type[j] !== GRAIN) { link[i] = -1; continue; }
       const x1 = i % cols, y1 = (i / cols) | 0, x2 = j % cols, y2 = (j / cols) | 0;
@@ -24497,68 +24685,202 @@ loop();
   }
 
   function updateGrid() {
-    const C = cols, R = rows, flip = frame & 1;
+    if (!type) return;
+    const Kt = kindTables();
+    const C = cols, R = rows, N = type.length;
+    const TY = type, KD = kind, MV = move, HT = heat, FL = flag, LK = link, PX = pix, RS = rest;
+    const cls = Kt.cls, dil = Kt.dil, mag = Kt.mag, dens = Kt.dens, tipA = Kt.tip, stopA = Kt.stop, flowA = Kt.flow;
+    const GA = Kt.GA, NI = Kt.NI, STF = Kt.STF;
+    const meltD = FRIC.gallium.meltDensity;
+
+    function relocate(jx, jy, ix, iy, notes) {
+      const i = iy * C + ix, j = jy * C + jx;
+      if (jy < iy) climbCount++;
+      TY[j] = GRAIN; KD[j] = KD[i]; PX[j] = PX[i]; HT[j] = HT[i]; FL[j] = FL[i];
+      LK[j] = LK[i]; RS[j] = RS[i]; MV[j] = MV[i];
+      TY[i] = EMPTY; LK[i] = -1; MV[i] = 0;
+      if (notes) { noteFill(jx, jy); noteVacate(ix, iy); }
+      relocCount++;
+      if (movedMark && j < movedMark.length) movedMark[j] = 1;
+    }
+
+    // 1. Magnet pull, then unsupported drops, then heavier grains push lighter ones aside.
+    const xStart = (frame & 1) ? 0 : C - 1;
+    const xEnd = (frame & 1) ? C : -1;
+    const xStep = (frame & 1) ? 1 : -1;
+    const hasMagnet = !!magnet;
     for (let y = R - 2; y >= 0; y--) {
-      for (let k = 0; k < C; k++) {
-        const x = flip ? k : C - 1 - k;
-        const i = y * C + x;
-        if (type[i] !== GRAIN) continue;
-        const rec = physOf(recOf(i));
-        if (rec.dilatant && flag[i]) continue; // rigid solid until the lock relaxes
-        let slide = rec.slide;
-        if (rec.key === 'gallium') slide = heat[i] > 80 ? 0.85 : 0.12;
-        if (rec.key === 'ni3' && flag[i]) slide = 0.7;
-        if (rec.key === 'silk' && link[i] >= 0) slide *= 0.15;
+      const row = y * C;
+      for (let x = xStart; x !== xEnd; x += xStep) {
+        const i = row + x;
+        if (TY[i] !== GRAIN) continue;
+        const k = KD[i];
+        if (hasMagnet && mag[k]) {
+          const dx = Math.sign(magnet.x - x), dy = Math.sign(magnet.y - y);
+          const tx = x + dx, ty = y + dy;
+          if (tx >= 0 && tx < C && ty >= 0 && ty < R) {
+            if (TY[ty * C + tx] === EMPTY) {
+              relocate(tx, ty, x, y, false);
+              continue;
+            }
+          }
+        }
         const below = i + C;
-        if (type[below] === EMPTY) {
-          type[below] = GRAIN; kind[below] = kind[i]; pix[below] = pix[i]; heat[below] = heat[i]; flag[below] = flag[i];
-          link[below] = link[i]; rest[below] = rest[i];
-          type[i] = EMPTY; link[i] = -1;
+        const tb = TY[below];
+        if (tb === EMPTY) {
+          relocate(x, y + 1, x, y, false);
           continue;
         }
-        const dir = flip ? 1 : -1;
-        const side = x + dir;
-        if (side >= 0 && side < C && type[y * C + side] === EMPTY && type[(y + 1) * C + side] === EMPTY && Math.random() < slide) {
-          const j = (y + 1) * C + side;
-          type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
-          link[j] = link[i]; rest[j] = rest[i];
-          type[i] = EMPTY; link[i] = -1;
+        if (cls[k] === 2 && LK[i] >= 0) continue;
+        if (dil[k] && FL[i]) continue;
+        if (tb !== GRAIN) continue;
+        const kb = KD[below];
+        if (cls[kb] === 2 && LK[below] >= 0) continue;
+        if (dil[kb] && FL[below]) continue;
+        const dI = (k === GA && HT[i] > 80) ? meltD : dens[k];
+        const dB = (kb === GA && HT[below] > 80) ? meltD : dens[kb];
+        if (dI <= dB + 0.02) continue;
+        const leftOpen = x > 0 && TY[below - 1] === EMPTY;
+        const rightOpen = x + 1 < C && TY[below + 1] === EMPTY;
+        if (!leftOpen && !rightOpen) continue;
+        const d0 = Math.random() < 0.5 ? 1 : -1;
+        let d = 0;
+        if (d0 > 0 ? rightOpen : leftOpen) d = d0;
+        else if (d0 > 0 ? leftOpen : rightOpen) d = -d0;
+        if (!d) continue;
+        // Push the lighter grain sideways, then drop. The lighter grain does not move up a row.
+        relocate(x + d, y + 1, x, y + 1, false);
+        relocate(x, y + 1, x, y, false);
+      }
+    }
+
+    refreshTops();
+    const tp = tops;
+
+    // 2. Resting grains start above the tipping angle; moving grains stop at or below the stopping angle.
+    //    Only the surface layer follows the pile slope; a buried grain with a stale moving mark is cleared.
+    for (let y = 0; y < R; y++) {
+      const row = y * C;
+      for (let x = 0; x < C; x++) {
+        const i = row + x;
+        if (TY[i] !== GRAIN) continue;
+        const mv = MV[i];
+        const deep = y > tp[x] + 2;
+        if (deep && mv === 0) continue;
+        const k = KD[i];
+        if (!(cls[k] === 0 && !(k === GA && HT[i] > 80))) {
+          if ((k === STF && FL[i]) || (cls[k] === 2 && LK[i] >= 0)) MV[i] = 0;
           continue;
         }
-        // dilatant liquid: a slow sideways seep on the same row, never while locked
-        if (rec.dilatant && side >= 0 && side < C && type[y * C + side] === EMPTY && Math.random() < slide * 0.5) {
-          const j = y * C + side;
-          type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
-          link[j] = link[i]; rest[j] = rest[i];
-          type[i] = EMPTY; link[i] = -1;
-          continue;
-        }
-        if (rec.key === 'ferro') {
-          const [fx, fy] = magnetForce(x, y);
-          const nx = clamp((x + Math.round(Math.sign(fx) * (Math.random() < Math.min(1, Math.abs(fx)) ? 1 : 0))) | 0, 0, C - 1);
-          const ny = clamp((y + Math.round(Math.sign(fy) * (Math.random() < Math.min(1, Math.abs(fy)) ? 1 : 0))) | 0, 0, R - 1);
-          const j = ny * C + nx;
-          if ((nx !== x || ny !== y) && type[j] === EMPTY) {
-            type[j] = GRAIN; kind[j] = kind[i]; pix[j] = pix[i]; heat[j] = heat[i]; flag[j] = flag[i];
-            type[i] = EMPTY;
+        if (deep) { MV[i] = 0; continue; }
+        if (!scValid[x]) calcSlope(x);
+        if (mv) {
+          if (scDeg[x] < stopA[k] + 0.7) MV[i] = 0;
+        } else {
+          const wide = scWide[x];
+          const spike = scDL[x] >= 3 && scDR[x] >= 3;
+          if ((scFill[x] >= 6 && wide > tipA[k]) || spike) {
+            MV[i] = 1;
+            // Keep the shallowest face start (the slope that just passed tip).
+            if (!spike) {
+              if (!lastStart || lastStart.spike || wide < lastStart.wide) {
+                lastStart = { x, wide, deg: scDeg[x], spike: false, tip: tipA[k], stop: stopA[k] };
+              }
+            } else if (!lastStart) {
+              lastStart = { x, wide, deg: scDeg[x], spike: true, tip: tipA[k], stop: stopA[k] };
+            }
+            wakePatch(x, y, scTie[x] ? (Math.random() < 0.5 ? -1 : 1) : scDir[x]);
           }
         }
       }
     }
-    // gallium cools slowly, no pulse
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'gallium' && heat[i] > 0) {
-      if ((frame & 3) === 0) heat[i]--;
+
+    // 3. Sliding and liquid flow.
+    for (let y = R - 2; y >= 0; y--) {
+      const row = y * C;
+      for (let x = xStart; x !== xEnd; x += xStep) {
+        const i = row + x;
+        if (TY[i] !== GRAIN) continue;
+        const k = KD[i];
+        const c = cls[k];
+        const melted = (k === GA && HT[i] > 80);
+        const m0 = MV[i];
+        if (c === 0 && !m0 && !melted) continue;      // a resting grain has nothing to do here
+        if (dil[k] && FL[i]) continue;
+
+        if (c === 1 || melted) {
+          if (!scValid[x]) calcSlope(x);
+          const dir = scTie[x] ? (Math.random() < 0.5 ? -1 : 1) : (scDir[x] || (Math.random() < 0.5 ? -1 : 1));
+          if (Math.random() >= flowA[k]) continue;
+          const nx = x + dir;
+          if (nx >= 0 && nx < C && TY[i + C + dir] === EMPTY && TY[i + dir] === EMPTY) {
+            relocate(nx, y + 1, x, y, true);
+            continue;
+          }
+          if (nx >= 0 && nx < C && TY[i + dir] === EMPTY) {
+            relocate(nx, y, x, y, true);
+            continue;
+          }
+          const ox = x - dir;
+          if (ox >= 0 && ox < C && TY[i - dir] === EMPTY) {
+            relocate(ox, y, x, y, true);
+          }
+          continue;
+        }
+
+        if (c === 2) {
+          const slide = (CATALOG[k].slide || 0.08) * (LK[i] >= 0 ? 0.15 : 1);
+          if (Math.random() >= slide) continue;
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          const nx = x + dir;
+          if (nx >= 0 && nx < C && TY[i + C + dir] === EMPTY && TY[i + dir] === EMPTY) {
+            relocate(nx, y + 1, x, y, true);
+          }
+          continue;
+        }
+
+        // moving granular grain
+        if (y > tp[x] + 2) { MV[i] = 0; continue; }
+        if (!scValid[x]) calcSlope(x);
+        const deg = scDeg[x];
+        if (deg < stopA[k] + 0.7) { MV[i] = 0; continue; }
+        const dir = scTie[x] ? (Math.random() < 0.5 ? -1 : 1) : scDir[x];
+        if (!dir) continue;
+        const nx = x + dir;
+        if (nx < 0 || nx >= C) continue;
+        if (TY[i + C + dir] === EMPTY && TY[i + dir] === EMPTY) {
+          const oldMove = MV[i];
+          relocate(nx, y + 1, x, y, true);
+          MV[(y + 1) * C + nx] = oldMove || 1;
+          continue;
+        }
+        if (TY[i + dir] === EMPTY && deg > stopA[k] + 2) {
+          const oldMove = MV[i];
+          relocate(nx, y, x, y, true);
+          MV[row + nx] = oldMove || 1;
+        }
+      }
     }
-    // NI3 one-way crumble: fade color toward pale dust, then stay dust. No strobe.
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'ni3' && flag[i] && flag[i] < 40) {
-      flag[i]++;
-      const t = flag[i] / 40;
-      const r = pix[i] & 255, g = (pix[i] >> 8) & 255, b = (pix[i] >> 16) & 255;
-      const nr = (r + (220 - r) * t) | 0, ng = (g + (210 - g) * t) | 0, nb = (b + (190 - b) * t) | 0;
-      pix[i] = pack(nr, ng, nb);
+
+    // gallium sheds heat slowly, NI3 fades to dust once, a shear-thickening lock relaxes once. No flicker, no pulse.
+    const shed = (frame & 3) === 0;
+    for (let i = 0; i < N; i++) {
+      if (TY[i] !== GRAIN) continue;
+      const k = KD[i];
+      if (k === GA) {
+        if (shed && HT[i] > 0) HT[i]--;
+      } else if (k === NI) {
+        if (FL[i] && FL[i] < 40) {
+          FL[i]++;
+          const t = FL[i] / 40;
+          const r = PX[i] & 255, g = (PX[i] >> 8) & 255, b = (PX[i] >> 16) & 255;
+          const nr = (r + (220 - r) * t) | 0, ng = (g + (210 - g) * t) | 0, nb = (b + (190 - b) * t) | 0;
+          PX[i] = pack(nr, ng, nb);
+        }
+      } else if (dil[k]) {
+        if (FL[i]) FL[i]--;
+      }
     }
-    // dilatant lock relaxes once, with no pulse
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).dilatant && flag[i]) flag[i]--;
     if ((frame & 3) === 0) ferroSmooth();
     snapSilk();
   }
@@ -24870,8 +25192,153 @@ loop();
     setTool(k) { tool = k; if (document.getElementById('controls') && typeof mode !== 'undefined' && mode === MODE) fillControls(); },
     setColor(hex) { color = hex; store('color', color); if (typeof mode !== 'undefined' && mode === MODE) fillControls(); },
     setPattern(p) { if (mat.patterns.indexOf(p) >= 0) { pattern = p; store('pattern', pattern); fillControls(); } },
-    clear() { if (type) { type.fill(0); heat.fill(0); flag.fill(0); link.fill(-1); } flying = []; magnet = null; },
+    clear() { if (type) { type.fill(0); heat.fill(0); flag.fill(0); link.fill(-1); if (move) move.fill(0); if (rest) rest.fill(0); } flying = []; magnet = null; relocCount = 0; climbCount = 0; },
     pourAt, crumbleAt, heatAt, lockAt,
+    fric: FRIC,
+    fricOf,
+    slopeAt(x) { refreshTops(); return slopeAt(x); },
+    maxFaceSlope() {
+      refreshTops();
+      let best = { deg: 0, reg: 0, x: 0 };
+      for (let x = 0; x < cols; x++) {
+        if (!tops || tops[x] >= rows) continue;
+        const sl = slopeAt(x);
+        if (sl.filled >= 6 && sl.wide > best.reg) best = { deg: sl.deg, reg: sl.wide, wide: sl.wide, dir: sl.dir, x, filled: sl.filled };
+      }
+      return best;
+    },
+    refreshTops,
+    grid() { return { cols, rows, cell, type, kind, pix, heat, flag, link, rest, move, tops }; },
+    relocCount: () => relocCount,
+    climbCount: () => climbCount,
+    resetCounts() { relocCount = 0; climbCount = 0; },
+    lastStart() { return lastStart; },
+    clearStart() { lastStart = null; },
+    beginMark() { if (type) movedMark = new Uint8Array(type.length); },
+    markedCount() {
+      if (!movedMark || !type) return 0;
+      let n = 0;
+      for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && movedMark[i]) n++;
+      return n;
+    },
+    endMark() { movedMark = null; },
+    step(n, opts) {
+      const N = n || 1;
+      const doDraw = !opts || opts.draw !== false;
+      if (typeof resize === 'function') resize();
+      for (let k = 0; k < N; k++) {
+        updateFlying();
+        updateGrid();
+        if (doDraw) draw();
+        frame++;
+      }
+    },
+    seed(s) {
+      let x = (s >>> 0) || 1;
+      Math.random = function () {
+        x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+        return ((x >>> 0) % 1000000) / 1000000;
+      };
+    },
+    grainCount() {
+      if (!type) return 0;
+      let n = 0;
+      for (let i = 0; i < type.length; i++) if (type[i] === GRAIN) n++;
+      return n;
+    },
+    emit(n, px, py) {
+      const ox = px / cell, oy = py / cell;
+      const origin = { x: ox, y: oy };
+      for (let k = 0; k < n; k++) {
+        flying.push({
+          x: ox + (Math.random() - 0.5) * 0.6,
+          y: oy + (Math.random() - 0.5) * 0.4,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: 0.15 + Math.random() * 0.2,
+          m: idxOf(mat.key),
+          c: shadeAt(mat, color, ox, oy, origin),
+          heat: 0,
+          silk: 0,
+          linkFlying: -1
+        });
+      }
+    },
+    flyingCount() { return flying.length; },
+    paintCell(x, y, moving) {
+      if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+      const i = y * cols + x;
+      if (type[i] === GRAIN) return false;
+      type[i] = GRAIN;
+      kind[i] = idxOf(mat.key);
+      pix[i] = shadeAt(mat, color, x, y, { x: x, y: y });
+      heat[i] = 0; flag[i] = 0; link[i] = -1; rest[i] = 0;
+      move[i] = moving ? 1 : 0;
+      return true;
+    },
+    buildPile(angleDeg, peakX, height) {
+      if (typeof resize === 'function') resize();
+      if (type) { type.fill(0); heat.fill(0); flag.fill(0); link.fill(-1); if (move) move.fill(0); if (rest) rest.fill(0); }
+      flying = []; magnet = null;
+      const t = Math.tan(angleDeg * Math.PI / 180);
+      const cx = (peakX == null) ? (cols >> 1) : (peakX | 0);
+      const H = height || Math.min(rows - 4, 48);
+      let n = 0;
+      for (let x = 0; x < cols; x++) {
+        const h = Math.floor(H - t * Math.abs(x - cx) + 1e-9);
+        for (let k = 0; k < h; k++) {
+          const y = rows - 1 - k;
+          if (y < 0) continue;
+          if (this.paintCell(x, y, false)) n++;
+        }
+      }
+      refreshTops();
+      return { n, cx, H };
+    },
+    fillFrac(frac) {
+      if (typeof resize === 'function') resize();
+      const f = frac == null ? 0.9 : frac;
+      let n = 0;
+      for (let i = 0; i < type.length; i++) {
+        if (Math.random() < f) {
+          type[i] = GRAIN;
+          kind[i] = idxOf(mat.key);
+          pix[i] = shadeAt(mat, color, i % cols, (i / cols) | 0, { x: 0, y: 0 });
+          heat[i] = 0; flag[i] = 0; link[i] = -1; rest[i] = 0; move[i] = 0;
+          n++;
+        } else {
+          type[i] = EMPTY; link[i] = -1; move[i] = 0;
+        }
+      }
+      flying = [];
+      refreshTops();
+      return n;
+    },
+    fitSides() {
+      refreshTops();
+      const H = new Array(cols);
+      let maxH = 0, peak = 0;
+      for (let x = 0; x < cols; x++) {
+        const h = (tops[x] >= rows) ? 0 : (rows - tops[x]);
+        H[x] = h;
+        if (h > maxH) { maxH = h; peak = x; }
+      }
+      function fit(from, to, step) {
+        const lo = maxH * 0.15, hi = maxH * 0.85;
+        const pts = [];
+        for (let x = from; step > 0 ? x <= to : x >= to; x += step) {
+          if (H[x] >= lo && H[x] <= hi) pts.push([x, H[x]]);
+        }
+        if (pts.length < 3) return { deg: null, n: pts.length };
+        let n = pts.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+        for (const [x, y] of pts) { sx += x; sy += y; sxx += x * x; sxy += x * y; }
+        const denom = n * sxx - sx * sx;
+        if (Math.abs(denom) < 1e-12) return { deg: null, n };
+        const m = (n * sxy - sx * sy) / denom;
+        return { deg: Math.atan(Math.abs(m)) * 180 / Math.PI, n, m, pts: n };
+      }
+      return { maxH, peak, n: this.grainCount(), left: fit(0, peak - 1, 1), right: fit(cols - 1, peak + 1, -1) };
+    },
+
     center(key) {
       if (!type) return null;
       let sx = 0, sy = 0, n = 0;
