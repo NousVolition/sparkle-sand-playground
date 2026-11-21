@@ -41,7 +41,7 @@ const run = code => new vm.Script(code).runInNewContext({}, { timeout: 15000 });
 const same = (a, b) => assert.deepEqual(JSON.parse(JSON.stringify(a)), JSON.parse(JSON.stringify(b)));
 const tabs = [...html.slice(0, html.indexOf('<div class="controls"')).matchAll(/<button class="tab(?: active)?" data-mode="([^"]+)"[^>]*>(.*?)<\/button>/g)];
 same(tabs.map(m => m[1]), Object.keys(coverage.pages)); assert.equal(tabs.length, 35);
-const allowedRevisions = new Set([coverage.revision, coverage.addedRevision, coverage.symmetryRevision, coverage.lightCaptureRevision, coverage.ramanujanRevision, coverage.crossingRevision].filter(Boolean));
+const allowedRevisions = new Set([coverage.revision, coverage.addedRevision, coverage.symmetryRevision, coverage.lightCaptureRevision, coverage.ramanujanRevision, coverage.crossingRevision, coverage.tab30Revision].filter(Boolean));
 const auditedByRevision = new Map();
 const auditNames = new Set();
 for (const revision of allowedRevisions) {
