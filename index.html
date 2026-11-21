@@ -19423,7 +19423,7 @@ function initSandGrid() {
       if (ny < 0 || ny >= nr) continue;
       for (let x = 0; x < Math.min(gCols, nc); x++) {
         const o = y * gCols + x, n = ny * nc + x;
-        t[n] = gType[o]; c[n] = gColor[o]; s[n] = gSticky[o]; ow[n] = gOwner ? gOwner[o] : 0;
+        t[n] = gType[o]; c[n] = gColor[o]; s[n] = gSticky[o]; ow[n] = gOwner ? gOwner[o] : 0; ph[n] = gPhase[o];
       }
     }
     for (const p of flying) p.y += dy * CELL;
@@ -19432,6 +19432,88 @@ function initSandGrid() {
   sandBuf.width = nc; sandBuf.height = nr;
   sandImg = sandBufCtx.createImageData(nc, nr);
   sandPix = new Uint32Array(sandImg.data.buffer);
+}
+
+// A grain's look (sprinkle angle, nudge, size, glint, lava tint, pulse) lives in gPhase[i].
+// When a grain moves from cell i to cell j, swap the two phases so the look travels with
+// the grain and the emptied cell keeps a random value for the next one.
+function swapPhase(i, j) {
+  if (!gPhase || i === j) return;
+  const t = gPhase[i];
+  gPhase[i] = gPhase[j];
+  gPhase[j] = t;
+  // A sliding or falling grain may fill a reserved empty slot. The reserved
+  // phase just moved to the cell this grain left, so any flyer that held this
+  // slot must follow it there.
+  if (typeof retargetPhaseSlots === 'function') retargetPhaseSlots(j, i);
+}
+
+// A flying grain carries the phase of the cell it left (p.ph) and a reserved empty
+// slot (p.slot, first set to that cell). The emptied cell keeps its value for now,
+// so the set of phase values on the grid stays the same. On landing, swap the
+// landing cell's phase with the reserved slot. If another grain has already landed
+// in that slot, it parked the reserved phase in the empty cell it left and
+// retargeted this grain's slot there, so the swap still works. The set of values
+// is then a true permutation under sliding, flying and landing. A newly poured
+// grain has no slot; its p.ph is a new random. If it lands on a reserved slot,
+// that reserved phase is moved to another empty cell first, so only an unused
+// phase is replaced. Only a newly poured grain or a grain removed by carving
+// may change the set.
+function reservedSlot(p) {
+  return p.slot != null ? p.slot : p.from;
+}
+function retargetPhaseSlots(oldCell, newCell) {
+  if (oldCell == null || oldCell === newCell || typeof flying === 'undefined' || !flying) return;
+  for (let k = 0; k < flying.length; k++) {
+    const q = flying[k];
+    if (reservedSlot(q) === oldCell) q.slot = newCell;
+  }
+}
+let phaseSpareCursor = 0;
+function slotIsReserved(cell) {
+  if (cell == null || typeof flying === 'undefined' || !flying) return false;
+  for (let k = 0; k < flying.length; k++) if (reservedSlot(flying[k]) === cell) return true;
+  return false;
+}
+function findSpareEmpty(except) {
+  if (!gType) return -1;
+  const n = gType.length;
+  for (let k = 0; k < n; k++) {
+    const i = (phaseSpareCursor + k) % n;
+    if (i !== except && gType[i] === EMPTY && !slotIsReserved(i)) { phaseSpareCursor = i + 1; return i; }
+  }
+  return -1;
+}
+function landPhase(p, i) {
+  if (!gPhase || p.ph == null) return;
+  if (p.slot == null && p.from != null) p.slot = p.from;
+  const src = reservedSlot(p);
+  // Landed back in the reserved slot itself: the phase is already there.
+  if (src === i) return;
+  const old = gPhase[i];
+  if (src == null || src < 0 || src >= gPhase.length) {
+    if (slotIsReserved(i)) {
+      const spare = findSpareEmpty(i);
+      if (spare >= 0) {
+        gPhase[spare] = old;
+        retargetPhaseSlots(i, spare);
+      }
+    }
+    gPhase[i] = p.ph;
+    return;
+  }
+  if (gType[src] === EMPTY) {
+    gPhase[i] = p.ph;
+    gPhase[src] = old;
+    retargetPhaseSlots(i, src);
+    return;
+  }
+  const spare = findSpareEmpty(i);
+  gPhase[i] = p.ph;
+  if (spare >= 0) {
+    gPhase[spare] = old;
+    retargetPhaseSlots(i, spare);
+  }
 }
 
 function clearSand() {
@@ -19527,16 +19609,17 @@ function dropObject(px, py) {
     const x = L.cells[k] + dx, y = L.cells[k + 1] + dy;
     if (x < 0 || x >= gCols || y < 0 || y >= gRows) continue;
     const i = y * gCols + x;
-    if (gType[i] === LOOSE) displaced.push(x, gColor[i]);
-    gType[i] = L.cells[k + 2]; gColor[i] = L.cells[k + 3]; gOwner[i] = L.cells[k + 4];
+    if (gType[i] === LOOSE) displaced.push(x, gColor[i], gPhase[i], i);
+    gType[i] = L.cells[k + 2]; gColor[i] = L.cells[k + 3]; gOwner[i] = L.cells[k + 4]; gPhase[i] = L.cells[k + 5];
   }
   // sand that was under the new spot is lifted onto the top of the piece and settles again
   const topY = (L.miny + dy) * CELL;
-  for (let k = 0; k < displaced.length && flying.length < MAX_FLYING * 2; k += 2) {
+  for (let k = 0; k < displaced.length && flying.length < MAX_FLYING * 2; k += 4) {
     flying.push({
       x: (displaced[k] + 0.5) * CELL + (Math.random() - 0.5) * 2,
       y: topY - CELL * (1 + Math.random() * 4),
-      vx: (Math.random() - 0.5) * 1.5, vy: 0, c: displaced[k + 1]
+      vx: (Math.random() - 0.5) * 1.5, vy: 0, c: displaced[k + 1],
+      ph: displaced[k + 2], from: displaced[k + 3]
     });
   }
   if (typeof blip === 'function') blip('triangle', 720, 360, 0.15, 0.06);
@@ -20114,7 +20197,8 @@ function pourSand() {
       y: mouse.y + (Math.random() - 0.5) * spread * 0.5,
       vx: (Math.random() - 0.5) * 1.2,
       vy: Math.random() * 1.5 + 0.5,
-      c: pourColor(color)
+      c: pourColor(color),
+      ph: (Math.random() * 1024) | 0
     });
   }
 }
@@ -20150,7 +20234,7 @@ function carveAt(px, py) {
           x: (gx + 0.5) * CELL, y: (gy + 0.5) * CELL,
           vx: dx / d * (1.5 + Math.random() * 2),
           vy: dy / d * (1.5 + Math.random() * 2) - 1.5,
-          c: gColor[i]
+          c: gColor[i], ph: gPhase[i], from: i
         });
       }
     }
@@ -20199,15 +20283,17 @@ function sandMove(p) {
 function settleGrain(p) {
   let cx = Math.min(gCols - 1, Math.max(0, (p.x / CELL) | 0));
   let cy = Math.min(gRows - 1, Math.floor(p.y / CELL));
-  if (cy < 0) return;
+  if (cy < 0) return false;
   // if a settled grain slipped into this spot, sit just above it (never climb far)
   const lim = cy - 2;
   while (cy >= 0 && cy >= lim && gType[cy * gCols + cx] !== EMPTY) cy--;
-  if (cy < 0 || cy < lim) return;
+  if (cy < 0 || cy < lim) return false;
   const i = cy * gCols + cx;
   gType[i] = LOOSE;
   gColor[i] = p.c;
   gSticky[i] = Math.random() < cling ? 1 : 0;
+  landPhase(p, i);
+  return true;
 }
 
 function updateFlying() {
@@ -20235,7 +20321,7 @@ function updateFlying() {
       }
       p.x = nx; p.y = ny;
     }
-    if (landed) settleGrain(p); else keep.push(p);
+    if (landed) { if (!settleGrain(p)) keep.push(p); } else keep.push(p);
   }
   flying = keep;
 }
@@ -20253,10 +20339,10 @@ function updateGrid() {
       if (T[below + x] === EMPTY) {
         // long drops become falling grains; one-cell drops stay in the grid
         if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) {
-          flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i] });
+          flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i], ph: gPhase[i], from: i });
           T[i] = EMPTY;
         } else {
-          T[below + x] = LOOSE; Col[below + x] = Col[i]; S[below + x] = S[i]; T[i] = EMPTY;
+          T[below + x] = LOOSE; Col[below + x] = Col[i]; S[below + x] = S[i]; swapPhase(i, below + x); T[i] = EMPTY;
         }
         continue;
       }
@@ -20273,7 +20359,7 @@ function updateGrid() {
         if (y + 2 >= R || T[two] !== EMPTY) continue;
       }
       const j = below + x + dir;
-      T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; T[i] = EMPTY;
+      T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; swapPhase(i, j); T[i] = EMPTY;
     }
   }
 }
@@ -20316,13 +20402,13 @@ function drawSand() {
   const atlas = sandAtlas();
   ensureSandLayer();
   const glints = [];
-  const pT = prevT, pC = prevC, TD = tileDirty, TX = tilesX;
+  const pT = prevT, pC = prevC, pP = prevP, TD = tileDirty, TX = tilesX;
   for (let y = 0; y < R; y++) {
     const ty = (y / TILE) | 0, ly = y - ty * TILE;
     for (let x = 0, i = y * C; x < C; x++, i++) {
       const t = T[i];
-      if (t !== pT[i] || (t !== EMPTY && Col[i] !== pC[i])) {
-        pT[i] = t; pC[i] = Col[i];
+      if (t !== pT[i] || (t !== EMPTY && (Col[i] !== pC[i] || ph[i] !== pP[i]))) {
+        pT[i] = t; pC[i] = Col[i]; if (t !== EMPTY) pP[i] = ph[i];
         const tx = (x / TILE) | 0, lx = x - tx * TILE;
         // dots spill a little into the neighbor cells, so mark bordering tiles too
         const x0 = lx === 0 && tx > 0 ? tx - 1 : tx, x1 = lx === TILE - 1 && tx < TX - 1 ? tx + 1 : tx;
@@ -20452,7 +20538,7 @@ function sparkleSprite() {
 
 // ---------- cached layer for settled grains ----------
 const TILE = 16;
-let sandLayer = null, layerCtx = null, prevT = null, prevC = null, tileDirty = null, tilesX = 0, tilesY = 0, layerDpr = 0;
+let sandLayer = null, layerCtx = null, prevT = null, prevC = null, prevP = null, tileDirty = null, tilesX = 0, tilesY = 0, layerDpr = 0;
 
 function ensureSandLayer() {
   const d = window.devicePixelRatio || 1;
@@ -20467,6 +20553,7 @@ function ensureSandLayer() {
   layerCtx.imageSmoothingEnabled = true;
   prevT = new Uint8Array(gType.length).fill(255);
   prevC = new Uint32Array(gType.length);
+  prevP = new Uint16Array(gType.length).fill(0xffff);
   tilesX = Math.ceil(gCols / TILE); tilesY = Math.ceil(gRows / TILE);
   tileDirty = new Uint8Array(tilesX * tilesY);
 }
@@ -22212,16 +22299,16 @@ function commitFallingMold(F) {
       !mask[my * n + mx - 1] || !mask[my * n + mx + 1] || !mask[(my - 1) * n + mx];
     if (edge && my < topBand && Math.random() < 0.05 + 0.08 * (F.impact || 0) && crumbs < 40) {
       crumbs++;
-      flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: (mx < n / 2 ? -1 : 1) * (0.4 + Math.random() * 1.2), vy: -0.5 - Math.random(), c: pourColor(color) });
+      flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: (mx < n / 2 ? -1 : 1) * (0.4 + Math.random() * 1.2), vy: -0.5 - Math.random(), c: pourColor(color), ph: (Math.random() * 1024) | 0 });
       continue;
     }
-    if (gType[i] === LOOSE) displaced.push(x, gColor[i]);
+    if (gType[i] === LOOSE) displaced.push(x, gColor[i], gPhase[i], i);
     if (gType[i] === LEDGE || gType[i] === STAMP) continue;
     gType[i] = STAMP; gOwner[i] = F.id; gColor[i] = F.mc;
   }
   const topY = (y0 + F.miny) * CELL;
-  for (let k = 0; k < displaced.length && flying.length < MAX_FLYING * 2; k += 2) {
-    flying.push({ x: (displaced[k] + 0.5) * CELL, y: topY - CELL * (1 + Math.random() * 4), vx: (Math.random() - 0.5) * 1.5, vy: 0, c: displaced[k + 1] });
+  for (let k = 0; k < displaced.length && flying.length < MAX_FLYING * 2; k += 4) {
+    flying.push({ x: (displaced[k] + 0.5) * CELL, y: topY - CELL * (1 + Math.random() * 4), vx: (Math.random() - 0.5) * 1.5, vy: 0, c: displaced[k + 1], ph: displaced[k + 2], from: displaced[k + 3] });
   }
 }
 function drawFallingMolds() {
@@ -23968,11 +24055,11 @@ loop();
       // Super Black Grain display name — Copyright © 2026 NousVolition. All rights reserved.
       name: 'Super Black Grain',
       also: '',
-      blurb: 'These grains look almost black and darken the grains next to them.',
+      blurb: 'Absorbs 99.965% of light, based on published measurements of Surrey NanoSystems\' super-black coating (<a href="https://www.vantablack.co.uk/our-story" target="_blank" rel="noopener">Surrey NanoSystems</a>). That is a reflectance of 0.035%, which encodes as sRGB #010101. The grains are drawn at that value, with a faint edge so they stay visible on this page\'s ground. The page shows a drawing based on that number, not the real material.',
       lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean also proves that each color channel is at most 17 out of 255.',
       leanHref: 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L238',
       leanLabel: 'Grain motion in Lean',
-      colors: ['#050505', '#0a0806', '#07080a'],
+      colors: ['#010101'],
       patterns: ['solid', 'gradient'],
       mass: 1.0, fall: 0.22, slide: 0.28, alpha: 1
     },
@@ -24043,6 +24130,26 @@ loop();
       lockFlick: 14,
       lockTime: 24,
       lockRadius: 5
+    },
+    {
+      key: 'pinkestpink',
+      name: 'Pinkest Pink',
+      also: '',
+      blurb: 'A high-pigment fluorescent pink paint by Stuart Semple, made available to all artists (<a href="https://culturehustle.com/products/pink-50g-powdered-paint-by-stuart-semple" target="_blank" rel="noopener">Culture Hustle</a>). No published measured color (hex, sRGB, Pantone or spectrum) was found. The grains are drawn in a bright on-screen pink, not the real paint\'s measured color.',
+      lean: 'No Lean file backs this material yet.',
+      colors: ['#ff1493', '#ff4fa3', '#ff2d8a', '#ff6eb5'],
+      patterns: ['solid', 'gradient'],
+      mass: 1.0, fall: 0.22, slide: 0.28, alpha: 1
+    },
+    {
+      key: 'fluorpink',
+      name: 'Fluorescent Pink Grain',
+      also: '',
+      blurb: 'A fluorescent pink built on this page from a simple rule: the grain takes in blue light and gives part of it back as pink, so it can look brighter than an ordinary pink. The numbers are the page\'s rule, not a measured paint.',
+      lean: 'No Lean file backs this material yet.',
+      colors: ['#c56b82', '#b85a74', '#d08094'],
+      patterns: ['solid'],
+      mass: 1.0, fall: 0.22, slide: 0.28, alpha: 1
     }
   ];
   const byKey = {};
@@ -24058,7 +24165,9 @@ loop();
   };
   const REAL_COLORS = {
     aerogel: ['#e8f0f6', '#f7fbff', '#cfe4f2'],
-    'super-black-grain': ['#050505'],
+    'super-black-grain': ['#010101'],
+    pinkestpink: ['#ff1493', '#ff4fa3', '#ff2d8a', '#ff6eb5'],
+    fluorpink: ['#c56b82', '#b85a74', '#d08094'],
     pasta: ['#cbb89a', '#9a8f84', '#e6d9b8', '#7a7468'],
     gallium: ['#c5cdd4', '#b7c0c6', '#d7e0e8'],
     ferro: null,
@@ -24282,6 +24391,16 @@ loop();
     #controls .mm-custom { width:28px; height:22px; border:0; padding:0; background:none; cursor:pointer; }
     #controls .mm-lean { width:100%; font-size:12px; line-height:1.4; opacity:0.9; }
     #controls .mm-lean a { color:#7dd3fc; }
+    #controls .mm-blue { width:100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+    #controls .mm-blue input[type=range] { flex:1; min-width:120px; }
+    #controls .mm-readout, #mmStage .mm-fluor {
+      width:100%; font-size:12px; line-height:1.4; opacity:0.95;
+    }
+    #mmStage .mm-fluor { position:absolute; left:12px; top:auto; margin-top:0;
+      max-width:min(92%, 420px); padding:8px 12px; border-radius:12px;
+      background:rgba(16,20,32,0.84); border:1px solid rgba(130,148,196,0.18);
+      pointer-events:none; }
+    #controls .mm-check { padding:6px 8px; }
   `;
 
   function ready() {
@@ -24291,7 +24410,7 @@ loop();
     document.head.appendChild(st);
     const stage = document.createElement('div');
     stage.id = 'mmStage';
-    stage.innerHTML = '<canvas id="mmCanvas"></canvas><div class="mm-note" id="mmNote"></div><div class="mm-copy">Copyright © 2026 NousVolition. All rights reserved.</div>';
+    stage.innerHTML = '<canvas id="mmCanvas"></canvas><div class="mm-note" id="mmNote"></div><div class="mm-fluor" id="mmFluorReadout" hidden></div><div class="mm-copy">Copyright © 2026 NousVolition. All rights reserved.</div>';
     const host = document.getElementById('canvas-container');
     host.appendChild(stage);
     return stage;
@@ -24341,12 +24460,140 @@ loop();
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function lerp(a, b, t) { return a + (b - a) * t; }
 
+  // Fluorescent Pink Grain: drawn color = reflected part + emitted part.
+  // Room light is fixed. Blue light is the slider (0–1). The grain takes in
+  // that blue/UV light and gives a share of it back as pink (the yield).
+  const FLUOR = {
+    room: 0.55,
+    absorb: 1.0,
+    yield: 0.70,
+    emitR: 1.00,
+    emitG: 0.16,
+    emitB: 0.48,
+    emitScale: 210,
+    haloCard: 0.22,
+    haloDiag: 0.08,
+    darken: 0.38
+  };
+  let blueLight = 0.5; // 0–1, 50% to start
+
+  function fluorParts(baseR, baseG, baseB, B) {
+    const takenIn = B * FLUOR.absorb;
+    const givenBack = takenIn * FLUOR.yield;
+    const refR = baseR * FLUOR.room;
+    const refG = baseG * FLUOR.room;
+    const refB = baseB * FLUOR.room;
+    const emR = FLUOR.emitR * givenBack * FLUOR.emitScale;
+    const emG = FLUOR.emitG * givenBack * FLUOR.emitScale;
+    const emB = FLUOR.emitB * givenBack * FLUOR.emitScale;
+    const r = clamp(refR + emR, 0, 255);
+    const g = clamp(refG + emG, 0, 255);
+    const b = clamp(refB + emB, 0, 255);
+    const brightness = 100 * Math.max(r, g, b) / 255;
+    return { r: r | 0, g: g | 0, b: b | 0, takenIn, givenBack, brightness, refR, refG, refB, emR, emG, emB };
+  }
+
+  function fluorTypical() {
+    const hex = (mat && mat.key === 'fluorpink' && color) ? color : '#c56b82';
+    const [br, bg, bb] = hexRgb(hex);
+    return fluorParts(br, bg, bb, blueLight);
+  }
+
+  function fluorReadoutText(p) {
+    p = p || fluorTypical();
+    return 'Light taken in: ' + Math.round(p.takenIn * 100) + '%, light given back as pink: ' +
+      Math.round(p.givenBack * 100) + '%, total pink brightness: ' + Math.round(p.brightness) + '%';
+  }
+
+  function paintFluorReadout() {
+    const text = fluorReadoutText();
+    const on = document.getElementById('mmFluorReadout');
+    if (on) {
+      const show = !!(stage && stage.style.display !== 'none' && mat && mat.key === 'fluorpink');
+      on.hidden = !show;
+      if (show) {
+        on.textContent = text;
+        const note = document.getElementById('mmNote');
+        if (note) on.style.top = (note.offsetTop + note.offsetHeight + 8) + 'px';
+      }
+    }
+    const live = document.getElementById('mmFluorLive');
+    if (live) live.textContent = text;
+    const pct = document.getElementById('mmBluePct');
+    if (pct) pct.textContent = Math.round(blueLight * 100) + '%';
+    const sl = document.getElementById('mmBlue');
+    if (sl && +sl.value !== Math.round(blueLight * 100)) sl.value = String(Math.round(blueLight * 100));
+  }
+
+  function setBlueLight(pct) {
+    blueLight = clamp((+pct) / 100, 0, 1);
+    try { store('bluelight', String(Math.round(blueLight * 100))); } catch (e) {}
+    paintFluorReadout();
+  }
+
+  function checkFluor() {
+    const results = [];
+    const bases = [['default', 0xc5, 0x6b, 0x82]];
+    (byKey.fluorpink ? byKey.fluorpink.colors : []).forEach((hex, i) => {
+      const [r, g, b] = hexRgb(hex);
+      bases.push(['swatch ' + hex, r, g, b]);
+    });
+    let allOk = true;
+    function add(name, ok, detail) {
+      results.push({ name, ok, detail });
+      if (!ok) allOk = false;
+    }
+    for (const [label, br, bg, bb] of bases) {
+      let prev = -1, inRange = true, mono = true, emitZero = true;
+      let maxAt1 = 0, roomCap = 255 * FLUOR.room;
+      for (let pct = 0; pct <= 100; pct++) {
+        const p = fluorParts(br, bg, bb, pct / 100);
+        if (p.r < 0 || p.g < 0 || p.b < 0 || p.r > 255 || p.g > 255 || p.b > 255) inRange = false;
+        if (p.brightness < prev - 1e-9) mono = false;
+        prev = p.brightness;
+        if (pct === 0 && (p.emR > 1e-9 || p.emG > 1e-9 || p.emB > 1e-9)) emitZero = false;
+        if (pct === 100) maxAt1 = Math.max(p.r, p.g, p.b);
+      }
+      add('Channels stay in 0–255 (' + label + ')', inRange, inRange ? 'ok' : 'out of range');
+      add('Brightness never falls as blue light rises (' + label + ')', mono, mono ? 'ok' : 'fell');
+      add('No emitted pink at 0% blue light (' + label + ')', emitZero, emitZero ? 'ok' : 'non-zero emit');
+      const brighter = maxAt1 > roomCap + 0.5;
+      add('At 100%, brighter than room light alone (' + label + ')', brighter, 'peak ' + maxAt1 + ' vs room cap ' + Math.round(roomCap));
+    }
+    const pass = results.filter(r => r.ok).length;
+    return { sum: pass + '/' + results.length + (allOk ? ' passed' : ' failed'), total: results.length, pass, fail: results.filter(r => !r.ok).map(r => r.name), results };
+  }
+  (function () {
+    const raw = load('bluelight', '');
+    if (raw !== '') blueLight = clamp((+raw) / 100, 0, 1);
+  })();
+
   function shadeAt(m, hex, x, y, origin) {
     let [r, g, b] = hexRgb(hex);
     const pat = (m.patterns.indexOf(pattern) >= 0) ? pattern : 'solid';
     if (m.key === 'super-black-grain') {
-      const j = (Math.random() * 6) | 0;
-      r = Math.min(r, 12) + j; g = Math.min(g, 12) + j; b = Math.min(b, 12) + (j >> 1);
+      // 0.035% reflectance encodes as sRGB (1, 1, 1) = #010101; see the material note
+      return pack(1, 1, 1);
+    }
+    if (m.key === 'pinkestpink') {
+      const k = 0.90 + Math.random() * 0.16;
+      r = clamp(r * k + (Math.random() * 8 - 2), 0, 255) | 0;
+      g = clamp(g * k + (Math.random() * 8 - 2), 0, 255) | 0;
+      b = clamp(b * k + (Math.random() * 8 - 2), 0, 255) | 0;
+      if (pat === 'gradient') {
+        const t = clamp((y / (rows || 1)), 0, 1);
+        r = clamp(r * (1 - 0.16 * t) + 24 * t, 0, 255) | 0;
+        g = clamp(g * (1 - 0.20 * t), 0, 255) | 0;
+        b = clamp(b * (1 - 0.10 * t) + 16 * t, 0, 255) | 0;
+      }
+      return pack(r, g, b);
+    }
+    if (m.key === 'fluorpink') {
+      // store the ordinary base pink only; room light and emission are applied in draw
+      const k = 0.94 + Math.random() * 0.08;
+      r = clamp(r * k, 0, 255) | 0;
+      g = clamp(g * k, 0, 255) | 0;
+      b = clamp(b * k, 0, 255) | 0;
       return pack(r, g, b);
     }
     if (pat === 'speckle') {
@@ -24840,17 +25087,50 @@ loop();
 
   function draw() {
     const w = stage.clientWidth, h = stage.clientHeight;
-    ctx.fillStyle = '#12161f';
+    const gd = 1 - FLUOR.darken * blueLight;
+    const gr = (18 * gd) | 0, gg = (22 * gd) | 0, gb = (31 * gd) | 0;
+    ctx.fillStyle = 'rgb(' + gr + ',' + gg + ',' + gb + ')';
     ctx.fillRect(0, 0, w, h);
     const img = ctx.createImageData(cols, rows);
     const data = img.data;
-    // Mark super-black grains before shading the grains beside them.
+    // Super Black Grain eats a little neighboring light; Pinkest Pink gives a little back, as a soft pink glow
     const dark = new Uint8Array(cols * rows);
-    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN && recOf(i).key === 'super-black-grain') dark[i] = 1;
+    const glow = new Uint8Array(cols * rows);
+    const fluor = new Uint8Array(cols * rows);
+    for (let i = 0; i < type.length; i++) if (type[i] === GRAIN) {
+      const k = recOf(i).key;
+      if (k === 'super-black-grain') dark[i] = 1;
+      else if (k === 'pinkestpink') glow[i] = 1;
+      else if (k === 'fluorpink') fluor[i] = 1;
+    }
     for (let i = 0, p = 0; i < type.length; i++, p += 4) {
-      if (type[i] === EMPTY) { data[p] = 18; data[p+1] = 22; data[p+2] = 31; data[p+3] = 255; continue; }
+      if (type[i] === EMPTY) {
+        let r = gr, g = gg, b = gb;
+        const x = i % cols, y = (i / cols) | 0;
+        let card = 0, diag = 0;
+        if (x > 0 && fluor[i - 1]) card++;
+        if (x + 1 < cols && fluor[i + 1]) card++;
+        if (y > 0 && fluor[i - cols]) card++;
+        if (y + 1 < rows && fluor[i + cols]) card++;
+        if (x > 0 && y > 0 && fluor[i - cols - 1]) diag++;
+        if (x + 1 < cols && y > 0 && fluor[i - cols + 1]) diag++;
+        if (x > 0 && y + 1 < rows && fluor[i + cols - 1]) diag++;
+        if (x + 1 < cols && y + 1 < rows && fluor[i + cols + 1]) diag++;
+        if ((card || diag) && blueLight > 0) {
+          const typ = fluorTypical();
+          const u = Math.min(0.85, FLUOR.haloCard * card + FLUOR.haloDiag * diag);
+          r = clamp(r + typ.emR * u, 0, 255) | 0;
+          g = clamp(g + typ.emG * u, 0, 255) | 0;
+          b = clamp(b + typ.emB * u, 0, 255) | 0;
+        }
+        data[p] = r; data[p+1] = g; data[p+2] = b; data[p+3] = 255; continue;
+      }
       const rec = recOf(i);
       let r = pix[i] & 255, g = (pix[i] >> 8) & 255, b = (pix[i] >> 16) & 255;
+      if (rec.key === 'fluorpink') {
+        const fp = fluorParts(r, g, b, blueLight);
+        r = fp.r; g = fp.g; b = fp.b;
+      }
       if (rec.key === 'gallium' && heat[i] > 80) {
         // steady warm tint, not a pulse
         const u = (heat[i] - 80) / 175;
@@ -24876,13 +25156,42 @@ loop();
         if (y + 1 < rows && dark[i + cols]) near++;
         if (near) { const k = 1 - 0.18 * near; r = (r * k) | 0; g = (g * k) | 0; b = (b * k) | 0; }
       }
+      if (glow[i] !== 1) {
+        const x = i % cols, y = (i / cols) | 0;
+        let near = 0;
+        if (x > 0 && glow[i - 1]) near++;
+        if (x + 1 < cols && glow[i + 1]) near++;
+        if (y > 0 && glow[i - cols]) near++;
+        if (y + 1 < rows && glow[i + cols]) near++;
+        if (near) {
+          const u = 0.10 * near;
+          r = (r + (0xff - r) * u) | 0;
+          g = (g + (0x4f - g) * u) | 0;
+          b = (b + (0xa3 - b) * u) | 0;
+        }
+      }
+      // faint silhouette so #010101 Super Black Grain grains stay visible on the #12161f ground
+      if (rec.key === 'super-black-grain') {
+        const x = i % cols, y = (i / cols) | 0;
+        const open = (x <= 0 || type[i - 1] === EMPTY) ||
+                     (x + 1 >= cols || type[i + 1] === EMPTY) ||
+                     (y <= 0 || type[i - cols] === EMPTY) ||
+                     (y + 1 >= rows || type[i + cols] === EMPTY);
+        if (open) { r = 0x32; g = 0x3a; b = 0x4a; } else { r = 1; g = 1; b = 1; }
+      }
       data[p] = r; data[p+1] = g; data[p+2] = b; data[p+3] = 255;
     }
     // flyers
     for (const p of flying) {
       const x = clamp(p.x | 0, 0, cols - 1), y = clamp(p.y | 0, 0, rows - 1);
       const o = (y * cols + x) * 4;
-      data[o] = p.c & 255; data[o+1] = (p.c >> 8) & 255; data[o+2] = (p.c >> 16) & 255; data[o+3] = 255;
+      let fr = p.c & 255, fg = (p.c >> 8) & 255, fb = (p.c >> 16) & 255;
+      const frec = CATALOG[p.m] || CATALOG[0];
+      if (frec.key === 'fluorpink') {
+        const fp = fluorParts(fr, fg, fb, blueLight);
+        fr = fp.r; fg = fp.g; fb = fp.b;
+      }
+      data[o] = fr; data[o+1] = fg; data[o+2] = fb; data[o+3] = 255;
     }
     if (!drawBuf || drawBuf.width !== cols || drawBuf.height !== rows) {
       drawBuf = document.createElement('canvas'); drawBuf.width = cols; drawBuf.height = rows; drawBufCtx = drawBuf.getContext('2d');
@@ -24932,6 +25241,7 @@ loop();
     updateFlying();
     updateGrid();
     draw();
+    paintFluorReadout();
     frame++;
     raf = requestAnimationFrame(tick);
   }
@@ -24941,6 +25251,7 @@ loop();
     stage.style.display = 'block';
     resize();
     writeNote();
+    paintFluorReadout();
     if (!running) { running = true; raf = requestAnimationFrame(tick); }
   }
   function hide() {
@@ -24961,6 +25272,7 @@ loop();
       hint.textContent = mat.blurb;
       hint.classList.remove('faded');
     }
+    paintFluorReadout();
   }
 
   function setMat(m) {
@@ -25076,6 +25388,28 @@ loop();
     lab.innerHTML = 'Size <input type="range" id="mmSize" min="1" max="8" value="' + size + '">';
     sz.appendChild(lab);
     lab.querySelector('input').oninput = e => { size = +e.target.value; };
+    if (mat.key === 'fluorpink') {
+      const bl = addRow('Blue light');
+      const wrap = document.createElement('div');
+      wrap.className = 'mm-blue';
+      wrap.innerHTML = '<input type="range" id="mmBlue" min="0" max="100" value="' + Math.round(blueLight * 100) + '"> <span id="mmBluePct">' + Math.round(blueLight * 100) + '%</span>';
+      bl.appendChild(wrap);
+      wrap.querySelector('input').oninput = e => { setBlueLight(+e.target.value); };
+      const read = document.createElement('div');
+      read.className = 'mm-readout';
+      read.id = 'mmFluorLive';
+      read.textContent = fluorReadoutText();
+      box.appendChild(read);
+      const chk = document.createElement('button');
+      chk.type = 'button';
+      chk.className = 'mm-check';
+      chk.textContent = 'Check this rule';
+      chk.onclick = () => {
+        const r = checkFluor();
+        read.textContent = fluorReadoutText() + ' Rule check: ' + r.sum + '.';
+      };
+      box.appendChild(chk);
+    }
     const lean = document.createElement('div');
     lean.className = 'mm-lean';
     lean.innerHTML = mat.lean + (mat.leanHref ? ' <a href="' + mat.leanHref + '" target="_blank" rel="noopener">' + mat.leanLabel + '</a>.' : '');
@@ -25127,6 +25461,7 @@ loop();
     key: () => mat.key,
     phys: () => phys,
     setPhys(v) { setPhysMode(v); },
+    setBlueLight, getBlueLight: () => blueLight, fluorParts, fluorTypical, checkFluor, fluorReadoutText,
     isReal,
     allowedColors: () => allowedColors(mat).slice(),
     smoothT: () => SMOOTH_T,
@@ -27213,7 +27548,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
 // spare top byte of its packed color, so materials mix freely in one scene and travel with the grain wherever it goes.
 // Each has its own look, size, colors, pile angle and stickiness. Stamps and molds take the picked material too.
 (function sandMaterials() {
-  const SAND = 0, SPRINKLES = 1, ROCKS = 2, CLAY = 3, SNOW = 4, GLITTER = 5, BEADS = 6, LAVA = 7;
+  const SAND = 0, SPRINKLES = 1, ROCKS = 2, CLAY = 3, SNOW = 4, GLITTER = 5, BEADS = 6, LAVA = 7, SUPERBLACK = 8, PINKESTPINK = 9, FLUORPINK = 10;
   const LIST = [
     [SAND, 'sand', 'Sand', 'Fine grains in your color, with a little sparkle.'],
     [SPRINKLES, 'sprinkles', 'Sprinkles', 'Little colored rods that bounce once when they land.'],
@@ -27222,9 +27557,30 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     [SNOW, 'snow', 'Snow', 'Light flakes that drift down and pile into soft, low drifts.'],
     [GLITTER, 'glitter', 'Glitter', 'The old sparkle: shiny round grains that twinkle.'],
     [BEADS, 'beads', 'Sticky beads', 'Tiny round beads that cling into clumps and little chains, and can hang from a ledge.'],
-    [LAVA, 'lava', 'Lava', 'Glowing molten rock that flows slowly and cools into dark rock.']
+    [LAVA, 'lava', 'Lava', 'Glowing molten rock that flows slowly and cools into dark rock.'],
+    [SUPERBLACK, 'super-black-grain', 'Super Black Grain', 'Fine dry pigment drawn at the sourced super-black value #010101, with a faint edge so it stays visible.'],
+    [PINKESTPINK, 'pinkestpink', 'Pinkest Pink', 'Fine dry pigment in a bright on-screen pink, not a measured paint color.'],
+    [FLUORPINK, 'fluorpink', 'Fluorescent Pink Grain', 'Fine dry pigment that takes in blue light and gives part of it back as pink.']
   ];
   const byKey = {}; LIST.forEach(m => { byKey[m[1]] = m[0]; });
+
+  // Tipping and stopping angles (degrees). The Fun look uses the same numbers as the Real look.
+  // Stopping is the angle of repose; tipping is a few degrees higher. Sources sit next to each value.
+  // Full citations: /workspace/t113/friction/angles.json (written 2026-11-20T02:58:10-08:00, before any measurement).
+  const ANGLES = {
+    [SAND]:      { stop: 34,   tip: 38,   stopSrc: 'Glover 1997 Pocket Reference, Sand (dry) 34°; also Lane USBR HYD-299 (1950)', tipSrc: 'chosen, 4° above stop' },
+    [SPRINKLES]: { stop: 36,   tip: 40,   stopSrc: 'chosen', tipSrc: 'chosen' },
+    [ROCKS]:     { stop: 40,   tip: 44,   stopSrc: 'Glover 1997, Granite 35–40° (high end)', tipSrc: 'chosen, 4° above stop' },
+    [CLAY]:      { stop: 40,   tip: 44,   stopSrc: 'Glover 1997, Clay (dry lump) 25–40° (high end)', tipSrc: 'chosen, 4° above stop' },
+    [SNOW]:      { stop: 38,   tip: 42,   stopSrc: 'Glover 1997, Snow 38°', tipSrc: 'chosen, 4° above stop' },
+    [GLITTER]:   { stop: 32,   tip: 36,   stopSrc: 'chosen', tipSrc: 'chosen' },
+    [BEADS]:     { stop: 26,   tip: 28.6, stopSrc: 'Jaeger, Liu and Nagel 1989, glass beads θ_r = 26° (Albert et al. 1997 Table I)', tipSrc: 'Jaeger, Liu and Nagel 1989, glass beads θ_m = 28.6°' },
+    [LAVA]:      { stop: 2,    tip: 6,    stopSrc: 'Hon et al. 1994, pahoehoe sheet flows on slopes less than 2°', tipSrc: 'chosen, 4° above stop' },
+    [SUPERBLACK]: { stop: 34, tip: 38, stopSrc: 'same as dry sand; see angles_pink.json', tipSrc: 'same as dry sand; see angles_pink.json' },
+    [PINKESTPINK]: { stop: 34, tip: 38, stopSrc: 'same as dry sand; see angles_pink.json', tipSrc: 'same as dry sand; see angles_pink.json' },
+    [FLUORPINK]: { stop: 34, tip: 38, stopSrc: 'same as dry sand; see angles_pink.json', tipSrc: 'same as dry sand; see angles_pink.json' }
+  };
+  const anglesOf = m => ANGLES[m] || ANGLES[SAND];
   let mat = (() => { try { return byKey[localStorage.getItem('sparkle.sand.mat')] || SAND; } catch (e) { return SAND; } })();
   // Real / Fun look — Copyright © 2026 NousVolition. All rights reserved.
   // Fun (the default) is today's behavior, including Snow following the chosen swatch. Real uses everyday colors and weights.
@@ -27239,6 +27595,9 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     if (mat === SAND) return SAND_REAL;
     if (mat === CLAY) return CLAY_REAL;
     if (mat === GLITTER) return GLITTER_REAL;
+    if (mat === SUPERBLACK) return ['#010101'];
+    if (mat === PINKESTPINK) return ['#ff1493', '#ff4fa3', '#ff2d8a', '#ff6eb5'];
+    if (mat === FLUORPINK) return ['#c56b82', '#b85a74', '#d08094'];
     return null;
   }
   function snapRealColor() {
@@ -27266,11 +27625,33 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   const ROCK_COLS = ['#8a8178', '#6f665d', '#9b8f80', '#5c5650', '#a39a8e', '#7a6a58', '#857a6c'];
   const SNOW_COLS = ['#f6f9ff', '#eaf1fb', '#dfe9f7', '#ffffff'];
   const BEAD_COLS = ['#f2f0ea', '#f4c3d2', '#7eb8d4', '#f0b44c', '#d4576a', '#5b7cbf', '#3aa38a', '#c9a0dc', '#2e3340', '#e8e2c4'];
-  let gHeat = null, beadSupp = null, beadQ = null, lavaN = 0;
+  let gHeat = null, gMotion = null, beadSupp = null, beadHang = null, beadQ = null, lavaN = 0, moveUpCount = 0;
   function ensureHeat() {
     if (!gType) return;
     if (!gHeat || gHeat.length !== gType.length) gHeat = new Uint8Array(gType.length);
+    if (!gMotion || gMotion.length !== gType.length) gMotion = new Uint8Array(gType.length);
   }
+
+  let dirtyCols = null, dirtyAny = true, anyBeads = false, lavaCanCool = true;
+  function ensureDirty(C) {
+    if (!dirtyCols || dirtyCols.length !== C) { dirtyCols = new Uint8Array(C); dirtyCols.fill(1); dirtyAny = true; }
+  }
+  function markDirtyCol(x) {
+    if (!gCols) return;
+    ensureDirty(gCols);
+    dirtyAny = true;
+    const C = dirtyCols.length;
+    for (let d = -4; d <= 4; d++) {
+      const c = x + d;
+      if (c >= 0 && c < C) dirtyCols[c] = 1;
+    }
+  }
+  function markAllDirty() {
+    if (gCols) ensureDirty(gCols);
+    dirtyAny = true;
+    if (dirtyCols) dirtyCols.fill(1);
+  }
+
 
   function colorFor(m, hex, stamp) {
     const k = 0.9 + Math.random() * 0.16;
@@ -27295,6 +27676,19 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     }
     if (m === BEADS) { const [r, g, b] = rgb(rnd(BEAD_COLS)); return pack(r, g, b, m); }
     if (m === LAVA) return lavaColor(220 + ((Math.random() * 36) | 0), (Math.random() * 1024) | 0);
+    if (m === SUPERBLACK) return pack(1, 1, 1, m);
+    if (m === PINKESTPINK) {
+      const [r, g, b] = rgb(hex || '#ff1493');
+      const k = 0.90 + Math.random() * 0.16;
+      return pack(Math.min(255, Math.max(0, r * k + (Math.random() * 8 - 2) | 0)),
+                  Math.min(255, Math.max(0, g * k + (Math.random() * 8 - 2) | 0)),
+                  Math.min(255, Math.max(0, b * k + (Math.random() * 8 - 2) | 0)), m);
+    }
+    if (m === FLUORPINK) {
+      const [r, g, b] = rgb(hex || '#c56b82');
+      const k = 0.94 + Math.random() * 0.08;
+      return pack(Math.min(255, r * k | 0), Math.min(255, g * k | 0), Math.min(255, b * k | 0), m);
+    }
     return null;
   }
   function lavaColor(heat, ph) {
@@ -27321,16 +27715,32 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
 
   // ----- landing -----
   settleGrain = function (p) {
-    let cx = Math.min(gCols - 1, Math.max(0, (p.x / CELL) | 0));
-    let cy = Math.min(gRows - 1, Math.floor(p.y / CELL));
-    if (cy < 0) return;
-    const lim = cy - 2;
-    while (cy >= 0 && cy >= lim && gType[cy * gCols + cx] !== EMPTY) cy--;
-    if (cy < 0 || cy < lim) return;
-    const i = cy * gCols + cx, m = matOf(p.c);
+    const findEmpty = (cx0, cy0) => {
+      let cx = Math.min(gCols - 1, Math.max(0, cx0));
+      let cy = Math.min(gRows - 1, Math.max(0, cy0 | 0));
+      while (cy >= 0 && gType[cy * gCols + cx] !== EMPTY) cy--;
+      if (cy < 0) return -1;
+      return cy * gCols + cx;
+    };
+    const cx0 = (p.x / CELL) | 0;
+    const cy0 = Math.floor(p.y / CELL);
+    let i = findEmpty(cx0, cy0);
+    if (i < 0) {
+      for (let d = 1; d <= 6 && i < 0; d++) {
+        i = findEmpty(cx0 + d, cy0);
+        if (i < 0) i = findEmpty(cx0 - d, cy0);
+      }
+    }
+    if (i < 0) return false;
+    const m = matOf(p.c);
     gType[i] = LOOSE;
     gColor[i] = p.c;
     gSticky[i] = m === ROCKS || m === CLAY || m === BEADS ? 1 : m === SNOW ? (Math.random() < cling * 0.25 ? 1 : 0) : (Math.random() < cling ? 1 : 0);
+    landPhase(p, i);
+    ensureHeat();
+    // A grain that was already sliding, or that hits with speed, lands moving.
+    // A gently placed grain lands at rest, so a pile can steepen toward the tipping angle.
+    if (gMotion) gMotion[i] = (p.moving || (p.vy != null && p.vy > 1.0) || (p.vx != null && Math.abs(p.vx) > 1.0)) ? 1 : 0;
     if (m === LAVA) {
       ensureHeat();
       const h = p.heat != null ? p.heat : 230;
@@ -27338,6 +27748,9 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       gColor[i] = lavaColor(h, gPhase[i]);
       gSticky[i] = 0;
     }
+    if (m === BEADS) anyBeads = true;
+    markDirtyCol(i % gCols);
+    return true;
   };
 
   // ----- grains in the air -----
@@ -27351,13 +27764,15 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       p.vy = Math.min(p.vy + G, maxV);
       if (m === SNOW) { p.vx += (Math.random() - 0.5) * 0.18; p.vx *= 0.97; } else p.vx *= m === LAVA ? 0.94 : 0.985;
       if (m === BEADS) {
+        // Only pull toward a ledge or a stamp, so hanging beads still find support.
+        // A pull toward loose beads in the air was spreading floor piles almost flat.
         const bx = (p.x / CELL) | 0, by = Math.floor(p.y / CELL);
-        let ax = 0, ay = 0, an = 0;
+        let ax = 0, an = 0;
         for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
           const xx = bx + dx, yy = by + dy;
           if (xx < 0 || xx >= gCols || yy < 0 || yy >= gRows) continue;
-          const j = yy * gCols + xx, t = gType[j];
-          if (t === LEDGE || t === STAMP || (t === LOOSE && matOf(gColor[j]) === BEADS)) { ax += dx; ay += dy; an++; }
+          const t = gType[yy * gCols + xx];
+          if (t === LEDGE || t === STAMP) { ax += dx; an++; }
         }
         if (an) { p.vx += Math.sign(ax) * 0.08; p.vy *= 0.92; }
       }
@@ -27382,85 +27797,559 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         keep.push(p); continue;
       }
       if (landed && m === ROCKS && !p.b && Math.abs(p.vx) < 0.6) { p.b = 1; p.vx = (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random()); p.vy = -0.6; keep.push(p); continue; }   // a short roll
-      if (landed && m === BEADS && (p.vy > 2.8 || Math.hypot(p.vx, p.vy) > 3.2)) shakeBeads(p.x, p.y, 3, 0.45 + (1 - cling) * 0.35);
-      if (landed) settleGrain(p); else keep.push(p);
+      if (landed && m === BEADS && (p.vy > 2.8 || Math.hypot(p.vx, p.vy) > 3.2)) {
+        // only rattle beads that hang from a ledge or stamp, not a floor pile
+        const cx = (p.x / CELL) | 0, cy = Math.min(gRows - 1, Math.floor(p.y / CELL));
+        let hung = false;
+        if (beadHang) {
+          for (let dy = -2; dy <= 2 && !hung; dy++) for (let dx = -2; dx <= 2; dx++) {
+            const xx = cx + dx, yy = cy + dy;
+            if (xx < 0 || xx >= gCols || yy < 0 || yy >= gRows) continue;
+            if (beadHang[yy * gCols + xx]) hung = true;
+          }
+        }
+        if (hung) shakeBeads(p.x, p.y, 3, 0.45 + (1 - cling) * 0.35);
+      }
+      if (landed) {
+        if (!settleGrain(p)) {
+          p.vy = -Math.max(0.35, Math.abs(p.vy) * 0.15);
+          p.vx += (Math.random() - 0.5) * 0.8;
+          p.x = Math.max(0, Math.min(W, p.x + (Math.random() - 0.5) * CELL * 2));
+          keep.push(p);
+        }
+      } else keep.push(p);
     }
     flying = keep;
   };
 
+  // ----- slope of the pile surface across 5 columns -----
+  // Height in a column is how many cells stand above the floor. A straight-line fit
+  // over five columns gives slopes between the 45° grid steps.
+  let colTop = null;
+  function ensureColTop(C, R, T) {
+    if (!colTop || colTop.length !== C) colTop = new Int16Array(C);
+    for (let x = 0; x < C; x++) {
+      let y = 0;
+      while (y < R && T[y * C + x] === EMPTY) y++;
+      colTop[x] = y;
+    }
+  }
+  function refreshTop(C, R, T, x) {
+    if (x < 0 || x >= C) return;
+    let y = 0;
+    while (y < R && T[y * C + x] === EMPTY) y++;
+    colTop[x] = y;
+  }
+  function heightAt(R, x) { return R - colTop[x]; }
+  // Face slope starting at column x and looking in dir (−1 left, +1 right) over up to 5 columns.
+  // Returns angle in degrees and the downhill direction, or null if there is not enough of a face.
+  function smoothHeight(R, t, C, x) {
+    let s = 0, n = 0;
+    for (let d = -1; d <= 1; d++) {
+      const c = x + d;
+      if (c < 0 || c >= C) continue;
+      s += R - t[c]; n++;
+    }
+    return n ? s / n : 0;
+  }
+  function faceSlope(C, R, x, dir, tops) {
+    const t = tops || colTop;
+    let n = 0, sk = 0, sh = 0, skk = 0, skh = 0;
+    for (let k = 0; k < 5; k++) {
+      const c = x + k * dir;
+      if (c < 0 || c >= C) break;
+      const h = smoothHeight(R, t, C, c);
+      sk += k; sh += h; skk += k * k; skh += k * h; n++;
+    }
+    if (n < 3) return null;
+    const den = n * skk - sk * sk;
+    if (den === 0) return { angle: 0, m: 0, dir, n };
+    const m = (n * skh - sk * sh) / den;   // height change per column, up is positive
+    return { angle: Math.atan(Math.abs(m)) * 180 / Math.PI, m, dir, n };
+  }
+  function slopeSides(C, R, x, tops) {
+    const L = faceSlope(C, R, x, -1, tops);
+    const Rt = faceSlope(C, R, x, 1, tops);
+    return { left: L, right: Rt };
+  }
+  // Steepest downhill face at column x. dir is 0 on a flat.
+  function steepestFace(C, R, x, tops) {
+    const { left, right } = slopeSides(C, R, x, tops);
+    const downL = left && left.m < -1e-9;
+    const downR = right && right.m < -1e-9;
+    if (downL && downR) return left.angle >= right.angle ? left : right;
+    if (downL) return left;
+    if (downR) return right;
+    // a valley or a flat: no downhill face, so no slide
+    return { angle: 0, m: 0, dir: 0, n: 0 };
+  }
+  function pathClear(T, C, R, x, y, dir, run, drop) {
+    const nx = x + run * dir, ny = y + drop;
+    if (nx < 0 || nx >= C || ny < 0 || ny >= R) return false;
+    if (T[ny * C + nx] !== EMPTY) return false;
+    if (run === 1 && drop === 1 && T[y * C + x + dir] !== EMPTY) return false;
+    for (let k = 1; k < run; k++) {
+      const cx = x + k * dir;
+      const side = T[y * C + cx] === EMPTY;
+      const down = drop === 1 && y + 1 < R && T[(y + 1) * C + cx] === EMPTY;
+      if (!side && !down) return false;
+    }
+    return true;
+  }
+  function downhillDir(C, R, x) {
+    // Which way the surface goes down, over a short span, so a 5-column kink
+    // does not flip the side of the pile.
+    const h = (c) => {
+      if (c < 0) c = 0; if (c >= C) c = C - 1;
+      return smoothHeight(R, colTop, C, c);
+    };
+    const left = h(x - 3), right = h(x + 3);
+    if (left < right - 0.15) return -1;
+    if (right < left - 0.15) return 1;
+    const face = steepestFace(C, R, x);
+    return face && face.dir ? face.dir : 0;
+  }
+  function faceDown(C, R, x) {
+    const dir = downhillDir(C, R, x);
+    if (!dir) return steepestFace(C, R, x);
+    return faceSlope(C, R, x, dir) || steepestFace(C, R, x);
+  }
+  function nearbyUphill(C, R, x, span) {
+    const dir = downhillDir(C, R, x);
+    let best = faceDown(C, R, x);
+    if (!dir) return best;
+    for (let k = 1; k <= span; k++) {
+      const xx = x - k * dir;
+      if (xx < 0 || xx >= C) break;
+      const f = faceSlope(C, R, xx, dir);
+      if (f && f.angle > (best ? best.angle : -1)) best = f;
+    }
+    return best;
+  }
+  function uphillSteepCount(C, R, x, span, thresh) {
+    const dir = downhillDir(C, R, x);
+    if (!dir) return 0;
+    let n = 0;
+    for (let k = 1; k <= span; k++) {
+      const xx = x - k * dir;
+      if (xx < 0 || xx >= C) break;
+      const f = faceSlope(C, R, xx, dir);
+      if (f && f.angle > thresh) n++;
+    }
+    return n;
+  }
+  function spanFace(C, R, x, nCols) {
+    const dir = downhillDir(C, R, x);
+    if (!dir) return faceDown(C, R, x);
+    let n = 0, sk = 0, sh = 0, skk = 0, skh = 0;
+    for (let k = 0; k < nCols; k++) {
+      const c = x + k * dir;
+      if (c < 0 || c >= C) break;
+      const h = smoothHeight(R, colTop, C, c);
+      sk += k; sh += h; skk += k * k; skh += k * h; n++;
+    }
+    if (n < 5) return { ...(faceDown(C, R, x) || { angle: 0, m: 0, dir: dir || 0 }), n };
+    const den = n * skk - sk * sk;
+    if (den === 0) return { angle: 0, m: 0, dir, n };
+    const m = (n * skh - sk * sh) / den;
+    return { angle: Math.atan(Math.abs(m)) * 180 / Math.PI, m, dir, n };
+  }
+  function spanFaceCentered(C, R, x, nCols) {
+    const half = (nCols / 2) | 0;
+    let n = 0, sk = 0, sh = 0, skk = 0, skh = 0;
+    for (let k = -half; k < -half + nCols; k++) {
+      const c = x + k;
+      if (c < 0 || c >= C) continue;
+      const h = smoothHeight(R, colTop, C, c);
+      sk += k; sh += h; skk += k * k; skh += k * h; n++;
+    }
+    if (n < 5) return null;
+    const den = n * skk - sk * sk;
+    if (den === 0) return { angle: 0, m: 0, dir: 0, n };
+    const m = (n * skh - sk * sh) / den;
+    return { angle: Math.atan(Math.abs(m)) * 180 / Math.PI, m, dir: m === 0 ? 0 : (m < 0 ? 1 : -1), n };
+  }
+  // The steepest downhill 5-column face this grain is holding up, including
+  // a stretch uphill. A shallow toe under a steep face can then keep moving
+  // so the steep part can slump, instead of freezing as a convex pile.
+  function supportingFace(C, R, x) {
+    const dir = downhillDir(C, R, x);
+    let best = dir ? (faceSlope(C, R, x, dir) || null) : steepestFace(C, R, x);
+    if (dir) {
+      for (let k = 1; k < 32; k++) {
+        const xx = x - k * dir;
+        if (xx < 0 || xx >= C) break;
+        if (colTop[xx] >= R) break;
+        const f = faceSlope(C, R, xx, dir);
+        if (f && f.angle > (best ? best.angle : -1)) best = f;
+      }
+    }
+    const steep = steepestFace(C, R, x);
+    if (steep && (!best || steep.angle > best.angle)) best = steep;
+    return best || { angle: 0, m: 0, dir: 0, n: 0 };
+  }
+  function wakeToToe(C, R, T, Mot, x0, dir) {
+    if (!dir) return;
+    for (let step = 0; step < 64; step++) {
+      const xx = x0 + step * dir;
+      if (xx < 0 || xx >= C) break;
+      const yy = colTop[xx];
+      if (yy >= R || T[yy * C + xx] !== LOOSE) break;
+      Mot[yy * C + xx] = 1;
+    }
+  }
+  function trimmedSideAngle(C, R, dir) {
+    if (!dir || !colTop) return null;
+    const t = colTop;
+    let peak = 0, peakH = -1, left = C, right = -1;
+    for (let x = 0; x < C; x++) {
+      const h = R - t[x];
+      if (h > 0) { if (x < left) left = x; if (x > right) right = x; }
+      if (h > peakH) { peakH = h; peak = x; }
+    }
+    if (peakH < 8) return null;
+    const x0 = dir < 0 ? left : peak, x1 = dir < 0 ? peak : right;
+    const pts = [];
+    for (let x = x0; x <= x1; x++) pts.push(R - t[x]);
+    if (pts.length < 8) return null;
+    const hmin = Math.min(...pts), hmax = Math.max(...pts);
+    const lo = hmin + 0.15 * (hmax - hmin), hi = hmax - 0.15 * (hmax - hmin);
+    let n = 0, sk = 0, sh = 0, skk = 0, skh = 0;
+    for (let k = 0; k < pts.length; k++) {
+      if (pts[k] < lo || pts[k] > hi) continue;
+      sk += k; sh += pts[k]; skk += k * k; skh += k * pts[k]; n++;
+    }
+    if (n < 6) return null;
+    const den = n * skk - sk * sk;
+    if (den === 0) return 0;
+    const m = (n * skh - sk * sh) / den;
+    return Math.atan(Math.abs(m)) * 180 / Math.PI;
+  }
+  function onCrest(C, R, x, rad) {
+    if (!colTop) return false;
+    let peakH = -1;
+    for (let c = 0; c < C; c++) {
+      const h = R - colTop[c];
+      if (h > peakH) peakH = h;
+    }
+    if (peakH < 8) return false;
+    let lo = C, hi = -1;
+    for (let c = 0; c < C; c++) {
+      if (R - colTop[c] === peakH) {
+        if (c < lo) lo = c;
+        if (c > hi) hi = c;
+      }
+    }
+    return x >= lo - rad && x <= hi + rad;
+  }
+  function overTipRun(C, R, T, Col, x0, thresh) {
+    // How many neighboring surface columns have a downhill 5-column face steeper than thresh.
+    // A one-grain bump is not the face passing tip, so a short run is ignored.
+    let n = 1;
+    for (const d of [-1, 1]) {
+      for (let step = 1; step < 48; step++) {
+        const xx = x0 + d * step;
+        if (xx < 0 || xx >= C) break;
+        const yy = colTop[xx];
+        if (yy >= R || T[yy * C + xx] !== LOOSE) break;
+        const mm = matOf(Col[yy * C + xx]);
+        if (mm === BEADS && beadHang && beadHang[yy * C + xx]) break;
+        const face = faceDown(C, R, xx);
+        if (!face || face.dir === 0 || face.angle <= thresh) break;
+        n++;
+      }
+    }
+    return n;
+  }
+  function wakeFaceSegment(C, R, T, Col, Mot, x0, dir) {
+    // Set every surface grain along the over-tip stretch moving, so a whole patch lets go together.
+    // Used only for lava and snow.
+    const start = colTop[x0];
+    if (start < R && T[start * C + x0] === LOOSE) Mot[start * C + x0] = 1;
+    for (const d of [dir || 1, dir ? -dir : -1]) {
+      for (let step = 1; step < 48; step++) {
+        const xx = x0 + d * step;
+        if (xx < 0 || xx >= C) break;
+        const yy = colTop[xx];
+        if (yy >= R || T[yy * C + xx] !== LOOSE) break;
+        const mm = matOf(Col[yy * C + xx]);
+        if (mm === BEADS && beadHang && beadHang[yy * C + xx]) break;
+        const face = faceDown(C, R, xx);
+        if (!face || face.dir === 0 || face.angle <= anglesOf(mm).tip) break;
+        Mot[yy * C + xx] = 1;
+        if (yy > 0 && T[(yy - 1) * C + xx] === LOOSE) Mot[(yy - 1) * C + xx] = 1;
+      }
+    }
+  }
+  // Snow whole-patch release flattened its pour to ~32° (stop 38°), so snow avalanches are off.
+  const canAvalanche = m => m === LAVA;
   // ----- settled grains -----
   updateGrid = function () {
     const C = gCols, R = gRows, T = gType, S = gSticky, Col = gColor;
     const flip = sandFrame & 1;
     ensureHeat();
-    markBeadSupport(C, R, T, Col);
+    ensureDirty(C);
+    if (anyBeads) markBeadHang(C, R, T, Col);
+    if (dirtyAny) ensureColTop(C, R, T);
+    else if (!colTop || colTop.length !== C) ensureColTop(C, R, T);
+    const Mot = gMotion;
+    lavaCanCool = true;
+    if (colTop) {
+      for (let x = 0; x < C; x++) {
+        const y = colTop[x];
+        if (y >= R || T[y * C + x] !== LOOSE) continue;
+        if (matOf(Col[y * C + x]) !== LAVA) continue;
+        const f = spanFace(C, R, x, 15) || faceDown(C, R, x);
+        if (f && f.angle > anglesOf(LAVA).stop) { lavaCanCool = false; break; }
+      }
+    }
+    let movedThis = false;
     // clay holds on to molds and ledges beside it
     const stuck = (j, ok) => ok && (T[j] === STAMP || T[j] === LEDGE);
-    const move = (i, j) => { T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i]; if (gHeat) gHeat[j] = gHeat[i]; T[i] = EMPTY; if (gHeat) gHeat[i] = 0; };
+    const move = (i, j) => {
+      if (((j / C) | 0) < ((i / C) | 0)) moveUpCount++;
+      T[j] = LOOSE; Col[j] = Col[i]; S[j] = S[i];
+      if (gHeat) { gHeat[j] = gHeat[i]; gHeat[i] = 0; }
+      if (Mot) { Mot[j] = 1; Mot[i] = 0; }   // a sliding grain stays moving
+      swapPhase(i, j);
+      T[i] = EMPTY;
+      markDirtyCol(i % C);
+      markDirtyCol(j % C);
+      movedThis = true;
+    };
+    const liftOff = (i, x, y) => {
+      flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i], ph: gPhase[i], from: i, slot: i, heat: gHeat ? gHeat[i] : 0, moving: 1 });
+      T[i] = EMPTY;
+      if (gHeat) gHeat[i] = 0;
+      if (Mot) Mot[i] = 0;
+      markDirtyCol(x);
+      movedThis = true;
+    };
+    const pickMove = (x, y, dir, target, longStep, shortStep) => {
+      // Try steps of one row down and 1–3 columns across, then same-row steps, always into an empty cell.
+      // Pick the landing whose 5-column face slope ends closest to the target (stopping) angle.
+      let best = null, bestErr = 1e9;
+      const consider = (run, drop) => {
+        if (!pathClear(T, C, R, x, y, dir, run, drop)) return;
+        const nx = x + run * dir, ny = y + drop;
+        const oldX = colTop[x], oldN = colTop[nx];
+        if (colTop[x] === y) {
+          let yy = y + 1;
+          while (yy < R && T[yy * C + x] === EMPTY) yy++;
+          colTop[x] = yy;
+        }
+        if (ny < colTop[nx]) colTop[nx] = ny;
+        // Judge the same face this grain is leaving, after the move.
+        const face = faceSlope(C, R, x, dir) || faceSlope(C, R, nx, dir);
+        colTop[x] = oldX; colTop[nx] = oldN;
+        const ang = face ? face.angle : target;
+        // Going below the stopping angle is worse than staying a little steep, so a 45°
+        // face is flattened by 2-column steps only until the five-column slope is near the target.
+        const err = (ang < target ? (target - ang) * 3 : (ang - target)) + (1 - drop) * 0.05;
+        if (err < bestErr) { bestErr = err; best = nx + ny * C; }
+      };
+      const cur = faceSlope(C, R, x, dir);
+      const close = cur && cur.angle <= target + 2.5;
+      if (shortStep) {
+        consider(1, 1);
+        if (best == null) consider(1, 0);
+        return best;
+      }
+      const maxDown = (target < 15 || longStep) ? 8 : 3;
+      const maxSide = (target < 15 || longStep) ? 14 : 3;
+      for (let run = 1; run <= maxDown; run++) {
+        if (run > 1 && close && !longStep) continue;
+        consider(run, 1);
+      }
+      // a same-row step is for shallow angles (under 20°), or when no downward step is open
+      if (best == null || target < 20 || longStep) {
+        for (let run = 1; run <= maxSide; run++) consider(run, 0);
+      }
+      return best;
+    };
+
+    // Falls: a grain with empty under it drops or lifts off, on every column.
     for (let y = R - 2; y >= 0; y--) {
       const row = y * C, below = row + C;
       for (let k = 0; k < C; k++) {
         const x = flip ? k : C - 1 - k;
         const i = row + x;
         if (T[i] !== LOOSE) continue;
-        const m = matOf(Col[i]);
-        if (m === BEADS) {
-          if (beadSupp[i]) continue;   // held by a neighbor, a ledge, or the pile under it
-          if (T[below + x] === EMPTY) {
-            if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) {
-              flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i] });
-              T[i] = EMPTY;
-            } else move(i, below + x);
-          } else {
-            const dl = x > 0 && T[below + x - 1] === EMPTY && T[i - 1] === EMPTY;
-            const dr = x < C - 1 && T[below + x + 1] === EMPTY && T[i + 1] === EMPTY;
-            if (dl || dr) {
-              const dir = dl && dr ? (Math.random() < 0.5 ? -1 : 1) : (dl ? -1 : 1);
-              move(i, below + x + dir);
+        let m = matOf(Col[i]);
+        if (m === LAVA) {
+          coolLava(i, x, y, C, R, T, Col, S);
+          if (T[i] !== LOOSE) continue;
+          m = matOf(Col[i]);
+        }
+        if (m === BEADS && beadHang && beadHang[i]) continue;
+        const clayHeld = m === CLAY && (stuck(i - 1, x > 0) || stuck(i + 1, x < C - 1));
+        if (T[below + x] === EMPTY) {
+          if (clayHeld) continue;
+          if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) liftOff(i, x, y);
+          else move(i, below + x);
+          if (colTop) refreshTop(C, R, T, x);
+          continue;
+        }
+        // A lone peak that stands 2 or more rows above a neighbor topples into
+        // that column without Mot. A needle then spreads into a short cap; the
+        // 15-column start can release it as a patch. The tip test does not
+        // treat this topple as an avalanche.
+        if (false && !clayHeld && onCrest(C, R, x, 0) && colTop && y === colTop[x]) {
+          // Only a true isolated spike: both neighboring columns at least 2 rows lower.
+          let gapL = 0, gapR = 0;
+          if (x > 0) gapL = colTop[x - 1] - y;
+          if (x < C - 1) gapR = colTop[x + 1] - y;
+          if (gapL >= 2 && gapR >= 2) {
+            const d = (flip ? 1 : -1);
+            const nx = (x + d >= 0 && x + d < C) ? x + d : x - d;
+            if (nx >= 0 && nx < C) {
+              const ty = colTop[nx];
+              const dropY = Math.min(y + 1, ty - 1);
+              if (dropY > y && dropY < R) {
+                const j = dropY * C + nx;
+                if (T[j] === EMPTY) {
+                  move(i, j);
+                  if (Mot) { Mot[j] = 0; Mot[i] = 0; }
+                  refreshTop(C, R, T, x);
+                  refreshTop(C, R, T, nx);
+                }
+              }
             }
           }
-          continue;
         }
-        if (m === LAVA) { stepLava(i, x, y, C, R, T, Col, S, move); continue; }
-        if (T[below + x] === EMPTY) {
-          // clay sticks to whatever it touches at the sides
-          if (m === CLAY && (stuck(i - 1, x > 0) || stuck(i + 1, x < C - 1))) continue;
-          if (y + 2 < R && T[below + C + x] === EMPTY && flying.length < MAX_FLYING * 2) {
-            flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: 0, vy: 1, c: Col[i] });
-            T[i] = EMPTY;
-          } else move(i, below + x);
-          continue;
-        }
-        if (m === CLAY && Math.random() < 0.6) continue;   // clay slumps slowly and stays steep: it keeps the shape it was given
-        const dl = x > 0 ? T[below + x - 1] !== EMPTY : true;
-        const dr = x < C - 1 ? T[below + x + 1] !== EMPTY : true;
-        if (dl && dr) continue;
-        let dir;
-        if (!dl && !dr) dir = Math.random() < 0.5 ? -1 : 1;
-        else dir = dl ? 1 : -1;
-        if (T[i + dir] !== EMPTY) continue;
-        if (S[i]) {   // clingy grains (and rocks, which stack steeply) hold unless the drop is steep
-          const two = below + C + x + dir;
-          if (y + 2 >= R || T[two] !== EMPTY) continue;
-        }
-        if (m === SNOW && Math.random() < 0.6) {   // snow spreads out into soft, low drifts
-          const x2 = x + 2 * dir;
-          if (x2 >= 0 && x2 < C && T[i + 2 * dir] === EMPTY && T[below + x2] === EMPTY) { move(i, below + x2); continue; }
-        }
-        move(i, below + x + dir);
       }
     }
-    // the floor row never falls, but lava sitting on it still cools into rock
+
+    // Sliding: only the free surface, and only columns that recently changed.
+    // A grain that is still moving must keep its column dirty, or a packed face
+    // would freeze with the toe never marked.
+    if (Mot && dirtyAny) {
+      for (let i = 0; i < Mot.length; i++) if (Mot[i]) {
+        const x = i % C, y = (i / C) | 0;
+        if (colTop && y !== colTop[x]) Mot[i] = 0;
+        else markDirtyCol(x);
+      }
+    }
+    if (dirtyAny) {
+      // Pass 1: resting grains hold until a stretch of the 5-column face is over tip,
+      // then the whole stretch is set moving. Moving grains rest only once the face is at or below stop.
+      for (let x = 0; x < C; x++) {
+        if (dirtyCols[x] !== 1 && dirtyCols[x] !== undefined) {
+          // Uint8Array values are 0 or 1; skip clean columns
+        }
+        if (!dirtyCols[x]) continue;
+        const y = colTop[x];
+        if (y < 0 || y >= R) continue;
+        const i = y * C + x;
+        if (T[i] !== LOOSE) continue;
+        const m = matOf(Col[i]);
+        if (m === BEADS && beadHang && beadHang[i]) continue;
+        const clayHeld = m === CLAY && (stuck(i - 1, x > 0) || stuck(i + 1, x < C - 1));
+        if (clayHeld) continue;
+        const ang = anglesOf(m);
+        const face = faceDown(C, R, x);
+        const moving = Mot && Mot[i];
+        const hot = m === LAVA && gHeat && gHeat[i] > 0;
+        const startAng = hot ? ang.stop : ang.tip;
+        const runNeed = ang.tip <= 10 ? 1 : 5;
+        if (!face || face.dir === 0) {
+          if (moving && (!face || face.angle <= ang.stop)) Mot[i] = 0;
+          continue;
+        }
+        if (!moving) {
+          if (canAvalanche(m)) {
+            // Whole-patch tip and release, only for lava and snow: when the
+            // downhill 5-column face is over tip, wake the over-tip stretch.
+            if (face.angle > startAng) {
+              wakeFaceSegment(C, R, T, Col, Mot, x, face.dir);
+              const tx = x + face.dir, ty = (tx >= 0 && tx < C) ? colTop[tx] : R;
+              if (ty < R && T[ty * C + tx] === LOOSE) Mot[ty * C + tx] = 1;
+            }
+          } else if (face.angle > ang.tip) {
+            // Plain rest-angle settling: this grain only, no patch avalanche.
+            // The start threshold is tip, not stop, because a 5-column window at
+            // the toe of a pile already at stop can sit a few degrees steep. Starting
+            // there was flattening pours about 4° below the rest angle.
+            Mot[i] = 1;
+          }
+        } else {
+          const local = hot ? (spanFace(C, R, x, 15) || face) : (spanFace(C, R, x, 7) || face);
+          const locA = local ? local.angle : face.angle;
+          if (hot) {
+            if (locA <= ang.stop) Mot[i] = 0;
+          } else if (canAvalanche(m)) {
+            // Keep moving past a local face already at stop only if a stretch uphill
+            // is still clearly steep, so a slump can finish.
+            if (locA <= ang.stop && uphillSteepCount(C, R, x, 6, ang.stop + 2) < 3) Mot[i] = 0;
+          } else if (locA <= ang.stop) {
+            Mot[i] = 0;
+          }
+        }
+      }
+
+      // Pass 2: moving surface grains keep sliding until their face is at or below stop.
+      for (let y = R - 2; y >= 0; y--) {
+        const row = y * C;
+        for (let k = 0; k < C; k++) {
+          const x = flip ? k : C - 1 - k;
+          if (!dirtyCols[x]) continue;
+          if (colTop[x] !== y) continue;
+          const i = row + x;
+          if (T[i] !== LOOSE) continue;
+          if (!Mot || !Mot[i]) continue;
+          const m = matOf(Col[i]);
+          if (m === BEADS && beadHang && beadHang[i]) { Mot[i] = 0; continue; }
+          const clayHeld = m === CLAY && (stuck(i - 1, x > 0) || stuck(i + 1, x < C - 1));
+          if (clayHeld) { Mot[i] = 0; continue; }
+          const ang = anglesOf(m);
+          const hot = m === LAVA && gHeat && gHeat[i] > 0;
+          const face = faceDown(C, R, x);
+          const local = hot ? (spanFace(C, R, x, 15) || face) : (spanFace(C, R, x, 7) || face);
+          const locA = local ? local.angle : (face ? face.angle : 0);
+          const stillSteep = hot ? locA > ang.stop
+            : canAvalanche(m) ? (locA > ang.stop || uphillSteepCount(C, R, x, 6, ang.stop + 2) >= 3)
+            : locA > ang.stop;
+          if (!face || face.dir === 0 || !stillSteep) { Mot[i] = 0; continue; }
+          const dir = face.dir;
+          const short = Mot[i] === 2;
+          const hops = short ? 1 : (hot ? 8 : 1);
+          let from = i, fx = x, fy = y, still = true;
+          for (let hop = 0; hop < hops && still; hop++) {
+            const dest = pickMove(fx, fy, dir, ang.stop, hot, short);
+            if (dest == null) {
+              const tx = fx + dir, ty = (tx >= 0 && tx < C) ? colTop[tx] : R;
+              if (ty < R && T[ty * C + tx] === LOOSE) Mot[ty * C + tx] = 1;
+              break; // stay moving so the grain can go when a cell opens
+            }
+            move(from, dest);
+            if (short && Mot) Mot[dest] = 2;
+            refreshTop(C, R, T, fx);
+            refreshTop(C, R, T, dest % C);
+            from = dest;
+            fx = dest % C;
+            fy = (dest / C) | 0;
+            still = fy < R - 1 && T[from + C] !== EMPTY && colTop[fx] === fy;
+          }
+        }
+      }
+    }
+
+    // the floor row never falls, but lava sitting on it still cools into rock once it has stopped
     if (R > 0) {
       const y = R - 1;
       for (let k = 0; k < C; k++) {
         const x = flip ? k : C - 1 - k, i = y * C + x;
-        if (T[i] === LOOSE && matOf(Col[i]) === LAVA) stepLava(i, x, y, C, R, T, Col, S, move);
+        if (T[i] === LOOSE && matOf(Col[i]) === LAVA) coolLava(i, x, y, C, R, T, Col, S);
       }
+    }
+    if (!movedThis && flying.length === 0 && dirtyAny) {
+      let mot = false;
+      if (Mot) for (let k = 0; k < Mot.length; k++) if (Mot[k]) { mot = true; break; }
+      if (!mot) { dirtyCols.fill(0); dirtyAny = false; }
     }
   };
 
-  // ----- stamps and molds in the picked material -----
+    // ----- stamps and molds in the picked material -----
   const baseMold = moldColor;
   let stampMat = -1;
   moldColor = function (hex) {
@@ -27614,7 +28503,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     isReal,
     get material() { return LIST.find(m => m[0] === mat)[1]; },
     set material(k) { if (byKey[k] !== undefined) setMat(byKey[k]); },
-    test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER, BEADS, LAVA,
+    test: { matOf, colorFor, SAND, SPRINKLES, ROCKS, CLAY, SNOW, GLITTER, BEADS, LAVA, SUPERBLACK, PINKESTPINK, FLUORPINK,
       heatStats() {
         ensureHeat();
         let n=0,min=255,max=0,sum=0, bottom=0;
@@ -27630,6 +28519,124 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   };
   // the shaped grains are drawn on the tile layer: redraw it all once
   if (typeof prevT !== 'undefined' && prevT) prevT.fill(255);
+  window.__sandPhase = {
+    counts() {
+      const c = Object.create(null);
+      if (!gPhase) return c;
+      for (let i = 0; i < gPhase.length; i++) c[gPhase[i]] = (c[gPhase[i]] || 0) + 1;
+      return c;
+    },
+    sameCounts(a, b) {
+      const keys = new Set([].concat(Object.keys(a), Object.keys(b)));
+      for (const k of keys) if ((a[k] || 0) !== (b[k] || 0)) return false;
+      return true;
+    },
+    dir(ph) { return ((ph >> 2) & 7) * Math.PI / 8; },
+    sizeBits(ph) { return (ph >> 8) & 3; },
+    nudge(ph) { return [((ph & 15) / 15 - 0.5) * 1.3, (((ph >> 4) & 15) / 15 - 0.5) * 1.1]; },
+    snapshot() { return gPhase ? new Uint16Array(gPhase) : null; },
+    cell(i) { return { i, t: gType[i], c: gColor[i], ph: gPhase[i], heat: gHeat ? gHeat[i] : 0, x: i % gCols, y: (i / gCols) | 0 }; },
+    loose() {
+      const out = [];
+      if (!gType) return out;
+      for (let i = 0; i < gType.length; i++) if (gType[i] === LOOSE) out.push(i);
+      return out;
+    },
+    flying() { return flying.map(p => ({ x: p.x, y: p.y, ph: p.ph, from: p.from, slot: p.slot, c: p.c, heat: p.heat, vx: p.vx, vy: p.vy })); },
+    dims() { return { cols: gCols, rows: gRows, cell: CELL, frame: sandFrame, nFlying: flying.length, nLoose: gType ? gType.reduce((n, t) => n + (t === LOOSE), 0) : 0 }; },
+    prevPhase(i) { return prevP ? prevP[i] : null; },
+    step() { updateSand(); },
+    draw() { if (typeof drawSand === 'function') drawSand(); },
+    clear() { if (typeof clearSand === 'function') clearSand(); if (window.sandWelcome) sandWelcome.clear(); },
+    fillAll(c) {
+      initSandGrid();
+      if (window.sandWelcome) sandWelcome.clear();
+      for (let i = 0; i < gType.length; i++) { gType[i] = LOOSE; gColor[i] = c; gSticky[i] = 0; if (gMotion) gMotion[i] = 0; if (gHeat) gHeat[i] = 0; }
+      flying = [];
+      anyBeads = false;
+      markAllDirty();
+      if (prevT) prevT.fill(255);
+    },
+    setCell(i, t, c, ph, sticky) {
+      gType[i] = t; if (c != null) gColor[i] = c; if (ph != null) gPhase[i] = ph; if (sticky != null) gSticky[i] = sticky;
+      if (c != null && matOf(c) === BEADS) anyBeads = true;
+      markDirtyCol(i % gCols);
+    },
+    pack(r, g, b, m) { return ((r & 255) | ((g & 255) << 8) | ((b & 255) << 16) | ((255 - m) << 24)) >>> 0; },
+    idx(x, y) { return y * gCols + x; },
+    EMPTY: 0, LOOSE: 1, LEDGE: 2, STAMP: 3,
+    gridStep() { updateGrid(); },
+    flyStep() { updateFlying(); },
+    setHeat(i, h) { if (gHeat) gHeat[i] = h; },
+    lift(i, vx, vy) {
+      flying.push({
+        x: ((i % gCols) + 0.5) * CELL,
+        y: (((i / gCols) | 0) + 0.5) * CELL,
+        vx: vx || 0, vy: vy == null ? 1 : vy,
+        c: gColor[i], ph: gPhase[i], from: i, slot: i,
+        heat: gHeat ? gHeat[i] : 0
+      });
+      gType[i] = EMPTY;
+      markDirtyCol(i % gCols);
+    },
+    typeAt(x, y) { return gType[y * gCols + x]; },
+    // one physics tick, not limited by the 60-steps-a-second display clock
+    rawStep() {
+      initSandGrid();
+      sandFrame++;
+      if (typeof updateFallingMolds === 'function') updateFallingMolds();
+      updateFlying();
+      updateGrid();
+      sandFrame++;
+      updateGrid();
+    },
+    moveUpCount() { return moveUpCount; },
+    resetMoveUp() { moveUpCount = 0; },
+    angles: ANGLES,
+    anglesOf,
+    motionAt(i) { return gMotion ? gMotion[i] : 0; },
+    setMotion(i, v) { ensureHeat(); gMotion[i] = v ? 1 : 0; markDirtyCol(i % gCols); },
+    heights() {
+      if (!gType) return [];
+      const C = gCols, R = gRows, h = new Array(C);
+      for (let x = 0; x < C; x++) {
+        let y = 0;
+        while (y < R && gType[y * C + x] === EMPTY) y++;
+        h[x] = R - y;
+      }
+      return h;
+    },
+    slopeAt(x) {
+      const C = gCols, R = gRows;
+      if (!colTop || colTop.length !== C) ensureColTop(C, R, gType);
+      else {
+        for (let c = 0; c < C; c++) {
+          let y = 0;
+          while (y < R && gType[y * C + c] === EMPTY) y++;
+          colTop[c] = y;
+        }
+      }
+      return steepestFace(C, R, x);
+    },
+    grainCount() {
+      let n = flying.length;
+      if (gType) for (let i = 0; i < gType.length; i++) if (gType[i] === LOOSE) n++;
+      return n;
+    },
+    pourN(px, py, n, c) {
+      initSandGrid();
+      for (let k = 0; k < n && flying.length < MAX_FLYING * 8; k++) {
+        flying.push({
+          x: px + (Math.random() - 0.5) * 2,
+          y: py + (Math.random() - 0.5) * 2,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: Math.random() * 0.8 + 0.3,
+          c, ph: (Math.random() * 1024) | 0, moving: 1,
+          heat: matOf(c) === LAVA ? 230 + ((Math.random() * 25) | 0) : 0
+        });
+      }
+    }
+  };
 
   // ----- sticky beads: who is still held by the pile, a neighbor, or a ledge -----
   function markBeadSupport(C, R, T, Col) {
@@ -27665,6 +28672,40 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       }
     }
   }
+  // Beads that touch a ledge or a stamp, and beads linked to them, can hang.
+  // A pile that only sits on the floor is not hung, so its sides still follow the bead angles.
+  function markBeadHang(C, R, T, Col) {
+    const n = C * R;
+    if (!beadHang || beadHang.length !== n) beadHang = new Uint8Array(n);
+    else beadHang.fill(0);
+    const isBead = i => T[i] === LOOSE && matOf(Col[i]) === BEADS;
+    let qt = 0;
+    if (!beadQ || beadQ.length !== n) beadQ = new Int32Array(n);
+    for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+      const i = y * C + x;
+      if (!isBead(i)) continue;
+      let hung = false;
+      for (let dy = -1; dy <= 1 && !hung; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || xx >= C || yy < 0 || yy >= R) continue;
+        const t = T[yy * C + xx];
+        if (t === LEDGE || t === STAMP) { hung = true; break; }
+      }
+      if (hung) { beadHang[i] = 1; beadQ[qt++] = i; }
+    }
+    let qh = 0;
+    while (qh < qt) {
+      const i = beadQ[qh++], x = i % C, y = (i / C) | 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const xx = x + dx, yy = y + dy;
+        if (xx < 0 || xx >= C || yy < 0 || yy >= R) continue;
+        const j = yy * C + xx;
+        if (!beadHang[j] && isBead(j)) { beadHang[j] = 1; beadQ[qt++] = j; }
+      }
+    }
+  }
   function shakeBeads(px, py, rad, chance) {
     if (!gType) return;
     const cx = px / CELL, cy = py / CELL;
@@ -27679,10 +28720,44 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
         flying.push({
           x: (gx + 0.5) * CELL, y: (gy + 0.5) * CELL,
           vx: (gx - cx) * (0.6 + Math.random()), vy: (gy - cy) * 0.5 - 0.8 - Math.random(),
-          c: gColor[i]
+          c: gColor[i], ph: gPhase[i], from: i
         });
         gType[i] = EMPTY; gOwner[i] = 0;
       }
+    }
+  }
+  function coolLava(i, x, y, C, R, T, Col, S) {
+    // Cooling waits until this grain has stopped moving, and until the lava
+    // surface as a whole is at or below the stopping angle, so a hot sheet can flatten first.
+    if (typeof lavaCanCool !== 'undefined' && lavaCanCool === false) return;
+    if (gMotion && gMotion[i]) return;
+    if (colTop && colTop.length === C && colTop[x] === y) {
+      const face = spanFace(C, R, x, 15) || faceDown(C, R, x);
+      if (face && face.angle > anglesOf(LAVA).stop) return;
+    }
+    const below = i + C;
+    let h = gHeat[i];
+    let hotN = 0, covered = false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || xx >= C || yy < 0 || yy >= R) continue;
+      const j = yy * C + xx;
+      if (T[j] === LOOSE && matOf(Col[j]) === LAVA) {
+        hotN++;
+        if (dy < 0) covered = true;
+      }
+    }
+    // edges and the open top of a pool cool first; a buried core stays molten longer
+    const pace = !covered || hotN <= 3 ? 2 : hotN >= 7 ? 5 : 3;
+    if ((sandFrame % pace) === (i % pace)) {
+      h = Math.max(0, h - 1); gHeat[i] = h;
+    }
+    Col[i] = lavaColor(h, gPhase[i]);
+    if (h <= 0) {
+      // cools into the same Rocks material already in the picker
+      const c = colorFor(ROCKS, '#000');
+      Col[i] = c; S[i] = 1; gHeat[i] = 0;
     }
   }
   function stepLava(i, x, y, C, R, T, Col, S, move) {
@@ -27716,7 +28791,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
     if (T[below] === EMPTY) {
       if (Math.random() < 0.82) {
         if (y + 2 < R && T[below + C] === EMPTY && flying.length < MAX_FLYING * 2) {
-          flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: (Math.random() - 0.5) * 0.3, vy: 0.6, c: Col[i], heat: h });
+          flying.push({ x: (x + 0.5) * CELL, y: (y + 0.5) * CELL, vx: (Math.random() - 0.5) * 0.3, vy: 0.6, c: Col[i], heat: h, ph: gPhase[i], from: i });
           T[i] = EMPTY; gHeat[i] = 0;
         } else move(i, below);
       }
@@ -27744,7 +28819,7 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
   // keep a heat map when the sandbox is resized or cleared, and shake nearby beads when you carve
   const baseInit = initSandGrid;
   initSandGrid = function () {
-    const oc = gCols, or = gRows, oh = gHeat;
+    const oc = gCols, or = gRows, oh = gHeat, om = gMotion;
     baseInit.apply(this, arguments);
     if (!gType) return;
     if (!gHeat || gHeat.length !== gType.length) {
@@ -27759,11 +28834,26 @@ const WELCOME_LINE = 'Touch-and-play sims of tension, waves, swirls and shapes. 
       }
       gHeat = h;
     }
+    if (!gMotion || gMotion.length !== gType.length) {
+      const mv = new Uint8Array(gType.length);
+      if (om && oc && or) {
+        const dy = gRows - or;
+        for (let y = 0; y < or; y++) {
+          const ny = y + dy;
+          if (ny < 0 || ny >= gRows) continue;
+          for (let x = 0; x < Math.min(oc, gCols); x++) mv[ny * gCols + x] = om[y * oc + x];
+        }
+      }
+      gMotion = mv;
+    }
   };
   const baseClear = clearSand;
   clearSand = function () {
     baseClear.apply(this, arguments);
     if (gHeat) gHeat.fill(0);
+    if (gMotion) gMotion.fill(0);
+    anyBeads = false;
+    markAllDirty();
   };
   const baseCarve = carveAt;
   carveAt = function (px, py) {
