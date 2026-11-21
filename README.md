@@ -7,7 +7,7 @@ The [saved browser checks](docs/browser-checks/leech-2026-11-20/README.md) recor
 
 ## Lean proofs across the playground
 
-The **Lean proofs** menu follows the selected tab. The [33-tab comparison](docs/lean-coverage.md) checks the tab's formulas, matrices and constructions against the Lean statements and their hypotheses. It distinguishes matching results, limited connections and pages with no matching proof in the reviewed library. The [reproducible checks](scripts/check-proof-coverage.cjs) and [saved output](docs/lean-coverage-check.json) record the external comparisons; they are separate from Lean's proof checking.
+The **Lean proofs** menu follows the selected tab. The [35-tab comparison](docs/lean-coverage.md) checks the tab's formulas, matrices and constructions against the Lean statements and their hypotheses. It distinguishes matching results, limited connections and pages with no matching proof in the reviewed library. The [reproducible checks](scripts/check-proof-coverage.cjs) and [saved output](docs/lean-coverage-check.json) record the external comparisons; they are separate from Lean's proof checking.
 
 ## Trilogy's gap proofs
 
