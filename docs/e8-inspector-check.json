@@ -1,9 +1,9 @@
 {
   "status": "PASS",
-  "checked_at_utc": "2026-11-21T04:59:03.659839+00:00",
+  "checked_at_utc": "2026-11-21T10:26:52.917107+00:00",
   "scope": "Exact finite arithmetic and replay of the actual standalone JavaScript determinant function; not a Lean compilation, browser rendering test, or proof of manifold topology.",
   "command": "python tests/tab30-exact.py [optional-index-html]",
-  "tab30_template_sha256": "2e0c7616b1eb2fb407a0ba11ac51a45cca40494aca9bdc1d1cecccdba3cc4d33",
+  "tab30_template_sha256": "f1a19eb68d2795841250c88792c195190f3b765c485f1ea9ab2b1433fdc1066b",
   "lean_source": {
     "url": "https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/f0e7c291733f50a950f40cfc786c945b8cf06b99/E8PlumbingBridge.lean#L60",
     "git_blob_sha": "49f88cf46f59e29c2d6c01f9ba4289d97053be88",
