@@ -105,7 +105,8 @@
       128,
       144,
       160,
-      176
+      176,
+      192
     ],
     "default_length": 32,
     "one_table_visible": true
@@ -878,8 +879,116 @@
     "total": 27052945920000,
     "scope": "The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."
   },
+  "length192": {
+    "reference_axis": [
+      4,
+      -4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "dot_product_and_count": [
+      [
+        -72,
+        47104
+      ],
+      [
+        -64,
+        133204500
+      ],
+      [
+        -56,
+        7535462400
+      ],
+      [
+        -48,
+        97917423808
+      ],
+      [
+        -40,
+        573172070400
+      ],
+      [
+        -32,
+        2007834672456
+      ],
+      [
+        -24,
+        4841939097600
+      ],
+      [
+        -16,
+        8710737537600
+      ],
+      [
+        -8,
+        12194621632512
+      ],
+      [
+        0,
+        13618454702600
+      ],
+      [
+        8,
+        12194621632512
+      ],
+      [
+        16,
+        8710737537600
+      ],
+      [
+        24,
+        4841939097600
+      ],
+      [
+        32,
+        2007834672456
+      ],
+      [
+        40,
+        573172070400
+      ],
+      [
+        48,
+        97917423808
+      ],
+      [
+        56,
+        7535462400
+      ],
+      [
+        64,
+        133204500
+      ],
+      [
+        72,
+        47104
+      ]
+    ],
+    "total": 70486236999360,
+    "scope": "The test counted coordinate choices for one shortest axis using the playground's Golay words and compared them with the displayed table."
+  },
   "source_sha256": {
-    "leech-three-e8.js": "9938b6f28561066bc86574f59f2ff47b56f15f95b08d935dafbe0dd3d2324835",
+    "leech-three-e8.js": "1db1343fc7edb426473604149d37b987f84c453364f4cf92743eb4c844a3ce86",
     "leech-three-e8.css": "4d4412b285b9b738a400b9f1ce88d67d8e8ba48ffad4b3780cba9e2fe520c600",
     "leech-three-e8-data.js": "4639b8d05b62796714739ac1477a0a0eeef97e9f4bb33a5409186989e4c1efe4"
   },
