@@ -68,7 +68,7 @@ body:not(.e8-mode) > #hud, body:not(.e8-mode) > #hideBtn { top:86px; max-height:
 .e8-evidence h3 { font-size:12px; font-weight:600; margin:0 0 9px; }
 .e8-evidence p { font-size:12px; color:var(--e8-muted); line-height:1.8; margin:0 0 10px; }
 .e8-page a { color:#b5dfcd; text-underline-offset:3px; }
-.e8-page button:focus-visible, .e8-nav button:focus-visible, .e8-page a:focus-visible, .e8-page summary:focus-visible, .e8-page input:focus-visible { outline:2px solid #d4f3e2; outline-offset:4px; }
+.e8-page button:focus-visible, .e8-nav button:focus-visible, .e8-page a:focus-visible, .e8-page summary:focus-visible, .e8-page select:focus-visible, .e8-page input:focus-visible { outline:2px solid #d4f3e2; outline-offset:4px; }
 .e8-fine { color:#96a5af; font-size:10px; line-height:1.7; margin-top:18px; }
 .e8-inspect .e8-caption { font-size:11px; margin:0; }
 @media(max-width:850px) { .e8-page { padding-top:30px; } .e8-heading { align-items:flex-start; flex-direction:column; gap:12px; } .e8-glue { flex-direction:column; align-items:flex-start; } .e8-bottom { grid-template-columns:1fr; } .e8-block { padding:12px; } .e8-block canvas { height:145px; } .e8-block header span { display:none; } .e8-coords { font-size:9px; } }
@@ -87,7 +87,10 @@ body:not(.e8-mode) > #hud, body:not(.e8-mode) > #hideBtn { top:86px; max-height:
 .e8-layer-counts dt { color:#9db3be; }
 .e8-layer-counts dd { margin:2px 0 0; color:#e4eeee; white-space:nowrap; }
 .e8-layer-notes { font-size:11px; line-height:1.6; color:var(--e8-muted); margin:9px 0 0; }
-.e8-shell-table { margin-top:18px; padding-top:14px; border-top:1px solid var(--e8-line); }
+.e8-table-picker { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:16px 0 12px; padding-top:14px; border-top:1px solid var(--e8-line); color:var(--e8-ink); font-size:13px; }
+.e8-table-picker select { padding:5px 9px; border:1px solid #50646b; border-radius:6px; background:#15232c; color:var(--e8-ink); font:inherit; color-scheme:dark; }
+.e8-layer-details { margin-top:8px; color:var(--e8-muted); font-size:11px; }
+.e8-layer-details summary { cursor:pointer; color:var(--e8-mint); }
 .e8-shell-table h3 { margin:0; color:var(--e8-ink); font-size:15px; }
 .e8-shell-table table { width:100%; margin-top:9px; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums; }
 .e8-shell-table th, .e8-shell-table td { padding:5px 0; text-align:left; font-weight:400; }

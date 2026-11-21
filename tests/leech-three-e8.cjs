@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'..'),byId=new Map(),created=[];
 const context=new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)})},{get:(o,k)=>k in o?o[k]:(()=>{})});
 class Element {
   constructor(tag='div'){this.tag=tag;this.nodes=[];this.attrs={};this.dataset={};this.events={};this.hidden=false;this.textContent='';this.classes=new Set();this.classList={toggle:(k,v)=>v?this.classes.add(k):this.classes.delete(k),contains:k=>this.classes.has(k)};created.push(this);}
-  set innerHTML(s){this.html=s;this.nodes=[];for(const m of s.matchAll(/<([a-z][a-z0-9-]*)\b([^>]*)>/gi)){const e=new Element(m[1]);for(const a of m[2].matchAll(/([a-z][a-z0-9-]*)="([^"]*)"/gi))e.setAttribute(a[1],a[2]);this.nodes.push(e);}}
+  set innerHTML(s){this.html=s;this.nodes=[];for(const m of s.matchAll(/<([a-z][a-z0-9-]*)\b([^>]*)>/gi)){const e=new Element(m[1]);for(const a of m[2].matchAll(/([a-z][a-z0-9-]*)="([^"]*)"/gi))e.setAttribute(a[1],a[2]);if (/\shidden(?:\s|$)/.test(m[2])) e.hidden=true;this.nodes.push(e);}}
   setAttribute(k,v){this.attrs[k]=String(v);if(k==='id'){this.id=v;byId.set(v,this);}if(k.startsWith('data-'))this.dataset[k.slice(5)]=v;}
   getAttribute(k){return this.attrs[k];}
   removeAttribute(k){delete this.attrs[k];}
@@ -35,7 +35,8 @@ const proofNote = page.html.match(/<p[^>]*id="e8LayerProofs"[^>]*>(.*?)<\/p>/)[1
 const tableLink = proofNote.match(/<a href="([^"]+)"[^>]*>Lean proof of the length-32 table<\/a>/);
 assert.ok(tableLink, 'The Layers view links to the theorem for every integer dot product');
 assert.match(tableLink[1], /^https:\/\/github\.com\/NousVolition\/discrete-gap-inequalities-lean\/blob\/[a-f0-9]{40}\/LeechLayers\.lean#L\d+$/);
-const signedLinks = [...proofNote.matchAll(/<a href="([^"]+)"[^>]*>([−+]\d+)<\/a>/g)];
+const individualProofs = page.html.match(/<details class="e8-layer-details">([\s\S]*?)<\/details>/)[1];
+const signedLinks = [...individualProofs.matchAll(/<a href="([^"]+)"[^>]*>([−+]\d+)<\/a>/g)];
 assert.deepEqual(signedLinks.map(m => m[2]), ['−8', '+8', '−16', '+16', '+32', '−32']);
 assert.equal(new Set(signedLinks.map(m => m[1])).size, signedLinks.length);
 for (const [, href] of signedLinks) {
@@ -84,6 +85,18 @@ const length80 = checkShellTable(80, [8,16,24,32,40], 4629381120, 'LeechNorm80La
 const length96 = checkShellTable(96, [8,16,24,32,40,48], 34417656000, 'LeechNorm96Layers.lean');
 const length112 = checkShellTable(112, [8,16,24,32,40,48], 187489935360, 'LeechNorm112Layers.lean', [56]);
 const length128 = checkShellTable(128, [8,16,24,32,40,48,56,64], 814879774800, 'LeechNorm128Layers.lean');
+const length144 = checkShellTable(144, [8,16,24,32,40,48,56], 2975551488000, 'LeechNorm144Layers.lean');
+const picker = $('e8TableLength');
+const options = [...page.html.match(/<select id="e8TableLength">([\s\S]*?)<\/select>/)[1]
+  .matchAll(/<option value="(\d+)">(\d+)<\/option>/g)].map(([, value, label]) => {
+    assert.equal(value, label);
+    return Number(value);
+  });
+assert.deepEqual(options, [32, 48, 64, 80, 96, 112, 128, 144]);
+function checkVisibleTable(length) {
+  assert.deepEqual(options.filter(n => !$('e8Length' + n + 'Panel').hidden), [length]);
+}
+checkVisibleTable(32);
 const endpoints = [];
 let measuredLayers;
 function selectedIndex() {
@@ -120,6 +133,11 @@ function verifyLayers() {
 }
 $('e8LayersMode').onclick();
 const firstLayerVector = verifyLayers();
+for (const length of options) {
+  picker.value = String(length);
+  picker.onchange();
+  checkVisibleTable(length);
+}
 const projection = sandbox.LeechThreeE8.projectLayers(generated.vecs, firstLayerVector);
 assert.equal(projection.products[firstLayerVector], 32);
 assert.equal(projection.products[firstLayerVector] / projection.norm, 32 / Math.sqrt(32));
@@ -128,16 +146,16 @@ assert(Math.abs(Math.hypot(...projection.vertical) - 1) < 1e-12);
 const originalVector = generated.vecs.subarray(24 * firstLayerVector, 24 * (firstLayerVector + 1));
 assert(Math.abs(projection.vertical.reduce((acc,x,i) => acc + x*originalVector[i],0)) < 1e-12);
 $('e8Next').onclick(); assert.notEqual(verifyLayers(), firstLayerVector);
-$('e8Prev').onclick(); assert.equal(verifyLayers(), firstLayerVector);
+$('e8Prev').onclick(); assert.equal(verifyLayers(), firstLayerVector); checkVisibleTable(144);
 $('e8CloudMode').onclick(); assert(!$('e8Cloud').hidden && $('e8LayersPanel').hidden);
 function choose(target){for(let i=0;i<12;i++)if(((mask()^target)>>i)&1)bits[i].onclick();assert.equal(mask(),target);}
 choose(0);assert.equal($('e8ClassCount').textContent,'720');assert.equal($('e8SumTotal').textContent,'32');assert.equal($('e8Remainder').textContent,'Three E₈ blocks');
-$('e8LayersMode').onclick(); verifyLayers(); $('e8CloudMode').onclick();
+$('e8LayersMode').onclick(); verifyLayers(); checkVisibleTable(144); $('e8CloudMode').onclick();
 const before=$('e8VectorNumber').textContent;$('e8Next').onclick();assert.notEqual($('e8VectorNumber').textContent,before);$('e8Prev').onclick();assert.equal($('e8VectorNumber').textContent,before);
 const empty=sandbox.__threeE8Check.classCounts.findIndex(n=>n===0);choose(empty);
 assert.equal($('e8SelectedTitle').textContent,'No shortest vector here');assert.equal($('e8SumTotal').textContent,'—');assert($('e8Next').disabled);assert(!$('e8Empty').hidden);
 $('e8LayersMode').onclick(); assert($('e8LayersData').hidden && !$('e8Empty').hidden);
-$('e8Filter').onclick(); verifyLayers(); $('e8CloudMode').onclick(); assert.equal($('e8CloudCount').textContent,'196,560 shortest vectors · 24D → 2D');assert($('e8Empty').hidden);assert.equal($('e8SumTotal').textContent,'32');
+$('e8Filter').onclick(); verifyLayers(); checkVisibleTable(144); $('e8CloudMode').onclick(); assert.equal($('e8CloudCount').textContent,'196,560 shortest vectors · 24D → 2D');assert($('e8Empty').hidden);assert.equal($('e8SumTotal').textContent,'32');
 $('e8Turn').oninput({target:{value:'1.2'}});
 $('e8Original').onclick();assert(!sandbox.__leechThreeE8Active);assert(page.hidden);
 $('e8Mode').onclick();assert(sandbox.__leechThreeE8Active);assert(!page.hidden);
@@ -145,5 +163,6 @@ for(const a of page.querySelectorAll('a')){assert.match(a.attrs.href,/\/blob\/[0
 const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 console.log(JSON.stringify({status:'PASS',checks:['initial construction mode','12 glue switches','720 shortest vectors in base coset','previous/next selection','empty coset state','return to full shell','projection rotation handler','23-fold mode and return','published proof links','cloud default and return','seven layer counts from all raw vectors on selection, Next and Previous','whole-table proof link and full browser histogram','proof links at +8, −8, +16, −16, +32 and −32','+32 contains the selected vector and −32 contains its negative','empty slots at both signs of 24','unit perpendicular projection and horizontal scale','layers for a filtered selection and an empty shift'],
  layers:{dot_product_and_count:measuredLayers,selected_vector_numbers:sampledSelections,endpoints,scope:"Each selection counted all 196,560 raw vectors. The first three selections are initial, Next and Previous."},
- length48, length64, length80, length96, length112, length128,
+ table_picker:{squared_lengths:options,default_length:32,one_table_visible:true},
+ length48, length64, length80, length96, length112, length128, length144,
  source_sha256:Object.fromEntries(['leech-three-e8.js','leech-three-e8.css','leech-three-e8-data.js'].map(p=>[p,sha(read(p))])),scope:'DOM/canvas stand-ins; no browser layout, pixels or pointer hit-testing are verified by this test.'},null,2));
