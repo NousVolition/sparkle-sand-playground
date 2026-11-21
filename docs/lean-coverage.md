@@ -2,7 +2,9 @@
 
 The table covers all 34 tabs. The original review compared the playground with [discrete-gap-inequalities-lean at 8d52096](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/README.md). This is a review of that project, not a search of every Lean library or a proof of the playground as a whole. The starting playground revision was [7914e9d](https://github.com/NousVolition/sparkle-sand-playground/commit/7914e9dd7677e3f801c7ac9e7cdbf23e6be81468).
 
-14 tabs have matching mathematical results with limits. 3 have a related theorem for part of their calculation, 1 has a related result only, and 16 have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
+17 tabs have matching mathematical results with limits. 2 have a related theorem for part of their calculation, 1 has a related result only, and 14 have no matching proof in this library. Links added after GapWaveTail.lean landed are pinned to [53ecf1d](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/53ecf1d4dc11a97871c9512b58020d926a85304c/GapWaveTail.lean). The “Lean proofs” menu follows the selected tab. A missing proof here does not mean a mathematical claim is false.
+
+The Ramanujan space proofs are pinned to [the merged addition](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean). Its full [build and axiom audit](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44839441230) passed with 1,058 audited declarations. The [gap experiment](zeros-gap-experiment.md) records the separate numerical checks and their limits.
 
 ## What was checked
 
@@ -16,8 +18,8 @@ The source comparison reads the actual JavaScript enumerations, smoothing code a
 - **E8 matrices:** the first Milnor tab's tree uses Lean's numbering. In 5D / E8, E8 Inspector and Milnor v2, the tab-to-Lean index permutation is [0,1,2,3,4,7,5,6]. Every Gram entry equals the negative of the corresponding Lean matrix entry. The matrix size is eight, so the whole-matrix sign change preserves its determinant. This correspondence and the Inspector's subset determinants 4, 2 and 8 were checked externally. The linked Lean determinant theorem proves neither the boundary topology nor an exotic-sphere classification. Comments about topology in the Lean source are not theorem statements.
 - **Leech:** Lean proves the correspondence between the modulo-23 recipe and the modulo-11 code, and transfers membership, minimum squared length 32, the three-shape classification and the 196,560 count. The new three-E₈ construction has three orthogonal scaled E₈ blocks and twelve glue vectors. Lean proves equality with the whole existing lattice and 4,096 distinct binary gluing cosets. It reuses the basis determinant 8^12 and evenness results; LeechBasis also gives unimodularity after rescaling. The source replay checks all 196,560 generated vectors, their glue labels and their integer decompositions. The measured coset-size and component-energy distributions are external checks, not additional Lean theorems. For the Leech lattice with the origin fixed, the full symmetry group has order 8,315,553,613,086,720,000, with explicit generators, proved in Lean. JavaScript execution and screen projection remain outside the proofs. See [construction evidence](three-e8-check.json) and [interaction checks](three-e8-ui-check.json).
 - **Ferro:** each isolated smoothing pass has the RingDecay form with t = (1 − (1 − s)^(1/3))/2, where s is the surface-tension setting. The theorem requires t ≤ 1/4, hence s ≤ 7/8. Of the 45 slider settings, 43 meet that restriction; 0.88 and 0.90 do not. All 45 were compared with the step formula. This says nothing about failure at those two settings; they are outside this theorem's hypotheses. Magnetic forcing, constant-area rescaling and the measured swirl-decay rate are separate.
-- **Ring and Pendulum:** Ring's first frequency squared agrees with the cycle gap; the −1/12 limit is not covered. Pendulum's neighbor forces match a path or cycle coupling term, but it evolves a damped second-order system, not the heat step.
-- **Zeros:** “GUE Match: 99.4%” was fixed markup, with no computed fit behind that badge. It now reads “GUE-like illustration.” The tab's drum bars are drawn from the stored Riemann zeros rather than obtained by solving a drum eigenvalue problem. These are illustrations, not a Lean proof of their correspondence.
+- **Ring and Pendulum:** Ring's first frequency squared agrees with the cycle gap. RingSumMinusTwelfth now also proves the finite bar sum and normalized leftover limit. Pendulum's neighbor forces match a path or cycle coupling term, but it evolves a damped second-order system, not the heat step.
+- **Zeros:** “GUE Match: 99.4%” was fixed markup, with no computed fit behind that badge. It now reads “GUE-like illustration.” The tab's drum bars are drawn from the stored Riemann zeros rather than obtained by solving a drum eigenvalue problem. These are illustrations, not a Lean proof of their correspondence. The separate Gap → Zeta experiment computes values and locates a zero without that stored list; its complex extension is not yet formalized.
 - **Other tempting matches:** a drawn torus is not the finite periodic grid of Torus.lean; Crystal uses six neighbors and freezing; Stretch uses a nonlinear Fourier/RK4 vorticity solver, now with a partial match in GapWaveTail.lean (the feed formula and tail, not the measured +0.75 rate, the dP/dt budget, or Hot/Cold); a polychoron is not the planar polygon inequality. E8CostMirror's quadratic cost/flip identity has no matching displayed quantity in the E8 tabs, so it has no proof link there.
 
 ## Reproduce
@@ -121,25 +123,25 @@ No proof link added.
 
 ### 11. −1/12
 
-**No matching proof in this library.** Tab 11 compares softened unit-width bars with the area under their smooth curve. The signed space approaches −1/12 as ε shrinks. The numerical checks cover the displayed difference and the area drawn for the bars. A merged Lean proof link is pending.
+**Some results proved; limits below.** Lean proves the softened bar sum, the smooth area, the space’s limit −1/12, and the shortcut L(ε) − 4L(2ε) = exp(−ε)/(1 + exp(−ε))². The areas cancel exactly; the alternating sum tends to 1/4. The final theorem identifies the limit with zeta at −1. Canvas rendering and floating-point readouts have separate numerical checks.
 
-No proof link added.
+[The signed space has a finite limit](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RingSumMinusTwelfth.lean#L360) · [The smooth area](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L25) · [The areas cancel](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L39) · [The shortcut on the spaces](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L45) · [The alternating series sums to the same value](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L69) · [The alternating limit is 1/4](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L78) · [The limit agrees with zeta at −1](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L113)
 
 <a id="ringsum"></a>
 
 ### 12. Ring
 
-**Related theorem; limited match.** The first bar has height 2 sin(π/n); its square is the proved cycle gap. This does not prove the sum of all bars, the −1/12 limit or the Casimir model.
+**Some results proved; limits below.** Lean proves the finite sum of the ring bars, their relation to the square roots of the heat eigenvalues, and the normalized leftover’s limit −1/12. This updates proof coverage only; tab 12 itself is unchanged. The Casimir illustration and browser execution remain outside the proof.
 
-[Cycle inequality](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/Wirtinger.lean#L168) · [Gap = 4 sin²(π/n)](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/8d520965e87e391ae4ce31bb5ee398733e8781bf/RingDecay.lean#L41)
+[Ring bars sum to twice the cotangent](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RingSumMinusTwelfth.lean#L46) · [Ring leftover tends to −1/12](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RingSumMinusTwelfth.lean#L194) · [Each bar is the square root of its eigenvalue](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RingSumMinusTwelfth.lean#L387)
 
 <a id="zeros"></a>
 
 ### 13. Zeros
 
-**No matching proof in this library.** The zero-spacing and quantum-drum pictures are illustrations. The earlier “99.4%” badge was fixed text, not a computed fit. No Riemann-hypothesis, GUE-statistics or drum-spectrum theorem is proved here.
+**Some results proved; limits below.** The new gap search evaluates a softened complex sum minus its Gamma-integral background, without stored zero locations. Lean covers its real starting case at s = −1; it does not yet cover the complex extension, numerical root search or the Riemann hypothesis. The exact finite Golay/Leech coefficient comparison and membership guard have external tests. The older spacing and drum views remain illustrations; the drum bars use stored zero ordinates.
 
-No proof link added.
+[Real gap at s = −1](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L32) · [Its limit equals the zeta value](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d/RamanujanGap.lean#L113)
 
 <a id="pendulum"></a>
 

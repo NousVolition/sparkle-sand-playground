@@ -1,0 +1,303 @@
+{
+  "status": "PASS",
+  "checks": 11,
+  "checked": [
+    "Direct gap agrees with 60-digit independent polylog/Gamma values",
+    "Original s=-1 gap is recovered and nonfinite inputs are rejected",
+    "Finite-damping roots converge without constraining Re(s) to 1/2",
+    "Five-level extrapolation improves with damping halved",
+    "Tail-cutoff doubling preserves the extrapolated candidate",
+    "The neighboring horizontal probes are distinguishable",
+    "The search does not consume stored zero ordinates or its independent reference",
+    "Exact integer coefficients match the four proved Leech shell counts",
+    "Golay generator matches the proved playground basis",
+    "All 4096 Golay words give the expected weight distribution",
+    "An allowed weight cannot bypass membership or length checks"
+  ],
+  "independent_reference": "mpmath 1.3.0 at 60 decimal digits; polylog minus Gamma reference, and independently mpmath.zeta.",
+  "max_gap_reference_error": 6.222938830902081e-13,
+  "max_zeta_reference_error": 4.547473508864641e-13,
+  "raw_roots": [
+    {
+      "epsilon": 0.2,
+      "sigma": 0.1925301773556458,
+      "t": 14.10410926842014,
+      "residual": 3.2655794360464976e-13,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.2,
+          "t": 14.166666666666666,
+          "residual": 0.04087721586778341
+        },
+        {
+          "sigma": 0.19416674632111444,
+          "t": 14.10405902599994,
+          "residual": 0.0010597850587805028
+        },
+        {
+          "sigma": 0.19252908060853258,
+          "t": 14.10410912510443,
+          "residual": 7.163938560466601e-7
+        },
+        {
+          "sigma": 0.1925301773556458,
+          "t": 14.10410926842014,
+          "residual": 3.2655794360464976e-13
+        }
+      ]
+    },
+    {
+      "epsilon": 0.1,
+      "sigma": 0.3462767296320941,
+      "t": 14.119244246218583,
+      "residual": 5.199024885717087e-13,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.30000000000000004,
+          "t": 14.166666666666666,
+          "residual": 0.048579896729059525
+        },
+        {
+          "sigma": 0.34595323741261685,
+          "t": 14.121005027376697,
+          "residual": 0.0012835384756476858
+        },
+        {
+          "sigma": 0.3462778513004516,
+          "t": 14.119244948586191,
+          "residual": 9.485856704392868e-7
+        },
+        {
+          "sigma": 0.3462767296320941,
+          "t": 14.119244246218583,
+          "residual": 5.199024885717087e-13
+        }
+      ]
+    },
+    {
+      "epsilon": 0.05,
+      "sigma": 0.4231418192314683,
+      "t": 14.126941386244061,
+      "residual": 3.030991221018816e-14,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.4,
+          "t": 14.166666666666666,
+          "residual": 0.035104416455719344
+        },
+        {
+          "sigma": 0.42340545636870114,
+          "t": 14.127767902440722,
+          "residual": 0.0006541035602931679
+        },
+        {
+          "sigma": 0.42314210330063223,
+          "t": 14.126941259551433,
+          "residual": 2.3452496163824569e-7
+        },
+        {
+          "sigma": 0.4231418192314683,
+          "t": 14.126941386244061,
+          "residual": 3.030991221018816e-14
+        }
+      ]
+    },
+    {
+      "epsilon": 0.025,
+      "sigma": 0.4615718414802528,
+      "t": 14.130822429828678,
+      "residual": 9.658686707990255e-14,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.5,
+          "t": 14.166666666666666,
+          "residual": 0.04012660892540756
+        },
+        {
+          "sigma": 0.46173174266119443,
+          "t": 14.129682145004526,
+          "residual": 0.0008903086781903993
+        },
+        {
+          "sigma": 0.4615723283413143,
+          "t": 14.130822681609853,
+          "residual": 4.2387415324486153e-7
+        },
+        {
+          "sigma": 0.4615718414802528,
+          "t": 14.130822429828678,
+          "residual": 9.658686707990255e-14
+        }
+      ]
+    }
+  ],
+  "extrapolated_roots": [
+    {
+      "epsilon": 0.1,
+      "levels": 5,
+      "sigma": 0.49999999674002354,
+      "t": 14.134725136777382,
+      "residual": 2.8977257145412185e-15,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.30000000000000004,
+          "t": 14.166666666666666,
+          "residual": 0.17490528550051773
+        },
+        {
+          "sigma": 0.4839696972880246,
+          "t": 14.136565037140002,
+          "residual": 0.012883546636880638
+        },
+        {
+          "sigma": 0.49989281140282,
+          "t": 14.134728193579283,
+          "residual": 0.00008505344997488883
+        },
+        {
+          "sigma": 0.4999999920340222,
+          "t": 14.13472513609987,
+          "residual": 3.771097938544613e-9
+        },
+        {
+          "sigma": 0.49999999674002354,
+          "t": 14.134725136777382,
+          "residual": 2.8977257145412185e-15
+        }
+      ]
+    },
+    {
+      "epsilon": 0.05,
+      "levels": 5,
+      "sigma": 0.49999999989660177,
+      "t": 14.134725141572556,
+      "residual": 2.0693190923857375e-15,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.4,
+          "t": 14.166666666666666,
+          "residual": 0.08696858186807362
+        },
+        {
+          "sigma": 0.49593170612334186,
+          "t": 14.136508576524314,
+          "residual": 0.0035295778329552004
+        },
+        {
+          "sigma": 0.4999933944179564,
+          "t": 14.134729916784568,
+          "residual": 0.00000646488549279381
+        },
+        {
+          "sigma": 0.49999999988297217,
+          "t": 14.13472514159641,
+          "residual": 2.1790670308995533e-11
+        },
+        {
+          "sigma": 0.49999999989660177,
+          "t": 14.134725141572556,
+          "residual": 2.0693190923857375e-15
+        }
+      ]
+    },
+    {
+      "epsilon": 0.025,
+      "levels": 5,
+      "sigma": 0.4999999999967436,
+      "t": 14.134725141729511,
+      "residual": 2.2618382301162746e-15,
+      "converged": true,
+      "history": [
+        {
+          "sigma": 0.5,
+          "t": 14.166666666666666,
+          "residual": 0.025400560499517288
+        },
+        {
+          "sigma": 0.500412450402663,
+          "t": 14.134812168565912,
+          "residual": 0.00033428880616602805
+        },
+        {
+          "sigma": 0.4999999400161484,
+          "t": 14.134725099275148,
+          "residual": 5.828539465585671e-8
+        },
+        {
+          "sigma": 0.4999999999967436,
+          "t": 14.134725141729511,
+          "residual": 2.2618382301162746e-15
+        }
+      ]
+    }
+  ],
+  "reference_zero": [
+    0.5,
+    14.134725141734695
+  ],
+  "controls": [
+    {
+      "sigma": 0.4,
+      "t": 14.134725141734695,
+      "magnitude": 0.0826209342831949
+    },
+    {
+      "sigma": 0.5,
+      "t": 14.134725141734695,
+      "magnitude": 1.5252365965155102e-10
+    },
+    {
+      "sigma": 0.6,
+      "t": 14.134725141734695,
+      "magnitude": 0.07618825999316285
+    }
+  ],
+  "theta_coefficients": [
+    "1",
+    "0",
+    "196560",
+    "16773120",
+    "398034000",
+    "4629381120"
+  ],
+  "delta_coefficients": [
+    "0",
+    "1",
+    "-24",
+    "252",
+    "-1472",
+    "4830"
+  ],
+  "golay_distribution": {
+    "0": 1,
+    "8": 759,
+    "12": 2576,
+    "16": 759,
+    "24": 1
+  },
+  "domain": {
+    "sigma": [
+      0.1,
+      0.9
+    ],
+    "t": [
+      12,
+      16
+    ],
+    "epsilon": [
+      0.2,
+      0.1,
+      0.05,
+      0.025
+    ],
+    "series_cutoff": 48
+  },
+  "limitations": "Finite-window floating-point experiment; no interval enclosure, no proof of uniqueness or completeness of the zero search, and no RH proof. The full complex finite-part limit and theta identity are sourced mathematics, not new Lean theorems in this change.",
+  "source_sha256": "542185916bc709ef34f46c15b3fbc495253873dba5519aa40624a6c0ca6f2b2e"
+}

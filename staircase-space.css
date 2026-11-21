@@ -79,3 +79,17 @@ a { color: var(--teal); text-underline-offset: 2px; }
   .comparison-plots { grid-template-columns: minmax(0, 1fr); }
   button { min-height: 36px; }
 }
+.shortcut-panel { margin: 20px 0; padding: clamp(14px,2vw,24px); border: 1px solid var(--line); background: var(--panel); border-radius: 8px; }
+.shortcut-panel > p { margin-top: 12px; }
+.shortcut-pictures { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; margin: 18px 0 8px; }
+.shortcut-pictures figure { min-width: 0; background: var(--paper); border-radius: 5px; padding: 12px; }
+.shortcut-pictures h3 { font-size: 1rem; margin: 0 0 6px; }
+.shortcut-pictures canvas { height: 190px; }
+.shortcut-pictures output, .shortcut-values dd { font-variant-numeric: tabular-nums; }
+.shortcut-caption, .shortcut-proofs { font-size: .875rem; }
+.area-cancellation { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin: 18px 0; font: 1rem/1.6 ui-monospace,Consolas,monospace; overflow-wrap: anywhere; }
+.area-cancellation s { text-decoration-color: var(--teal); text-decoration-thickness: 2px; }
+.shortcut-equation { color: var(--teal); font: 1.25rem/1.5 Georgia,serif; }
+.shortcut-values { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.shortcut-values dd { font-size: 1.1rem; }
+@media (max-width:720px) { .shortcut-pictures,.shortcut-values { grid-template-columns: minmax(0,1fr); } .shortcut-values { gap: 0; } }
