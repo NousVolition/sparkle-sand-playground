@@ -34,6 +34,8 @@ The source comparison reads the actual JavaScript enumerations, smoothing code a
 
 **Tab 30 — OLD IN THE PROJECT.** The merged proof revision has a [saved verification record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/three-e8-verification-2026-11-21-e8-wirtinger-integration.json), a [1,165-declaration axiom transcript](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/axioms-2026-11-21-e8-wirtinger-integration.txt) and a [successful full build](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44885643672). These records belong to that pinned revision; later library additions do not change their recorded scope. The comparison of the web page's arrays with the formal data is an external file check, not a Lean proof of the web page. The existing [exact-arithmetic record](e8-inspector-check.json) and [browser record](e8-inspector-ui-check.json) remain historical checks of their recorded sources; they are not presented as new tests of this link update.
 
+**E₈ link review — OLD IN THE PROJECT.** Tabs 13, 23, 25, 29 and 31 now also link the existing merged E₈ proof revision and its saved verification records. The 1,165-declaration audit belongs to that pinned revision, not to later library additions. Tab 13’s lattice proofs are separate from the full theta-series identity and the numerical zero search. The Hamming recipe proved for Tab 30 is not presented as a proof of Tab 29’s differently written Hamming highlighting. The saved page-source comparisons remain external evidence; no new lattice proof or numerical experiment is claimed here.
+
 ## Reproduce
 
 Use this playground checkout and a separate checkout of the pinned proof revision:
@@ -56,7 +58,7 @@ for(const [,key,label] of tabs) {
   const page=pages[key];
   text+=`\n<a id="${key}"></a>\n\n### ${label}\n\n**${page.status}.** ${page.note}\n\n`;
   text+=page.links.length ? page.links.map(p=>`[${p.label}](${p.href})`).join(' · ')+'\n' : 'No proof link added.\n';
-  if (key === "e8insp") text+="\n[Saved verification record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/three-e8-verification-2026-11-21-e8-wirtinger-integration.json) · [Full axiom transcript: 1,165 declarations](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/axioms-2026-11-21-e8-wirtinger-integration.txt) · [Successful merged-main build](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44885643672)\n";
+  if (["zeros", "penteract", "pentlite", "e8studio", "e8insp", "e8studio2"].includes(key)) text+="\n[Saved verification record](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/three-e8-verification-2026-11-21-e8-wirtinger-integration.json) · [Full axiom transcript: 1,165 declarations](https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/axioms-2026-11-21-e8-wirtinger-integration.txt) · [Successful merged-main build](https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44885643672)\n";
 }
 fs.mkdirSync(path.join(root,'docs'),{recursive:true});
 fs.writeFileSync(path.join(root,'docs/lean-coverage.md'),text);

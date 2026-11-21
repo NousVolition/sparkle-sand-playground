@@ -4,6 +4,8 @@
   const M = window.ZeroGapMath, abs = M.complex.abs;
   const revision = '4a1e2f0798c5186e8cbb118a7d57b6a84f5c2f8d';
   const lean = (file,line) => 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/'+revision+'/'+file+'#L'+line;
+  const e8Revision = '0b44d6896c646b64c58141d2b8d6ebc0f0f41e10';
+  const e8Lean = (file,line) => 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/'+e8Revision+'/'+file+'#L'+line;
   const section = document.createElement('section'); section.id = 'tab-gap'; section.className = 'workspace';
   section.innerHTML = `
     <div class="gap-intro"><p class="gap-eyebrow">THE SPACE, FOLLOWED INTO ZETA</p>
@@ -49,7 +51,8 @@
       <p id="golay-result" role="status"></p>
       <p class="gap-muted">Weights 0, 8, 12, 16 and 24 are allowed. Membership must also pass: eight ones alone are not enough. This guard uses the playground's proved Golay generator convention.</p>
       <p>Your construction glues the scaled base (√2 E₈)³ with 4,096 cosets. Scaling raises the old roots from squared length 2 to 4; gluing adds vectors. It does not erase old ones.</p>
-      <p class="gap-source"><a href="${lean('LeechThreeE8.lean',85)}" target="_blank" rel="noopener">Lean: equality of the constructed lattices</a> · <a href="https://people.math.harvard.edu/~elkies/M272.19/oct28.pdf" target="_blank" rel="noopener">Theta-series identity</a> · <a href="https://people.math.harvard.edu/~elkies/M272.19/nov04.pdf" target="_blank" rel="noopener">Leech shell counts</a></p>
+      <p class="gap-source"><a href="${e8Lean('LeechThreeE8.lean',85)}" target="_blank" rel="noopener">Lean: equality of the constructed lattices</a> · <a href="${e8Lean('LeechThreeE8Cosets.lean',118)}" target="_blank" rel="noopener">Unique gluing class</a> · <a href="${e8Lean('LeechThreeE8.lean',110)}" target="_blank" rel="noopener">Minimum squared length</a> · <a href="https://people.math.harvard.edu/~elkies/M272.19/oct28.pdf" target="_blank" rel="noopener">Theta-series identity</a> · <a href="https://people.math.harvard.edu/~elkies/M272.19/nov04.pdf" target="_blank" rel="noopener">Leech shell counts</a></p>
+      <p class="gap-source">Existing lattice proofs (OLD IN THE PROJECT): <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/three-e8-verification-2026-11-21-e8-wirtinger-integration.json" target="_blank" rel="noopener">Merged verification record</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/0b44d6896c646b64c58141d2b8d6ebc0f0f41e10/docs/axioms-2026-11-21-e8-wirtinger-integration.txt" target="_blank" rel="noopener">1,165-declaration audit at this revision</a> · <a href="https://github.com/NousVolition/discrete-gap-inequalities-lean/actions/runs/44885643672" target="_blank" rel="noopener">Successful merged build</a>.</p>
     </details>
     <section class="gap-card"><h3>What is established?</h3>
       <p>Lean proves the real space at s = −1, the cancellation of the two smooth areas, the softened alternating identity, and the limit's agreement with ζ(−1). The complex gap used in this search is a further numerical experiment, supported by the polylogarithm expansion; it has not yet been formalized in this library.</p>
