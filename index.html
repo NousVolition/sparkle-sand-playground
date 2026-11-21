@@ -337,6 +337,10 @@ Third-party material is governed by its own terms.
   .pn-caret { flex: none; color: var(--accent); font-size: 0.9rem; }
   .pn-arrow { flex: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text, #e6e6f0); font-size: 1.5rem; line-height: 1; cursor: pointer; }
   .pn-arrow:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  #color-motion-guide { flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 8px; background: #141922; color: #bcdded; font-size: .77rem; text-decoration: none; white-space: nowrap; }
+  #color-motion-guide:hover { text-decoration: underline; }
+  #color-motion-guide:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 700px) { #color-motion-guide { display: grid; place-content: center; min-height: 44px; width: 46px; padding: 2px; white-space: normal; text-align: center; line-height: 1.12; } }
   .pn-list { position: absolute; z-index: 1000; top: calc(100% + 6px); left: 0; right: 0; min-width: 300px; max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; background: #10141e; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); padding: 6px; }
   .pn-list[hidden] { display: none; }
   .pn-full, .pn-heavy-head, .pn-opt[hidden], .pn-group[hidden] { display: none; }
@@ -477,6 +481,7 @@ Third-party material is governed by its own terms.
       <div class="pn-list" id="playList" role="listbox" aria-label="Playgrounds" tabindex="-1" hidden></div>
     </div>
     <button class="pn-arrow" id="playNext" title="Next playground" aria-label="Next playground">&#8250;</button>
+    <a id="color-motion-guide" href="guides/Playground-colors-and-jitter.html#sand" target="_blank" rel="noopener">Color chart</a>
   </nav>
   <div class="bg-pick" id="bgPick">
     <button type="button" class="bg-pick-btn" id="bgPickBtn" aria-haspopup="true" aria-expanded="false" aria-controls="bgSwatches" title="Background color"><span class="bg-dot"></span></button>
@@ -2617,8 +2622,13 @@ function drawCasimir() {
 }
 
 // Animation loop for gentle wave breathing
+const ringRadiansPerSecond = 2.1;
+let lastRingTime = performance.now();
+document.addEventListener('visibilitychange', () => { lastRingTime = performance.now(); });
 function tick() {
-  phase += 0.035;
+  const now = performance.now();
+  if (!document.hidden) phase += ringRadiansPerSecond * Math.max(0, now - lastRingTime) / 1000;
+  lastRingTime = now;
   const n = parseInt(ringNInput.value, 10);
   drawRing(n);
   if (document.getElementById('casimir-tab').classList.contains('active')) {
@@ -22029,7 +22039,7 @@ let cry = (() => {
 })();
 let cryPaused = false, cryAcc = 0;
 let cryC = 0, cryR = 0, cryN = 0, cryHex = 4, cryW = 0, cryH = 0, cryOX = 0, cryOY = 0;
-let cOwner, cS, cU, cRec, cFrozen, cNb, cEdge, cFreezeR, cryFrozenList = [], crySeeds = [];
+let cOwner, cS, cU, cRec, cFrozen, cNb, cEdge, cFreezeR, cFacetLight, cryFrozenList = [], crySeeds = [];
 let cryLayer = null, cryLayerCtx = null, cryVapor = null, cryVaporCtx = null, cryVaporImg = null, cryVaporPix = null;
 let cryDev = 0, cryNewFrozen = 0, cryLastTinkle = 0, cryFrame = 0, cryInitW = 0, cryInitH = 0;
 
@@ -22066,6 +22076,7 @@ function cryInit() {
   cS = new Float32Array(cryN); cU = new Float32Array(cryN);
   cRec = new Uint8Array(cryN); cFrozen = new Uint8Array(cryN); cEdge = new Uint8Array(cryN);
   cFreezeR = new Float32Array(cryN); cOwner = new Int16Array(cryN);
+  cFacetLight = new Float64Array(cryN);
   cNb = new Int32Array(cryN * 6);
   const EV = [[-1, -1], [0, -1], [-1, 0], [1, 0], [-1, 1], [0, 1]], OD = [[0, -1], [1, -1], [-1, 0], [1, 0], [0, 1], [1, 1]];
   for (let r = 0; r < cryR; r++) for (let c = 0; c < cryC; c++) {
@@ -22130,6 +22141,7 @@ function cryFreeze(i) {
   const [x, y] = cryCenter(i);
   const sd = crySeeds[cOwner[i]] || crySeeds[0];
   cFreezeR[i] = sd ? Math.hypot(x - sd[0], y - sd[1]) : 0;
+  cFacetLight[i] = 0.9 + 0.1 * Math.random();
   cryDrawCell(i);
   cryNewFrozen++;
 }
@@ -22233,7 +22245,7 @@ function cryCellColor(i) {
 function cryDrawCell(i) {
   const g = cryLayerCtx, [x, y] = cryCenter(i), c = cryCellColor(i);
   // a soft lit facet: light toward the top left, a thin darker rim gives the cell texture
-  const lit = 0.9 + 0.1 * Math.random();
+  const lit = cFacetLight[i];
   g.beginPath(); cryHexPath(g, x, y, cryHex * 0.98);
   g.fillStyle = rgbStr([c[0] * lit | 0, c[1] * lit | 0, c[2] * lit | 0], 0.82);
   g.fill();
@@ -23111,11 +23123,8 @@ function setMagPalette(v) {
 }
 
 // ========== STRETCH & CLOSE (ported from Michele's playground v5, tab 6) ==========
-// Her solver and drawing code below are unchanged. Adaptations only:
-//  - it draws into its own 960x500 offscreen canvas (stcCanvas), which the main loop scales onto the page;
-//  - "activeTab === 'stretch'" became "mode === 'stretch'";
-//  - her controls live in a persistent block (#tab-stretch) that setControls moves into the controls bar;
-//  - everything is wrapped in one function so her names (SC, render, plot, ...) stay private.
+// A worker advances the original Fourier/RK4 solver. The page draws each completed
+// field and its diagnostics together on the 960x500 canvas, scaled to fit the tab.
 const stcCanvas = document.createElement('canvas');
 // drawn at 2x so it stays sharp when scaled up (her code keeps using 960x500 coordinates)
 const STC_RES = 2;
@@ -23156,6 +23165,7 @@ const stcControls = (() => {
 })();
 const STC_HINT = 'Two opposite vortex patches side by side on a periodic square. Production is −Σ ∂<sub>i</sub>ω ∂<sub>i</sub>u<sub>j</sub> ∂<sub>j</sub>ω, dissipation is ν Σ|Δω|², and dP/dt = 2(production − dissipation). Spectral derivatives, 2/3-rule dealiasing, RK4 with a CFL time step; <b>Half Step</b> reruns from the same start at dt/2. <b>Hot/Cold</b> adds a warm blob (θ, 4× the start scale) between the swirls: ∂ω/∂t + u·∇ω = νΔω + ∂θ/∂x and ∂θ/∂t + u·∇θ = νΔθ, with warm (θ &gt; 0) rising; production then also counts Σ ∇ω·∇(∂θ/∂x).';
 (() => {
+function createStretchStepper() {
   // ---- solver core (SC-BEGIN) ----
   const SC = (() => {
     const N = 128, L = 2 * Math.PI, NN = N * N, dA = (L / N) * (L / N);
@@ -23393,23 +23403,51 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
     return { N, Run, BRun };
   })();
   // ---- solver core (SC-END) ----
+  let main, half;
+  return function next(settings) {
+    let dt = 0;
+    if (settings) {
+      const { scale, nu, hot, halfOn } = settings;
+      const makeRun = () => hot ? new SC.BRun(scale, nu, 4 * scale) : new SC.Run(scale, nu);
+      main = makeRun();
+      half = halfOn ? makeRun() : null;
+    } else {
+      dt = main.stableDt(0.5);
+      main.step(dt);
+    }
+    const field = new Float64Array(SC.N * SC.N);
+    const metric = main.measure(field);
+    if (half && dt) { half.step(dt / 2); half.step(dt / 2); }
+    return { steps: main.steps, dt, metric, halfMetric: half ? half.measure() : null,
+             field, theta: main.theta ? main.theta.slice() : null };
+  };
+}
+
+function runStretchWorker(makeStepper) {
+  const next = makeStepper();
+  self.onmessage = ({ data }) => {
+    const state = next(data.settings);
+    const buffers = [state.field.buffer];
+    if (state.theta) buffers.push(state.theta.buffer);
+    self.postMessage({ generation: data.generation, state }, buffers);
+  };
+}
 (() => {
   const canvas = stcCanvas;
   const ctx = canvas.getContext('2d');
-  const N = SC.N;
-  const field = new Float64Array(N * N);
+  let N = 0;
+  let field = null, theta = null;
   const img = document.createElement('canvas');
-  img.width = N; img.height = N;
   const ictx = img.getContext('2d');
-  const imgData = ictx.createImageData(N, N);
+  let imgData;
 
   let scale = 64, nu = 0.05, tEnd = 1.5, running = true, halfOn = false;
-  let main = null, half = null, hist = [], histHalf = [], colorMax = 1, done = false;
+  let steps = 0, hist = [], histHalf = [], colorMax = 1, done = false;
   let stats = null, statsHalf = null, lastBudget = null;
   // Hot/Cold state
   let hotOn = false, swirl0 = 1, swirlHi = 0, swirlNow = 0, budgetHi = 0, budgetNoHeatHi = 0;
-  const HEAT_X = 4;   // warm blob strength = 4 × the start scale
-  const makeRun = () => hotOn ? new SC.BRun(scale, nuFromSlider(), HEAT_X * scale) : new SC.Run(scale, nuFromSlider());
+  let generation = 0, needsInit = true, busy = false, pending = null;
+  let worker, localNext = null, localSteps = -1, dirty = true, drawnBackground = null;
 
   const nuValues = [0.001, 0.002, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.2];
   function nuFromSlider() { return nuValues[parseInt(document.getElementById('stretchNu').value, 10)]; }
@@ -23426,25 +23464,68 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
 
   function reset() {
     nu = nuFromSlider();
-    main = makeRun();
-    half = halfOn ? makeRun() : null;
+    generation++; needsInit = true; pending = null; localSteps = -1; steps = 0; dirty = true;
     hist = []; histHalf = []; done = false; lastBudget = null;
     stats = newStats(); statsHalf = halfOn ? newStats() : null;
-    const m = main.measure(field);
-    colorMax = m.wmax || 1;
-    swirl0 = m.wmax || 1; swirlNow = 1; swirlHi = 1; budgetHi = 0; budgetNoHeatHi = 0;
-    hist.push(m); track(stats, m, 0);
-    if (half) { const h = half.measure(); histHalf.push(h); track(statsHalf, h, 0); }
+    field = theta = null;
+    swirl0 = swirlNow = swirlHi = 1; budgetHi = budgetNoHeatHi = 0;
+    document.getElementById('stretchPeak').textContent = 'Peak ratio: –';
+    document.getElementById('stretchSwirl').textContent = 'Peak swirl ÷ start: –';
   }
 
-  function advance() {
-    const dt = main.stableDt(0.5);
-    const before = hist[hist.length - 1];
-    main.step(dt);
-    const m = main.measure();
+  function startWorker() {
+    // A Blob also works in the downloadable single-file playground.
+    let url;
+    try {
+      const source = '(' + runStretchWorker.toString() + ')(' + createStretchStepper.toString() + ');';
+      url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+      worker = new Worker(url);
+      const release = () => { if (url) { URL.revokeObjectURL(url); url = null; } };
+      worker.onmessage = ({ data }) => {
+        release();
+        busy = false;
+        if (data.generation === generation) pending = data.state;
+      };
+      worker.onerror = event => {
+        event.preventDefault();
+        release(); worker.terminate(); worker = null; busy = false; localSteps = -1; needsInit = !hist.length;
+      };
+    } catch {
+      if (url) URL.revokeObjectURL(url);
+      worker = null;
+    }
+  }
+
+  function requestStep() {
+    if (worker === undefined) startWorker();
+    const settings = { scale, nu, hot: hotOn, halfOn };
+    if (worker) {
+      worker.postMessage({ generation, settings: needsInit ? settings : null });
+      busy = true;
+    } else {
+      // If workers are unavailable, advance once per frame. After a worker failure
+      // replay the accepted steps before appending to the visible history.
+      if (!localNext) localNext = createStretchStepper();
+      const state = localNext(localSteps < 0 ? settings : null);
+      localSteps = state.steps;
+      if (!hist.length || state.steps > steps) pending = state;
+    }
+    needsInit = false;
+  }
+
+  function accept(state) {
+    const { metric: m, halfMetric, dt } = state, before = hist[hist.length - 1];
+    field = state.field; theta = state.theta; steps = state.steps; dirty = true;
+    if (!imgData) {
+      N = Math.sqrt(field.length);
+      img.width = img.height = heatImg.width = heatImg.height = N;
+      imgData = ictx.createImageData(N, N);
+      heatData = hctx.createImageData(N, N);
+    }
     hist.push(m); track(stats, m, dt);
-    lastBudget = { measured: (m.P - before.P) / dt, predicted: (m.prod - m.diss) + (before.prod - before.diss) };
-    {
+    if (halfMetric) { histHalf.push(halfMetric); track(statsHalf, halfMetric, dt); }
+    if (before) {
+      lastBudget = { measured: (m.P - before.P) / dt, predicted: (m.prod - m.diss) + (before.prod - before.diss) };
       const e = Math.abs(lastBudget.measured - lastBudget.predicted) / Math.max(Math.abs(lastBudget.predicted), 1e-12);
       if (e > budgetHi) budgetHi = e;
       if (m.prodHeat !== undefined) {   // the same check without the hot/cold term, to show it is needed
@@ -23454,13 +23535,10 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
       }
       swirlNow = m.wmax / swirl0;
       if (swirlNow > swirlHi) swirlHi = swirlNow;
+    } else {
+      colorMax = swirl0 = m.wmax || 1;
     }
-    if (half) {
-      half.step(dt / 2); half.step(dt / 2);
-      const h = half.measure();
-      histHalf.push(h); track(statsHalf, h, dt);
-    }
-    if (main.t >= tEnd) done = true;
+    done = m.t >= tEnd;
   }
 
   document.querySelectorAll('#tab-stretch [data-scale]').forEach(btn => {
@@ -23490,7 +23568,7 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
   // read-only status, for checking the numbers from outside
   window.stretchStatus = () => {
     const cur = hist[hist.length - 1] || {};
-    return { hot: hotOn, t: cur.t, swirlNow, swirlHi, budgetHi, budgetNoHeatHi, lastBudget, prod: cur.prod, prodHeat: cur.prodHeat, diss: cur.diss, done, steps: main ? main.steps : 0 };
+    return { hot: hotOn, t: cur.t, swirlNow, swirlHi, budgetHi, budgetNoHeatHi, lastBudget, prod: cur.prod, prodHeat: cur.prodHeat, diss: cur.diss, done, steps };
   };
   const nuSlider = document.getElementById('stretchNu');
   nuSlider.addEventListener('input', () => { document.getElementById('stretchNuVal').textContent = nuFromSlider().toFixed(3); });
@@ -23499,7 +23577,8 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
   tSlider.addEventListener('input', () => {
     tEnd = parseFloat(tSlider.value);
     document.getElementById('stretchTEndVal').textContent = tEnd.toFixed(1);
-    if (main && main.t < tEnd) done = false;
+    done = hist.length > 0 && hist[hist.length - 1].t >= tEnd;
+    dirty = true;
   });
 
   function drawField(x0, y0, size) {
@@ -23529,10 +23608,10 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
 
   // warm glow where the hot fluid is (θ > 0), drawn over the vorticity picture
   const heatImg = document.createElement('canvas');
-  heatImg.width = N; heatImg.height = N;
-  const hctx = heatImg.getContext('2d'), heatData = hctx.createImageData(N, N);
+  const hctx = heatImg.getContext('2d');
+  let heatData;
   function drawHeat(x0, y0, size) {
-    const d = heatData.data, th = main.theta;
+    const d = heatData.data, th = theta;
     let top = 1e-9; for (let n = 0; n < N * N; n++) if (th[n] > top) top = th[n];   // scaled to the hottest spot now
     for (let n = 0; n < N * N; n++) {
       const v = Math.max(0, Math.min(1, th[n] / top));
@@ -23586,29 +23665,29 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
   }
 
   function render() {
+    requestAnimationFrame(render);
     if (mode === 'stretch') {
-      if (!main) reset();
-      if (running && !done) {
-        const t0 = performance.now();
-        let n = 0;
-        while (!done && (n < 1 || performance.now() - t0 < 28)) { advance(); n++; }
-        main.measure(field);
-      }
-      ctx.fillStyle = typeof bgPanel === 'function' ? bgPanel('#07090e', true) : '#07090e';
+      if (!generation) reset();
+      if (pending && (!hist.length || (running && !done))) { accept(pending); pending = null; }
+      if (!busy && !pending && (needsInit || (running && !done))) requestStep();
+      const background = typeof bgPanel === 'function' ? bgPanel('#07090e', true) : '#07090e';
+      if (!dirty && drawnBackground === background) return;
+      dirty = false; drawnBackground = background; ctx.fillStyle = background;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (!field) { ctx.fillStyle = '#aebccc'; ctx.font = '14px sans-serif'; ctx.fillText('Preparing vortex field…', 20, 40); return; }
       drawField(20, 40, 420);
-      if (hotOn && main.theta) drawHeat(20, 40, 420);
+      if (theta) drawHeat(20, 40, 420);
 
       const px = 470, pw = 470, ph = 132;
       const series = [{ data: hist.map(m => [m.t, m.ratio]), color: '#7ee787' }];
-      if (half) series.push({ data: histHalf.map(m => [m.t, m.ratio]), color: '#ff7b72', width: 1.5 });
-      plot(px, 30, pw, ph, 'ratio = production / dissipation' + (half ? '   (green dt, pink dt/2)' : ''), series, { refLine: 1, zero: true });
+      if (halfOn) series.push({ data: histHalf.map(m => [m.t, m.ratio]), color: '#ff7b72', width: 1.5 });
+      plot(px, 30, pw, ph, 'ratio = production / dissipation' + (halfOn ? '   (green dt, pink dt/2)' : ''), series, { refLine: 1, zero: true });
       plot(px, 30 + ph + 22, pw, ph, 'P = Σ|∇ω|² (log scale)', [{ data: hist.map(m => [m.t, m.P]), color: '#79c0ff' }], { log: true });
       plot(px, 30 + 2 * (ph + 22), pw, ph, 'width = √(Σω² / Σ|∇ω|²)', [{ data: hist.map(m => [m.t, m.width]), color: '#f5d08a' }], {});
 
       const cur = hist[hist.length - 1];
       ctx.fillStyle = '#8b949e'; ctx.font = '12px sans-serif';
-      let line = `×${scale}   ν = ${nu.toPrecision(2)}   t = ${cur.t.toFixed(3)} / ${tEnd.toFixed(1)}   steps = ${main.steps}`;
+      let line = `×${scale}   ν = ${nu.toPrecision(2)}   t = ${cur.t.toFixed(3)} / ${tEnd.toFixed(1)}   steps = ${steps}`;
       if (lastBudget) {
         const rel = Math.abs(lastBudget.measured - lastBudget.predicted) / Math.max(Math.abs(lastBudget.predicted), 1e-12);
         line += `   budget: dP/dt ${lastBudget.measured.toExponential(3)} vs 2(prod−diss) ${lastBudget.predicted.toExponential(3)} (${(rel * 100).toFixed(2)}%)`;
@@ -23621,7 +23700,6 @@ const STC_HINT = 'Two opposite vortex patches side by side on a periodic square.
       document.getElementById('stretchSwirl').textContent =
         `Peak swirl ÷ start: ${swirlNow.toFixed(3)} (highest ${swirlHi.toFixed(3)})`;
     }
-    requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
 })();
@@ -23648,12 +23726,13 @@ const PAGE_TABS = ['sum', 'ringsum', 'zeros', 'pendulum', 'trilogy', 'blackhole'
 const PAGE_SHIM = '<script>(function(){' +
   'var active=true,pausedAt=0,offset=0,q=[],pn=performance.now.bind(performance),raf=window.requestAnimationFrame.bind(window);' +
   'performance.now=function(){return (active?pn():pausedAt)-offset;};' +
-  'window.requestAnimationFrame=function(cb){if(active)return raf(function(t){cb(t-offset);});q.push(cb);return 0;};' +
+  'function frame(cb){return raf(function(t){if(active)cb(t-offset);else q.push(cb);});}' +
+  'window.requestAnimationFrame=function(cb){if(active)return frame(cb);q.push(cb);return 0;};' +
   'var si=window.setInterval.bind(window);window.setInterval=function(f,ms){var a=[].slice.call(arguments,2);return si(function(){if(active)f.apply(null,a);},ms);};' +
   'var ctxs=[],AC=window.AudioContext||window.webkitAudioContext;' +
   'if(AC){var Wrap=function(o){var c=o===undefined?new AC():new AC(o);ctxs.push(c);return c;};Wrap.prototype=AC.prototype;window.AudioContext=Wrap;window.webkitAudioContext=Wrap;}' +
   'window.__tabPause=function(){if(!active)return;active=false;pausedAt=pn();ctxs.forEach(function(c){c.__was=c.state==="running";if(c.__was)c.suspend();});};' +
-  'window.__tabResume=function(){if(active)return;offset+=pn()-pausedAt;active=true;var w=q;q=[];w.forEach(function(cb){raf(function(t){cb(t-offset);});});ctxs.forEach(function(c){if(c.__was)c.resume();});};' +
+  'window.__tabResume=function(){if(active)return;offset+=pn()-pausedAt;active=true;var w=q;q=[];w.forEach(frame);ctxs.forEach(function(c){if(c.__was)c.resume();});};' +
   '})();<\/script>';
 // Left-panel layout for her frames whose controls sit in a bottom bar: an additive stylesheet,
 // put in by the small helper below before her page loads (desktop widths only; her files are unchanged).
@@ -24194,7 +24273,7 @@ loop();
       name: 'Super Black Grain',
       also: '',
       blurb: 'Absorbs 99.965% of light, based on published measurements of Surrey NanoSystems\' super-black coating (<a href="https://www.vantablack.co.uk/our-story" target="_blank" rel="noopener">Surrey NanoSystems</a>). That is a reflectance of 0.035%, which encodes as sRGB #010101. The grains are drawn at that value, with a faint edge so they stay visible on this page\'s ground. The page shows a drawing based on that number, not the real material.',
-      lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean also proves that each color channel is at most 17 out of 255.',
+      lean: 'Once on the grid, a grain keeps its material and stays at or below its starting row. Lean bounds the earlier color formula at 17 per channel. The current drawing uses RGB (1, 1, 1) inside a pile and RGB (50, 58, 74) on exposed edges.',
       leanHref: 'https://github.com/NousVolition/discrete-gap-inequalities-lean/blob/cb7c8ef9fb7153b01fcfbec3d78b736fcd95f72d/LightBounceAndCapture.lean#L238',
       leanLabel: 'Grain motion in Lean',
       colors: ['#010101'],
@@ -24529,6 +24608,12 @@ loop();
     #controls .mm-custom { width:28px; height:22px; border:0; padding:0; background:none; cursor:pointer; }
     #controls .mm-lean { width:100%; font-size:12px; line-height:1.4; opacity:0.9; }
     #controls .mm-lean a { color:#7dd3fc; }
+    #controls .mm-contrast { width:100%; font-size:13px; }
+    #controls .mm-contrast summary { cursor:pointer; }
+    #controls .mm-contrast label { display:block; margin-top:8px; }
+    #controls .mm-contrast select { max-width:100%; }
+    #controls .mm-contrast img { display:block; max-width:100%; height:auto; margin:8px 0; image-rendering:pixelated; }
+    #controls .mm-contrast p { margin:6px 0; }
     #controls .mm-blue { width:100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
     #controls .mm-blue input[type=range] { flex:1; min-width:120px; }
     #controls .mm-readout, #mmStage .mm-fluor {
@@ -25495,6 +25580,26 @@ loop();
     } else if (mat.key === 'ferro') {
       colsRow.title = 'Dyed ferrofluids, a real-world option';
     }
+    if (mat.key === 'super-black-grain') {
+      const chart = document.createElement('details');
+      chart.className = 'mm-contrast';
+      chart.innerHTML = '<summary>Compare navy backgrounds</summary>' +
+        '<label>Chart background <select><option value="#283044" data-ratio="1.15:1">Lighter navy (#283044)</option>' +
+        '<option value="#1C2230" data-ratio="1.39:1">Welcome Navy (#1C2230)</option></select></label>' +
+        '<img src="guides/super-black-grain-pile.png" alt="A stair-stepped blue-gray edge around a nearly black grain pile." width="385" height="204">' +
+        '<p><output aria-live="polite"></output> The default Tab 34 canvas measures 1.65:1 at 50% blue light.</p>' +
+        '<a href="guides/welcome-navy-color-chart.pdf#page=6" target="_blank" rel="noopener">Open the full color chart (PDF, page 6)</a>';
+      const background = chart.querySelector('select');
+      const picture = chart.querySelector('img');
+      const ratio = chart.querySelector('output');
+      const updatePreview = () => {
+        picture.style.backgroundColor = background.value;
+        ratio.textContent = 'Outline contrast ' + background.selectedOptions[0].dataset.ratio + '.';
+      };
+      background.addEventListener('change', updatePreview);
+      updatePreview();
+      box.appendChild(chart);
+    }
     const pats = addRow('Pattern');
     PATTERNS.forEach(p => {
       const b = document.createElement('button');
@@ -26337,13 +26442,14 @@ loop();
   };
 })();
 // ========== FLASH CAUTION ==========
-// Entries whose recorded frames showed fast blinking or whole-screen pulsing start paused, with a small note and a
-// Play button. Her pages stay unedited: the frame's own pause helper holds them before their first animation frame.
-// Pressing Play is remembered for this browser session only; with reduced motion turned on they always start paused.
+// Pendulum blinks, Fireflies pulses, and bright particles repeatedly cross the same part of Disk v2.
+// The frame's pause helper holds each animation until Play. The browser remembers Play during this
+// session. With reduced motion enabled, reloading the playground asks for Play again.
 (function flashGuard() {
   const FLASHY = {
     pendulum: 'Heads up: this one has a small spot that blinks fast. Press Play when ready.',
-    fireflies: 'Heads up: this one has pulsing, flashing lights. Press Play when ready.'
+    fireflies: 'Heads up: this one has pulsing, flashing lights. Press Play when ready.',
+    bh3: 'Bright particles flicker around this disk. Press Play when ready.'
   };
   const reduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const okKey = k => 'sparkle.flash.ok.' + k;
@@ -26588,6 +26694,7 @@ loop();
   function current() { const a = document.querySelector('.tabs .tab.active'); return a ? a.dataset.mode : order[0]; }
   function sync() {
     const k = current(), b = byKey[faceOf(k)] || byKey[k];
+    document.getElementById('color-motion-guide').hash = k;
     cur.textContent = num(b) + '. ' + name(b);
     menuBtn.title = 'Choose a playground (now: ' + num(b) + '. ' + name(b) + ')';
     opts.forEach(o => o.setAttribute('aria-selected', o.dataset.pick === faceOf(k) ? 'true' : 'false'));

@@ -1,0 +1,5062 @@
+{
+  "classification": "YOURS ALONE",
+  "existingProjectEvidence": "OLD IN THE PROJECT",
+  "browser": "157.0.8103.52",
+  "baselineCommit": "6110e99",
+  "updatedIndexNormalizedLF_SHA256": "652fad360698153072c81541cc9416fb5d1788387baa3d879aae7adf8b319e5b",
+  "unchangedSolverCoreNormalizedLF_SHA256": "b3da622c52df86130b365a85356f0d141057ef67d779e38d6944aabc4ceec64c",
+  "measurementsOn": "2026-11-21",
+  "method": {
+    "opening": "Four seconds from each opening scene, using a fresh browser context and the 35 numbered tab routes. Guarded views were played for the survey. Initial rendering, specific secondary modes, custom palettes and arbitrary interactions can differ.",
+    "screen": "All 35 scans at 1024 × 768 cover visible canvases sampled on a four-CSS-pixel grid. The scan uses fixed positions at 60 callbacks per modeled second. Stretch runs on its own native clock. The phone screen uses 390 × 844. Primary simulations use the same seeded random generator for controlled comparisons.",
+    "recurringFineDetail": "For a sampled point, accumulate rises and falls of at least 0.10 in linear relative luminance with the darker state below 0.80. Pair alternating changes into nonoverlapping cycles. Mark a point when a rolling second contains four completed cycles. Slide an approximately 341 × 256 CSS-pixel window over the screen and record its highest percentage of marked points. Different points can qualify at different times. This is a repeat footprint, not simultaneous flash area.",
+    "spatialAverage": "Apply the same rise/fall detector to mean luminance in fixed 32 × 32 CSS-pixel blocks. Report blocks with two or more full cycles in the entire four-second run. This catches slower broad pulsing that may never reach four cycles in a second.",
+    "red": "Also screen adjacent sampled frames for alternating transitions involving saturated red and a chromaticity difference above 0.2 in CIE u′v′. Screened defaults produced no four-cycle red footprint. The screen covers a subset of possible red transitions.",
+    "visiblePage": "The seven desktop and six phone follow-ups use composited Chrome screenshots, including text and overlapping controls. They sample at 30 fps while the simulation advances at 60 callbacks/s. Three desktop follow-ups also use 60 screenshots/s. Disk v2 was repeated on a phone with its controls hidden. The per-tab 60 fps canvas screen can include canvas pixels under a panel.",
+    "scope": "These are project-specific design checks. They cover one browser and short opening states. The measured footprint and broad-pulse measures do not establish WCAG conformance or a medical safety classification.",
+    "reference": "https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html"
+  },
+  "repairs": {
+    "browser": "157.0.8103.52",
+    "ring": {
+      "samples": [
+        {
+          "version": "before",
+          "hz": 30,
+          "deltaPhase": 1.0500000000000005
+        },
+        {
+          "version": "before",
+          "hz": 60,
+          "deltaPhase": 2.0999999999999988
+        },
+        {
+          "version": "before",
+          "hz": 120,
+          "deltaPhase": 4.200000000000007
+        },
+        {
+          "version": "before",
+          "hz": "irregular",
+          "deltaPhase": 1.3999999999999997
+        },
+        {
+          "version": "after",
+          "hz": 30,
+          "deltaPhase": 2.099999999999995
+        },
+        {
+          "version": "after",
+          "hz": 60,
+          "deltaPhase": 2.1000000000000085
+        },
+        {
+          "version": "after",
+          "hz": 120,
+          "deltaPhase": 2.099999999999981
+        },
+        {
+          "version": "after",
+          "hz": "irregular",
+          "deltaPhase": 2.1
+        }
+      ],
+      "hiddenSeconds": 3,
+      "resumedOneSecond": 2.100000000000036
+    },
+    "crystal": {
+      "before": {
+        "cells": 97,
+        "sameCells": true,
+        "firstRepaint": 4357,
+        "secondRepaint": 4405,
+        "differentTint": 5234,
+        "restoredTint": 4500
+      },
+      "after": {
+        "cells": 97,
+        "sameCells": true,
+        "firstRepaint": 0,
+        "secondRepaint": 0,
+        "differentTint": 5234,
+        "restoredTint": 0
+      }
+    },
+    "stretch": {
+      "plain": {
+        "before": {
+          "status": {
+            "hot": false,
+            "t": 0.20146226024988975,
+            "swirlNow": 0.8492345156503902,
+            "swirlHi": 1,
+            "budgetHi": 0.0010336437278229478,
+            "budgetNoHeatHi": 0,
+            "lastBudget": {
+              "measured": -47804.74555648226,
+              "predicted": -47803.7747280432
+            },
+            "prod": 3486.325992761824,
+            "diss": 27396.721851951017,
+            "done": true,
+            "steps": 142
+          },
+          "peak": "Peak ratio: 0.939 at t = 0.057  ·  Time above 1: 0.000",
+          "swirl": "Peak swirl ÷ start: 0.849 (highest 1.000)",
+          "fieldSHA256": "274fab7fbdda6f533dc8c372bd812b296ed87b569256bfe1ca3395f6d074451a"
+        },
+        "after": {
+          "status": {
+            "hot": false,
+            "t": 0.20146226024988975,
+            "swirlNow": 0.8492345156503902,
+            "swirlHi": 1,
+            "budgetHi": 0.0010336437278229478,
+            "budgetNoHeatHi": 0,
+            "lastBudget": {
+              "measured": -47804.74555648226,
+              "predicted": -47803.7747280432
+            },
+            "prod": 3486.325992761824,
+            "diss": 27396.721851951017,
+            "done": true,
+            "steps": 142
+          },
+          "peak": "Peak ratio: 0.939 at t = 0.057  ·  Time above 1: 0.000",
+          "swirl": "Peak swirl ÷ start: 0.849 (highest 1.000)",
+          "fieldSHA256": "274fab7fbdda6f533dc8c372bd812b296ed87b569256bfe1ca3395f6d074451a"
+        }
+      },
+      "half": {
+        "before": {
+          "status": {
+            "hot": false,
+            "t": 0.20146226024988975,
+            "swirlNow": 0.8492345156503902,
+            "swirlHi": 1,
+            "budgetHi": 0.0010336437278229478,
+            "budgetNoHeatHi": 0,
+            "lastBudget": {
+              "measured": -47804.74555648226,
+              "predicted": -47803.7747280432
+            },
+            "prod": 3486.325992761824,
+            "diss": 27396.721851951017,
+            "done": true,
+            "steps": 142
+          },
+          "peak": "Peak ratio: 0.939 at t = 0.057  ·  Time above 1: 0.000  |  dt/2: 0.939, above 1: 0.000",
+          "swirl": "Peak swirl ÷ start: 0.849 (highest 1.000)",
+          "fieldSHA256": "274fab7fbdda6f533dc8c372bd812b296ed87b569256bfe1ca3395f6d074451a"
+        },
+        "after": {
+          "status": {
+            "hot": false,
+            "t": 0.20146226024988975,
+            "swirlNow": 0.8492345156503902,
+            "swirlHi": 1,
+            "budgetHi": 0.0010336437278229478,
+            "budgetNoHeatHi": 0,
+            "lastBudget": {
+              "measured": -47804.74555648226,
+              "predicted": -47803.7747280432
+            },
+            "prod": 3486.325992761824,
+            "diss": 27396.721851951017,
+            "done": true,
+            "steps": 142
+          },
+          "peak": "Peak ratio: 0.939 at t = 0.057  ·  Time above 1: 0.000  |  dt/2: 0.939, above 1: 0.000",
+          "swirl": "Peak swirl ÷ start: 0.849 (highest 1.000)",
+          "fieldSHA256": "274fab7fbdda6f533dc8c372bd812b296ed87b569256bfe1ca3395f6d074451a"
+        }
+      },
+      "hot": {
+        "before": {
+          "status": {
+            "hot": true,
+            "t": 0.2007754208467226,
+            "swirlNow": 1.2510519397388604,
+            "swirlHi": 1.2707070201638766,
+            "budgetHi": 0.0005799455048004157,
+            "budgetNoHeatHi": 9.264979490788338,
+            "lastBudget": {
+              "measured": 576526.0267477783,
+              "predicted": 576523.1944914865
+            },
+            "prod": 3322082.5150156603,
+            "prodHeat": 2665759.8314639367,
+            "diss": 3040776.555869707,
+            "done": true,
+            "steps": 174
+          },
+          "peak": "Peak ratio: 7.335 at t = 0.005  ·  Time above 1: 0.201",
+          "swirl": "Peak swirl ÷ start: 1.251 (highest 1.271)",
+          "fieldSHA256": "c3b141fed8a19d8bb8a0abee34752ba549ce51205190357363ecad29fb42baee"
+        },
+        "after": {
+          "status": {
+            "hot": true,
+            "t": 0.2007754208467226,
+            "swirlNow": 1.2510519397388604,
+            "swirlHi": 1.2707070201638766,
+            "budgetHi": 0.0005799455048004157,
+            "budgetNoHeatHi": 9.264979490788338,
+            "lastBudget": {
+              "measured": 576526.0267477783,
+              "predicted": 576523.1944914865
+            },
+            "prod": 3322082.5150156603,
+            "prodHeat": 2665759.8314639367,
+            "diss": 3040776.555869707,
+            "done": true,
+            "steps": 174
+          },
+          "peak": "Peak ratio: 7.335 at t = 0.005  ·  Time above 1: 0.201",
+          "swirl": "Peak swirl ÷ start: 1.251 (highest 1.271)",
+          "fieldSHA256": "c3b141fed8a19d8bb8a0abee34752ba549ce51205190357363ecad29fb42baee"
+        }
+      },
+      "hotHalf": {
+        "before": {
+          "status": {
+            "hot": true,
+            "t": 0.2007754208467226,
+            "swirlNow": 1.2510519397388604,
+            "swirlHi": 1.2707070201638766,
+            "budgetHi": 0.0005799455048004157,
+            "budgetNoHeatHi": 9.264979490788338,
+            "lastBudget": {
+              "measured": 576526.0267477783,
+              "predicted": 576523.1944914865
+            },
+            "prod": 3322082.5150156603,
+            "prodHeat": 2665759.8314639367,
+            "diss": 3040776.555869707,
+            "done": true,
+            "steps": 174
+          },
+          "peak": "Peak ratio: 7.335 at t = 0.005  ·  Time above 1: 0.201  |  dt/2: 7.335, above 1: 0.201",
+          "swirl": "Peak swirl ÷ start: 1.251 (highest 1.271)",
+          "fieldSHA256": "c3b141fed8a19d8bb8a0abee34752ba549ce51205190357363ecad29fb42baee"
+        },
+        "after": {
+          "status": {
+            "hot": true,
+            "t": 0.2007754208467226,
+            "swirlNow": 1.2510519397388604,
+            "swirlHi": 1.2707070201638766,
+            "budgetHi": 0.0005799455048004157,
+            "budgetNoHeatHi": 9.264979490788338,
+            "lastBudget": {
+              "measured": 576526.0267477783,
+              "predicted": 576523.1944914865
+            },
+            "prod": 3322082.5150156603,
+            "prodHeat": 2665759.8314639367,
+            "diss": 3040776.555869707,
+            "done": true,
+            "steps": 174
+          },
+          "peak": "Peak ratio: 7.335 at t = 0.005  ·  Time above 1: 0.201  |  dt/2: 7.335, above 1: 0.201",
+          "swirl": "Peak swirl ÷ start: 1.251 (highest 1.271)",
+          "fieldSHA256": "c3b141fed8a19d8bb8a0abee34752ba549ce51205190357363ecad29fb42baee"
+        }
+      }
+    },
+    "fallbackExact": true,
+    "midRunRecoveryExact": true,
+    "controls": {
+      "pauseHeld": true,
+      "resetWhilePaused": true,
+      "hiddenHeld": true,
+      "resumeAdvanced": true,
+      "viscosityReset": true
+    }
+  },
+  "frameTiming": {
+    "browser": "157.0.8103.52",
+    "pools": {
+      "before": {
+        "median": 45.9,
+        "p95": 54.5
+      },
+      "after": {
+        "median": 4.2,
+        "p95": 4.3
+      }
+    },
+    "rows": [
+      {
+        "version": "before",
+        "begin": 30,
+        "end": 216,
+        "active": [
+          45.9,
+          41.8,
+          41.6,
+          46,
+          41.6,
+          41.7,
+          45.9,
+          41.7,
+          41.8,
+          45.9,
+          41.7,
+          41.7,
+          45.8,
+          41.6,
+          41.8,
+          46,
+          41.6,
+          41.7,
+          41.7,
+          41.7,
+          41.7,
+          41.8,
+          45.9,
+          45.8,
+          41.8,
+          45.8,
+          41.7,
+          41.7,
+          41.7,
+          41.8,
+          41.7,
+          45.9,
+          41.7,
+          41.6,
+          45.9,
+          41.7,
+          41.7,
+          45.9,
+          41.7,
+          45.9,
+          41.7,
+          41.8,
+          41.6,
+          41.7,
+          46,
+          41.6,
+          41.8,
+          45.8,
+          41.7,
+          41.7,
+          45.9,
+          41.7,
+          41.7,
+          45.9,
+          41.7,
+          45.9,
+          41.7,
+          41.7,
+          45.9,
+          41.6,
+          50.1,
+          46,
+          50,
+          50,
+          50.1,
+          45.9,
+          41.7,
+          45.8,
+          41.8,
+          45.8,
+          45.9,
+          41.7,
+          50.1,
+          41.7,
+          45.8,
+          41.8,
+          45.9,
+          41.6,
+          46,
+          45.8,
+          45.9,
+          45.9,
+          45.9,
+          45.9,
+          45.8,
+          41.7,
+          50.1,
+          41.7,
+          41.7,
+          50.2
+        ],
+        "paused": [
+          8.4,
+          8.4,
+          8.3,
+          12.5,
+          8.3,
+          8.4,
+          8.3,
+          8.3,
+          4.2,
+          8.4,
+          8.3,
+          12.5,
+          8.4,
+          8.3,
+          8.5,
+          8.2,
+          8.3,
+          8.4,
+          8.3,
+          8.4,
+          8.3,
+          8.4,
+          4.1,
+          12.6,
+          8.3,
+          4.2,
+          8.3,
+          8.4,
+          8.3,
+          8.3,
+          8.4,
+          8.2,
+          8.4,
+          8.4,
+          8.3,
+          8.4,
+          8.4,
+          8.2,
+          8.5,
+          8.3,
+          8.3,
+          8.4,
+          8.2,
+          8.4,
+          8.3,
+          8.4,
+          8.3,
+          8.5,
+          8.2,
+          8.3,
+          8.4,
+          4.2,
+          12.4,
+          8.5,
+          8.4,
+          8.2,
+          8.3,
+          8.3,
+          8.4,
+          8.5
+        ],
+        "activeStats": {
+          "median": 41.8,
+          "p95": 50.1
+        },
+        "pausedStats": {
+          "median": 8.3,
+          "p95": 12.4
+        }
+      },
+      {
+        "version": "after",
+        "begin": 5,
+        "end": 29,
+        "active": [
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          8.4,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          8.3,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4,
+          4.2,
+          4.3,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          8.4,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4.1,
+          4.2,
+          4,
+          4.3,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2
+        ],
+        "paused": [
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2
+        ],
+        "activeStats": {
+          "median": 4.2,
+          "p95": 4.3
+        },
+        "pausedStats": {
+          "median": 4.2,
+          "p95": 4.3
+        }
+      },
+      {
+        "version": "after",
+        "begin": 6,
+        "end": 30,
+        "active": [
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.3,
+          8.4,
+          4.1,
+          4.1,
+          8.4,
+          4.2,
+          4.1,
+          8.4,
+          4.1,
+          4.2,
+          8.4,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4.2,
+          4,
+          4.2,
+          4.2,
+          4.2,
+          8.3,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.3,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1
+        ],
+        "paused": [
+          4.1,
+          4.3,
+          4,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.3,
+          4,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1
+        ],
+        "activeStats": {
+          "median": 4.2,
+          "p95": 8.3
+        },
+        "pausedStats": {
+          "median": 4.2,
+          "p95": 4.3
+        }
+      },
+      {
+        "version": "before",
+        "begin": 58,
+        "end": 243,
+        "active": [
+          45.9,
+          45.9,
+          45.9,
+          50.1,
+          66.7,
+          54.2,
+          54.2,
+          41.7,
+          45.8,
+          50.2,
+          45.9,
+          45.8,
+          45.8,
+          45.9,
+          45.9,
+          45.9,
+          46,
+          45.8,
+          41.7,
+          45.8,
+          45.9,
+          45.8,
+          45.9,
+          41.8,
+          50,
+          45.9,
+          45.9,
+          45.9,
+          45.9,
+          41.6,
+          50.1,
+          45.9,
+          45.9,
+          50,
+          54.2,
+          54.3,
+          41.7,
+          45.8,
+          45.9,
+          50.1,
+          50,
+          46,
+          45.8,
+          45.9,
+          50,
+          45.9,
+          45.9,
+          50.1,
+          50,
+          45.9,
+          45.9,
+          50,
+          41.7,
+          50.1,
+          66.7,
+          45.9,
+          62.6,
+          66.7,
+          75.1,
+          54.1,
+          50.1,
+          50.1,
+          58.4,
+          45.9,
+          45.8,
+          54.5,
+          54,
+          62.6,
+          62.5,
+          62.6,
+          54.2,
+          50.1,
+          50,
+          45.8,
+          46,
+          49.9,
+          46,
+          45.8,
+          45.9,
+          45.9,
+          41.7,
+          45.9,
+          45.9,
+          45.9,
+          45.8,
+          45.8,
+          41.9,
+          50,
+          45.8,
+          45.9
+        ],
+        "paused": [
+          8.2,
+          8.3,
+          8.5,
+          8.3,
+          8.3,
+          8.4,
+          4.2,
+          8.3,
+          8.4,
+          8.3,
+          8.3,
+          8.4,
+          8.3,
+          4.2,
+          8.4,
+          8.2,
+          12.5,
+          4.3,
+          8.2,
+          8.4,
+          8.3,
+          8.6,
+          8.2,
+          8.3,
+          4.2,
+          8.3,
+          8.3,
+          8.4,
+          8.4,
+          8.3,
+          8.3,
+          8.4,
+          8.3,
+          8.4,
+          8.3,
+          8.3,
+          8.4,
+          8.3,
+          8.3,
+          8.4,
+          8.2,
+          8.5,
+          8.4,
+          8.2,
+          8.3,
+          8.5,
+          8.3,
+          8.4,
+          8.3,
+          8.3,
+          8.4,
+          4.1,
+          12.5,
+          4.2,
+          8.3,
+          12.5,
+          8.4,
+          8.4,
+          4.1,
+          8.4
+        ],
+        "activeStats": {
+          "median": 45.9,
+          "p95": 62.6
+        },
+        "pausedStats": {
+          "median": 8.3,
+          "p95": 8.6
+        }
+      }
+    ]
+  },
+  "frameTimingRepeat": {
+    "browser": "157.0.8103.52",
+    "pools": {
+      "before": {
+        "median": 54.1,
+        "p95": 75.1
+      },
+      "after": {
+        "median": 4.2,
+        "p95": 4.4
+      }
+    },
+    "rows": [
+      {
+        "version": "before",
+        "begin": 26,
+        "end": 128,
+        "active": [
+          50.1,
+          50.1,
+          54.2,
+          45.8,
+          50.1,
+          50,
+          50.1,
+          50,
+          50.1,
+          66.7,
+          50.1,
+          50,
+          75.1,
+          50,
+          54.3,
+          50,
+          54.2,
+          50.1,
+          50.1,
+          58.3,
+          50,
+          54.3,
+          50,
+          54.3,
+          50.1,
+          49.9,
+          50.2,
+          54.1,
+          45.9,
+          54.3,
+          50,
+          54.2,
+          54.3,
+          50,
+          50,
+          50.1,
+          54.3,
+          45.8,
+          58.4,
+          50,
+          75.1,
+          54.2,
+          62.6,
+          54.2,
+          58.4,
+          50.1,
+          70.8,
+          54.2,
+          66.9,
+          70.8,
+          79.2,
+          50.1,
+          79.3,
+          54.1,
+          50.1,
+          50.1,
+          50.1,
+          54.1,
+          45.9,
+          54.2,
+          50.1,
+          54.2,
+          54.3,
+          54.2,
+          66.7,
+          54.3,
+          50,
+          50,
+          50,
+          54.4,
+          54.1,
+          54.3,
+          54.2,
+          50.1,
+          54.2,
+          50,
+          50,
+          50.2,
+          50,
+          45.8,
+          58.4,
+          50.1,
+          79.2,
+          54.2,
+          58.4,
+          62.6,
+          62.6,
+          83.3,
+          58.4,
+          50.2
+        ],
+        "paused": [
+          20.8,
+          16.7,
+          12.5,
+          21,
+          16.6,
+          12.5,
+          16.7,
+          12.5,
+          12.5,
+          16.7,
+          12.4,
+          16.7,
+          12.6,
+          16.8,
+          8.2,
+          20.9,
+          12.4,
+          12.6,
+          16.6,
+          12.6,
+          16.7,
+          12.5,
+          16.7,
+          16.6,
+          12.6,
+          16.6,
+          12.5,
+          12.6,
+          12.4,
+          16.7,
+          12.5,
+          12.7,
+          16.6,
+          16.6,
+          12.6,
+          16.6,
+          12.6,
+          16.6,
+          16.7,
+          12.6,
+          16.6,
+          12.4,
+          12.6,
+          16.7,
+          12.6,
+          16.6,
+          16.6,
+          12.6,
+          12.5,
+          16.7,
+          12.5,
+          16.7,
+          16.7,
+          12.5,
+          16.8,
+          12.4,
+          12.6,
+          16.7,
+          16.6,
+          12.5
+        ],
+        "activeStats": {
+          "median": 54.1,
+          "p95": 75.1
+        },
+        "pausedStats": {
+          "median": 14.6,
+          "p95": 16.8
+        }
+      },
+      {
+        "version": "after",
+        "begin": 2,
+        "end": 6,
+        "active": [
+          4.1,
+          4.2,
+          4,
+          4.4,
+          4.1,
+          4,
+          4.3,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4,
+          8.4,
+          4.2,
+          4.4,
+          3.9,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.4,
+          12.3,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.2,
+          12.5,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.3,
+          4,
+          4.1,
+          8.4,
+          4.2
+        ],
+        "paused": [
+          4.3,
+          4,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4.1,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.3,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2
+        ],
+        "activeStats": {
+          "median": 4.2,
+          "p95": 4.4
+        },
+        "pausedStats": {
+          "median": 4.2,
+          "p95": 4.3
+        }
+      },
+      {
+        "version": "after",
+        "begin": 4,
+        "end": 6,
+        "active": [
+          4.2,
+          8.4,
+          4.3,
+          8.2,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4,
+          4.3,
+          4.1,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.2,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.3,
+          4,
+          4.2,
+          4.3,
+          4,
+          4.3,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          8.4,
+          4.1,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.2
+        ],
+        "paused": [
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.2,
+          4.2,
+          4.1,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.3,
+          4.1,
+          4.2,
+          4.1,
+          4.2,
+          4.2,
+          4.1
+        ],
+        "activeStats": {
+          "median": 4.2,
+          "p95": 4.3
+        },
+        "pausedStats": {
+          "median": 4.2,
+          "p95": 4.3
+        }
+      },
+      {
+        "version": "before",
+        "begin": 31,
+        "end": 134,
+        "active": [
+          50,
+          71,
+          75.1,
+          50,
+          50,
+          46,
+          70.9,
+          54.2,
+          54.2,
+          50,
+          50.2,
+          50,
+          54.2,
+          50.1,
+          50,
+          50,
+          50.1,
+          108.4,
+          45.9,
+          66.7,
+          75.1,
+          54.2,
+          54.2,
+          50.1,
+          54.2,
+          54.2,
+          54.3,
+          54.3,
+          54.1,
+          50,
+          79.4,
+          79.2,
+          54.2,
+          54.1,
+          50.1,
+          75.1,
+          50,
+          50.1,
+          54.2,
+          50,
+          50.1,
+          54.3,
+          50,
+          54.3,
+          54.1,
+          50,
+          58.4,
+          58.4,
+          50.1,
+          54.3,
+          54.2,
+          120.9,
+          45.9,
+          54.2,
+          50.1,
+          54.2,
+          50,
+          50.1,
+          54.2,
+          50.2,
+          54.1,
+          54.2,
+          62.6,
+          50,
+          54.2,
+          50.1,
+          54.2,
+          50,
+          54.3,
+          54.2,
+          50.1,
+          50,
+          54.3,
+          75,
+          75.1,
+          50.1,
+          54.1,
+          50.1,
+          50.1,
+          75,
+          58.5,
+          49.9,
+          54.3,
+          45.9,
+          54.1,
+          54.3,
+          54.2,
+          54.2,
+          54.3,
+          50
+        ],
+        "paused": [
+          16.7,
+          12.5,
+          12.5,
+          16.7,
+          12.5,
+          16.7,
+          12.5,
+          12.5,
+          16.8,
+          12.4,
+          12.5,
+          16.7,
+          16.7,
+          12.5,
+          16.6,
+          12.6,
+          12.5,
+          12.5,
+          16.7,
+          12.5,
+          16.7,
+          12.5,
+          16.7,
+          16.7,
+          12.5,
+          12.5,
+          12.5,
+          16.7,
+          16.7,
+          12.5,
+          12.5,
+          12.5,
+          12.6,
+          54.1,
+          12.6,
+          12.4,
+          16.8,
+          16.6,
+          8.5,
+          16.6,
+          16.7,
+          12.5,
+          12.5,
+          12.5,
+          16.7,
+          12.5,
+          12.6,
+          16.6,
+          12.5,
+          12.5,
+          16.7,
+          12.5,
+          12.6,
+          16.7,
+          12.6,
+          16.5,
+          12.5,
+          16.8,
+          12.4,
+          16.7
+        ],
+        "activeStats": {
+          "median": 54.2,
+          "p95": 75.1
+        },
+        "pausedStats": {
+          "median": 12.6,
+          "p95": 16.8
+        }
+      }
+    ]
+  },
+  "guardEntryChecks": {
+    "bh3": {
+      "heldInitial120Callbacks": true,
+      "heldThreeUnplayedReentries": true,
+      "keyboardPlay": true,
+      "rememberedInSession": true
+    },
+    "pendulum": {
+      "heldInitial120Callbacks": true,
+      "heldThreeUnplayedReentries": true,
+      "keyboardPlay": true,
+      "rememberedInSession": true
+    },
+    "fireflies": {
+      "heldInitial120Callbacks": true,
+      "heldThreeUnplayedReentries": true,
+      "keyboardPlay": true,
+      "rememberedInSession": true
+    },
+    "groupedViewAndReducedMotionReload": true
+  },
+  "diskCanvasAfterPlay": {
+    "label": "bh3",
+    "seconds": 4,
+    "frames": 241,
+    "grid": [
+      256,
+      192
+    ],
+    "stride": 4,
+    "windowGrid": [
+      85,
+      64
+    ],
+    "canvasIds": [
+      "main",
+      "c"
+    ],
+    "general": {
+      "peakWindowPoints": 1139,
+      "peakWindowPercent": 20.9375,
+      "windowOrigin": [
+        324,
+        256
+      ],
+      "peakAtSeconds": 3.966666666666667,
+      "mostPersistentPoint": [
+        448,
+        468
+      ],
+      "framesAtMostPersistentPoint": 225,
+      "maxNonoverlappingCyclesAtOnePoint": 35,
+      "framesWithRepeatingPoints": 230,
+      "framesOverOnePercent": 220
+    },
+    "red": {
+      "peakWindowPoints": 0,
+      "peakWindowPercent": 0,
+      "windowOrigin": [
+        0,
+        0
+      ],
+      "peakAtSeconds": 0,
+      "mostPersistentPoint": [
+        0,
+        0
+      ],
+      "framesAtMostPersistentPoint": 0,
+      "maxNonoverlappingCyclesAtOnePoint": 0,
+      "framesWithRepeatingPoints": 0,
+      "framesOverOnePercent": 0
+    },
+    "spatialAverage": {
+      "blockCssPixels": 32,
+      "maxFullCyclesInRun": 0,
+      "blocksWithTwoCycles": 0
+    },
+    "compositedScreenshot": false
+  },
+  "detectorControls": {
+    "steady": {
+      "general": 0,
+      "red": 0,
+      "broadCycles": 0
+    },
+    "slow": {
+      "general": 0,
+      "red": 0,
+      "broadCycles": 8
+    },
+    "fast": {
+      "general": 100,
+      "red": 0,
+      "broadCycles": 20
+    },
+    "red": {
+      "general": 0,
+      "red": 100,
+      "broadCycles": 0
+    }
+  },
+  "phoneDiskWithControlsHidden": {
+    "label": "bh3-phone-30-s2",
+    "seconds": 4,
+    "frames": 121,
+    "grid": [
+      195,
+      422
+    ],
+    "stride": 2,
+    "windowGrid": [
+      171,
+      128
+    ],
+    "canvasIds": [
+      "main",
+      "c"
+    ],
+    "general": {
+      "peakWindowPoints": 1498,
+      "peakWindowPercent": 6.843932748538012,
+      "windowOrigin": [
+        28,
+        338
+      ],
+      "peakAtSeconds": 1.8666666666666667,
+      "mostPersistentPoint": [
+        200,
+        472
+      ],
+      "framesAtMostPersistentPoint": 100,
+      "maxNonoverlappingCyclesAtOnePoint": 21,
+      "framesWithRepeatingPoints": 112,
+      "framesOverOnePercent": 103
+    },
+    "red": {
+      "peakWindowPoints": 0,
+      "peakWindowPercent": 0,
+      "windowOrigin": [
+        0,
+        0
+      ],
+      "peakAtSeconds": 0,
+      "mostPersistentPoint": [
+        0,
+        0
+      ],
+      "framesAtMostPersistentPoint": 0,
+      "maxNonoverlappingCyclesAtOnePoint": 0,
+      "framesWithRepeatingPoints": 0,
+      "framesOverOnePercent": 0
+    },
+    "spatialAverage": {
+      "blockCssPixels": 32,
+      "maxFullCyclesInRun": 0,
+      "blocksWithTwoCycles": 0
+    },
+    "compositedScreenshot": true
+  },
+  "tabs": [
+    {
+      "num": 1,
+      "key": "sand",
+      "name": "Sand",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "sand",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "moldIcon",
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 2,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 2,
+      "key": "loop",
+      "name": "Loop",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "loop",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 4,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 3,
+      "key": "bubbles",
+      "name": "Bubbles",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "bubbles",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 2,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 4,
+      "key": "plate",
+      "name": "Plate",
+      "decision": "Watch fine detail",
+      "note": "Grains briefly sparkle as they gather onto the nodal lines.",
+      "modelScreen": {
+        "label": "plate",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 372,
+          "peakWindowPercent": 6.838235294117647,
+          "windowOrigin": [
+            612,
+            312
+          ],
+          "peakAtSeconds": 1.0166666666666666,
+          "mostPersistentPoint": [
+            948,
+            560
+          ],
+          "framesAtMostPersistentPoint": 108,
+          "maxNonoverlappingCyclesAtOnePoint": 14,
+          "framesWithRepeatingPoints": 224,
+          "framesOverOnePercent": 76
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": {
+        "label": "plate-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 170,
+          "peakWindowPercent": 3.125,
+          "windowOrigin": [
+            612,
+            332
+          ],
+          "peakAtSeconds": 1.0333333333333334,
+          "mostPersistentPoint": [
+            872,
+            148
+          ],
+          "framesAtMostPersistentPoint": 85,
+          "maxNonoverlappingCyclesAtOnePoint": 26,
+          "framesWithRepeatingPoints": 112,
+          "framesOverOnePercent": 30
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": {
+        "label": "plate",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 413,
+          "peakWindowPercent": 7.591911764705882,
+          "windowOrigin": [
+            612,
+            320
+          ],
+          "peakAtSeconds": 1.0166666666666666,
+          "mostPersistentPoint": [
+            872,
+            148
+          ],
+          "framesAtMostPersistentPoint": 174,
+          "maxNonoverlappingCyclesAtOnePoint": 47,
+          "framesWithRepeatingPoints": 232,
+          "framesOverOnePercent": 84
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visiblePhone30": {
+        "label": "plate-phone-30-s2",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          195,
+          422
+        ],
+        "stride": 2,
+        "windowGrid": [
+          171,
+          128
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 630,
+          "peakWindowPercent": 2.8782894736842106,
+          "windowOrigin": [
+            24,
+            468
+          ],
+          "peakAtSeconds": 1.0333333333333334,
+          "mostPersistentPoint": [
+            274,
+            720
+          ],
+          "framesAtMostPersistentPoint": 54,
+          "maxNonoverlappingCyclesAtOnePoint": 11,
+          "framesWithRepeatingPoints": 71,
+          "framesOverOnePercent": 22
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      }
+    },
+    {
+      "num": 5,
+      "key": "waves",
+      "name": "Waves",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "waves",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "hWave",
+          "vWave"
+        ],
+        "general": {
+          "peakWindowPoints": 63,
+          "peakWindowPercent": 1.1580882352941178,
+          "windowOrigin": [
+            656,
+            396
+          ],
+          "peakAtSeconds": 1.0166666666666666,
+          "mostPersistentPoint": [
+            768,
+            460
+          ],
+          "framesAtMostPersistentPoint": 57,
+          "maxNonoverlappingCyclesAtOnePoint": 7,
+          "framesWithRepeatingPoints": 103,
+          "framesOverOnePercent": 6
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 6,
+      "key": "silk",
+      "name": "Silk",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "silk",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 2,
+          "peakWindowPercent": 0.03676470588235294,
+          "windowOrigin": [
+            236,
+            484
+          ],
+          "peakAtSeconds": 3.1,
+          "mostPersistentPoint": [
+            344,
+            360
+          ],
+          "framesAtMostPersistentPoint": 19,
+          "maxNonoverlappingCyclesAtOnePoint": 7,
+          "framesWithRepeatingPoints": 31,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 7,
+      "key": "crystal",
+      "name": "Crystal",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "crystal",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 2,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 8,
+      "key": "magnets",
+      "name": "Magnets",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "magnets",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 2,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 9,
+      "key": "stretch",
+      "name": "Stretch",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "stretch",
+        "seconds": 4.004000000000008,
+        "frames": 480,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 32,
+          "peakWindowPercent": 0.5882352941176471,
+          "windowOrigin": [
+            388,
+            288
+          ],
+          "peakAtSeconds": 2.711100000000003,
+          "mostPersistentPoint": [
+            396,
+            540
+          ],
+          "framesAtMostPersistentPoint": 454,
+          "maxNonoverlappingCyclesAtOnePoint": 58,
+          "framesWithRepeatingPoints": 454,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 10,
+      "key": "ferro",
+      "name": "Ferro",
+      "decision": "Watch fine detail",
+      "note": "Swirl tracers and the fluid edge produced localized changes.",
+      "modelScreen": {
+        "label": "ferro",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "fs-simCanvas",
+          "fs-fitCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 403,
+          "peakWindowPercent": 7.408088235294118,
+          "windowOrigin": [
+            480,
+            324
+          ],
+          "peakAtSeconds": 1.3,
+          "mostPersistentPoint": [
+            732,
+            584
+          ],
+          "framesAtMostPersistentPoint": 116,
+          "maxNonoverlappingCyclesAtOnePoint": 14,
+          "framesWithRepeatingPoints": 226,
+          "framesOverOnePercent": 204
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": {
+        "label": "ferro-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "fs-simCanvas",
+          "fs-fitCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 20,
+          "peakWindowPercent": 0.36764705882352944,
+          "windowOrigin": [
+            240,
+            196
+          ],
+          "peakAtSeconds": 1.0333333333333334,
+          "mostPersistentPoint": [
+            544,
+            228
+          ],
+          "framesAtMostPersistentPoint": 109,
+          "maxNonoverlappingCyclesAtOnePoint": 38,
+          "framesWithRepeatingPoints": 109,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": null,
+      "visiblePhone30": {
+        "label": "ferro-phone-30-s2",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          195,
+          422
+        ],
+        "stride": 2,
+        "windowGrid": [
+          171,
+          128
+        ],
+        "canvasIds": [
+          "main",
+          "fs-simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 50,
+          "peakWindowPercent": 0.22843567251461988,
+          "windowOrigin": [
+            0,
+            576
+          ],
+          "peakAtSeconds": 1.3333333333333333,
+          "mostPersistentPoint": [
+            112,
+            764
+          ],
+          "framesAtMostPersistentPoint": 30,
+          "maxNonoverlappingCyclesAtOnePoint": 9,
+          "framesWithRepeatingPoints": 107,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      }
+    },
+    {
+      "num": 11,
+      "key": "sum",
+      "name": "−1/12",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "sum",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "space-chart"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 12,
+      "key": "ringsum",
+      "name": "Ring",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "ringsum",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "ring-canvas",
+          "bars-canvas",
+          "stair-canvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 4,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 13,
+      "key": "zeros",
+      "name": "Zeros",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "zeros",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 14,
+      "key": "pendulum",
+      "name": "Pendulum",
+      "decision": "Existing Play guard",
+      "note": "The measured opening animation repeatedly changed the average brightness of multiple 32 × 32 CSS-pixel patches.",
+      "modelScreen": {
+        "label": "pendulum",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 371,
+          "peakWindowPercent": 6.819852941176471,
+          "windowOrigin": [
+            620,
+            324
+          ],
+          "peakAtSeconds": 1.15,
+          "mostPersistentPoint": [
+            916,
+            452
+          ],
+          "framesAtMostPersistentPoint": 207,
+          "maxNonoverlappingCyclesAtOnePoint": 23,
+          "framesWithRepeatingPoints": 225,
+          "framesOverOnePercent": 215
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 6,
+          "blocksWithTwoCycles": 62
+        }
+      },
+      "visibleDesktop30": {
+        "label": "pendulum-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 299,
+          "peakWindowPercent": 5.4963235294117645,
+          "windowOrigin": [
+            588,
+            336
+          ],
+          "peakAtSeconds": 1.9666666666666666,
+          "mostPersistentPoint": [
+            892,
+            460
+          ],
+          "framesAtMostPersistentPoint": 92,
+          "maxNonoverlappingCyclesAtOnePoint": 19,
+          "framesWithRepeatingPoints": 112,
+          "framesOverOnePercent": 99
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 6,
+          "blocksWithTwoCycles": 61
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": {
+        "label": "pendulum",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 367,
+          "peakWindowPercent": 6.7463235294117645,
+          "windowOrigin": [
+            624,
+            320
+          ],
+          "peakAtSeconds": 1.9166666666666667,
+          "mostPersistentPoint": [
+            916,
+            452
+          ],
+          "framesAtMostPersistentPoint": 206,
+          "maxNonoverlappingCyclesAtOnePoint": 21,
+          "framesWithRepeatingPoints": 225,
+          "framesOverOnePercent": 215
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 6,
+          "blocksWithTwoCycles": 62
+        },
+        "compositedScreenshot": true
+      },
+      "visiblePhone30": {
+        "label": "pendulum-phone-30-s2",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          195,
+          422
+        ],
+        "stride": 2,
+        "windowGrid": [
+          171,
+          128
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 872,
+          "peakWindowPercent": 3.9839181286549707,
+          "windowOrigin": [
+            0,
+            334
+          ],
+          "peakAtSeconds": 4,
+          "mostPersistentPoint": [
+            306,
+            492
+          ],
+          "framesAtMostPersistentPoint": 86,
+          "maxNonoverlappingCyclesAtOnePoint": 18,
+          "framesWithRepeatingPoints": 92,
+          "framesOverOnePercent": 77
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 5,
+          "blocksWithTwoCycles": 28
+        },
+        "compositedScreenshot": true
+      }
+    },
+    {
+      "num": 15,
+      "key": "trilogy",
+      "name": "Trilogy",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "trilogy",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "lineCanvas",
+          "cycleCanvas",
+          "triCubeCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 1,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 16,
+      "key": "blackhole",
+      "name": "Black Hole",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "blackhole",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "canvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 2,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 17,
+      "key": "ocean",
+      "name": "Ocean",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "ocean",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "globeCanvas",
+          "insetCanvas",
+          "legendCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 8,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 18,
+      "key": "fourd",
+      "name": "4D",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "fourd",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "canvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 4,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 19,
+      "key": "polychora",
+      "name": "Polychora",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "polychora",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "canvas"
+        ],
+        "general": {
+          "peakWindowPoints": 1,
+          "peakWindowPercent": 0.01838235294117647,
+          "windowOrigin": [
+            180,
+            152
+          ],
+          "peakAtSeconds": 2.216666666666667,
+          "mostPersistentPoint": [
+            524,
+            420
+          ],
+          "framesAtMostPersistentPoint": 11,
+          "maxNonoverlappingCyclesAtOnePoint": 9,
+          "framesWithRepeatingPoints": 33,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 20,
+      "key": "fireflies",
+      "name": "Fireflies",
+      "decision": "Existing Play guard",
+      "note": "The measured opening animation repeatedly changed the average brightness of multiple 32 × 32 CSS-pixel patches.",
+      "modelScreen": {
+        "label": "fireflies",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 8,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 6,
+          "blocksWithTwoCycles": 145
+        }
+      },
+      "visibleDesktop30": {
+        "label": "fireflies-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 6,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 6,
+          "blocksWithTwoCycles": 143
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": null,
+      "visiblePhone30": {
+        "label": "fireflies-phone-30-s2",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          195,
+          422
+        ],
+        "stride": 2,
+        "windowGrid": [
+          171,
+          128
+        ],
+        "canvasIds": [
+          "main",
+          "simCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 8,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 6,
+          "blocksWithTwoCycles": 46
+        },
+        "compositedScreenshot": true
+      }
+    },
+    {
+      "num": 21,
+      "key": "horned",
+      "name": "Horned",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "horned",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 3,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 22,
+      "key": "nonorient",
+      "name": "Non-Orientable",
+      "decision": "Watch fine detail",
+      "note": "Moving mesh edges produced localized changes.",
+      "modelScreen": {
+        "label": "nonorient",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 299,
+          "peakWindowPercent": 5.4963235294117645,
+          "windowOrigin": [
+            308,
+            296
+          ],
+          "peakAtSeconds": 1.8666666666666667,
+          "mostPersistentPoint": [
+            348,
+            500
+          ],
+          "framesAtMostPersistentPoint": 94,
+          "maxNonoverlappingCyclesAtOnePoint": 11,
+          "framesWithRepeatingPoints": 227,
+          "framesOverOnePercent": 157
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": {
+        "label": "nonorient-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 102,
+          "peakWindowPercent": 1.875,
+          "windowOrigin": [
+            228,
+            300
+          ],
+          "peakAtSeconds": 2.533333333333333,
+          "mostPersistentPoint": [
+            188,
+            664
+          ],
+          "framesAtMostPersistentPoint": 101,
+          "maxNonoverlappingCyclesAtOnePoint": 23,
+          "framesWithRepeatingPoints": 109,
+          "framesOverOnePercent": 40
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 1,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": null,
+      "visiblePhone30": {
+        "label": "nonorient-phone-30-s2",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          195,
+          422
+        ],
+        "stride": 2,
+        "windowGrid": [
+          171,
+          128
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 17,
+          "peakWindowPercent": 0.07766812865497076,
+          "windowOrigin": [
+            0,
+            458
+          ],
+          "peakAtSeconds": 1.6666666666666667,
+          "mostPersistentPoint": [
+            188,
+            710
+          ],
+          "framesAtMostPersistentPoint": 106,
+          "maxNonoverlappingCyclesAtOnePoint": 28,
+          "framesWithRepeatingPoints": 110,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      }
+    },
+    {
+      "num": 23,
+      "key": "penteract",
+      "name": "5D / E₈",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "penteract",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "canvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 9,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 24,
+      "key": "leech",
+      "name": "Leech",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "leech",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "e8Root0",
+          "e8Root1",
+          "e8Root2"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 25,
+      "key": "pentlite",
+      "name": "5D Lite",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "pentlite",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 3,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 26,
+      "key": "hopf",
+      "name": "Hopf",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "hopf",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "mainCanvas",
+          "baseSphere"
+        ],
+        "general": {
+          "peakWindowPoints": 34,
+          "peakWindowPercent": 0.625,
+          "windowOrigin": [
+            368,
+            260
+          ],
+          "peakAtSeconds": 2.283333333333333,
+          "mostPersistentPoint": [
+            712,
+            400
+          ],
+          "framesAtMostPersistentPoint": 60,
+          "maxNonoverlappingCyclesAtOnePoint": 10,
+          "framesWithRepeatingPoints": 207,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": {
+        "label": "hopf-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "mainCanvas",
+          "baseSphere"
+        ],
+        "general": {
+          "peakWindowPoints": 22,
+          "peakWindowPercent": 0.40441176470588236,
+          "windowOrigin": [
+            368,
+            284
+          ],
+          "peakAtSeconds": 2.3333333333333335,
+          "mostPersistentPoint": [
+            672,
+            464
+          ],
+          "framesAtMostPersistentPoint": 30,
+          "maxNonoverlappingCyclesAtOnePoint": 10,
+          "framesWithRepeatingPoints": 99,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 1,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 27,
+      "key": "bh2",
+      "name": "Black Hole B",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "bh2",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "canvas"
+        ],
+        "general": {
+          "peakWindowPoints": 67,
+          "peakWindowPercent": 1.2316176470588236,
+          "windowOrigin": [
+            216,
+            436
+          ],
+          "peakAtSeconds": 2.433333333333333,
+          "mostPersistentPoint": [
+            356,
+            588
+          ],
+          "framesAtMostPersistentPoint": 60,
+          "maxNonoverlappingCyclesAtOnePoint": 7,
+          "framesWithRepeatingPoints": 158,
+          "framesOverOnePercent": 36
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 28,
+      "key": "bh3",
+      "name": "Black Hole C (Disk) v2",
+      "decision": "Play guard added",
+      "note": "Bright disk particles repeatedly cross the same narrow band.",
+      "modelScreen": {
+        "label": "bh3",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 1139,
+          "peakWindowPercent": 20.9375,
+          "windowOrigin": [
+            324,
+            256
+          ],
+          "peakAtSeconds": 3.966666666666667,
+          "mostPersistentPoint": [
+            448,
+            468
+          ],
+          "framesAtMostPersistentPoint": 225,
+          "maxNonoverlappingCyclesAtOnePoint": 35,
+          "framesWithRepeatingPoints": 230,
+          "framesOverOnePercent": 220
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": {
+        "label": "bh3-30",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 390,
+          "peakWindowPercent": 7.169117647058823,
+          "windowOrigin": [
+            352,
+            256
+          ],
+          "peakAtSeconds": 1.7333333333333334,
+          "mostPersistentPoint": [
+            380,
+            444
+          ],
+          "framesAtMostPersistentPoint": 94,
+          "maxNonoverlappingCyclesAtOnePoint": 20,
+          "framesWithRepeatingPoints": 112,
+          "framesOverOnePercent": 102
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visibleDesktop60": {
+        "label": "bh3",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 1146,
+          "peakWindowPercent": 21.066176470588236,
+          "windowOrigin": [
+            336,
+            256
+          ],
+          "peakAtSeconds": 1.9,
+          "mostPersistentPoint": [
+            480,
+            472
+          ],
+          "framesAtMostPersistentPoint": 227,
+          "maxNonoverlappingCyclesAtOnePoint": 36,
+          "framesWithRepeatingPoints": 228,
+          "framesOverOnePercent": 219
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      },
+      "visiblePhone30": {
+        "label": "bh3-phone-30-s2",
+        "seconds": 4,
+        "frames": 121,
+        "grid": [
+          195,
+          422
+        ],
+        "stride": 2,
+        "windowGrid": [
+          171,
+          128
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 157,
+          "peakWindowPercent": 0.7172880116959064,
+          "windowOrigin": [
+            48,
+            320
+          ],
+          "peakAtSeconds": 1.8,
+          "mostPersistentPoint": [
+            10,
+            556
+          ],
+          "framesAtMostPersistentPoint": 92,
+          "maxNonoverlappingCyclesAtOnePoint": 18,
+          "framesWithRepeatingPoints": 111,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        },
+        "compositedScreenshot": true
+      }
+    },
+    {
+      "num": 29,
+      "key": "e8studio",
+      "name": "E₈ → Milnor",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "e8studio",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 4,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 30,
+      "key": "e8insp",
+      "name": "E₈ Inspector",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "e8insp",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 31,
+      "key": "e8studio2",
+      "name": "E₈ → Milnor v2",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "e8studio2",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "c"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 4,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 32,
+      "key": "unit-distances",
+      "name": "Unit Distances",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "unit-distances",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "grid",
+          "ring"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 33,
+      "key": "cipher",
+      "name": "Cipher Inspector",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "cipher",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 34,
+      "key": "more-materials",
+      "name": "More materials",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "more-materials",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "mmCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    },
+    {
+      "num": 35,
+      "key": "feathers-bricks",
+      "name": "Feathers and Bricks",
+      "decision": "Keep current start",
+      "note": "The sampled opening scene did not show a repeat pattern comparable to the disk.",
+      "modelScreen": {
+        "label": "feathers-bricks",
+        "seconds": 4,
+        "frames": 241,
+        "grid": [
+          256,
+          192
+        ],
+        "stride": 4,
+        "windowGrid": [
+          85,
+          64
+        ],
+        "canvasIds": [
+          "main",
+          "fbCanvas"
+        ],
+        "general": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "red": {
+          "peakWindowPoints": 0,
+          "peakWindowPercent": 0,
+          "windowOrigin": [
+            0,
+            0
+          ],
+          "peakAtSeconds": 0,
+          "mostPersistentPoint": [
+            0,
+            0
+          ],
+          "framesAtMostPersistentPoint": 0,
+          "maxNonoverlappingCyclesAtOnePoint": 0,
+          "framesWithRepeatingPoints": 0,
+          "framesOverOnePercent": 0
+        },
+        "spatialAverage": {
+          "blockCssPixels": 32,
+          "maxFullCyclesInRun": 0,
+          "blocksWithTwoCycles": 0
+        }
+      },
+      "visibleDesktop30": null,
+      "visibleDesktop60": null,
+      "visiblePhone30": null
+    }
+  ]
+}
